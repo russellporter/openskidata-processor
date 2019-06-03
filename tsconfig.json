@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "sourceMap": true,
+    "strict": true,
+    "moduleResolution": "node",
+    "noEmit": true,
+    "esModuleInterop": true,
+    "target": "esnext",
+    "importHelpers": true,
+    "lib": ["es5", "es2015.promise", "esnext", "dom" /* ArangoJS workaround */],
+    "types": ["node", "jest"],
+    "typeRoots": ["./node_modules/@types"],
+    "baseUrl": ".",
+    "paths": {
+      "*": ["types/*"]
+    }
+  },
+  "include": ["./src/**/*"]
+}
