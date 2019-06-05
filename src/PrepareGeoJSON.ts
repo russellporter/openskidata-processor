@@ -26,7 +26,8 @@ export default async function prepare(
   inputPaths: GeoJSONInputPaths,
   intermediatePaths: GeoJSONIntermediatePaths,
   outputPaths: GeoJSONOutputPaths,
-  cluster: boolean = true
+  cluster: boolean = true,
+  arangoDBURL: string | undefined
 ) {
   await Promise.all(
     [
@@ -67,7 +68,8 @@ export default async function prepare(
       intermediatePaths.lifts,
       outputPaths.lifts,
       intermediatePaths.runs,
-      outputPaths.runs
+      outputPaths.runs,
+      arangoDBURL
     );
   }
 

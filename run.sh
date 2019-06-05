@@ -8,7 +8,9 @@ rm -Rf data/*
 
 docker-compose up -d
 
-npm run download-and-prepare
+ARANGODB_URL=$(docker-compose port arangodb 8529)
+
+npm run download-and-prepare $ARANGODB_URL
 
 docker-compose run tippecanoe \
   tippecanoe -o /data/planet_lifts.mbtiles \

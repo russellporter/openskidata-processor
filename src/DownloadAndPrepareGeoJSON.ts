@@ -5,11 +5,16 @@ import {
 } from "./io/GeoJSONFiles";
 import prepare from "./PrepareGeoJSON";
 
-export default async function downloadAndPrepare(outputFolder: string) {
+export default async function downloadAndPrepare(
+  outputFolder: string,
+  arangoDBURL: string
+) {
   const input = await downloadAndConvertToGeoJSON(outputFolder);
   await prepare(
     input,
     new GeoJSONIntermediatePaths(outputFolder),
-    new GeoJSONOutputPaths(outputFolder)
+    new GeoJSONOutputPaths(outputFolder),
+    undefined,
+    arangoDBURL
   );
 }
