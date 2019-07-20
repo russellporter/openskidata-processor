@@ -1,8 +1,8 @@
 #!/bin/bash
 set -e
 
-DIR=$(cd $(dirname ${BASH_SOURCE[0]}) && pwd)
-echo $DIR
+MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+cd $MY_DIR
 
 rm -Rf data/*
 
