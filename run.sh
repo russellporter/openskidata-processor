@@ -6,9 +6,11 @@ cd $MY_DIR
 
 rm -Rf data/*
 
-docker-compose up -d
-
-ARANGODB_URL="http://$(docker-compose port arangodb 8529)"
+ARANGODB_URL=$1
+if [ -z "$ARANGODB_URL" ]; then
+    docker-compose up -d
+    ARANGODB_URL="http://$(docker-compose port arangodb 8529)"
+fi
 
 npm run download-and-prepare $ARANGODB_URL
 
