@@ -116,6 +116,7 @@ export default async function loadArangoGraph(
       _key: properties.id,
       type: MapObjectType.Run,
       geometry: feature.geometry,
+      name: feature.properties.name,
       runAssignableToSkiArea:
         activities.includes(Activity.Downhill) ||
         activities.includes(Activity.Nordic),

@@ -18,39 +18,44 @@ export function skiAreaStatistics(mapObjects: MapObject[]): Statistics {
 }
 
 function runStatistics(runs: RunObject[]): RunStatistics {
-  return runs
-    .map(run => {
-      return {
-        difficulty: run.difficulty,
-        activities: run.activities,
-        distance: turfLength(run.geometry)
-      };
-    })
-    .reduce(
-      (statistics, run) => {
-        run.activities.forEach(activity => {
-          const activityStatistics = statistics.byActivity[activity] || {
-            byDifficulty: new Map()
-          };
-          statistics.byActivity[activity] = activityStatistics;
+  return (
+    runs
+      // Exclude run areas because in practice, most runs are also mapped with a line (and including both significantly inflates stats)
+      .filter(run => run.geometry.type != "Polygon")
+      .map(run => {
+        return {
+          name: run.name,
+          difficulty: run.difficulty,
+          activities: run.activities,
+          distance: turfLength(run.geometry)
+        };
+      })
+      .reduce(
+        (statistics, run) => {
+          run.activities.forEach(activity => {
+            const activityStatistics = statistics.byActivity[activity] || {
+              byDifficulty: new Map()
+            };
+            statistics.byActivity[activity] = activityStatistics;
 
-          const difficulty = run.difficulty || "other";
-          const runStats = activityStatistics.byDifficulty[difficulty] || {
-            count: 0,
-            lengthInKm: 0
-          };
-          activityStatistics.byDifficulty[difficulty] = runStats;
+            const difficulty = run.difficulty || "other";
+            const runStats = activityStatistics.byDifficulty[difficulty] || {
+              count: 0,
+              lengthInKm: 0
+            };
+            activityStatistics.byDifficulty[difficulty] = runStats;
 
-          runStats.count++;
-          runStats.lengthInKm += run.distance;
-        });
+            runStats.count++;
+            runStats.lengthInKm += run.distance;
+          });
 
-        return statistics;
-      },
-      {
-        byActivity: {}
-      } as RunStatistics
-    );
+          return statistics;
+        },
+        {
+          byActivity: {}
+        } as RunStatistics
+      )
+  );
 }
 
 function liftStatistics(lifts: LiftObject[]): LiftStatistics {
@@ -72,4 +77,11 @@ function liftStatistics(lifts: LiftObject[]): LiftStatistics {
       },
       { byType: {} } as LiftStatistics
     );
+}
+
+function groupBy<X: [[key: string]: any]>(xs: X[], key: string): { [key: string]: X[] } {
+  return xs.reduce(function(rv, x) {
+    (rv[x[key]] = rv[x[key]] || []).push(x);
+    return rv;
+  }, {});
 }

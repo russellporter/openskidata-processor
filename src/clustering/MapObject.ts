@@ -16,6 +16,7 @@ export type DraftMapObject = DraftRun | DraftLift | DraftSkiArea;
 export interface DraftRun extends BaseDraftMapObject {
   type: MapObjectType.Run;
   geometry: RunGeometry;
+  name: string | null;
   runAssignableToSkiArea: boolean;
   difficulty: RunDifficulty | null;
 }
