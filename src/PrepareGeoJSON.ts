@@ -27,7 +27,7 @@ export default async function prepare(
   intermediatePaths: GeoJSONIntermediatePaths,
   outputPaths: GeoJSONOutputPaths,
   cluster: boolean = true,
-  arangoDBURL: string | undefined
+  arangoDBURL: string | undefined = undefined
 ) {
   await Promise.all(
     [

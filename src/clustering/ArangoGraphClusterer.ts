@@ -4,6 +4,7 @@ import { aql, Database } from "arangojs";
 import * as GeoJSON from "geojson";
 import { Activity, FeatureType, Status } from "openskidata-format";
 import uuid from "uuid/v4";
+import { getRunConvention } from "../transforms/RunFormatter";
 import { skiAreaStatistics } from "./ArangoGraphSkiAreaStatisticsAugmenter";
 import {
   DraftSkiArea,
@@ -218,7 +219,8 @@ export default async function clusterArangoGraph(
         generated: true,
         activities: activities,
         status: Status.Operating,
-        sources: []
+        sources: [],
+        runConvention: getRunConvention(geometry.coordinates)
       }
     };
 

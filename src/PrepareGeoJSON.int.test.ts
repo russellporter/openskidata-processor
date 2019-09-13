@@ -230,7 +230,7 @@ Map {
         },
         "properties": Object {
           "has_downhill": true,
-          "id": "bf4079e0570553cd70fe472dcdeb416be2571d00",
+          "id": "dabe8dd3df97e01ce68199967c0c725476816389",
           "name": "Rabenkopflift Oberau",
         },
         "type": "Feature",
@@ -303,8 +303,9 @@ Map {
             "downhill",
           ],
           "generated": false,
-          "id": "bf4079e0570553cd70fe472dcdeb416be2571d00",
+          "id": "dabe8dd3df97e01ce68199967c0c725476816389",
           "name": "Rabenkopflift Oberau",
+          "runConvention": "europe",
           "sources": Array [
             Object {
               "id": "13666",

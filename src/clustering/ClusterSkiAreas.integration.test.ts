@@ -326,6 +326,7 @@ Map {
           "generated": true,
           "id": "mock-UUID-0",
           "name": null,
+          "runConvention": "europe",
           "sources": Array [],
           "statistics": Object {
             "lifts": Object {
@@ -534,6 +535,7 @@ Map {
           "generated": true,
           "id": "mock-UUID-0",
           "name": null,
+          "runConvention": "europe",
           "sources": Array [],
           "statistics": Object {
             "lifts": Object {
@@ -572,6 +574,7 @@ Map {
           "generated": true,
           "id": "mock-UUID-1",
           "name": null,
+          "runConvention": "europe",
           "sources": Array [],
           "statistics": Object {
             "lifts": Object {
@@ -774,6 +777,7 @@ Map {
           "generated": false,
           "id": "1",
           "name": "Rabenkopflift Oberau",
+          "runConvention": "europe",
           "sources": Array [
             Object {
               "id": "13666",

@@ -8,6 +8,7 @@ import {
   LiftGeometry,
   LiftProperties,
   LiftType,
+  RunConvention,
   RunDifficulty,
   RunFeature,
   RunProperties,
@@ -168,7 +169,8 @@ export function mockSkiAreaFeature<G extends SkiAreaGeometry>(options: {
       activities: options.activities,
       status: options.status,
       generated: false,
-      sources: options.sources !== undefined ? options.sources : []
+      sources: options.sources !== undefined ? options.sources : [],
+      runConvention: RunConvention.EUROPE
     },
     geometry: options.geometry
   };

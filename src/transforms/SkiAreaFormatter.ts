@@ -10,6 +10,7 @@ import {
 } from "../features/SkiAreaFeature";
 import buildFeature from "./FeatureBuilder";
 import { Omit } from "./Omit";
+import { getRunConvention } from "./RunFormatter";
 
 export function formatSkiArea(feature: InputSkiAreaFeature): SkiAreaFeature {
   const inputProperties = feature.properties || {};
@@ -21,7 +22,8 @@ export function formatSkiArea(feature: InputSkiAreaFeature): SkiAreaFeature {
     sources: getSources(inputProperties),
     activities: activities,
     generated: false,
-    status: inputProperties.status
+    status: inputProperties.status,
+    runConvention: getRunConvention(feature.geometry.coordinates)
   };
 
   return buildFeature(feature.geometry, properties);

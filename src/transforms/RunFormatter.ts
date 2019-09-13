@@ -1,8 +1,10 @@
 import * as turf from "@turf/turf";
 import _ from "lodash";
 import {
-  ColorName,
   FeatureType,
+  getColorName,
+  getRunColor,
+  RunConvention,
   RunDifficulty,
   RunGrooming,
   RunProperties,
@@ -27,7 +29,7 @@ export function formatRun(
 
   const uses = getUses(inputProperties["piste:type"]);
   const difficulty = getDifficulty(inputProperties);
-  const color = getRegionalRunColor(coords, difficulty);
+  const color = getRunColor(getRunConvention(coords), difficulty);
 
   const properties: Omit<RunProperties, "id"> = {
     type: FeatureType.Run,
@@ -61,7 +63,9 @@ function getUses(type: string | undefined): RunUse[] {
   return type
     .split(";")
     .map(t => t.trim().toLowerCase())
-    .flatMap(t => (Object.values(RunUse).includes(t) ? [t as RunUse] : []));
+    .flatMap(t =>
+      Object.values(RunUse).includes(t as RunUse) ? [t as RunUse] : []
+    );
 }
 
 function getOneway(
@@ -100,7 +104,7 @@ function getOrElse<P extends { [key: string]: string | undefined }>(
 
 function getGrooming(properties: InputRunProperties): RunGrooming | null {
   const value = properties["piste:grooming"];
-  if (Object.values(RunGrooming).includes(value)) {
+  if (Object.values(RunGrooming).includes(value as RunGrooming)) {
     return value as RunGrooming;
   }
 
@@ -118,7 +122,7 @@ function getGrooming(properties: InputRunProperties): RunGrooming | null {
 
 function getDifficulty(properties: InputRunProperties): RunDifficulty | null {
   const value = properties["piste:difficulty"];
-  return Object.values(RunDifficulty).includes(value)
+  return value && Object.values(RunDifficulty).includes(value as RunDifficulty)
     ? (value as RunDifficulty)
     : null;
 }
@@ -149,91 +153,6 @@ function getName(properties: InputRunProperties) {
     .join(", ");
 }
 
-// When adding a new color, add a supplemental oneway icon on the map style
-const GREEN_COLOR = "hsl(125, 100%, 33%)";
-const BLUE_COLOR = "hsl(208, 100%, 33%)";
-const RED_COLOR = "hsl(359, 94%, 53%)";
-const BLACK_COLOR = "hsl(0, 0%, 0%)";
-const ORANGE_COLOR = "hsl(34, 100%, 50%)";
-const PURPLE_COLOR = "hsl(298, 87%, 43%)";
-
-function getColorName(color: string): ColorName {
-  switch (color) {
-    case GREEN_COLOR:
-      return ColorName.GREEN;
-    case BLUE_COLOR:
-      return ColorName.BLUE;
-    case RED_COLOR:
-      return ColorName.RED;
-    case BLACK_COLOR:
-      return ColorName.BLACK;
-    case ORANGE_COLOR:
-      return ColorName.ORANGE;
-    case PURPLE_COLOR:
-      return ColorName.PURPLE;
-    default:
-      throw "missing color";
-  }
-}
-
-function getRegionalRunColor(
-  coords: number[],
-  difficulty: RunDifficulty | null
-): string {
-  switch (getRunConvention(coords)) {
-    case RunConvention.EUROPE:
-      switch (difficulty) {
-        case RunDifficulty.NOVICE:
-          return GREEN_COLOR;
-        case RunDifficulty.EASY:
-          return BLUE_COLOR;
-        case RunDifficulty.INTERMEDIATE:
-          return RED_COLOR;
-        case RunDifficulty.ADVANCED:
-        case RunDifficulty.EXPERT:
-          return BLACK_COLOR;
-        case RunDifficulty.FREERIDE:
-        case RunDifficulty.EXTREME:
-          return ORANGE_COLOR;
-        default:
-          return PURPLE_COLOR;
-      }
-    case RunConvention.JAPAN:
-      switch (difficulty) {
-        case RunDifficulty.NOVICE:
-        case RunDifficulty.EASY:
-          return GREEN_COLOR;
-        case RunDifficulty.INTERMEDIATE:
-          return RED_COLOR;
-        case RunDifficulty.ADVANCED:
-        case RunDifficulty.EXPERT:
-          return BLACK_COLOR;
-        case RunDifficulty.FREERIDE:
-        case RunDifficulty.EXTREME:
-          return ORANGE_COLOR;
-        default:
-          return PURPLE_COLOR;
-      }
-    default:
-    case RunConvention.NORTH_AMERICA:
-      switch (difficulty) {
-        case RunDifficulty.NOVICE:
-        case RunDifficulty.EASY:
-          return GREEN_COLOR;
-        case RunDifficulty.INTERMEDIATE:
-          return BLUE_COLOR;
-        case RunDifficulty.ADVANCED:
-        case RunDifficulty.EXPERT:
-          return BLACK_COLOR;
-        case RunDifficulty.FREERIDE:
-        case RunDifficulty.EXTREME:
-          return ORANGE_COLOR;
-        default:
-          return PURPLE_COLOR;
-      }
-  }
-}
-
 const euPoly = turf.polygon([
   [
     [-20.8273687679, -38.4405631112],
@@ -253,13 +172,7 @@ const jpPoly = turf.polygon([
   ]
 ]);
 
-enum RunConvention {
-  EUROPE = "europe",
-  JAPAN = "japan",
-  NORTH_AMERICA = "north_america"
-}
-
-function getRunConvention(coords: number[]): RunConvention {
+export function getRunConvention(coords: number[]): RunConvention {
   const point = turf.point(coords);
 
   if (turf.booleanPointInPolygon(point, euPoly)) {
