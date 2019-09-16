@@ -10,7 +10,7 @@
     "arangojs": "^6.10.0",
     "lodash": "^4.17.13",
     "object-hash": "^1.3.1",
-    "openskidata-format": "0.1.7",
+    "openskidata-format": "0.1.9",
     "osmtogeojson": "russellporter/osmtogeojson#typescript-fixes",
     "request": "^2.88.0",
     "stream-to-promise": "^2.2.0",
