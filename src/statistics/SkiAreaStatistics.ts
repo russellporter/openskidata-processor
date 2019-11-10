@@ -24,6 +24,10 @@ export function skiAreaStatistics(mapObjects: MapObject[]): Statistics {
 
 function runStatistics(runs: RunObject[]): RunStatistics {
   return runs
+    .filter(run => {
+      // Exclude polygons from statistics as these are typically redundant with LineString based runs
+      return run.geometry.type !== "Polygon";
+    })
     .map(run => {
       return {
         difficulty: run.difficulty,
