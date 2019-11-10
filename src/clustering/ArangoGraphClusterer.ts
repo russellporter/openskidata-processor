@@ -4,8 +4,8 @@ import { aql, Database } from "arangojs";
 import * as GeoJSON from "geojson";
 import { Activity, FeatureType, Status } from "openskidata-format";
 import uuid from "uuid/v4";
+import { skiAreaStatistics } from "../statistics/SkiAreaStatistics";
 import { getRunConvention } from "../transforms/RunFormatter";
-import { skiAreaStatistics } from "./ArangoGraphSkiAreaStatisticsAugmenter";
 import {
   DraftSkiArea,
   MapObject,

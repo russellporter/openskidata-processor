@@ -1,6 +1,11 @@
 import turfLength from "@turf/length";
 import { LiftStatistics, RunStatistics, Statistics } from "openskidata-format";
-import { LiftObject, MapObject, MapObjectType, RunObject } from "./MapObject";
+import {
+  LiftObject,
+  MapObject,
+  MapObjectType,
+  RunObject
+} from "../clustering/MapObject";
 
 function isRun(object: MapObject): object is RunObject {
   return object.type === MapObjectType.Run;
