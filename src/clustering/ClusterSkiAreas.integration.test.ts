@@ -85,67 +85,67 @@ it("skips generating ski areas for runs with unsupported activity", async () => 
     );
 
     expect(TestHelpers.folderContents("output")).toMatchInlineSnapshot(`
-Map {
-  "output/lifts.geojson" => Object {
-    "features": Array [],
-    "type": "FeatureCollection",
-  },
-  "output/runs.geojson" => Object {
-    "features": Array [
-      Object {
-        "geometry": Object {
-          "coordinates": Array [
-            Array [
-              Array [
-                11.1164229,
-                47.558125000000004,
-              ],
-              Array [
-                11.116365499999999,
-                47.5579742,
-              ],
-              Array [
-                11.1171866,
-                47.55764129999999,
-              ],
-              Array [
-                11.1164229,
-                47.558125000000004,
-              ],
-            ],
-          ],
-          "type": "Polygon",
+      Map {
+        "output/lifts.geojson" => Object {
+          "features": Array [],
+          "type": "FeatureCollection",
         },
-        "properties": Object {
-          "color": "",
-          "colorName": "green",
-          "description": null,
-          "difficulty": "easy",
-          "gladed": null,
-          "grooming": null,
-          "id": "3",
-          "lit": null,
-          "name": "Sledding run",
-          "oneway": null,
-          "patrolled": null,
-          "ref": null,
-          "skiAreas": Array [],
-          "type": "run",
-          "uses": Array [
-            "sled",
+        "output/runs.geojson" => Object {
+          "features": Array [
+            Object {
+              "geometry": Object {
+                "coordinates": Array [
+                  Array [
+                    Array [
+                      11.1164229,
+                      47.558125000000004,
+                    ],
+                    Array [
+                      11.116365499999999,
+                      47.5579742,
+                    ],
+                    Array [
+                      11.1171866,
+                      47.55764129999999,
+                    ],
+                    Array [
+                      11.1164229,
+                      47.558125000000004,
+                    ],
+                  ],
+                ],
+                "type": "Polygon",
+              },
+              "properties": Object {
+                "color": "",
+                "colorName": "green",
+                "description": null,
+                "difficulty": "easy",
+                "gladed": null,
+                "grooming": null,
+                "id": "3",
+                "lit": null,
+                "name": "Sledding run",
+                "oneway": null,
+                "patrolled": null,
+                "ref": null,
+                "skiAreas": Array [],
+                "type": "run",
+                "uses": Array [
+                  "sled",
+                ],
+              },
+              "type": "Feature",
+            },
           ],
+          "type": "FeatureCollection",
         },
-        "type": "Feature",
-      },
-    ],
-    "type": "FeatureCollection",
-  },
-  "output/ski_areas.geojson" => Object {
-    "features": Array [],
-    "type": "FeatureCollection",
-  },
-}
-`);
+        "output/ski_areas.geojson" => Object {
+          "features": Array [],
+          "type": "FeatureCollection",
+        },
+      }
+    `);
   } finally {
     mockFS.restore();
   }
@@ -205,156 +205,147 @@ it("generates ski areas for runs without them", async () => {
     );
 
     expect(TestHelpers.folderContents("output")).toMatchInlineSnapshot(`
-Map {
-  "output/lifts.geojson" => Object {
-    "features": Array [],
-    "type": "FeatureCollection",
-  },
-  "output/runs.geojson" => Object {
-    "features": Array [
-      Object {
-        "geometry": Object {
-          "coordinates": Array [
-            Array [
-              Array [
-                11.1164229,
-                47.558125000000004,
-              ],
-              Array [
-                11.116365499999999,
-                47.5579742,
-              ],
-              Array [
-                11.1171866,
-                47.55764129999999,
-              ],
-              Array [
-                11.1164229,
-                47.558125000000004,
-              ],
-            ],
-          ],
-          "type": "Polygon",
+      Map {
+        "output/lifts.geojson" => Object {
+          "features": Array [],
+          "type": "FeatureCollection",
         },
-        "properties": Object {
-          "color": "",
-          "colorName": "green",
-          "description": null,
-          "difficulty": "easy",
-          "gladed": null,
-          "grooming": null,
-          "id": "3",
-          "lit": null,
-          "name": "Oberauer Skiabfahrt",
-          "oneway": null,
-          "patrolled": null,
-          "ref": null,
-          "skiAreas": Array [
-            "mock-UUID-0",
-          ],
-          "type": "run",
-          "uses": Array [
-            "downhill",
-          ],
-        },
-        "type": "Feature",
-      },
-      Object {
-        "geometry": Object {
-          "coordinates": Array [
-            Array [
-              Array [
-                11.1164229,
-                47.558125000000004,
-              ],
-              Array [
-                11.116365499999999,
-                47.5579742,
-              ],
-              Array [
-                11.1171866,
-                47.55764129999999,
-              ],
-              Array [
-                11.1164229,
-                47.558125000000004,
-              ],
-            ],
-          ],
-          "type": "Polygon",
-        },
-        "properties": Object {
-          "color": "",
-          "colorName": "green",
-          "description": null,
-          "difficulty": "easy",
-          "gladed": null,
-          "grooming": null,
-          "id": "4",
-          "lit": null,
-          "name": "Another run nearby",
-          "oneway": null,
-          "patrolled": null,
-          "ref": null,
-          "skiAreas": Array [
-            "mock-UUID-0",
-          ],
-          "type": "run",
-          "uses": Array [
-            "downhill",
-          ],
-        },
-        "type": "Feature",
-      },
-    ],
-    "type": "FeatureCollection",
-  },
-  "output/ski_areas.geojson" => Object {
-    "features": Array [
-      Object {
-        "geometry": Object {
-          "coordinates": Array [
-            11.116658333333334,
-            47.557913500000005,
-          ],
-          "type": "Point",
-        },
-        "properties": Object {
-          "activities": Array [
-            "downhill",
-          ],
-          "generated": true,
-          "id": "mock-UUID-0",
-          "name": null,
-          "runConvention": "europe",
-          "sources": Array [],
-          "statistics": Object {
-            "lifts": Object {
-              "byType": Object {},
+        "output/runs.geojson" => Object {
+          "features": Array [
+            Object {
+              "geometry": Object {
+                "coordinates": Array [
+                  Array [
+                    Array [
+                      11.1164229,
+                      47.558125000000004,
+                    ],
+                    Array [
+                      11.116365499999999,
+                      47.5579742,
+                    ],
+                    Array [
+                      11.1171866,
+                      47.55764129999999,
+                    ],
+                    Array [
+                      11.1164229,
+                      47.558125000000004,
+                    ],
+                  ],
+                ],
+                "type": "Polygon",
+              },
+              "properties": Object {
+                "color": "",
+                "colorName": "green",
+                "description": null,
+                "difficulty": "easy",
+                "gladed": null,
+                "grooming": null,
+                "id": "3",
+                "lit": null,
+                "name": "Oberauer Skiabfahrt",
+                "oneway": null,
+                "patrolled": null,
+                "ref": null,
+                "skiAreas": Array [
+                  "mock-UUID-0",
+                ],
+                "type": "run",
+                "uses": Array [
+                  "downhill",
+                ],
+              },
+              "type": "Feature",
             },
-            "runs": Object {
-              "byActivity": Object {
-                "downhill": Object {
-                  "byDifficulty": Object {
-                    "easy": Object {
-                      "count": 2,
-                      "lengthInKm": 0.3355717666254747,
-                    },
+            Object {
+              "geometry": Object {
+                "coordinates": Array [
+                  Array [
+                    Array [
+                      11.1164229,
+                      47.558125000000004,
+                    ],
+                    Array [
+                      11.116365499999999,
+                      47.5579742,
+                    ],
+                    Array [
+                      11.1171866,
+                      47.55764129999999,
+                    ],
+                    Array [
+                      11.1164229,
+                      47.558125000000004,
+                    ],
+                  ],
+                ],
+                "type": "Polygon",
+              },
+              "properties": Object {
+                "color": "",
+                "colorName": "green",
+                "description": null,
+                "difficulty": "easy",
+                "gladed": null,
+                "grooming": null,
+                "id": "4",
+                "lit": null,
+                "name": "Another run nearby",
+                "oneway": null,
+                "patrolled": null,
+                "ref": null,
+                "skiAreas": Array [
+                  "mock-UUID-0",
+                ],
+                "type": "run",
+                "uses": Array [
+                  "downhill",
+                ],
+              },
+              "type": "Feature",
+            },
+          ],
+          "type": "FeatureCollection",
+        },
+        "output/ski_areas.geojson" => Object {
+          "features": Array [
+            Object {
+              "geometry": Object {
+                "coordinates": Array [
+                  11.116658333333334,
+                  47.557913500000005,
+                ],
+                "type": "Point",
+              },
+              "properties": Object {
+                "activities": Array [
+                  "downhill",
+                ],
+                "generated": true,
+                "id": "mock-UUID-0",
+                "name": null,
+                "runConvention": "europe",
+                "sources": Array [],
+                "statistics": Object {
+                  "lifts": Object {
+                    "byType": Object {},
+                  },
+                  "runs": Object {
+                    "byActivity": Object {},
                   },
                 },
+                "status": "operating",
+                "type": "skiArea",
               },
+              "type": "Feature",
             },
-          },
-          "status": "operating",
-          "type": "skiArea",
+          ],
+          "type": "FeatureCollection",
         },
-        "type": "Feature",
-      },
-    ],
-    "type": "FeatureCollection",
-  },
-}
-`);
+      }
+    `);
   } finally {
     mockFS.restore();
   }
@@ -414,195 +405,177 @@ it("generates ski areas by activity", async () => {
     );
 
     expect(TestHelpers.folderContents("output")).toMatchInlineSnapshot(`
-Map {
-  "output/lifts.geojson" => Object {
-    "features": Array [],
-    "type": "FeatureCollection",
-  },
-  "output/runs.geojson" => Object {
-    "features": Array [
-      Object {
-        "geometry": Object {
-          "coordinates": Array [
-            Array [
-              Array [
-                11.1164229,
-                47.558125000000004,
-              ],
-              Array [
-                11.116365499999999,
-                47.5579742,
-              ],
-              Array [
-                11.1171866,
-                47.55764129999999,
-              ],
-              Array [
-                11.1164229,
-                47.558125000000004,
-              ],
-            ],
-          ],
-          "type": "Polygon",
+      Map {
+        "output/lifts.geojson" => Object {
+          "features": Array [],
+          "type": "FeatureCollection",
         },
-        "properties": Object {
-          "color": "",
-          "colorName": "green",
-          "description": null,
-          "difficulty": "easy",
-          "gladed": null,
-          "grooming": null,
-          "id": "3",
-          "lit": null,
-          "name": "Downhill Run",
-          "oneway": null,
-          "patrolled": null,
-          "ref": null,
-          "skiAreas": Array [
-            "mock-UUID-0",
-          ],
-          "type": "run",
-          "uses": Array [
-            "downhill",
-          ],
-        },
-        "type": "Feature",
-      },
-      Object {
-        "geometry": Object {
-          "coordinates": Array [
-            Array [
-              Array [
-                11.1164229,
-                47.558125000000004,
-              ],
-              Array [
-                11.116365499999999,
-                47.5579742,
-              ],
-              Array [
-                11.1171866,
-                47.55764129999999,
-              ],
-              Array [
-                11.1164229,
-                47.558125000000004,
-              ],
-            ],
-          ],
-          "type": "Polygon",
-        },
-        "properties": Object {
-          "color": "",
-          "colorName": "green",
-          "description": null,
-          "difficulty": "easy",
-          "gladed": null,
-          "grooming": null,
-          "id": "4",
-          "lit": null,
-          "name": "Nordic run",
-          "oneway": null,
-          "patrolled": null,
-          "ref": null,
-          "skiAreas": Array [
-            "mock-UUID-1",
-          ],
-          "type": "run",
-          "uses": Array [
-            "nordic",
-          ],
-        },
-        "type": "Feature",
-      },
-    ],
-    "type": "FeatureCollection",
-  },
-  "output/ski_areas.geojson" => Object {
-    "features": Array [
-      Object {
-        "geometry": Object {
-          "coordinates": Array [
-            11.116658333333334,
-            47.557913500000005,
-          ],
-          "type": "Point",
-        },
-        "properties": Object {
-          "activities": Array [
-            "downhill",
-          ],
-          "generated": true,
-          "id": "mock-UUID-0",
-          "name": null,
-          "runConvention": "europe",
-          "sources": Array [],
-          "statistics": Object {
-            "lifts": Object {
-              "byType": Object {},
+        "output/runs.geojson" => Object {
+          "features": Array [
+            Object {
+              "geometry": Object {
+                "coordinates": Array [
+                  Array [
+                    Array [
+                      11.1164229,
+                      47.558125000000004,
+                    ],
+                    Array [
+                      11.116365499999999,
+                      47.5579742,
+                    ],
+                    Array [
+                      11.1171866,
+                      47.55764129999999,
+                    ],
+                    Array [
+                      11.1164229,
+                      47.558125000000004,
+                    ],
+                  ],
+                ],
+                "type": "Polygon",
+              },
+              "properties": Object {
+                "color": "",
+                "colorName": "green",
+                "description": null,
+                "difficulty": "easy",
+                "gladed": null,
+                "grooming": null,
+                "id": "3",
+                "lit": null,
+                "name": "Downhill Run",
+                "oneway": null,
+                "patrolled": null,
+                "ref": null,
+                "skiAreas": Array [
+                  "mock-UUID-0",
+                ],
+                "type": "run",
+                "uses": Array [
+                  "downhill",
+                ],
+              },
+              "type": "Feature",
             },
-            "runs": Object {
-              "byActivity": Object {
-                "downhill": Object {
-                  "byDifficulty": Object {
-                    "easy": Object {
-                      "count": 1,
-                      "lengthInKm": 0.16778588331273736,
-                    },
+            Object {
+              "geometry": Object {
+                "coordinates": Array [
+                  Array [
+                    Array [
+                      11.1164229,
+                      47.558125000000004,
+                    ],
+                    Array [
+                      11.116365499999999,
+                      47.5579742,
+                    ],
+                    Array [
+                      11.1171866,
+                      47.55764129999999,
+                    ],
+                    Array [
+                      11.1164229,
+                      47.558125000000004,
+                    ],
+                  ],
+                ],
+                "type": "Polygon",
+              },
+              "properties": Object {
+                "color": "",
+                "colorName": "green",
+                "description": null,
+                "difficulty": "easy",
+                "gladed": null,
+                "grooming": null,
+                "id": "4",
+                "lit": null,
+                "name": "Nordic run",
+                "oneway": null,
+                "patrolled": null,
+                "ref": null,
+                "skiAreas": Array [
+                  "mock-UUID-1",
+                ],
+                "type": "run",
+                "uses": Array [
+                  "nordic",
+                ],
+              },
+              "type": "Feature",
+            },
+          ],
+          "type": "FeatureCollection",
+        },
+        "output/ski_areas.geojson" => Object {
+          "features": Array [
+            Object {
+              "geometry": Object {
+                "coordinates": Array [
+                  11.116658333333334,
+                  47.557913500000005,
+                ],
+                "type": "Point",
+              },
+              "properties": Object {
+                "activities": Array [
+                  "downhill",
+                ],
+                "generated": true,
+                "id": "mock-UUID-0",
+                "name": null,
+                "runConvention": "europe",
+                "sources": Array [],
+                "statistics": Object {
+                  "lifts": Object {
+                    "byType": Object {},
+                  },
+                  "runs": Object {
+                    "byActivity": Object {},
                   },
                 },
+                "status": "operating",
+                "type": "skiArea",
               },
+              "type": "Feature",
             },
-          },
-          "status": "operating",
-          "type": "skiArea",
-        },
-        "type": "Feature",
-      },
-      Object {
-        "geometry": Object {
-          "coordinates": Array [
-            11.116658333333334,
-            47.557913500000005,
-          ],
-          "type": "Point",
-        },
-        "properties": Object {
-          "activities": Array [
-            "nordic",
-          ],
-          "generated": true,
-          "id": "mock-UUID-1",
-          "name": null,
-          "runConvention": "europe",
-          "sources": Array [],
-          "statistics": Object {
-            "lifts": Object {
-              "byType": Object {},
-            },
-            "runs": Object {
-              "byActivity": Object {
-                "nordic": Object {
-                  "byDifficulty": Object {
-                    "easy": Object {
-                      "count": 1,
-                      "lengthInKm": 0.16778588331273736,
-                    },
+            Object {
+              "geometry": Object {
+                "coordinates": Array [
+                  11.116658333333334,
+                  47.557913500000005,
+                ],
+                "type": "Point",
+              },
+              "properties": Object {
+                "activities": Array [
+                  "nordic",
+                ],
+                "generated": true,
+                "id": "mock-UUID-1",
+                "name": null,
+                "runConvention": "europe",
+                "sources": Array [],
+                "statistics": Object {
+                  "lifts": Object {
+                    "byType": Object {},
+                  },
+                  "runs": Object {
+                    "byActivity": Object {},
                   },
                 },
+                "status": "operating",
+                "type": "skiArea",
               },
+              "type": "Feature",
             },
-          },
-          "status": "operating",
-          "type": "skiArea",
+          ],
+          "type": "FeatureCollection",
         },
-        "type": "Feature",
-      },
-    ],
-    "type": "FeatureCollection",
-  },
-}
-`);
+      }
+    `);
   } finally {
     mockFS.restore();
   }
@@ -668,154 +641,145 @@ it("clusters ski areas", async () => {
     );
 
     expect(TestHelpers.folderContents("output")).toMatchInlineSnapshot(`
-Map {
-  "output/lifts.geojson" => Object {
-    "features": Array [
-      Object {
-        "geometry": Object {
-          "coordinates": Array [
-            Array [
-              11.1223444,
-              47.5572422,
-            ],
-            Array [
-              11.1164297,
-              47.55815630000001,
-            ],
-          ],
-          "type": "LineString",
-        },
-        "properties": Object {
-          "bubble": null,
-          "capacity": null,
-          "color": "",
-          "duration": null,
-          "heating": null,
-          "id": "2",
-          "liftType": "t-bar",
-          "name": "Skilift Oberau",
-          "occupancy": null,
-          "oneway": null,
-          "ref": null,
-          "skiAreas": Array [
-            "1",
-          ],
-          "status": "operating",
-          "type": "lift",
-        },
-        "type": "Feature",
-      },
-    ],
-    "type": "FeatureCollection",
-  },
-  "output/runs.geojson" => Object {
-    "features": Array [
-      Object {
-        "geometry": Object {
-          "coordinates": Array [
-            Array [
-              Array [
-                11.1164229,
-                47.558125000000004,
-              ],
-              Array [
-                11.116365499999999,
-                47.5579742,
-              ],
-              Array [
-                11.1171866,
-                47.55764129999999,
-              ],
-              Array [
-                11.1164229,
-                47.558125000000004,
-              ],
-            ],
-          ],
-          "type": "Polygon",
-        },
-        "properties": Object {
-          "color": "",
-          "colorName": "green",
-          "description": null,
-          "difficulty": "easy",
-          "gladed": null,
-          "grooming": null,
-          "id": "3",
-          "lit": null,
-          "name": "Oberauer Skiabfahrt",
-          "oneway": null,
-          "patrolled": null,
-          "ref": null,
-          "skiAreas": Array [
-            "1",
-          ],
-          "type": "run",
-          "uses": Array [
-            "downhill",
-          ],
-        },
-        "type": "Feature",
-      },
-    ],
-    "type": "FeatureCollection",
-  },
-  "output/ski_areas.geojson" => Object {
-    "features": Array [
-      Object {
-        "geometry": Object {
-          "coordinates": Array [
-            11.122066084534,
-            47.557111836837,
-          ],
-          "type": "Point",
-        },
-        "properties": Object {
-          "activities": Array [
-            "downhill",
-          ],
-          "generated": false,
-          "id": "1",
-          "name": "Rabenkopflift Oberau",
-          "runConvention": "europe",
-          "sources": Array [
+      Map {
+        "output/lifts.geojson" => Object {
+          "features": Array [
             Object {
-              "id": "13666",
-              "type": "skimap.org",
+              "geometry": Object {
+                "coordinates": Array [
+                  Array [
+                    11.1223444,
+                    47.5572422,
+                  ],
+                  Array [
+                    11.1164297,
+                    47.55815630000001,
+                  ],
+                ],
+                "type": "LineString",
+              },
+              "properties": Object {
+                "bubble": null,
+                "capacity": null,
+                "color": "",
+                "duration": null,
+                "heating": null,
+                "id": "2",
+                "liftType": "t-bar",
+                "name": "Skilift Oberau",
+                "occupancy": null,
+                "oneway": null,
+                "ref": null,
+                "skiAreas": Array [
+                  "1",
+                ],
+                "status": "operating",
+                "type": "lift",
+              },
+              "type": "Feature",
             },
           ],
-          "statistics": Object {
-            "lifts": Object {
-              "byType": Object {
-                "t-bar": Object {
-                  "count": 1,
-                  "lengthInKm": 0.4553273553619445,
-                },
+          "type": "FeatureCollection",
+        },
+        "output/runs.geojson" => Object {
+          "features": Array [
+            Object {
+              "geometry": Object {
+                "coordinates": Array [
+                  Array [
+                    Array [
+                      11.1164229,
+                      47.558125000000004,
+                    ],
+                    Array [
+                      11.116365499999999,
+                      47.5579742,
+                    ],
+                    Array [
+                      11.1171866,
+                      47.55764129999999,
+                    ],
+                    Array [
+                      11.1164229,
+                      47.558125000000004,
+                    ],
+                  ],
+                ],
+                "type": "Polygon",
               },
+              "properties": Object {
+                "color": "",
+                "colorName": "green",
+                "description": null,
+                "difficulty": "easy",
+                "gladed": null,
+                "grooming": null,
+                "id": "3",
+                "lit": null,
+                "name": "Oberauer Skiabfahrt",
+                "oneway": null,
+                "patrolled": null,
+                "ref": null,
+                "skiAreas": Array [
+                  "1",
+                ],
+                "type": "run",
+                "uses": Array [
+                  "downhill",
+                ],
+              },
+              "type": "Feature",
             },
-            "runs": Object {
-              "byActivity": Object {
-                "downhill": Object {
-                  "byDifficulty": Object {
-                    "easy": Object {
-                      "count": 1,
-                      "lengthInKm": 0.16778588331273736,
+          ],
+          "type": "FeatureCollection",
+        },
+        "output/ski_areas.geojson" => Object {
+          "features": Array [
+            Object {
+              "geometry": Object {
+                "coordinates": Array [
+                  11.122066084534,
+                  47.557111836837,
+                ],
+                "type": "Point",
+              },
+              "properties": Object {
+                "activities": Array [
+                  "downhill",
+                ],
+                "generated": false,
+                "id": "1",
+                "name": "Rabenkopflift Oberau",
+                "runConvention": "europe",
+                "sources": Array [
+                  Object {
+                    "id": "13666",
+                    "type": "skimap.org",
+                  },
+                ],
+                "statistics": Object {
+                  "lifts": Object {
+                    "byType": Object {
+                      "t-bar": Object {
+                        "count": 1,
+                        "lengthInKm": 0.4553273553619445,
+                      },
                     },
                   },
+                  "runs": Object {
+                    "byActivity": Object {},
+                  },
                 },
+                "status": "operating",
+                "type": "skiArea",
               },
+              "type": "Feature",
             },
-          },
-          "status": "operating",
-          "type": "skiArea",
+          ],
+          "type": "FeatureCollection",
         },
-        "type": "Feature",
-      },
-    ],
-    "type": "FeatureCollection",
-  },
-}
-`);
+      }
+    `);
   } finally {
     mockFS.restore();
   }
