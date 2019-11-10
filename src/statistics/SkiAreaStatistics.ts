@@ -35,7 +35,7 @@ function runStatistics(runs: RunObject[]): RunStatistics {
       (statistics, run) => {
         run.activities.forEach(activity => {
           const activityStatistics = statistics.byActivity[activity] || {
-            byDifficulty: new Map()
+            byDifficulty: {}
           };
           statistics.byActivity[activity] = activityStatistics;
 
