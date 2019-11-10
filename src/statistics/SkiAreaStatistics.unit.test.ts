@@ -21,24 +21,24 @@ describe("SkiAreaStatistics", () => {
     const statistics = skiAreaStatistics([run]);
 
     expect(statistics).toMatchInlineSnapshot(`
-            Object {
-              "lifts": Object {
-                "byType": Object {},
-              },
-              "runs": Object {
-                "byActivity": Object {
-                  "downhill": Object {
-                    "byDifficulty": Object {
-                      "easy": Object {
-                        "count": 1,
-                        "lengthInKm": 111.1950802335329,
+                  Object {
+                    "lifts": Object {
+                      "byType": Object {},
+                    },
+                    "runs": Object {
+                      "byActivity": Object {
+                        "downhill": Object {
+                          "byDifficulty": Object {
+                            "easy": Object {
+                              "count": 1,
+                              "lengthInKm": 111.1950802335329,
+                            },
+                          },
+                        },
                       },
                     },
-                  },
-                },
-              },
-            }
-        `);
+                  }
+            `);
   });
 
   it("should count a lift", () => {
