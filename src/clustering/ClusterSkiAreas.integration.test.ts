@@ -785,6 +785,187 @@ it("clusters ski areas", async () => {
   }
 });
 
+it("generates a downhill ski area but does not include backcountry runs when clustering from a mixed use run", async () => {
+  TestHelpers.mockFeatureFiles(
+    [],
+    [],
+    [
+      TestHelpers.mockRunFeature({
+        id: "3",
+        name: "Downhill Run & Backcountry Route",
+        uses: [RunUse.Downhill, RunUse.Skitour],
+        geometry: {
+          type: "LineString",
+          coordinates: [[0, 0], [1, 0]]
+        }
+      }),
+      TestHelpers.mockRunFeature({
+        id: "4",
+        name: "Backcountry Route",
+        uses: [RunUse.Skitour],
+        difficulty: RunDifficulty.EASY,
+        geometry: {
+          type: "LineString",
+          coordinates: [[0, 0], [0, 1]]
+        }
+      })
+    ]
+  );
+
+  try {
+    await clusterSkiAreas(
+      "intermediate_ski_areas.geojson",
+      "output/ski_areas.geojson",
+      "intermediate_lifts.geojson",
+      "output/lifts.geojson",
+      "intermediate_runs.geojson",
+      "output/runs.geojson",
+      "http://localhost:" + container.getMappedPort(8529)
+    );
+
+    expect(TestHelpers.folderContents("output")).toMatchInlineSnapshot(`
+      Map {
+        "output/lifts.geojson" => Object {
+          "features": Array [],
+          "type": "FeatureCollection",
+        },
+        "output/runs.geojson" => Object {
+          "features": Array [
+            Object {
+              "geometry": Object {
+                "coordinates": Array [
+                  Array [
+                    0,
+                    0,
+                  ],
+                  Array [
+                    1,
+                    0,
+                  ],
+                ],
+                "type": "LineString",
+              },
+              "properties": Object {
+                "color": "",
+                "colorName": "green",
+                "description": null,
+                "difficulty": null,
+                "gladed": null,
+                "grooming": null,
+                "id": "3",
+                "lit": null,
+                "name": "Downhill Run & Backcountry Route",
+                "oneway": null,
+                "patrolled": null,
+                "ref": null,
+                "skiAreas": Array [
+                  "mock-UUID-0",
+                ],
+                "type": "run",
+                "uses": Array [
+                  "downhill",
+                  "skitour",
+                ],
+              },
+              "type": "Feature",
+            },
+            Object {
+              "geometry": Object {
+                "coordinates": Array [
+                  Array [
+                    0,
+                    0,
+                  ],
+                  Array [
+                    0,
+                    1,
+                  ],
+                ],
+                "type": "LineString",
+              },
+              "properties": Object {
+                "color": "",
+                "colorName": "green",
+                "description": null,
+                "difficulty": "easy",
+                "gladed": null,
+                "grooming": null,
+                "id": "4",
+                "lit": null,
+                "name": "Backcountry Route",
+                "oneway": null,
+                "patrolled": null,
+                "ref": null,
+                "skiAreas": Array [],
+                "type": "run",
+                "uses": Array [
+                  "skitour",
+                ],
+              },
+              "type": "Feature",
+            },
+          ],
+          "type": "FeatureCollection",
+        },
+        "output/ski_areas.geojson" => Object {
+          "features": Array [
+            Object {
+              "geometry": Object {
+                "coordinates": Array [
+                  0.5,
+                  0,
+                ],
+                "type": "Point",
+              },
+              "properties": Object {
+                "activities": Array [
+                  "downhill",
+                ],
+                "generated": true,
+                "id": "mock-UUID-0",
+                "name": null,
+                "runConvention": "europe",
+                "sources": Array [],
+                "statistics": Object {
+                  "lifts": Object {
+                    "byType": Object {},
+                  },
+                  "runs": Object {
+                    "byActivity": Object {
+                      "backcountry": Object {
+                        "byDifficulty": Object {
+                          "other": Object {
+                            "count": 1,
+                            "lengthInKm": 111.1950802335329,
+                          },
+                        },
+                      },
+                      "downhill": Object {
+                        "byDifficulty": Object {
+                          "other": Object {
+                            "count": 1,
+                            "lengthInKm": 111.1950802335329,
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+                "status": "operating",
+                "type": "skiArea",
+              },
+              "type": "Feature",
+            },
+          ],
+          "type": "FeatureCollection",
+        },
+      }
+    `);
+  } finally {
+    mockFS.restore();
+  }
+});
+
 async function sleep(ms: number) {
   return new Promise(resolve => {
     setTimeout(resolve, ms);

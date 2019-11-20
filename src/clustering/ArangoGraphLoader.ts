@@ -11,6 +11,7 @@ import {
 import StreamToPromise from "stream-to-promise";
 import { readGeoJSONFeatures } from "../io/GeoJSONReader";
 import { mapAsync } from "../transforms/StreamTransforms";
+import { skiAreaActivities } from "./ArangoGraphClusterer";
 import {
   DraftLift,
   DraftMapObject,
@@ -116,9 +117,9 @@ export default async function loadArangoGraph(
       _key: properties.id,
       type: MapObjectType.Run,
       geometry: feature.geometry,
-      runAssignableToSkiArea:
-        activities.includes(Activity.Downhill) ||
-        activities.includes(Activity.Nordic),
+      runAssignableToSkiArea: activities.some(activity =>
+        skiAreaActivities.has(activity)
+      ),
       skiAreas: [],
       activities: activities,
       difficulty: feature.properties.difficulty

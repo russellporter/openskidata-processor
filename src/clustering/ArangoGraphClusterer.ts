@@ -21,6 +21,8 @@ interface VisitContext {
 
 const maxDistanceInKilometers = 0.5;
 
+export const skiAreaActivities = new Set([Activity.Downhill, Activity.Nordic]);
+
 export default async function clusterArangoGraph(
   database: Database
 ): Promise<void> {
@@ -52,16 +54,15 @@ export default async function clusterArangoGraph(
       const newSkiAreaID = uuid();
       // Workaround for ArangoDB intersect bug
       await markSkiArea(newSkiAreaID, [unassignedRun]);
+      const activities = unassignedRun.activities.filter(activity =>
+        skiAreaActivities.has(activity)
+      );
       const memberObjects = await visitObject(
-        { id: newSkiAreaID, activities: unassignedRun.activities },
+        { id: newSkiAreaID, activities: activities },
         unassignedRun
       );
 
-      await createGeneratedSkiArea(
-        newSkiAreaID,
-        unassignedRun.activities,
-        memberObjects
-      );
+      await createGeneratedSkiArea(newSkiAreaID, activities, memberObjects);
     } catch (exception) {
       console.error("Processing unassigned run failed.", exception);
     }
