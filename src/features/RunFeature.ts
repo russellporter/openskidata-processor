@@ -1,4 +1,5 @@
 import {
+  ColorName,
   RunDifficulty,
   RunGeometry,
   RunGrooming,
@@ -58,6 +59,7 @@ export type MapboxGLRunProperties = {
   lit: boolean | null;
   gladed: boolean | null;
   color: string;
+  colorName: ColorName | null;
   grooming: RunGrooming | null;
 };
 

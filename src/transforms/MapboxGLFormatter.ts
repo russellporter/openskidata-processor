@@ -46,6 +46,7 @@ export function formatter(
       lit: properties.lit,
       gladed: properties.gladed,
       color: properties.color,
+      colorName: properties.colorName,
       grooming: properties.grooming
     };
 

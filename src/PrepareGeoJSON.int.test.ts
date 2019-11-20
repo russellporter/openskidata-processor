@@ -204,6 +204,7 @@ it("produces output for simple input", async () => {
             },
             "properties": Object {
               "color": "hsl(208, 100%, 33%)",
+              "colorName": "blue",
               "difficulty": "easy",
               "gladed": null,
               "grooming": null,
