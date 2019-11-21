@@ -1,5 +1,6 @@
 import turfLength from "@turf/length";
 import { LiftStatistics, RunStatistics, Statistics } from "openskidata-format";
+import { skiAreaActivities } from "../clustering/ArangoGraphClusterer";
 import {
   LiftObject,
   MapObject,
@@ -31,7 +32,9 @@ function runStatistics(runs: RunObject[]): RunStatistics {
     .map(run => {
       return {
         difficulty: run.difficulty,
-        activities: run.activities,
+        activities: run.activities.filter(activity =>
+          skiAreaActivities.has(activity)
+        ),
         distance: turfLength(run.geometry)
       };
     })

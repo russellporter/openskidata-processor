@@ -932,14 +932,6 @@ it("generates a downhill ski area but does not include backcountry runs when clu
                   },
                   "runs": Object {
                     "byActivity": Object {
-                      "backcountry": Object {
-                        "byDifficulty": Object {
-                          "other": Object {
-                            "count": 1,
-                            "lengthInKm": 111.1950802335329,
-                          },
-                        },
-                      },
                       "downhill": Object {
                         "byDifficulty": Object {
                           "other": Object {
