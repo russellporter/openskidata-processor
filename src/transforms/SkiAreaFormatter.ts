@@ -18,7 +18,7 @@ export function formatSkiArea(feature: InputSkiAreaFeature): SkiAreaFeature {
   const activities = inputProperties.activities;
   const properties: Omit<SkiAreaProperties, "id"> = {
     type: FeatureType.SkiArea,
-    name: getName(inputProperties),
+    name: inputProperties.name || null,
     sources: getSources(inputProperties),
     activities: activities,
     generated: false,
@@ -36,12 +36,4 @@ function getSources(properties: InputSkiAreaProperties) {
       id: properties.id
     }
   ];
-}
-
-function getName(properties: InputSkiAreaProperties): string | null {
-  const name = properties.name;
-  if (name === undefined) {
-    return null;
-  }
-  return name.length > 20 ? name.split("(")[0].trim() : name;
 }

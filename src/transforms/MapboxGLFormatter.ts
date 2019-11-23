@@ -91,7 +91,7 @@ export function formatter(
     const mapboxGLProperties: MapboxGLSkiAreaProperties = {
       // TODO: Find a better approach to multi-use runs
       id: properties.id,
-      name: properties.name,
+      name: shortenedName(properties.name),
       status: properties.status
     };
 
@@ -109,4 +109,8 @@ export function formatter(
       properties: mapboxGLProperties
     };
   }
+}
+
+function shortenedName(name: string | null): string | null {
+  return name && name.length > 20 ? name.split("(")[0].trim() : name;
 }

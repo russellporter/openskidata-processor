@@ -323,3 +323,100 @@ it("produces output for simple input", async () => {
     }
   `);
 });
+
+it("shortens ski area names for Mapbox GL output", async () => {
+  TestHelpers.mockOSMFiles(
+    [
+      {
+        type: "Feature",
+        properties: {
+          id: "13666",
+          name:
+            "Ski Welt (Wilder Kaiser – Gosau, Scheffau, Ellmau - Going, Söll, Brixen, Westendorf, Hopfgarten - Itter - Kelchsau)",
+          operating_status: "operating",
+          activities: [Activity.Downhill]
+        },
+        geometry: {
+          type: "Point",
+          coordinates: [11.122066084534, 47.557111836837]
+        }
+      }
+    ],
+    [],
+    []
+  );
+
+  await prepare(input, intermediate, output, false);
+
+  expect(TestHelpers.folderContents("output")).toMatchInlineSnapshot(`
+    Map {
+      "output/lifts.geojson" => Object {
+        "features": Array [],
+        "type": "FeatureCollection",
+      },
+      "output/mapboxgl_lifts.geojson" => Object {
+        "features": Array [],
+        "type": "FeatureCollection",
+      },
+      "output/mapboxgl_runs.geojson" => Object {
+        "features": Array [],
+        "type": "FeatureCollection",
+      },
+      "output/mapboxgl_ski_areas.geojson" => Object {
+        "features": Array [
+          Object {
+            "geometry": Object {
+              "coordinates": Array [
+                11.122066084534,
+                47.557111836837,
+              ],
+              "type": "Point",
+            },
+            "properties": Object {
+              "has_downhill": true,
+              "id": "3b0290b969049e0b4193357ebcdcffc6ec21036a",
+              "name": "Ski Welt",
+            },
+            "type": "Feature",
+          },
+        ],
+        "type": "FeatureCollection",
+      },
+      "output/runs.geojson" => Object {
+        "features": Array [],
+        "type": "FeatureCollection",
+      },
+      "output/ski_areas.geojson" => Object {
+        "features": Array [
+          Object {
+            "geometry": Object {
+              "coordinates": Array [
+                11.122066084534,
+                47.557111836837,
+              ],
+              "type": "Point",
+            },
+            "properties": Object {
+              "activities": Array [
+                "downhill",
+              ],
+              "generated": false,
+              "id": "3b0290b969049e0b4193357ebcdcffc6ec21036a",
+              "name": "Ski Welt (Wilder Kaiser – Gosau, Scheffau, Ellmau - Going, Söll, Brixen, Westendorf, Hopfgarten - Itter - Kelchsau)",
+              "runConvention": "europe",
+              "sources": Array [
+                Object {
+                  "id": "13666",
+                  "type": "skimap.org",
+                },
+              ],
+              "type": "skiArea",
+            },
+            "type": "Feature",
+          },
+        ],
+        "type": "FeatureCollection",
+      },
+    }
+  `);
+});
