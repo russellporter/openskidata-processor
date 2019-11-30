@@ -1,5 +1,6 @@
 import mockFS from "mock-fs";
 import { Activity } from "openskidata-format";
+import { Config } from "./Config";
 import {
   GeoJSONInputPaths,
   GeoJSONIntermediatePaths,
@@ -11,6 +12,10 @@ import * as TestHelpers from "./TestHelpers";
 const input = new GeoJSONInputPaths(".");
 const intermediate = new GeoJSONIntermediatePaths(".");
 const output = new GeoJSONOutputPaths("output");
+const config: Config = {
+  arangoDBURLForClustering: null,
+  elevationServerURL: null
+};
 
 afterEach(() => {
   mockFS.restore();
@@ -19,7 +24,7 @@ afterEach(() => {
 it("produces empty output for empty input", async () => {
   TestHelpers.mockOSMFiles([], [], []);
 
-  await prepare(input, intermediate, output, false);
+  await prepare(input, intermediate, output, config);
 
   expect(TestHelpers.folderContents("output")).toMatchInlineSnapshot(`
     Map {
@@ -108,7 +113,7 @@ it("produces output for simple input", async () => {
     ]
   );
 
-  await prepare(input, intermediate, output, false);
+  await prepare(input, intermediate, output, config);
 
   expect(TestHelpers.folderContents("output")).toMatchInlineSnapshot(`
     Map {
@@ -346,7 +351,7 @@ it("shortens ski area names for Mapbox GL output", async () => {
     []
   );
 
-  await prepare(input, intermediate, output, false);
+  await prepare(input, intermediate, output, config);
 
   expect(TestHelpers.folderContents("output")).toMatchInlineSnapshot(`
     Map {

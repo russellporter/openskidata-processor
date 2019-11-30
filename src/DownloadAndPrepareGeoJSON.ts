@@ -1,3 +1,4 @@
+import { Config } from "./Config";
 import downloadAndConvertToGeoJSON from "./io/GeoJSONDownloader";
 import {
   GeoJSONIntermediatePaths,
@@ -7,14 +8,13 @@ import prepare from "./PrepareGeoJSON";
 
 export default async function downloadAndPrepare(
   outputFolder: string,
-  arangoDBURL: string
+  config: Config
 ) {
   const input = await downloadAndConvertToGeoJSON(outputFolder);
   await prepare(
     input,
     new GeoJSONIntermediatePaths(outputFolder),
     new GeoJSONOutputPaths(outputFolder),
-    undefined,
-    arangoDBURL
+    config
   );
 }

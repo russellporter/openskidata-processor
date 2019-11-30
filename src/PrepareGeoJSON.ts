@@ -1,6 +1,7 @@
 import { FeatureType } from "openskidata-format";
 import StreamToPromise from "stream-to-promise";
 import clusterSkiAreas from "./clustering/ClusterSkiAreas";
+import { Config } from "./Config";
 import {
   GeoJSONInputPaths,
   GeoJSONIntermediatePaths,
@@ -10,6 +11,7 @@ import {
 import { readGeoJSONFeatures } from "./io/GeoJSONReader";
 import { writeGeoJSONFeatures } from "./io/GeoJSONWriter";
 import { RunNormalizerAccumulator } from "./transforms/accumulator/RunNormalizerAccumulator";
+import addElevation from "./transforms/Elevation";
 import { formatLift } from "./transforms/LiftFormatter";
 import * as MapboxGLFormatter from "./transforms/MapboxGLFormatter";
 import { filterRun } from "./transforms/RunFilter";
@@ -19,15 +21,15 @@ import {
   accumulate,
   filter,
   flatMap,
-  map
+  map,
+  mapAsync
 } from "./transforms/StreamTransforms";
 
 export default async function prepare(
   inputPaths: GeoJSONInputPaths,
   intermediatePaths: GeoJSONIntermediatePaths,
   outputPaths: GeoJSONOutputPaths,
-  cluster: boolean = true,
-  arangoDBURL: string | undefined = undefined
+  config: Config
 ) {
   await Promise.all(
     [
@@ -35,25 +37,47 @@ export default async function prepare(
         .pipe(map(formatSkiArea))
         .pipe(
           writeGeoJSONFeatures(
-            cluster ? intermediatePaths.skiAreas : outputPaths.skiAreas
+            config.arangoDBURLForClustering
+              ? intermediatePaths.skiAreas
+              : outputPaths.skiAreas
           )
         ),
 
       readGeoJSONFeatures(inputPaths.runs)
         .pipe(filter(filterRun))
+        .pipe(
+          mapAsync(
+            config.elevationServerURL
+              ? addElevation(config.elevationServerURL)
+              : null,
+            10
+          )
+        )
         .pipe(map(formatRun))
         .pipe(accumulate(new RunNormalizerAccumulator()))
         .pipe(
           writeGeoJSONFeatures(
-            cluster ? intermediatePaths.runs : outputPaths.runs
+            config.arangoDBURLForClustering
+              ? intermediatePaths.runs
+              : outputPaths.runs
           )
         ),
 
       readGeoJSONFeatures(inputPaths.lifts)
         .pipe(flatMap(formatLift))
         .pipe(
+          mapAsync(
+            config.elevationServerURL
+              ? addElevation(config.elevationServerURL)
+              : null,
+            10
+          )
+        )
+        .pipe(
           writeGeoJSONFeatures(
-            cluster ? intermediatePaths.lifts : outputPaths.lifts
+            config.arangoDBURLForClustering
+              ? intermediatePaths.lifts
+              : outputPaths.lifts
           )
         )
     ].map(stream => {
@@ -61,7 +85,7 @@ export default async function prepare(
     })
   );
 
-  if (cluster) {
+  if (config.arangoDBURLForClustering) {
     await clusterSkiAreas(
       intermediatePaths.skiAreas,
       outputPaths.skiAreas,
@@ -69,7 +93,7 @@ export default async function prepare(
       outputPaths.lifts,
       intermediatePaths.runs,
       outputPaths.runs,
-      arangoDBURL
+      config.arangoDBURLForClustering
     );
   }
 

@@ -55,7 +55,7 @@ export default async function loadArangoGraph(
         } catch (e) {
           console.error("Failed loading feature " + JSON.stringify(feature), e);
         }
-      })
+      }, 10)
     );
   }
 

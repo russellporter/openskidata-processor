@@ -11,7 +11,7 @@ export default async function clusterSkiAreas(
   outputLiftsPath: string,
   runsPath: string,
   outputRunsPath: string,
-  arangoDBURL?: string
+  arangoDBURL: string
 ): Promise<void> {
   const client = new arangojs.Database(arangoDBURL);
 

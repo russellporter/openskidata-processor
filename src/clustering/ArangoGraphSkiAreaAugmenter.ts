@@ -18,7 +18,7 @@ export default async function augmentGeoJSONWithSkiAreas(
 
           feature.properties.skiAreas = skiAreas;
           return feature;
-        })
+        }, 10)
       )
       .pipe(writeGeoJSONFeatures(outputPath))
   );

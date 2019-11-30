@@ -1,3 +1,4 @@
+import transform from "parallel-transform";
 import { Duplex, PassThrough, Transform, Writable } from "stream";
 import Accumulator from "./accumulator/Accumulator";
 
@@ -10,18 +11,21 @@ export function map<X, Y>(mapper: (input: X) => Y): Transform {
   });
 }
 
-export function mapAsync<X, Y>(mapper: (input: X) => Promise<Y>): Transform {
-  return new Transform({
-    objectMode: true,
-    transform: (data: X, _, done) => {
-      mapper(data)
-        .then(value => {
-          done(null, value);
-        })
-        .catch(error => {
-          done(error);
-        });
-    }
+export function mapAsync<X, Y>(
+  mapper: ((input: X) => Promise<Y>) | null,
+  parallelism: number = 1
+): Transform {
+  if (!mapper) {
+    return passThrough();
+  }
+  return transform(parallelism, { objectMode: true }, (data, done) => {
+    mapper(data)
+      .then(value => {
+        done(null, value);
+      })
+      .catch(error => {
+        done(error);
+      });
   });
 }
 
@@ -31,26 +35,6 @@ export function get<X>(operation: (input: X) => void): Transform {
     transform: (data: X, _, done) => {
       operation(data);
       done(null, data);
-    }
-  });
-}
-
-export function getAsync<X>(
-  mapper: ((input: X) => Promise<void>) | null
-): Transform {
-  if (!mapper) {
-    return new PassThrough({ objectMode: true });
-  }
-  return new Transform({
-    objectMode: true,
-    transform: (data: X, _, done) => {
-      mapper(data)
-        .then(value => {
-          done(null, data);
-        })
-        .catch(error => {
-          done(error);
-        });
     }
   });
 }
@@ -108,4 +92,8 @@ export function accumulate<X, Y>(accumulator: Accumulator<X, Y>): Duplex {
   });
 
   return duplex;
+}
+
+export function passThrough(): Transform {
+  return new PassThrough({ objectMode: true });
 }
