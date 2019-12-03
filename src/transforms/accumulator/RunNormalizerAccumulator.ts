@@ -3,7 +3,7 @@ import { GeoJsonObject } from "geojson";
 import { RunFeature, RunGeometry, RunProperties } from "openskidata-format";
 import * as topojsonClient from "topojson-client";
 import * as topojsonServer from "topojson-server";
-import { InputRunFeature } from "../../features/RunFeature";
+import { InputRunGeometry } from "../../features/RunFeature";
 import buildFeature from "../FeatureBuilder";
 import combineRunSegments from "../normalization/CombineRunSegments";
 import {
@@ -13,14 +13,15 @@ import {
 import Accumulator from "./Accumulator";
 
 export class RunNormalizerAccumulator
-  implements Accumulator<InputRunFeature, RunFeature> {
-  private features: InputRunFeature[];
+  implements
+    Accumulator<GeoJSON.Feature<InputRunGeometry, RunProperties>, RunFeature> {
+  private features: GeoJSON.Feature<InputRunGeometry, RunProperties>[];
 
   constructor() {
     this.features = [];
   }
 
-  accumulate(input: InputRunFeature): void {
+  accumulate(input: GeoJSON.Feature<InputRunGeometry, RunProperties>): void {
     this.features.push(input);
   }
 
