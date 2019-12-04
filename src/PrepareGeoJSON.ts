@@ -45,6 +45,8 @@ export default async function prepare(
 
       readGeoJSONFeatures(inputPaths.runs)
         .pipe(filter(filterRun))
+        .pipe(map(formatRun))
+        .pipe(accumulate(new RunNormalizerAccumulator()))
         .pipe(
           mapAsync(
             config.elevationServerURL
@@ -53,8 +55,6 @@ export default async function prepare(
             10
           )
         )
-        .pipe(map(formatRun))
-        .pipe(accumulate(new RunNormalizerAccumulator()))
         .pipe(
           writeGeoJSONFeatures(
             config.arangoDBURLForClustering

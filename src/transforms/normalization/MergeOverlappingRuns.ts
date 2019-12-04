@@ -182,7 +182,8 @@ function propertiesForArcData(data: ArcData): RunProperties {
     grooming: allProps.map(p => p.grooming).reduce(groomingReducer),
     color: difficultyAndColor.color,
     colorName: difficultyAndColor.colorName,
-    skiAreas: Array.from(new Set(allProps.flatMap(p => p.skiAreas)))
+    skiAreas: Array.from(new Set(allProps.flatMap(p => p.skiAreas))),
+    elevationProfile: allProps[0].elevationProfile
   };
 }
 

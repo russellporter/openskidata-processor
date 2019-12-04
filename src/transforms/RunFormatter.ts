@@ -7,21 +7,18 @@ import {
   RunConvention,
   RunDifficulty,
   RunGrooming,
-  RunProperties,
   RunUse
 } from "openskidata-format";
-import {
-  InputRunFeature,
-  InputRunGeometry,
-  InputRunProperties
-} from "../features/RunFeature";
+import { InputRunFeature, InputRunProperties } from "../features/RunFeature";
 import buildFeature from "./FeatureBuilder";
+import {
+  FormattedInputRunFeature,
+  FormattedInputRunProperties
+} from "./FormattedInputRunFeature";
 import { Omit } from "./Omit";
 import { mapOSMBoolean, mapOSMString } from "./OSMTransforms";
 
-export function formatRun(
-  feature: InputRunFeature
-): GeoJSON.Feature<InputRunGeometry, RunProperties> {
+export function formatRun(feature: InputRunFeature): FormattedInputRunFeature {
   const inputProperties = feature.properties || {};
 
   const pointGeometry = turf.pointOnFeature(feature).geometry;
@@ -31,7 +28,7 @@ export function formatRun(
   const difficulty = getDifficulty(inputProperties);
   const color = getRunColor(getRunConvention(coords), difficulty);
 
-  const properties: Omit<RunProperties, "id"> = {
+  const properties: Omit<FormattedInputRunProperties, "id"> = {
     type: FeatureType.Run,
     uses: uses,
     name: getName(inputProperties),

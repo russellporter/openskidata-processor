@@ -1,42 +1,88 @@
+import turfLineChunk from "@turf/line-chunk";
+import { FeatureType, LiftFeature, RunFeature } from "openskidata-format";
 import request from "request";
+
+const elevationProfileResolution = 25;
 
 export default function addElevation(
   elevationServerURL: string
-): (feature: GeoJSON.Feature) => Promise<GeoJSON.Feature> {
-  return (feature: GeoJSON.Feature) =>
-    new Promise(resolve => {
-      const coordinates: number[][] = getCoordinates(feature);
-      request(
-        elevationServerURL,
-        {
-          method: "POST",
-          json: coordinates,
-          timeout: 5 * 60 * 1000
-        },
-        (error, response) => {
-          if (error) {
-            console.log(
-              "Failed with error: " + error + " coordinates: " + coordinates
-            );
-          } else if (response.statusCode < 200 || response.statusCode >= 300) {
-            console.log("Failed status code: " + response.statusCode);
-          } else {
-            const elevations = response.toJSON().body;
-            addElevations(feature, elevations);
-          }
-          resolve(feature);
-        }
-      );
-    });
+): (feature: RunFeature | LiftFeature) => Promise<RunFeature | LiftFeature> {
+  return async (feature: RunFeature | LiftFeature) => {
+    const coordinates: number[][] = getCoordinates(feature);
+    const elevationProfileCoordinates: number[][] = getCoordinatesForElevationProfile(
+      feature
+    );
+
+    const elevations = await loadElevations(
+      Array.from(coordinates).concat(elevationProfileCoordinates),
+      elevationServerURL
+    );
+
+    const coordinateElevations = elevations.slice(0, coordinates.length);
+    const profileElevations = elevations.slice(
+      coordinates.length,
+      elevationProfileCoordinates.length
+    );
+
+    if (feature.properties.type === FeatureType.Run) {
+      feature.properties.elevationProfile =
+        profileElevations.length > 0
+          ? {
+              heights: profileElevations,
+              resolution: elevationProfileResolution
+            }
+          : null;
+    }
+
+    addElevations(feature, coordinateElevations);
+    return feature;
+  };
 }
 
-function getCoordinates(feature: GeoJSON.Feature) {
+function loadElevations(
+  coordinates: number[][],
+  elevationServerURL: string
+): Promise<number[]> {
+  return new Promise((resolve, reject) => {
+    request(
+      elevationServerURL,
+      {
+        method: "POST",
+        json: coordinates,
+        timeout: 5 * 60 * 1000
+      },
+      (error, response) => {
+        if (error) {
+          reject(
+            "Failed with error: " + error + " coordinates: " + coordinates
+          );
+        } else if (response.statusCode < 200 || response.statusCode >= 300) {
+          reject("Failed status code: " + response.statusCode);
+        } else {
+          const elevations = response.toJSON().body;
+
+          if (coordinates.length !== elevations.length) {
+            reject(
+              "Number of coordinates (" +
+                coordinates.length +
+                ") is different than number of elevations (" +
+                elevations.length +
+                ")"
+            );
+          }
+          resolve(elevations);
+        }
+      }
+    );
+  });
+}
+
+function getCoordinates(feature: RunFeature | LiftFeature) {
   switch (feature.geometry.type) {
     case "Point":
       return [feature.geometry.coordinates];
     case "LineString":
       return feature.geometry.coordinates;
-    case "MultiLineString":
     case "Polygon":
       return feature.geometry.coordinates.flat();
     case "MultiPolygon":
@@ -46,7 +92,46 @@ function getCoordinates(feature: GeoJSON.Feature) {
   }
 }
 
-function addElevations(feature: GeoJSON.Feature, elevations: number[]) {
+function getCoordinatesForElevationProfile(feature: RunFeature | LiftFeature) {
+  if (feature.properties.type === FeatureType.Lift) {
+    return [];
+  }
+
+  if (feature.geometry.type !== "LineString") {
+    return [];
+  }
+
+  const subfeatures = turfLineChunk(
+    feature.geometry,
+    elevationProfileResolution,
+    { units: "meters" }
+  ).features;
+  const points: [number, number][] = [];
+  for (let subline of subfeatures) {
+    const geometry = subline.geometry;
+    if (geometry) {
+      const point = geometry.coordinates[0];
+      points.push([point[0], point[1]]);
+    }
+  }
+  if (subfeatures.length > 0) {
+    const geometry = subfeatures[subfeatures.length - 1].geometry;
+    if (geometry) {
+      const coords = geometry.coordinates;
+      if (coords.length > 1) {
+        const point = coords[coords.length - 1];
+        points.push([point[0], point[1]]);
+      }
+    }
+  }
+
+  return points;
+}
+
+function addElevations(
+  feature: RunFeature | LiftFeature,
+  elevations: number[]
+) {
   let i = 0;
   switch (feature.geometry.type) {
     case "Point":

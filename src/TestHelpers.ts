@@ -22,7 +22,7 @@ import { join } from "path";
 import { SkiAreaGeometry } from "./clustering/MapObject";
 import { InputRunGeometry } from "./features/RunFeature";
 
-export interface FolderContents extends Map<string, string | FolderContents> {}
+export interface FolderContents extends Map<string, any | FolderContents> {}
 
 export function mockOSMFiles(
   skiAreas: GeoJSON.Feature[],
@@ -80,7 +80,7 @@ export function folderContents(folder: string): FolderContents {
       const stat = fs.lstatSync(path);
       if (stat.isFile()) {
         const map = new Map();
-        map.set(path, JSON.parse(fs.readFileSync(path).toString()));
+        map.set(path, fileContents(path));
         return map as FolderContents;
       } else if (stat.isDirectory()) {
         return folderContents(path);
@@ -90,6 +90,10 @@ export function folderContents(folder: string): FolderContents {
     .reduce((previous, current) => {
       return new Map([...previous, ...current]);
     }, new Map());
+}
+
+export function fileContents(path: string): any {
+  return JSON.parse(fs.readFileSync(path).toString());
 }
 
 export function mockRunFeature<G extends InputRunGeometry>(options: {
@@ -117,7 +121,8 @@ export function mockRunFeature<G extends InputRunGeometry>(options: {
       grooming: null,
       color: "",
       colorName: ColorName.GREEN,
-      skiAreas: []
+      skiAreas: [],
+      elevationProfile: null
     },
     geometry: options.geometry
   };
