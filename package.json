@@ -19,7 +19,7 @@
     "topojson-client": "^3.0.0",
     "topojson-server": "^3.0.0",
     "ts-node": "^8.0.3",
-    "typescript": "^3.3.3333",
+    "typescript": "^3.7.3",
     "uuid": "^3.3.2"
   },
   "devDependencies": {

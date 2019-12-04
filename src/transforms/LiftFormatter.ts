@@ -142,7 +142,7 @@ function getLiftTypeAndStatus(
   }
 
   return [
-    Object.values(LiftType).includes(aerialway)
+    aerialway && Object.values(LiftType).includes(aerialway as LiftType)
       ? (aerialway as LiftType)
       : null,
     status
