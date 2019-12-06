@@ -14,6 +14,10 @@ describe("SkiAreaStatistics", () => {
         type: "LineString",
         coordinates: [[0, 0], [0, 1]]
       },
+      geometryWithElevations: {
+        type: "LineString",
+        coordinates: [[0, 0], [0, 1]]
+      },
       skiAreas: [],
       runAssignableToSkiArea: true
     };
@@ -21,24 +25,24 @@ describe("SkiAreaStatistics", () => {
     const statistics = skiAreaStatistics([run]);
 
     expect(statistics).toMatchInlineSnapshot(`
-                  Object {
-                    "lifts": Object {
-                      "byType": Object {},
-                    },
-                    "runs": Object {
-                      "byActivity": Object {
-                        "downhill": Object {
-                          "byDifficulty": Object {
-                            "easy": Object {
-                              "count": 1,
-                              "lengthInKm": 111.1950802335329,
-                            },
-                          },
-                        },
-                      },
-                    },
-                  }
-            `);
+      Object {
+        "lifts": Object {
+          "byType": Object {},
+        },
+        "runs": Object {
+          "byActivity": Object {
+            "downhill": Object {
+              "byDifficulty": Object {
+                "easy": Object {
+                  "count": 1,
+                  "lengthInKm": 111.1950802335329,
+                },
+              },
+            },
+          },
+        },
+      }
+    `);
   });
 
   it("should count a lift", () => {
@@ -52,26 +56,30 @@ describe("SkiAreaStatistics", () => {
         type: "LineString",
         coordinates: [[0, 0], [0, 1]]
       },
+      geometryWithElevations: {
+        type: "LineString",
+        coordinates: [[0, 0], [0, 1]]
+      },
       skiAreas: []
     };
 
     const statistics = skiAreaStatistics([lift]);
 
     expect(statistics).toMatchInlineSnapshot(`
-            Object {
-              "lifts": Object {
-                "byType": Object {
-                  "gondola": Object {
-                    "count": 1,
-                    "lengthInKm": 111.1950802335329,
-                  },
-                },
-              },
-              "runs": Object {
-                "byActivity": Object {},
-              },
-            }
-        `);
+      Object {
+        "lifts": Object {
+          "byType": Object {
+            "gondola": Object {
+              "count": 1,
+              "lengthInKm": 111.1950802335329,
+            },
+          },
+        },
+        "runs": Object {
+          "byActivity": Object {},
+        },
+      }
+    `);
   });
 
   it("should not count run polygons in length calculation", () => {
@@ -82,6 +90,10 @@ describe("SkiAreaStatistics", () => {
       activities: [Activity.Downhill],
       difficulty: RunDifficulty.EASY,
       geometry: {
+        type: "Polygon",
+        coordinates: [[[0, 0], [0, 1], [1, 0], [0, 0]]]
+      },
+      geometryWithElevations: {
         type: "Polygon",
         coordinates: [[[0, 0], [0, 1], [1, 0], [0, 0]]]
       },
@@ -112,6 +124,10 @@ it("should not count backcountry activity in mixed use runs", () => {
     activities: [Activity.Downhill, Activity.Backcountry],
     difficulty: RunDifficulty.EASY,
     geometry: {
+      type: "LineString",
+      coordinates: [[0, 0], [0, 1]]
+    },
+    geometryWithElevations: {
       type: "LineString",
       coordinates: [[0, 0], [0, 1]]
     },

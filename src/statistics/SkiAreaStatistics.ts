@@ -1,5 +1,10 @@
 import turfLength from "@turf/length";
-import { LiftStatistics, RunStatistics, Statistics } from "openskidata-format";
+import {
+  LiftStatistics,
+  MapObjectStatistics,
+  RunStatistics,
+  SkiAreaStatistics
+} from "openskidata-format";
 import { skiAreaActivities } from "../clustering/ArangoGraphClusterer";
 import {
   LiftObject,
@@ -16,10 +21,61 @@ function isLift(object: MapObject): object is LiftObject {
   return object.type === MapObjectType.Lift;
 }
 
-export function skiAreaStatistics(mapObjects: MapObject[]): Statistics {
+export function skiAreaStatistics(mapObjects: MapObject[]): SkiAreaStatistics {
+  const runStats = runStatistics(mapObjects.filter(isRun));
+  const liftStats = liftStatistics(mapObjects.filter(isLift));
+  const statistics: SkiAreaStatistics = {
+    runs: runStats,
+    lifts: liftStats
+  };
+  const max = maxElevation(runStats.maxElevation, liftStats.maxElevation);
+  if (max) {
+    statistics.maxElevation = max;
+  }
+  const min = minElevation(runStats.minElevation, liftStats.minElevation);
+  if (min) {
+    statistics.minElevation = min;
+  }
+
+  return statistics;
+}
+
+function maxElevation(runMax: number | undefined, liftMax: number | undefined) {
+  if (!runMax) {
+    return liftMax;
+  } else if (!liftMax) {
+    return runMax;
+  } else {
+    // Take the highest "lift serviced" elevation that also has runs.
+    return Math.min(runMax, liftMax);
+  }
+}
+
+function minElevation(runMin: number | undefined, liftMin: number | undefined) {
+  if (!runMin) {
+    return liftMin;
+  } else if (!liftMin) {
+    return runMin;
+  } else {
+    // Take the lowest "lift serviced" elevation that also has runs.
+    return Math.max(runMin, liftMin);
+  }
+}
+
+function elevationStatistics(geometry: GeoJSON.Geometry) {
+  if (geometry.type !== "LineString" || geometry.coordinates[0].length < 3) {
+    return {};
+  }
+
+  const coordinates = geometry.coordinates;
   return {
-    runs: runStatistics(mapObjects.filter(isRun)),
-    lifts: liftStatistics(mapObjects.filter(isLift))
+    elevationChange: coordinates[coordinates.length - 1][2] - coordinates[0][2],
+    maxElevation: coordinates.reduce((previous, coordinate) => {
+      return Math.max(coordinate[2], previous);
+    }, -Number.MAX_VALUE),
+    minElevation: coordinates.reduce((previous, coordinate) => {
+      return Math.min(coordinate[2], previous);
+    }, Number.MAX_VALUE)
   };
 }
 
@@ -31,11 +87,12 @@ function runStatistics(runs: RunObject[]): RunStatistics {
     })
     .map(run => {
       return {
+        ...elevationStatistics(run.geometryWithElevations),
         difficulty: run.difficulty,
         activities: run.activities.filter(activity =>
           skiAreaActivities.has(activity)
         ),
-        distance: turfLength(run.geometry)
+        distance: turfLength(run.geometryWithElevations)
       };
     })
     .reduce(
@@ -53,8 +110,8 @@ function runStatistics(runs: RunObject[]): RunStatistics {
           };
           activityStatistics.byDifficulty[difficulty] = runStats;
 
-          runStats.count++;
-          runStats.lengthInKm += run.distance;
+          augmentRunOrLiftStatistics(runStats, run);
+          augmentElevationStatistics(statistics, run);
         });
 
         return statistics;
@@ -68,7 +125,11 @@ function runStatistics(runs: RunObject[]): RunStatistics {
 function liftStatistics(lifts: LiftObject[]): LiftStatistics {
   return lifts
     .map(lift => {
-      return { distance: turfLength(lift.geometry), type: lift.liftType };
+      return {
+        ...elevationStatistics(lift.geometryWithElevations),
+        distance: turfLength(lift.geometryWithElevations),
+        type: lift.liftType
+      };
     })
     .reduce(
       (statistics: LiftStatistics, lift) => {
@@ -78,10 +139,54 @@ function liftStatistics(lifts: LiftObject[]): LiftStatistics {
           lengthInKm: 0
         };
         statistics.byType[liftType] = liftTypeStatistics;
-        liftTypeStatistics.count += 1;
-        liftTypeStatistics.lengthInKm += lift.distance;
+
+        augmentRunOrLiftStatistics(liftTypeStatistics, lift);
+        augmentElevationStatistics(statistics, lift);
         return statistics;
       },
       { byType: {} } as LiftStatistics
     );
+}
+
+function augmentRunOrLiftStatistics(
+  statistics: MapObjectStatistics,
+  object: ObjectStatistics
+) {
+  statistics.count++;
+  statistics.lengthInKm += object.distance;
+  augmentElevationStatistics(statistics, object);
+  if (object.elevationChange) {
+    if (!statistics.combinedElevationChange) {
+      statistics.combinedElevationChange = 0;
+    }
+    statistics.combinedElevationChange += Math.abs(object.elevationChange);
+  }
+}
+
+function augmentElevationStatistics(
+  statistics: { minElevation?: number; maxElevation?: number },
+  object: ObjectStatistics
+) {
+  if (
+    object.minElevation &&
+    (!statistics.minElevation || object.minElevation < statistics.minElevation)
+  ) {
+    statistics.minElevation = object.minElevation;
+  }
+  if (
+    object.maxElevation &&
+    (!statistics.maxElevation || object.maxElevation > statistics.maxElevation)
+  ) {
+    statistics.maxElevation = object.maxElevation;
+  }
+}
+
+interface ObjectElevationStatistics {
+  elevationChange?: number;
+  maxElevation?: number;
+  minElevation?: number;
+}
+
+interface ObjectStatistics extends ObjectElevationStatistics {
+  distance: number;
 }

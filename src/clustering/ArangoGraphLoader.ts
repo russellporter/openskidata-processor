@@ -2,7 +2,9 @@ import { Database } from "arangojs";
 import {
   Activity,
   LiftFeature,
+  LiftGeometry,
   RunFeature,
+  RunGeometry,
   RunGrooming,
   RunUse,
   SkiAreaFeature,
@@ -82,7 +84,8 @@ export default async function loadArangoGraph(
     return {
       _key: properties.id,
       type: MapObjectType.Lift,
-      geometry: feature.geometry,
+      geometry: geometryWithoutElevations(feature.geometry) as LiftGeometry,
+      geometryWithElevations: feature.geometry,
       activities:
         properties["status"] === Status.Operating ? [Activity.Downhill] : [],
       skiAreas: [],
@@ -116,7 +119,8 @@ export default async function loadArangoGraph(
     return {
       _key: properties.id,
       type: MapObjectType.Run,
-      geometry: feature.geometry,
+      geometry: geometryWithoutElevations(feature.geometry) as RunGeometry,
+      geometryWithElevations: feature.geometry,
       runAssignableToSkiArea: activities.some(activity =>
         skiAreaActivities.has(activity)
       ),
@@ -124,5 +128,29 @@ export default async function loadArangoGraph(
       activities: activities,
       difficulty: feature.properties.difficulty
     };
+  }
+}
+
+function geometryWithoutElevations(
+  geometry: GeoJSON.Geometry
+): GeoJSON.Geometry {
+  switch (geometry.type) {
+    case "LineString":
+      return {
+        type: "LineString",
+        coordinates: geometry.coordinates.map(coordinate => [
+          coordinate[0],
+          coordinate[1]
+        ])
+      };
+    case "Polygon":
+      return {
+        type: "Polygon",
+        coordinates: geometry.coordinates.map(coordinates =>
+          coordinates.map(coordinate => [coordinate[0], coordinate[1]])
+        )
+      };
+    default:
+      throw "Unsupported geometry type " + geometry.type;
   }
 }
