@@ -16,22 +16,38 @@ const config: Config = {
   arangoDBURLForClustering: null,
   elevationServerURL: "http://elevation.example.com"
 };
+// Work around https://github.com/tschaub/mock-fs/issues/234
+let logs = [];
+let logMock;
 
-const mockElevationServer = nock("http://elevation.example.com")
-  .post("/")
-  .reply(200, (uri, requestBody) => {
-    const coordinates = requestBody as number[][];
-    return coordinates.map((_, index) => index);
+beforeEach(() => {
+  logMock = jest.spyOn(console, "log").mockImplementation((...args) => {
+    logs.push(args);
   });
-
-mockElevationServer.persist();
-
-afterEach(() => {
-  mockElevationServer.persist(false);
-  mockFS.restore();
 });
 
+afterEach(() => {
+  logMock.mockRestore();
+  mockFS.restore();
+  logs.map(el => console.log(...el));
+  logs = [];
+});
+
+function mockElevationServer(code) {
+  nock("http://elevation.example.com")
+    .post("/")
+    .reply(code, (_, requestBody) => {
+      if (code === 200) {
+        const coordinates = requestBody as number[][];
+        return coordinates.map((_, index) => index);
+      } else {
+        return "";
+      }
+    });
+}
+
 it("adds elevations to lift geometry", async () => {
+  mockElevationServer(200);
   TestHelpers.mockOSMFiles(
     [],
     [
@@ -99,6 +115,8 @@ it("adds elevations to lift geometry", async () => {
 });
 
 it("adds elevations to run geometry & elevation profile", async () => {
+  mockElevationServer(200);
+
   TestHelpers.mockOSMFiles(
     [],
     [],
@@ -185,6 +203,72 @@ it("adds elevations to run geometry & elevation profile", async () => {
             "uses": Array [
               "downhill",
             ],
+          },
+          "type": "Feature",
+        },
+      ],
+      "type": "FeatureCollection",
+    }
+  `);
+});
+
+it("completes without adding elevations when elevation server fails", async () => {
+  mockElevationServer(500);
+  TestHelpers.mockOSMFiles(
+    [],
+    [
+      {
+        type: "Feature",
+        id: "way/227407273",
+        properties: {
+          aerialway: "t-bar",
+          name: "Skilift Oberau",
+          id: "way/227407273"
+        },
+        geometry: {
+          type: "LineString",
+          coordinates: [[11.1223444, 47.5572422], [11.1164297, 47.5581563]]
+        }
+      }
+    ],
+    []
+  );
+
+  await prepare(input, intermediate, output, config);
+
+  expect(TestHelpers.fileContents("output/lifts.geojson"))
+    .toMatchInlineSnapshot(`
+    Object {
+      "features": Array [
+        Object {
+          "geometry": Object {
+            "coordinates": Array [
+              Array [
+                11.1223444,
+                47.5572422,
+              ],
+              Array [
+                11.1164297,
+                47.55815630000001,
+              ],
+            ],
+            "type": "LineString",
+          },
+          "properties": Object {
+            "bubble": null,
+            "capacity": null,
+            "color": "hsl(0, 82%, 42%)",
+            "duration": null,
+            "heating": null,
+            "id": "b4b80de7783accc7d23964b0b305b4da9ff0cf9a",
+            "liftType": "t-bar",
+            "name": "Skilift Oberau",
+            "occupancy": null,
+            "oneway": null,
+            "ref": null,
+            "skiAreas": Array [],
+            "status": "operating",
+            "type": "lift",
           },
           "type": "Feature",
         },

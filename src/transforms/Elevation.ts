@@ -13,10 +13,16 @@ export default function addElevation(
       feature
     );
 
-    const elevations = await loadElevations(
-      Array.from(coordinates).concat(elevationProfileCoordinates),
-      elevationServerURL
-    );
+    let elevations: number[];
+    try {
+      elevations = await loadElevations(
+        Array.from(coordinates).concat(elevationProfileCoordinates),
+        elevationServerURL
+      );
+    } catch (error) {
+      console.log(error);
+      return feature;
+    }
 
     const coordinateElevations = elevations.slice(0, coordinates.length);
     const profileElevations = elevations.slice(
