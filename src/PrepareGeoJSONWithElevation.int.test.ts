@@ -17,8 +17,8 @@ const config: Config = {
   elevationServerURL: "http://elevation.example.com"
 };
 // Work around https://github.com/tschaub/mock-fs/issues/234
-let logs = [];
-let logMock;
+let logs: any[] = [];
+let logMock: jest.SpyInstance;
 
 beforeEach(() => {
   logMock = jest.spyOn(console, "log").mockImplementation((...args) => {
@@ -33,7 +33,7 @@ afterEach(() => {
   logs = [];
 });
 
-function mockElevationServer(code) {
+function mockElevationServer(code: number) {
   nock("http://elevation.example.com")
     .post("/")
     .reply(code, (_, requestBody) => {
