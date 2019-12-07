@@ -11,7 +11,7 @@ if [ -z "$CLUSTERING_ARANGODB_URL" ]; then
     CLUSTERING_ARANGODB_URL="http://$(docker-compose port arangodb 8529)"
 fi
 
-npm run download-and-prepare $ARANGODB_URL
+npm run download-and-prepare
 
 docker-compose run tippecanoe \
   tippecanoe -o /data/planet_lifts.mbtiles \
