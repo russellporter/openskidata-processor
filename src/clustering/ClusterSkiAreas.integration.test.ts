@@ -13,12 +13,9 @@ import * as TestHelpers from "../TestHelpers";
 import clusterSkiAreas from "./ClusterSkiAreas";
 
 let mockUuidCount = 0;
-jest.mock(
-  "uuid/v4",
-  (): (() => string) => {
-    return () => "mock-UUID-" + mockUuidCount++;
-  }
-);
+jest.mock("uuid/v4", (): (() => string) => {
+  return () => "mock-UUID-" + mockUuidCount++;
+});
 
 // Increase timeout to give time to set up the container
 jest.setTimeout(60 * 1000);
@@ -609,7 +606,10 @@ it("clusters ski areas", async () => {
         status: Status.Operating,
         geometry: {
           type: "LineString",
-          coordinates: [[11.1223444, 47.5572422], [11.1164297, 47.5581563]]
+          coordinates: [
+            [11.1223444, 47.5572422],
+            [11.1164297, 47.5581563]
+          ]
         }
       })
     ],
@@ -802,7 +802,10 @@ it("generates a downhill ski area but does not include backcountry runs when clu
         uses: [RunUse.Downhill, RunUse.Skitour],
         geometry: {
           type: "LineString",
-          coordinates: [[0, 0], [1, 0]]
+          coordinates: [
+            [0, 0],
+            [1, 0]
+          ]
         }
       }),
       TestHelpers.mockRunFeature({
@@ -812,7 +815,10 @@ it("generates a downhill ski area but does not include backcountry runs when clu
         difficulty: RunDifficulty.EASY,
         geometry: {
           type: "LineString",
-          coordinates: [[0, 0], [0, 1]]
+          coordinates: [
+            [0, 0],
+            [0, 1]
+          ]
         }
       })
     ]
@@ -977,7 +983,10 @@ it("generates elevation statistics for run", async () => {
         uses: [RunUse.Downhill],
         geometry: {
           type: "LineString",
-          coordinates: [[0, 0, 100], [1, 0, 90]]
+          coordinates: [
+            [0, 0, 100],
+            [1, 0, 90]
+          ]
         }
       })
     ]
@@ -1155,6 +1164,140 @@ it("generates elevation statistics for run & lift based on lift served skiable v
               },
               "status": "operating",
               "type": "skiArea",
+            },
+            "type": "Feature",
+          },
+        ],
+        "type": "FeatureCollection",
+      }
+    `);
+  } finally {
+    mockFS.restore();
+  }
+});
+
+it("allows point & multilinestring lifts to be processed", async () => {
+  TestHelpers.mockFeatureFiles(
+    [],
+    [
+      TestHelpers.mockLiftFeature({
+        id: "2",
+        name: "Skilift Oberau",
+        liftType: LiftType.TBar,
+        status: Status.Operating,
+        geometry: {
+          type: "MultiLineString",
+          coordinates: [
+            [
+              [25.430488, 36.420539900000016, 238.44396972656193],
+              [25.4273675, 36.4188913, 18.190246582031193]
+            ],
+            [
+              [25.427413799999993, 36.4188392, 15.1902456283569],
+              [25.430537199999993, 36.4204801, 237.44396972656193]
+            ]
+          ]
+        }
+      }),
+      TestHelpers.mockLiftFeature({
+        id: "3",
+        name: "Gondola",
+        liftType: LiftType.Gondola,
+        geometry: {
+          type: "Point",
+          coordinates: [12.2447153, 47.5270405, 719.0122680664059]
+        }
+      })
+    ],
+    []
+  );
+
+  try {
+    await clusterSkiAreas(
+      "intermediate_ski_areas.geojson",
+      "output/ski_areas.geojson",
+      "intermediate_lifts.geojson",
+      "output/lifts.geojson",
+      "intermediate_runs.geojson",
+      "output/runs.geojson",
+      "http://localhost:" + container.getMappedPort(8529)
+    );
+
+    expect(TestHelpers.fileContents("output/lifts.geojson"))
+      .toMatchInlineSnapshot(`
+      Object {
+        "features": Array [
+          Object {
+            "geometry": Object {
+              "coordinates": Array [
+                Array [
+                  Array [
+                    25.430488,
+                    36.42053990000002,
+                    238.44396972656187,
+                  ],
+                  Array [
+                    25.4273675,
+                    36.4188913,
+                    18.190246582031186,
+                  ],
+                ],
+                Array [
+                  Array [
+                    25.42741379999999,
+                    36.4188392,
+                    15.1902456283569,
+                  ],
+                  Array [
+                    25.43053719999999,
+                    36.4204801,
+                    237.44396972656187,
+                  ],
+                ],
+              ],
+              "type": "MultiLineString",
+            },
+            "properties": Object {
+              "bubble": null,
+              "capacity": null,
+              "color": "",
+              "duration": null,
+              "heating": null,
+              "id": "2",
+              "liftType": "t-bar",
+              "name": "Skilift Oberau",
+              "occupancy": null,
+              "oneway": null,
+              "ref": null,
+              "status": "operating",
+              "type": "lift",
+            },
+            "type": "Feature",
+          },
+          Object {
+            "geometry": Object {
+              "coordinates": Array [
+                12.244715299999998,
+                47.5270405,
+                719.0122680664058,
+              ],
+              "type": "Point",
+            },
+            "properties": Object {
+              "bubble": null,
+              "capacity": null,
+              "color": "",
+              "duration": null,
+              "heating": null,
+              "id": "3",
+              "liftType": "gondola",
+              "name": "Gondola",
+              "occupancy": null,
+              "oneway": null,
+              "ref": null,
+              "skiAreas": Array [],
+              "status": "operating",
+              "type": "lift",
             },
             "type": "Feature",
           },

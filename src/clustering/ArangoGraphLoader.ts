@@ -148,11 +148,24 @@ function geometryWithoutElevations(
           coordinate[1]
         ])
       };
+    case "MultiLineString":
     case "Polygon":
       return {
-        type: "Polygon",
+        type: geometry.type,
         coordinates: geometry.coordinates.map(coordinates =>
           coordinates.map(coordinate => [coordinate[0], coordinate[1]])
+        )
+      };
+    case "MultiPolygon":
+      return {
+        type: "MultiPolygon",
+        coordinates: geometry.coordinates.map(coordinates =>
+          coordinates.map(coordinatess =>
+            coordinatess.map(coordinatesss => [
+              coordinatesss[0],
+              coordinatesss[1]
+            ])
+          )
         )
       };
     default:
