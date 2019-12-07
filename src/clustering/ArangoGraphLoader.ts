@@ -55,7 +55,7 @@ export default async function loadArangoGraph(
         try {
           await objectsCollection.save(prepare(feature));
         } catch (e) {
-          console.error("Failed loading feature " + JSON.stringify(feature), e);
+          console.log("Failed loading feature " + JSON.stringify(feature), e);
         }
       }, 10)
     );

@@ -12,6 +12,6 @@ prepare(
   new GeoJSONOutputPaths("data"),
   configFromEnvironment()
 ).catch((reason: any) => {
-  console.error("Failed preparing", reason);
+  console.log("Failed preparing", reason);
   process.exit(1);
 });

@@ -45,7 +45,7 @@ function arangoQueryStream(
       streamingCursor
         .next()
         .catch(_ => {
-          console.error("Failed querying ArangoDB, stopping.");
+          console.log("Failed querying ArangoDB, stopping.");
           readable.push(null);
         })
         .then(value => {

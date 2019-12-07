@@ -64,7 +64,7 @@ export default async function clusterArangoGraph(
 
       await createGeneratedSkiArea(newSkiAreaID, activities, memberObjects);
     } catch (exception) {
-      console.error("Processing unassigned run failed.", exception);
+      console.log("Processing unassigned run failed.", exception);
     }
   }
 
@@ -89,7 +89,7 @@ export default async function clusterArangoGraph(
         steps: 16
       }).geometry;
       if (!bufferArea) {
-        console.error(
+        console.log(
           "Failed buffering geometry. This can happen if the geometry is invalid."
         );
         return null;
@@ -97,7 +97,7 @@ export default async function clusterArangoGraph(
 
       return bufferArea;
     } catch (exception) {
-      console.error(
+      console.log(
         "Failed buffering geometry. This can happen if the geometry is invalid.",
         exception
       );
@@ -138,9 +138,7 @@ export default async function clusterArangoGraph(
   ): Promise<MapObject[]> {
     const query = aql`
             FOR object in ${objectsCollection}
-            FILTER GEO_INTERSECTS(GEO_POLYGON(${
-              area.coordinates
-            }), object.geometry)
+            FILTER GEO_INTERSECTS(GEO_POLYGON(${area.coordinates}), object.geometry)
             FILTER ${context.id} NOT IN object.skiAreas
             FILTER object.activities ANY IN ${context.activities}
             RETURN object
@@ -228,7 +226,7 @@ export default async function clusterArangoGraph(
     try {
       await objectsCollection.save(draftSkiArea);
     } catch (exception) {
-      console.error("Failed saving ski area", exception);
+      console.log("Failed saving ski area", exception);
       throw exception;
     }
 
