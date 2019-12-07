@@ -1269,6 +1269,7 @@ it("allows point & multilinestring lifts to be processed", async () => {
               "occupancy": null,
               "oneway": null,
               "ref": null,
+              "skiAreas": Array [],
               "status": "operating",
               "type": "lift",
             },
