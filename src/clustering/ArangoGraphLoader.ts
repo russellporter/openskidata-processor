@@ -135,6 +135,11 @@ function geometryWithoutElevations(
   geometry: GeoJSON.Geometry
 ): GeoJSON.Geometry {
   switch (geometry.type) {
+    case "Point":
+      return {
+        type: "Point",
+        coordinates: [geometry.coordinates[0], geometry.coordinates[1]]
+      };
     case "LineString":
       return {
         type: "LineString",
