@@ -84,19 +84,27 @@ function loadElevations(
 }
 
 function getCoordinates(feature: RunFeature | LiftFeature) {
+  let coordinates: number[][];
   switch (feature.geometry.type) {
     case "Point":
-      return [feature.geometry.coordinates];
+      coordinates = [feature.geometry.coordinates];
+      break;
     case "LineString":
-      return feature.geometry.coordinates;
+      coordinates = feature.geometry.coordinates;
+      break;
     case "MultiLineString":
     case "Polygon":
-      return feature.geometry.coordinates.flat();
+      coordinates = feature.geometry.coordinates.flat();
+      break;
     case "MultiPolygon":
-      return feature.geometry.coordinates.flat().flat();
+      coordinates = feature.geometry.coordinates.flat().flat();
+      break;
     default:
       throw "Geometry type " + feature.geometry.type + " not implemented";
   }
+
+  // Remove elevation in case it was already added to this point
+  return coordinates.map(coordinate => [coordinate[0], coordinate[1]]);
 }
 
 function getCoordinatesForElevationProfile(feature: RunFeature | LiftFeature) {
