@@ -89,6 +89,7 @@ function getCoordinates(feature: RunFeature | LiftFeature) {
       return [feature.geometry.coordinates];
     case "LineString":
       return feature.geometry.coordinates;
+    case "MultiLineString":
     case "Polygon":
       return feature.geometry.coordinates.flat();
     case "MultiPolygon":
@@ -170,8 +171,9 @@ function addElevations(
 }
 
 function addElevationToCoords(coords: number[], elevation: number) {
-  if (coords.length != 2) {
-    throw "Unexpected coords length " + coords.length;
+  if (coords.length === 3) {
+    // The elevation was already added to this point (this can happen with polygons where the first and last coordinates are the same object in memory)
+    return;
   }
 
   coords.push(elevation);

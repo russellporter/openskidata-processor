@@ -277,3 +277,123 @@ it("completes without adding elevations when elevation server fails", async () =
     }
   `);
 });
+
+it("adds elevations to run polygons", async () => {
+  mockElevationServer(200);
+
+  TestHelpers.mockOSMFiles(
+    [],
+    [],
+    [
+      {
+        type: "Feature",
+        id: "way/227407273",
+        properties: {
+          name: "Oberauer Skiabfahrt",
+          "piste:difficulty": "easy",
+          "piste:type": "downhill",
+          sport: "skiing",
+          id: "way/227407268"
+        },
+        geometry: {
+          type: "Polygon",
+          coordinates: [
+            [
+              [6.544500899999999, 45.3230511],
+              [6.543409400000001, 45.323173700000005],
+              [6.544500899999999, 45.3230511]
+            ],
+            [
+              [6.5502579, 45.3224134],
+              [6.550612, 45.3222571],
+              [6.5502579, 45.3224134]
+            ]
+          ]
+        }
+      }
+    ]
+  );
+
+  await prepare(input, intermediate, output, config);
+
+  expect(TestHelpers.fileContents("output/runs.geojson"))
+    .toMatchInlineSnapshot(`
+    Object {
+      "features": Array [
+        Object {
+          "geometry": Object {
+            "coordinates": Array [
+              Array [
+                Array [
+                  6.544500899999997,
+                  45.3230511,
+                  0,
+                ],
+                Array [
+                  6.543409400000002,
+                  45.32317370000001,
+                  1,
+                ],
+                Array [
+                  6.544500899999997,
+                  45.3230511,
+                  2,
+                ],
+                Array [
+                  6.544500899999997,
+                  45.3230511,
+                  0,
+                ],
+              ],
+              Array [
+                Array [
+                  6.5502579,
+                  45.3224134,
+                  4,
+                ],
+                Array [
+                  6.550612,
+                  45.3222571,
+                  5,
+                ],
+                Array [
+                  6.5502579,
+                  45.3224134,
+                  6,
+                ],
+                Array [
+                  6.5502579,
+                  45.3224134,
+                  4,
+                ],
+              ],
+            ],
+            "type": "Polygon",
+          },
+          "properties": Object {
+            "color": "hsl(208, 100%, 33%)",
+            "colorName": "blue",
+            "description": null,
+            "difficulty": "easy",
+            "elevationProfile": null,
+            "gladed": null,
+            "grooming": null,
+            "id": "1bb376afe78af2d1cd672790ab58ff1ba6b510f8",
+            "lit": null,
+            "name": "Oberauer Skiabfahrt",
+            "oneway": null,
+            "patrolled": null,
+            "ref": null,
+            "skiAreas": Array [],
+            "type": "run",
+            "uses": Array [
+              "downhill",
+            ],
+          },
+          "type": "Feature",
+        },
+      ],
+      "type": "FeatureCollection",
+    }
+  `);
+});
