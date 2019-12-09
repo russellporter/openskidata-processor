@@ -27,7 +27,7 @@ export default function addElevation(
     const coordinateElevations = elevations.slice(0, coordinates.length);
     const profileElevations = elevations.slice(
       coordinates.length,
-      elevationProfileCoordinates.length
+      elevations.length
     );
 
     if (feature.properties.type === FeatureType.Run) {
