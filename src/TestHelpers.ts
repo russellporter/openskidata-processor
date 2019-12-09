@@ -15,6 +15,7 @@ import {
   RunUse,
   SkiAreaFeature,
   SkiAreaProperties,
+  SkiAreaStatistics,
   Status
 } from "openskidata-format";
 import Source from "openskidata-format/dist/Source";
@@ -158,24 +159,29 @@ export function mockLiftFeature<G extends LiftGeometry>(options: {
 }
 
 export function mockSkiAreaFeature<G extends SkiAreaGeometry>(options: {
-  id: string;
-  name: string;
-  activities: Activity[];
-  status: Status;
+  id?: string;
+  name?: string;
+  activities?: Activity[];
+  status?: Status;
   sources?: Source[];
+  statistics?: SkiAreaStatistics;
   geometry: G;
 }): GeoJSON.Feature<G, SkiAreaProperties> {
   return {
     type: "Feature",
     properties: {
       type: FeatureType.SkiArea,
-      id: options.id,
-      name: options.name,
-      activities: options.activities,
-      status: options.status,
+      id: options.id !== undefined ? options.id : "ID",
+      name: options.name !== undefined ? options.name : "Name",
+      activities:
+        options.activities !== undefined
+          ? options.activities
+          : [Activity.Downhill],
+      status: options.status !== undefined ? options.status : Status.Operating,
       generated: false,
       sources: options.sources !== undefined ? options.sources : [],
-      runConvention: RunConvention.EUROPE
+      runConvention: RunConvention.EUROPE,
+      statistics: options.statistics
     },
     geometry: options.geometry
   };

@@ -14,6 +14,10 @@ export interface MapboxGLSkiAreaProperties {
   has_downhill?: true;
   has_nordic?: true;
   status: Status | null;
+  maxElevation: number | null;
+  minElevation: number | null;
+  downhillDistance: number | null;
+  nordicDistance: number | null;
 }
 
 export type InputSkiAreaFeature = GeoJSON.Feature<

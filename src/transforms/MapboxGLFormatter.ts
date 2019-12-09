@@ -4,7 +4,9 @@ import {
   FeatureType,
   getLiftNameAndType,
   LiftFeature,
+  RunDifficulty,
   RunFeature,
+  RunStatisticsByDifficulty,
   SkiAreaFeature
 } from "openskidata-format";
 import {
@@ -86,13 +88,40 @@ export function formatter(
     };
   }
 
+  function getDistance(statistics: RunStatisticsByDifficulty) {
+    return Object.keys(statistics).reduce((distance, key) => {
+      return distance + statistics[key as RunDifficulty | "other"]!.lengthInKm;
+    }, 0);
+  }
+
   function formatSkiArea(feature: SkiAreaFeature): MapboxGLSkiAreaFeature {
     const properties = feature.properties;
+    const statistics = properties.statistics;
     const mapboxGLProperties: MapboxGLSkiAreaProperties = {
       // TODO: Find a better approach to multi-use runs
       id: properties.id,
       name: shortenedName(properties.name),
-      status: properties.status
+      status: properties.status,
+      downhillDistance:
+        statistics && statistics.runs.byActivity.downhill
+          ? Math.round(
+              getDistance(statistics.runs.byActivity.downhill.byDifficulty)
+            )
+          : null,
+      nordicDistance:
+        statistics && statistics.runs.byActivity.nordic
+          ? Math.round(
+              getDistance(statistics.runs.byActivity.nordic.byDifficulty)
+            )
+          : null,
+      minElevation:
+        statistics && statistics.minElevation
+          ? Math.round(statistics.minElevation)
+          : null,
+      maxElevation:
+        statistics && statistics.maxElevation
+          ? Math.round(statistics.maxElevation)
+          : null
     };
 
     if (properties.activities.includes(Activity.Downhill)) {
