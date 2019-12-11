@@ -26,10 +26,10 @@ describe("MapboxGLFormatter", () => {
           "has_downhill": true,
           "id": "ID",
           "maxElevation": null,
-          "minElevation": null,
           "name": "Name",
           "nordicDistance": null,
           "status": "operating",
+          "vertical": null,
         },
         "type": "Feature",
       }
@@ -77,7 +77,7 @@ describe("MapboxGLFormatter", () => {
       feature
     ) as MapboxGLSkiAreaFeature;
 
-    expect(mapboxGLFeature.properties.minElevation).toBe(101);
+    expect(mapboxGLFeature.properties.vertical).toBe(922);
     expect(mapboxGLFeature.properties.maxElevation).toBe(1023);
   });
 });

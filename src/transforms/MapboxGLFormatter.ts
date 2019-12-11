@@ -114,13 +114,13 @@ export function formatter(
               getDistance(statistics.runs.byActivity.nordic.byDifficulty)
             )
           : null,
-      minElevation:
-        statistics && statistics.minElevation
-          ? Math.round(statistics.minElevation)
-          : null,
       maxElevation:
         statistics && statistics.maxElevation
           ? Math.round(statistics.maxElevation)
+          : null,
+      vertical:
+        statistics && statistics.maxElevation && statistics.minElevation
+          ? Math.round(statistics.maxElevation - statistics.minElevation)
           : null
     };
 

@@ -15,7 +15,7 @@ export interface MapboxGLSkiAreaProperties {
   has_nordic?: true;
   status: Status | null;
   maxElevation: number | null;
-  minElevation: number | null;
+  vertical: number | null;
   downhillDistance: number | null;
   nordicDistance: number | null;
 }
