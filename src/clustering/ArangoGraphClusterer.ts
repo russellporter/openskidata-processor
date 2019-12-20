@@ -114,14 +114,22 @@ export default async function clusterArangoGraph(
     if (bufferArea === null) {
       return foundObjects;
     }
+    const objectContext = {
+      ...context,
+      activities: context.activities.filter(activity =>
+        object.activities.includes(activity)
+      )
+    };
     switch (bufferArea.type) {
       case "Polygon":
-        return foundObjects.concat(await visitPolygon(context, bufferArea));
+        return foundObjects.concat(
+          await visitPolygon(objectContext, bufferArea)
+        );
       case "MultiPolygon":
         for (let i = 0; i < bufferArea.coordinates.length; i++) {
           foundObjects = foundObjects.concat(
             await visitPolygon(
-              context,
+              objectContext,
               geometry("Polygon", bufferArea.coordinates[i])
             )
           );
@@ -138,7 +146,9 @@ export default async function clusterArangoGraph(
   ): Promise<MapObject[]> {
     const query = aql`
             FOR object in ${objectsCollection}
-            FILTER GEO_INTERSECTS(GEO_POLYGON(${area.coordinates}), object.geometry)
+            FILTER GEO_INTERSECTS(GEO_POLYGON(${
+              area.coordinates
+            }), object.geometry)
             FILTER ${context.id} NOT IN object.skiAreas
             FILTER object.activities ANY IN ${context.activities}
             RETURN object

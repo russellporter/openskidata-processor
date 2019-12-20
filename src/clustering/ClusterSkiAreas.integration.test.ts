@@ -3,6 +3,7 @@ import {
   Activity,
   LiftType,
   RunDifficulty,
+  RunFeature,
   RunUse,
   SourceType,
   Status
@@ -13,9 +14,12 @@ import * as TestHelpers from "../TestHelpers";
 import clusterSkiAreas from "./ClusterSkiAreas";
 
 let mockUuidCount = 0;
-jest.mock("uuid/v4", (): (() => string) => {
-  return () => "mock-UUID-" + mockUuidCount++;
-});
+jest.mock(
+  "uuid/v4",
+  (): (() => string) => {
+    return () => "mock-UUID-" + mockUuidCount++;
+  }
+);
 
 // Increase timeout to give time to set up the container
 jest.setTimeout(60 * 1000);
@@ -606,10 +610,7 @@ it("clusters ski areas", async () => {
         status: Status.Operating,
         geometry: {
           type: "LineString",
-          coordinates: [
-            [11.1223444, 47.5572422],
-            [11.1164297, 47.5581563]
-          ]
+          coordinates: [[11.1223444, 47.5572422], [11.1164297, 47.5581563]]
         }
       })
     ],
@@ -791,6 +792,94 @@ it("clusters ski areas", async () => {
   }
 });
 
+it("clusters ski area activities independently", async () => {
+  TestHelpers.mockFeatureFiles(
+    [
+      TestHelpers.mockSkiAreaFeature({
+        id: "1",
+        activities: [Activity.Downhill, Activity.Nordic],
+        geometry: {
+          type: "Point",
+          coordinates: [0, 0]
+        }
+      })
+    ],
+    [],
+    [
+      TestHelpers.mockRunFeature({
+        id: "2",
+        name: "Downhill run part of ski area",
+        uses: [RunUse.Downhill],
+        geometry: {
+          type: "LineString",
+          coordinates: [[0, 0], [1, 1]]
+        }
+      }),
+      TestHelpers.mockRunFeature({
+        id: "3",
+        name: "Nordic run part of ski area",
+        uses: [RunUse.Nordic],
+        geometry: {
+          type: "LineString",
+          coordinates: [[0, 0], [-1, -1]]
+        }
+      }),
+      TestHelpers.mockRunFeature({
+        id: "4",
+        name: "Nordic run not part of ski area",
+        uses: [RunUse.Nordic],
+        geometry: {
+          type: "LineString",
+          coordinates: [[1, 1], [2, 2]]
+        }
+      })
+    ]
+  );
+
+  try {
+    await clusterSkiAreas(
+      "intermediate_ski_areas.geojson",
+      "output/ski_areas.geojson",
+      "intermediate_lifts.geojson",
+      "output/lifts.geojson",
+      "intermediate_runs.geojson",
+      "output/runs.geojson",
+      "http://localhost:" + container.getMappedPort(8529)
+    );
+
+    const runsResult = TestHelpers.fileContents(
+      "output/runs.geojson"
+    ).features.map((run: RunFeature) => {
+      return { name: run.properties.name, skiAreas: run.properties.skiAreas };
+    });
+
+    expect(runsResult).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "name": "Downhill run part of ski area",
+          "skiAreas": Array [
+            "1",
+          ],
+        },
+        Object {
+          "name": "Nordic run part of ski area",
+          "skiAreas": Array [
+            "1",
+          ],
+        },
+        Object {
+          "name": "Nordic run not part of ski area",
+          "skiAreas": Array [
+            "mock-UUID-0",
+          ],
+        },
+      ]
+    `);
+  } finally {
+    mockFS.restore();
+  }
+});
+
 it("generates a downhill ski area but does not include backcountry runs when clustering from a mixed use run", async () => {
   TestHelpers.mockFeatureFiles(
     [],
@@ -802,10 +891,7 @@ it("generates a downhill ski area but does not include backcountry runs when clu
         uses: [RunUse.Downhill, RunUse.Skitour],
         geometry: {
           type: "LineString",
-          coordinates: [
-            [0, 0],
-            [1, 0]
-          ]
+          coordinates: [[0, 0], [1, 0]]
         }
       }),
       TestHelpers.mockRunFeature({
@@ -815,10 +901,7 @@ it("generates a downhill ski area but does not include backcountry runs when clu
         difficulty: RunDifficulty.EASY,
         geometry: {
           type: "LineString",
-          coordinates: [
-            [0, 0],
-            [0, 1]
-          ]
+          coordinates: [[0, 0], [0, 1]]
         }
       })
     ]
@@ -983,10 +1066,7 @@ it("generates elevation statistics for run", async () => {
         uses: [RunUse.Downhill],
         geometry: {
           type: "LineString",
-          coordinates: [
-            [0, 0, 100],
-            [1, 0, 90]
-          ]
+          coordinates: [[0, 0, 100], [1, 0, 90]]
         }
       })
     ]
