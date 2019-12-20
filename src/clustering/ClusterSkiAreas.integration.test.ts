@@ -26,7 +26,7 @@ jest.setTimeout(60 * 1000);
 
 let container: StartedTestContainer;
 beforeAll(async () => {
-  container = await new GenericContainer("arangodb")
+  container = await new GenericContainer("arangodb", "3.5.3")
     .withExposedPorts(8529)
     .withEnv("ARANGO_NO_AUTH", "1d")
     .start();
