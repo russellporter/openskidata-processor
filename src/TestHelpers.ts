@@ -101,6 +101,7 @@ export function mockRunFeature<G extends InputRunGeometry>(options: {
   id: string;
   name: string | null;
   oneway?: boolean | null;
+  ref?: string | null;
   uses: RunUse[];
   difficulty?: RunDifficulty;
   geometry: G;
@@ -113,7 +114,7 @@ export function mockRunFeature<G extends InputRunGeometry>(options: {
       id: options.id,
       name: options.name,
       difficulty: options.difficulty || null,
-      ref: null,
+      ref: options.ref || null,
       oneway: options.oneway !== undefined ? options.oneway : null,
       lit: null,
       description: null,
@@ -134,6 +135,7 @@ export function mockLiftFeature<G extends LiftGeometry>(options: {
   name: string;
   liftType: LiftType;
   status?: Status;
+  ref?: string | null;
   geometry: G;
 }): GeoJSON.Feature<G, LiftProperties> {
   return {
@@ -145,7 +147,7 @@ export function mockLiftFeature<G extends LiftGeometry>(options: {
       liftType: options.liftType,
       status: options.status || Status.Operating,
       color: "",
-      ref: null,
+      ref: options.ref || null,
       oneway: null,
       occupancy: null,
       capacity: null,

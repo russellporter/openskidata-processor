@@ -42,7 +42,7 @@ export function formatter(
       // TODO: Find a better approach to multi-use runs
       use: properties.uses[0],
       id: properties.id,
-      name: properties.name,
+      name: getNameIncludingRef(properties.name, properties.ref),
       difficulty: properties.difficulty,
       oneway: properties.oneway,
       lit: properties.lit,
@@ -70,7 +70,10 @@ export function formatter(
     const mapboxGLProperties: MapboxGLLiftProperties = {
       // TODO: Find a better approach to multi-use runs
       id: properties.id,
-      name_and_type: getLiftNameAndType(properties),
+      name_and_type: getNameIncludingRef(
+        getLiftNameAndType(properties),
+        properties.ref
+      ),
       color: properties.color,
       status: properties.status
     };
@@ -142,4 +145,16 @@ export function formatter(
 
 function shortenedName(name: string | null): string | null {
   return name && name.length > 20 ? name.split("(")[0].trim() : name;
+}
+
+function getNameIncludingRef(name: string | null, ref: string | null) {
+  if (ref === null) {
+    return name;
+  }
+
+  if (name === null) {
+    return ref;
+  }
+
+  return ref + " - " + name;
 }

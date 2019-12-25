@@ -1,4 +1,6 @@
-import { FeatureType } from "openskidata-format";
+import { FeatureType, LiftType, RunUse } from "openskidata-format";
+import { MapboxGLLiftFeature } from "src/features/LiftFeature";
+import { MapboxGLRunFeature } from "src/features/RunFeature";
 import { MapboxGLSkiAreaFeature } from "../features/SkiAreaFeature";
 import * as TestHelpers from "../TestHelpers";
 import { formatter } from "./MapboxGLFormatter";
@@ -79,5 +81,67 @@ describe("MapboxGLFormatter", () => {
 
     expect(mapboxGLFeature.properties.vertical).toBe(922);
     expect(mapboxGLFeature.properties.maxElevation).toBe(1023);
+  });
+
+  it("should export run with ref", () => {
+    const feature = TestHelpers.mockRunFeature({
+      geometry: { type: "LineString", coordinates: [[1, 1]] },
+      id: "1",
+      ref: "99",
+      name: "Run",
+      uses: [RunUse.Downhill]
+    });
+    const mapboxGLFeature = formatter(FeatureType.Run)(
+      feature
+    ) as MapboxGLRunFeature;
+
+    expect(mapboxGLFeature.properties.name).toBe("99 - Run");
+  });
+
+  it("should export run without ref", () => {
+    const feature = TestHelpers.mockRunFeature({
+      geometry: { type: "LineString", coordinates: [[1, 1]] },
+      id: "1",
+      ref: null,
+      name: "Run",
+      uses: [RunUse.Downhill]
+    });
+    const mapboxGLFeature = formatter(FeatureType.Run)(
+      feature
+    ) as MapboxGLRunFeature;
+
+    expect(mapboxGLFeature.properties.name).toBe("Run");
+  });
+
+  it("should export lift with ref", () => {
+    const feature = TestHelpers.mockLiftFeature({
+      geometry: { type: "LineString", coordinates: [[1, 1]] },
+      id: "1",
+      ref: "99",
+      name: "Lift",
+      liftType: LiftType.ChairLift
+    });
+    const mapboxGLFeature = formatter(FeatureType.Lift)(
+      feature
+    ) as MapboxGLLiftFeature;
+
+    expect(mapboxGLFeature.properties.name_and_type).toBe(
+      "99 - Lift (Chairlift)"
+    );
+  });
+
+  it("should export lift without ref", () => {
+    const feature = TestHelpers.mockLiftFeature({
+      geometry: { type: "LineString", coordinates: [[1, 1]] },
+      id: "1",
+      ref: null,
+      name: "Lift",
+      liftType: LiftType.ChairLift
+    });
+    const mapboxGLFeature = formatter(FeatureType.Lift)(
+      feature
+    ) as MapboxGLLiftFeature;
+
+    expect(mapboxGLFeature.properties.name_and_type).toBe("Lift (Chairlift)");
   });
 });
