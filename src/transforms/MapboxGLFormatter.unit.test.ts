@@ -1,6 +1,6 @@
 import { FeatureType, LiftType, RunUse } from "openskidata-format";
-import { MapboxGLLiftFeature } from "src/features/LiftFeature";
-import { MapboxGLRunFeature } from "src/features/RunFeature";
+import { MapboxGLLiftFeature } from "../features/LiftFeature";
+import { MapboxGLRunFeature } from "../features/RunFeature";
 import { MapboxGLSkiAreaFeature } from "../features/SkiAreaFeature";
 import * as TestHelpers from "../TestHelpers";
 import { formatter } from "./MapboxGLFormatter";
