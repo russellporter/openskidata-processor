@@ -6,9 +6,9 @@ import { Status } from "openskidata-format";
 // - proposed/planned/construction/abandoned/disused:{key} = {value}
 // - proposed/planned/construction/abandoned/disused = yes
 // - {key} = construction & construction = {value}
-export default function getStatusAndValue<T extends { [key: string]: string }>(
-  key: keyof T & string,
-  properties: T
+export default function getStatusAndValue(
+  key: string,
+  properties: { [key: string]: string }
 ): { status: Status; value: string | null } {
   if (properties.hasOwnProperty(key)) {
     const valueOrStatus = properties[key];
