@@ -172,6 +172,10 @@ function sortedNameKeys(properties: InputRunProperties) {
 function getName(properties: InputRunProperties) {
   const keys = sortedNameKeys(properties);
 
+  if (keys.length === 0) {
+    return null;
+  }
+
   return keys
     .map(function(key) {
       return properties[key];
