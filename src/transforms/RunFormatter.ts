@@ -71,10 +71,15 @@ export function formatRun(
 }
 
 function getStatusAndUses(properties: InputRunProperties) {
-  const { status, value: pisteType } = getStatusAndValue(
+  let { status, value: pisteType } = getStatusAndValue(
     "piste:type",
     properties as { [key: string]: string }
   );
+
+  // Special case status check for runs: https://wiki.openstreetmap.org/wiki/Piste_Maps
+  if (properties["piste:abandoned"] === "yes") {
+    status = Status.Abandoned;
+  }
 
   const uses = pisteType !== null ? getUses(pisteType) : [];
   return { status, uses };
