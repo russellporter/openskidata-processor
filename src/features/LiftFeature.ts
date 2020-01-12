@@ -18,6 +18,7 @@ export type InputLiftProperties = {
   name?: string;
   oneway?: string;
   ref?: string;
+  description?: string;
   foot?: string;
   access?: string;
   note?: string;

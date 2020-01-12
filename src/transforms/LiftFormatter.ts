@@ -1,4 +1,3 @@
-import * as _ from "lodash";
 import {
   FeatureType,
   LiftFeature,
@@ -9,22 +8,7 @@ import {
 import { InputLiftFeature, InputLiftProperties } from "../features/LiftFeature";
 import buildFeature from "./FeatureBuilder";
 import { mapOSMBoolean, mapOSMNumber, mapOSMString } from "./OSMTransforms";
-
-const lifecycleStates = [
-  Status.Disused,
-  Status.Abandoned,
-  Status.Proposed,
-  Status.Planned,
-  Status.Construction
-];
-const lifecyclePrefixes = [
-  "",
-  "disused:",
-  "abandoned:",
-  "proposed:",
-  "planned:",
-  "construction:"
-];
+import getStatusAndValue from "./Status";
 
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 
@@ -46,18 +30,7 @@ export function formatLift(feature: InputLiftFeature): LiftFeature | null {
     return null;
   }
 
-  // To simplify processing, treat funicular's also as "aerialway"'s.
-  if (!_.has(inputProperties, "aerialway")) {
-    _.forEach(lifecyclePrefixes, state => {
-      if ((inputProperties as any)[state + "railway"] === "funicular") {
-        (inputProperties as any)[state + "aerialway"] = "funicular";
-      }
-    });
-  }
-
-  const liftTypeAndStatus = getLiftTypeAndStatus(inputProperties);
-  const liftType = liftTypeAndStatus[0];
-  const status = liftTypeAndStatus[1];
+  const { status, liftType } = getStatusAndLiftType(inputProperties);
 
   if (liftType === null) {
     return null;
@@ -70,6 +43,7 @@ export function formatLift(feature: InputLiftFeature): LiftFeature | null {
     name: mapOSMString(inputProperties.name),
     oneway: mapOSMBoolean(inputProperties.oneway),
     ref: mapOSMString(inputProperties.ref),
+    description: inputProperties.description || null,
     occupancy: mapOSMNumber(inputProperties["aerialway:occupancy"]),
     capacity: mapOSMNumber(inputProperties["aerialway:capacity"]),
     duration: mapDuration(inputProperties["aerialway:duration"]),
@@ -80,6 +54,23 @@ export function formatLift(feature: InputLiftFeature): LiftFeature | null {
   };
 
   return buildFeature(feature.geometry, properties);
+}
+
+function getStatusAndLiftType(properties: InputLiftProperties) {
+  let { status, value } = getStatusAndValue("aerialway", properties as {
+    [key: string]: string;
+  });
+
+  if (value === null) {
+    ({ status, value } = getStatusAndValue("railway", properties as {
+      [key: string]: string;
+    }));
+  }
+
+  const liftType = Object.values(LiftType).includes(value as LiftType)
+    ? (value as LiftType)
+    : null;
+  return { status, liftType };
 }
 
 function isNumeric(n: any) {
@@ -104,49 +95,6 @@ function mapDuration(string: string | undefined): number | null {
   }
 
   return null;
-}
-
-// Add a "status" property which can be one of "abandoned", "disused", "operating", "proposed", "planned", "construction"
-// Supports several common tagging schemes:
-// - disused:aerialway, abandoned:aerialway
-// - proposed:aerialway, planned:aerialway, construction:aerialway
-// - proposed/planned/construction/abandoned/disused = yes
-// - aerialway = construction & construction = chair_lift
-function getLiftTypeAndStatus(
-  properties: InputLiftProperties
-): [LiftType | null, Status] {
-  let status = Status.Operating;
-  let aerialway = properties.aerialway;
-
-  _.forEach(lifecycleStates, state => {
-    if (properties["aerialway"] === state) {
-      status = state;
-      if (_.has(properties, state)) {
-        aerialway = (properties as any)[state];
-      }
-    }
-
-    if ((properties as any)[state] === "yes") {
-      status = state;
-    }
-  });
-
-  if (!_.has(properties, "aerialway")) {
-    _.forEach(lifecycleStates, state => {
-      const aerialwayLifecycleKey = state + ":aerialway";
-      if (_.has(properties, aerialwayLifecycleKey)) {
-        aerialway = (properties as any)[aerialwayLifecycleKey];
-        status = state;
-      }
-    });
-  }
-
-  return [
-    aerialway && Object.values(LiftType).includes(aerialway as LiftType)
-      ? (aerialway as LiftType)
-      : null,
-    status
-  ];
 }
 
 function getColor(status: string): string {

@@ -23,7 +23,8 @@ export function formatSkiArea(feature: InputSkiAreaFeature): SkiAreaFeature {
     activities: activities,
     generated: false,
     status: inputProperties.status,
-    runConvention: getRunConvention(feature.geometry.coordinates)
+    runConvention: getRunConvention(feature.geometry.coordinates),
+    website: inputProperties.official_website
   };
 
   return buildFeature(feature.geometry, properties);

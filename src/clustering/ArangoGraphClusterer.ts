@@ -229,7 +229,8 @@ export default async function clusterArangoGraph(
         activities: activities,
         status: Status.Operating,
         sources: [],
-        runConvention: getRunConvention(geometry.coordinates)
+        runConvention: getRunConvention(geometry.coordinates),
+        website: null
       }
     };
 

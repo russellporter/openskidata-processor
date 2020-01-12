@@ -132,6 +132,7 @@ it("skips generating ski areas for runs with unsupported activity", async () => 
                 "patrolled": null,
                 "ref": null,
                 "skiAreas": Array [],
+                "status": "operating",
                 "type": "run",
                 "uses": Array [
                   "sled",
@@ -255,6 +256,7 @@ it("generates ski areas for runs without them", async () => {
                 "skiAreas": Array [
                   "mock-UUID-0",
                 ],
+                "status": "operating",
                 "type": "run",
                 "uses": Array [
                   "downhill",
@@ -303,6 +305,7 @@ it("generates ski areas for runs without them", async () => {
                 "skiAreas": Array [
                   "mock-UUID-0",
                 ],
+                "status": "operating",
                 "type": "run",
                 "uses": Array [
                   "downhill",
@@ -342,6 +345,7 @@ it("generates ski areas for runs without them", async () => {
                 },
                 "status": "operating",
                 "type": "skiArea",
+                "website": null,
               },
               "type": "Feature",
             },
@@ -457,6 +461,7 @@ it("generates ski areas by activity", async () => {
                 "skiAreas": Array [
                   "mock-UUID-0",
                 ],
+                "status": "operating",
                 "type": "run",
                 "uses": Array [
                   "downhill",
@@ -505,6 +510,7 @@ it("generates ski areas by activity", async () => {
                 "skiAreas": Array [
                   "mock-UUID-1",
                 ],
+                "status": "operating",
                 "type": "run",
                 "uses": Array [
                   "nordic",
@@ -544,6 +550,7 @@ it("generates ski areas by activity", async () => {
                 },
                 "status": "operating",
                 "type": "skiArea",
+                "website": null,
               },
               "type": "Feature",
             },
@@ -574,6 +581,7 @@ it("generates ski areas by activity", async () => {
                 },
                 "status": "operating",
                 "type": "skiArea",
+                "website": null,
               },
               "type": "Feature",
             },
@@ -668,6 +676,7 @@ it("clusters ski areas", async () => {
                 "bubble": null,
                 "capacity": null,
                 "color": "",
+                "description": null,
                 "duration": null,
                 "heating": null,
                 "id": "2",
@@ -730,6 +739,7 @@ it("clusters ski areas", async () => {
                 "skiAreas": Array [
                   "1",
                 ],
+                "status": "operating",
                 "type": "run",
                 "uses": Array [
                   "downhill",
@@ -779,6 +789,7 @@ it("clusters ski areas", async () => {
                 },
                 "status": "operating",
                 "type": "skiArea",
+                "website": null,
               },
               "type": "Feature",
             },
@@ -957,6 +968,7 @@ it("generates a downhill ski area but does not include backcountry runs when clu
                 "skiAreas": Array [
                   "mock-UUID-0",
                 ],
+                "status": "operating",
                 "type": "run",
                 "uses": Array [
                   "downhill",
@@ -994,6 +1006,7 @@ it("generates a downhill ski area but does not include backcountry runs when clu
                 "patrolled": null,
                 "ref": null,
                 "skiAreas": Array [],
+                "status": "operating",
                 "type": "run",
                 "uses": Array [
                   "skitour",
@@ -1042,6 +1055,7 @@ it("generates a downhill ski area but does not include backcountry runs when clu
                 },
                 "status": "operating",
                 "type": "skiArea",
+                "website": null,
               },
               "type": "Feature",
             },
@@ -1130,6 +1144,7 @@ it("generates elevation statistics for run", async () => {
               },
               "status": "operating",
               "type": "skiArea",
+              "website": null,
             },
             "type": "Feature",
           },
@@ -1244,6 +1259,7 @@ it("generates elevation statistics for run & lift based on lift served skiable v
               },
               "status": "operating",
               "type": "skiArea",
+              "website": null,
             },
             "type": "Feature",
           },
@@ -1341,6 +1357,7 @@ it("allows point & multilinestring lifts to be processed", async () => {
               "bubble": null,
               "capacity": null,
               "color": "",
+              "description": null,
               "duration": null,
               "heating": null,
               "id": "2",
@@ -1368,6 +1385,7 @@ it("allows point & multilinestring lifts to be processed", async () => {
               "bubble": null,
               "capacity": null,
               "color": "",
+              "description": null,
               "duration": null,
               "heating": null,
               "id": "3",

@@ -6,6 +6,7 @@ export interface InputSkiAreaProperties {
   scalerank: number;
   status: Status | null;
   activities: Activity[];
+  official_website: string | null;
 }
 
 export interface MapboxGLSkiAreaProperties {

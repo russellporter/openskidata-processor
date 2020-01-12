@@ -37,6 +37,7 @@ export type InputRunProperties = {
 };
 
 export type InputRunGeometry =
+  | GeoJSON.Point
   | GeoJSON.LineString
   | GeoJSON.Polygon
   | GeoJSON.MultiLineString

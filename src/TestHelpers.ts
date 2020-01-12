@@ -105,6 +105,7 @@ export function mockRunFeature<G extends InputRunGeometry>(options: {
   uses: RunUse[];
   difficulty?: RunDifficulty;
   geometry: G;
+  status?: Status;
 }): GeoJSON.Feature<G, RunProperties> {
   return {
     type: "Feature",
@@ -124,7 +125,8 @@ export function mockRunFeature<G extends InputRunGeometry>(options: {
       color: "",
       colorName: ColorName.GREEN,
       skiAreas: [],
-      elevationProfile: null
+      elevationProfile: null,
+      status: options.status || Status.Operating
     },
     geometry: options.geometry
   };
@@ -148,6 +150,7 @@ export function mockLiftFeature<G extends LiftGeometry>(options: {
       status: options.status || Status.Operating,
       color: "",
       ref: options.ref || null,
+      description: null,
       oneway: null,
       occupancy: null,
       capacity: null,
@@ -183,7 +186,8 @@ export function mockSkiAreaFeature<G extends SkiAreaGeometry>(options: {
       generated: false,
       sources: options.sources !== undefined ? options.sources : [],
       runConvention: RunConvention.EUROPE,
-      statistics: options.statistics
+      statistics: options.statistics,
+      website: null
     },
     geometry: options.geometry
   };

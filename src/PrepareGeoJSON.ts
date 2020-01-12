@@ -14,12 +14,10 @@ import { RunNormalizerAccumulator } from "./transforms/accumulator/RunNormalizer
 import addElevation from "./transforms/Elevation";
 import { formatLift } from "./transforms/LiftFormatter";
 import * as MapboxGLFormatter from "./transforms/MapboxGLFormatter";
-import { filterRun } from "./transforms/RunFilter";
 import { formatRun } from "./transforms/RunFormatter";
 import { formatSkiArea } from "./transforms/SkiAreaFormatter";
 import {
   accumulate,
-  filter,
   flatMap,
   map,
   mapAsync
@@ -44,8 +42,7 @@ export default async function prepare(
         ),
 
       readGeoJSONFeatures(inputPaths.runs)
-        .pipe(filter(filterRun))
-        .pipe(map(formatRun))
+        .pipe(flatMap(formatRun))
         .pipe(accumulate(new RunNormalizerAccumulator()))
         .pipe(
           mapAsync(

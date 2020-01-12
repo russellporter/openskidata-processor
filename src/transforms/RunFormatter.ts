@@ -7,7 +7,8 @@ import {
   RunConvention,
   RunDifficulty,
   RunGrooming,
-  RunUse
+  RunUse,
+  Status
 } from "openskidata-format";
 import { InputRunFeature, InputRunProperties } from "../features/RunFeature";
 import buildFeature from "./FeatureBuilder";
@@ -17,14 +18,30 @@ import {
 } from "./FormattedInputRunFeature";
 import { Omit } from "./Omit";
 import { mapOSMBoolean, mapOSMString } from "./OSMTransforms";
+import getStatusAndValue from "./Status";
 
-export function formatRun(feature: InputRunFeature): FormattedInputRunFeature {
-  const inputProperties = feature.properties || {};
+export function formatRun(
+  feature: InputRunFeature
+): FormattedInputRunFeature | null {
+  if (feature.geometry.type === "Point") {
+    return null;
+  }
+
+  const inputProperties = feature.properties;
+
+  const { status, uses } = getStatusAndUses(inputProperties);
+  if (uses.length === 0) {
+    return null;
+  }
+
+  // TODO: support runs that are not operational: https://github.com/russellporter/openskimap.org/issues/15
+  if (status !== Status.Operating) {
+    return null;
+  }
 
   const pointGeometry = turf.pointOnFeature(feature).geometry;
   const coords = (pointGeometry as GeoJSON.Point).coordinates;
 
-  const uses = getUses(inputProperties["piste:type"]);
   const difficulty = getDifficulty(inputProperties);
   const color = getRunColor(getRunConvention(coords), difficulty);
 
@@ -46,17 +63,24 @@ export function formatRun(feature: InputRunFeature): FormattedInputRunFeature {
     color: color,
     colorName: getColorName(color),
     grooming: getGrooming(inputProperties),
-    skiAreas: []
+    skiAreas: [],
+    status: status
   };
 
   return buildFeature(feature.geometry, properties);
 }
 
-function getUses(type: string | undefined): RunUse[] {
-  if (type === undefined) {
-    return [];
-  }
+function getStatusAndUses(properties: InputRunProperties) {
+  const { status, value: pisteType } = getStatusAndValue(
+    "piste:type",
+    properties as { [key: string]: string }
+  );
 
+  const uses = pisteType !== null ? getUses(pisteType) : [];
+  return { status, uses };
+}
+
+function getUses(type: string): RunUse[] {
   return type
     .split(";")
     .map(t => t.trim().toLowerCase())

@@ -3,7 +3,8 @@ import {
   FeatureType,
   RunDifficulty,
   RunGrooming,
-  RunProperties
+  RunProperties,
+  Status
 } from "openskidata-format";
 import * as TopoJSON from "topojson-specification";
 
@@ -175,6 +176,7 @@ function propertiesForArcData(data: ArcData): RunProperties {
     ref: sanitizeUniqueAndJoin(allProps.map(p => p.ref)),
     description: sanitizeUniqueAndJoin(allProps.map(p => p.description)),
     difficulty: difficultyAndColor.difficulty,
+    status: allProps.map(p => p.status).reduce(statusReducer),
     oneway: directionData.oneway,
     lit: allProps.map(p => p.lit).reduce(litReducer),
     gladed: allProps.map(p => p.gladed).reduce(gladedReducer),
@@ -282,6 +284,15 @@ const groomingReducer = priorityReducer([
   RunGrooming.Scooter,
   RunGrooming.Backcountry,
   null
+]);
+
+const statusReducer = priorityReducer([
+  Status.Operating,
+  Status.Construction,
+  Status.Planned,
+  Status.Proposed,
+  Status.Disused,
+  Status.Abandoned
 ]);
 
 const gladedReducer = priorityReducer([true, false, null]);
