@@ -11,6 +11,7 @@ import {
   RunConvention,
   RunDifficulty,
   RunFeature,
+  RunGrooming,
   RunProperties,
   RunUse,
   SkiAreaFeature,
@@ -101,7 +102,9 @@ export function mockRunFeature<G extends InputRunGeometry>(options: {
   id: string;
   name: string | null;
   oneway?: boolean | null;
+  patrolled?: boolean | null;
   ref?: string | null;
+  grooming?: RunGrooming | null;
   uses: RunUse[];
   difficulty?: RunDifficulty;
   geometry: G;
@@ -120,8 +123,8 @@ export function mockRunFeature<G extends InputRunGeometry>(options: {
       lit: null,
       description: null,
       gladed: null,
-      patrolled: null,
-      grooming: null,
+      patrolled: options.patrolled !== undefined ? options.patrolled : null,
+      grooming: options.grooming || null,
       color: "",
       colorName: ColorName.GREEN,
       skiAreas: [],

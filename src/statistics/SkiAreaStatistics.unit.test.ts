@@ -19,7 +19,7 @@ describe("SkiAreaStatistics", () => {
         coordinates: [[0, 0], [0, 1]]
       },
       skiAreas: [],
-      runAssignableToSkiArea: true
+      isBasisForNewSkiArea: true
     };
 
     const statistics = skiAreaStatistics([run]);
@@ -98,7 +98,7 @@ describe("SkiAreaStatistics", () => {
         coordinates: [[[0, 0], [0, 1], [1, 0], [0, 0]]]
       },
       skiAreas: [],
-      runAssignableToSkiArea: true
+      isBasisForNewSkiArea: true
     };
 
     const statistics = skiAreaStatistics([run]);
@@ -132,7 +132,7 @@ it("should not count backcountry activity in mixed use runs", () => {
       coordinates: [[0, 0], [0, 1]]
     },
     skiAreas: [],
-    runAssignableToSkiArea: true
+    isBasisForNewSkiArea: true
   };
 
   const statistics = skiAreaStatistics([run]);

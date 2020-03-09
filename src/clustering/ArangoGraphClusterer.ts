@@ -164,7 +164,7 @@ export default async function clusterArangoGraph(
             FILTER object._key IN ${objects.map(object => {
               return object._key;
             })}
-            UPDATE { _key: object._key, runAssignableToSkiArea: false, skiAreas: APPEND(object.skiAreas, ${[
+            UPDATE { _key: object._key, isBasisForNewSkiArea: false, skiAreas: APPEND(object.skiAreas, ${[
               id
             ]})} IN ${objectsCollection}
             OPTIONS { exclusive: true }
@@ -189,7 +189,7 @@ export default async function clusterArangoGraph(
   async function nextUnassignedRun(): Promise<RunObject> {
     const array = await database.query(aql`
             FOR object IN ${objectsCollection}
-            FILTER object.runAssignableToSkiArea == true
+            FILTER object.isBasisForNewSkiArea == true
             LIMIT ${1}
             RETURN object`);
 

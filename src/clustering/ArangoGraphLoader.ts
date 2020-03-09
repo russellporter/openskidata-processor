@@ -42,7 +42,7 @@ export default async function loadArangoGraph(
   await objectsCollection.createGeoIndex("geometry", { geoJson: true });
   await objectsCollection.createSkipList("type");
   await objectsCollection.createSkipList("skiAreas");
-  await objectsCollection.createSkipList("runAssignableToSkiArea", {
+  await objectsCollection.createSkipList("isBasisForNewSkiArea", {
     sparse: true
   });
 
@@ -97,7 +97,10 @@ export default async function loadArangoGraph(
     const properties = feature.properties;
     const activities = (() => {
       // This tagging is ambiguous, but for safety, lean towards marking runs as "backcountry skiing" instead of "resort skiing"
-      if (properties.grooming === RunGrooming.Backcountry) {
+      if (
+        properties.grooming === RunGrooming.Backcountry &&
+        properties.patrolled !== true
+      ) {
         return [Activity.Backcountry];
       }
 
@@ -121,9 +124,12 @@ export default async function loadArangoGraph(
       type: MapObjectType.Run,
       geometry: geometryWithoutElevations(feature.geometry) as RunGeometry,
       geometryWithElevations: feature.geometry,
-      runAssignableToSkiArea: activities.some(activity =>
-        skiAreaActivities.has(activity)
-      ),
+      isBasisForNewSkiArea:
+        // SnowPark's sometimes are used for purposes other than downhill ski areas (for example: skate parks, nordic skiing jumps)
+        // So only start generating a new ski area from a run if the use was explicitly downhill or nordic.
+        (properties.uses.includes(RunUse.Downhill) ||
+          properties.uses.includes(RunUse.Nordic)) &&
+        activities.some(activity => skiAreaActivities.has(activity)),
       skiAreas: [],
       activities: activities,
       difficulty: feature.properties.difficulty

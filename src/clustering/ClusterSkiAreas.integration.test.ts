@@ -4,6 +4,7 @@ import {
   LiftType,
   RunDifficulty,
   RunFeature,
+  RunGrooming,
   RunUse,
   SourceType,
   Status
@@ -1401,6 +1402,239 @@ it("allows point & multilinestring lifts to be processed", async () => {
             "type": "Feature",
           },
         ],
+        "type": "FeatureCollection",
+      }
+    `);
+  } finally {
+    mockFS.restore();
+  }
+});
+
+it("does not generate ski area for lone snow park", async () => {
+  TestHelpers.mockFeatureFiles(
+    [],
+    [],
+    [
+      TestHelpers.mockRunFeature({
+        id: "1",
+        name: "Terrain Park",
+        uses: [RunUse.SnowPark],
+        difficulty: RunDifficulty.EASY,
+        geometry: {
+          type: "Polygon",
+          coordinates: [
+            [
+              [11.1164229, 47.558125],
+              [11.1163655, 47.5579742],
+              [11.1171866, 47.5576413],
+              [11.1164229, 47.558125]
+            ]
+          ]
+        }
+      })
+    ]
+  );
+
+  try {
+    await clusterSkiAreas(
+      "intermediate_ski_areas.geojson",
+      "output/ski_areas.geojson",
+      "intermediate_lifts.geojson",
+      "output/lifts.geojson",
+      "intermediate_runs.geojson",
+      "output/runs.geojson",
+      "http://localhost:" + container.getMappedPort(8529)
+    );
+
+    expect(TestHelpers.fileContents("output/ski_areas.geojson"))
+      .toMatchInlineSnapshot(`
+      Object {
+        "features": Array [],
+        "type": "FeatureCollection",
+      }
+    `);
+  } finally {
+    mockFS.restore();
+  }
+});
+
+it("generates ski area which includes the snow park", async () => {
+  TestHelpers.mockFeatureFiles(
+    [],
+    [],
+    [
+      TestHelpers.mockRunFeature({
+        id: "1",
+        name: "Run",
+        uses: [RunUse.Downhill],
+        difficulty: RunDifficulty.EASY,
+        geometry: {
+          type: "LineString",
+          coordinates: [[11.1223444, 47.5572422], [11.1164297, 47.5581563]]
+        }
+      }),
+      TestHelpers.mockRunFeature({
+        id: "2",
+        name: "Terrain Park",
+        uses: [RunUse.SnowPark],
+        difficulty: RunDifficulty.EASY,
+        geometry: {
+          type: "Polygon",
+          coordinates: [
+            [
+              [11.1164229, 47.558125],
+              [11.1163655, 47.5579742],
+              [11.1171866, 47.5576413],
+              [11.1164229, 47.558125]
+            ]
+          ]
+        }
+      })
+    ]
+  );
+
+  try {
+    await clusterSkiAreas(
+      "intermediate_ski_areas.geojson",
+      "output/ski_areas.geojson",
+      "intermediate_lifts.geojson",
+      "output/lifts.geojson",
+      "intermediate_runs.geojson",
+      "output/runs.geojson",
+      "http://localhost:" + container.getMappedPort(8529)
+    );
+
+    expect(
+      TestHelpers.fileContents("output/runs.geojson").features.map(
+        (feature: any) => {
+          return {
+            id: feature.properties.id,
+            skiAreas: feature.properties.skiAreas
+          };
+        }
+      )
+    ).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "id": "1",
+          "skiAreas": Array [
+            "mock-UUID-0",
+          ],
+        },
+        Object {
+          "id": "2",
+          "skiAreas": Array [
+            "mock-UUID-0",
+          ],
+        },
+      ]
+    `);
+  } finally {
+    mockFS.restore();
+  }
+});
+
+it("generates ski area which includes the patrolled ungroomed run", async () => {
+  TestHelpers.mockFeatureFiles(
+    [],
+    [],
+    [
+      TestHelpers.mockRunFeature({
+        id: "1",
+        name: "Run",
+        uses: [RunUse.Downhill],
+        patrolled: true,
+        grooming: RunGrooming.Backcountry,
+        geometry: {
+          type: "Polygon",
+          coordinates: [
+            [
+              [11.1164229, 47.558125],
+              [11.1163655, 47.5579742],
+              [11.1171866, 47.5576413],
+              [11.1164229, 47.558125]
+            ]
+          ]
+        }
+      })
+    ]
+  );
+
+  try {
+    await clusterSkiAreas(
+      "intermediate_ski_areas.geojson",
+      "output/ski_areas.geojson",
+      "intermediate_lifts.geojson",
+      "output/lifts.geojson",
+      "intermediate_runs.geojson",
+      "output/runs.geojson",
+      "http://localhost:" + container.getMappedPort(8529)
+    );
+
+    expect(
+      TestHelpers.fileContents("output/runs.geojson").features.map(
+        (feature: any) => {
+          return {
+            id: feature.properties.id,
+            skiAreas: feature.properties.skiAreas
+          };
+        }
+      )
+    ).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "id": "1",
+          "skiAreas": Array [
+            "mock-UUID-0",
+          ],
+        },
+      ]
+    `);
+  } finally {
+    mockFS.restore();
+  }
+});
+
+it("does not generate ski area for ungroomed run", async () => {
+  TestHelpers.mockFeatureFiles(
+    [],
+    [],
+    [
+      TestHelpers.mockRunFeature({
+        id: "1",
+        name: "Run",
+        uses: [RunUse.Downhill],
+        grooming: RunGrooming.Backcountry,
+        geometry: {
+          type: "Polygon",
+          coordinates: [
+            [
+              [11.1164229, 47.558125],
+              [11.1163655, 47.5579742],
+              [11.1171866, 47.5576413],
+              [11.1164229, 47.558125]
+            ]
+          ]
+        }
+      })
+    ]
+  );
+
+  try {
+    await clusterSkiAreas(
+      "intermediate_ski_areas.geojson",
+      "output/ski_areas.geojson",
+      "intermediate_lifts.geojson",
+      "output/lifts.geojson",
+      "intermediate_runs.geojson",
+      "output/runs.geojson",
+      "http://localhost:" + container.getMappedPort(8529)
+    );
+
+    expect(TestHelpers.fileContents("output/ski_areas.geojson"))
+      .toMatchInlineSnapshot(`
+      Object {
+        "features": Array [],
         "type": "FeatureCollection",
       }
     `);

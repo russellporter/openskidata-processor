@@ -17,7 +17,7 @@ export interface DraftRun extends BaseDraftMapObject {
   type: MapObjectType.Run;
   geometry: RunGeometry;
   geometryWithElevations: RunGeometry;
-  runAssignableToSkiArea: boolean;
+  isBasisForNewSkiArea: boolean;
   difficulty: RunDifficulty | null;
 }
 
