@@ -1,4 +1,5 @@
 import { Database } from "arangojs";
+import assert from "assert";
 import {
   Activity,
   LiftFeature,
@@ -40,7 +41,7 @@ export default async function loadArangoGraph(
   );
 
   await objectsCollection.createGeoIndex("geometry", { geoJson: true });
-  await objectsCollection.createSkipList("type");
+  await objectsCollection.createSkipList(["type", "source", "isPolygon"]);
   await objectsCollection.createSkipList("skiAreas");
   await objectsCollection.createSkipList("isBasisForNewSkiArea", {
     sparse: true
@@ -62,11 +63,21 @@ export default async function loadArangoGraph(
   }
 
   function prepareSkiArea(feature: SkiAreaFeature): DraftSkiArea {
+    const sources = feature.properties.sources;
+
+    assert(
+      sources.length === 1,
+      "Only ski areas with a single source are supported for clustering."
+    );
     const properties = feature.properties;
     properties.generated = false;
     return {
       _key: properties.id,
       id: properties.id,
+      source: sources[0].type,
+      isPolygon:
+        feature.geometry.type === "Polygon" ||
+        feature.geometry.type === "MultiPolygon",
       type: MapObjectType.SkiArea,
       geometry: feature.geometry,
       skiAreas: [],
@@ -89,7 +100,8 @@ export default async function loadArangoGraph(
       activities:
         properties["status"] === Status.Operating ? [Activity.Downhill] : [],
       skiAreas: [],
-      liftType: properties.liftType
+      liftType: properties.liftType,
+      isInSkiAreaPolygon: false
     };
   }
 
@@ -132,7 +144,8 @@ export default async function loadArangoGraph(
         activities.some(activity => skiAreaActivities.has(activity)),
       skiAreas: [],
       activities: activities,
-      difficulty: feature.properties.difficulty
+      difficulty: feature.properties.difficulty,
+      isInSkiAreaPolygon: false
     };
   }
 }

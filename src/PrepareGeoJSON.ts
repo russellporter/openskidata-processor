@@ -1,4 +1,5 @@
-import { FeatureType } from "openskidata-format";
+import merge from "merge2";
+import { FeatureType, SourceType } from "openskidata-format";
 import StreamToPromise from "stream-to-promise";
 import clusterSkiAreas from "./clustering/ClusterSkiAreas";
 import { Config } from "./Config";
@@ -31,15 +32,20 @@ export default async function prepare(
 ) {
   await Promise.all(
     [
-      readGeoJSONFeatures(inputPaths.skiAreas)
-        .pipe(map(formatSkiArea))
-        .pipe(
-          writeGeoJSONFeatures(
-            config.arangoDBURLForClustering
-              ? intermediatePaths.skiAreas
-              : outputPaths.skiAreas
-          )
+      merge([
+        readGeoJSONFeatures(inputPaths.skiAreas).pipe(
+          map(formatSkiArea(SourceType.OPENSTREETMAP))
         ),
+        readGeoJSONFeatures(inputPaths.skiMapSkiAreas).pipe(
+          map(formatSkiArea(SourceType.SKIMAP_ORG))
+        )
+      ]).pipe(
+        writeGeoJSONFeatures(
+          config.arangoDBURLForClustering
+            ? intermediatePaths.skiAreas
+            : outputPaths.skiAreas
+        )
+      ),
 
       readGeoJSONFeatures(inputPaths.runs)
         .pipe(flatMap(formatRun))

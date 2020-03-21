@@ -1,6 +1,9 @@
 import { LiftGeometry, Status } from "openskidata-format";
 
 export type InputLiftProperties = {
+  // OpenStreetMap ID
+  id: string;
+
   aerialway?: string;
   "disused:aerialway"?: string;
   "abandoned:aerialway"?: string;

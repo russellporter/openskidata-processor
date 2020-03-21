@@ -19,30 +19,40 @@ import {
   SkiAreaStatistics,
   Status
 } from "openskidata-format";
-import Source from "openskidata-format/dist/Source";
+import Source, { SourceType } from "openskidata-format/dist/Source";
 import { join } from "path";
 import { SkiAreaGeometry } from "./clustering/MapObject";
-import { InputRunGeometry } from "./features/RunFeature";
+import { InputLiftFeature } from "./features/LiftFeature";
+import { InputRunFeature, InputRunGeometry } from "./features/RunFeature";
+import {
+  InputOpenStreetMapSkiAreaProperties,
+  InputSkiMapOrgSkiAreaFeature
+} from "./features/SkiAreaFeature";
 
 export interface FolderContents extends Map<string, any | FolderContents> {}
 
-export function mockOSMFiles(
-  skiAreas: GeoJSON.Feature[],
-  lifts: GeoJSON.Feature[],
-  runs: GeoJSON.Feature[]
-) {
+export function mockInputFiles(input: {
+  skiMapSkiAreas: InputSkiMapOrgSkiAreaFeature[];
+  openStreetMapSkiAreas: InputOpenStreetMapSkiAreaProperties[];
+  lifts: InputLiftFeature[];
+  runs: InputRunFeature[];
+}) {
   mockFS({
-    "input_ski_areas.geojson": JSON.stringify({
+    "input_skimap_ski_areas.geojson": JSON.stringify({
       type: "FeatureCollection",
-      features: skiAreas
+      features: input.skiMapSkiAreas
+    }),
+    "input_openstreetmap_ski_areas.geojson": JSON.stringify({
+      type: "FeatureCollection",
+      features: input.openStreetMapSkiAreas
     }),
     "input_lifts.geojson": JSON.stringify({
       type: "FeatureCollection",
-      features: lifts
+      features: input.lifts
     }),
     "input_runs.geojson": JSON.stringify({
       type: "FeatureCollection",
-      features: runs
+      features: input.runs
     })
   });
 
@@ -187,7 +197,10 @@ export function mockSkiAreaFeature<G extends SkiAreaGeometry>(options: {
           : [Activity.Downhill],
       status: options.status !== undefined ? options.status : Status.Operating,
       generated: false,
-      sources: options.sources !== undefined ? options.sources : [],
+      sources:
+        options.sources !== undefined
+          ? options.sources
+          : [{ id: "1", type: SourceType.SKIMAP_ORG }],
       runConvention: RunConvention.EUROPE,
       statistics: options.statistics,
       website: null

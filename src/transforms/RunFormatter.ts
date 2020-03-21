@@ -1,4 +1,7 @@
-import * as turf from "@turf/turf";
+import booleanPointInPolygon from "@turf/boolean-point-in-polygon";
+import turfCenter from "@turf/center";
+import * as turf from "@turf/helpers";
+import { AllGeoJSON } from "@turf/helpers";
 import _ from "lodash";
 import {
   FeatureType,
@@ -39,11 +42,8 @@ export function formatRun(
     return null;
   }
 
-  const pointGeometry = turf.pointOnFeature(feature).geometry;
-  const coords = (pointGeometry as GeoJSON.Point).coordinates;
-
   const difficulty = getDifficulty(inputProperties);
-  const color = getRunColor(getRunConvention(coords), difficulty);
+  const color = getRunColor(getRunConvention(feature), difficulty);
 
   const properties: Omit<FormattedInputRunProperties, "id"> = {
     type: FeatureType.Run,
@@ -202,12 +202,15 @@ const jpPoly = turf.polygon([
   ]
 ]);
 
-export function getRunConvention(coords: number[]): RunConvention {
-  const point = turf.point(coords);
+export function getRunConvention(geojson: AllGeoJSON): RunConvention {
+  const point = turfCenter(geojson).geometry;
+  if (!point) {
+    throw "Cannot determine center of geometry";
+  }
 
-  if (turf.booleanPointInPolygon(point, euPoly)) {
+  if (booleanPointInPolygon(point, euPoly)) {
     return RunConvention.EUROPE;
-  } else if (turf.booleanPointInPolygon(point, jpPoly)) {
+  } else if (booleanPointInPolygon(point, jpPoly)) {
     return RunConvention.JAPAN;
   } else {
     return RunConvention.NORTH_AMERICA;

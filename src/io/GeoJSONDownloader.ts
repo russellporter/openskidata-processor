@@ -32,16 +32,28 @@ const liftsURL = overpassURLForQuery(`
 out;
 `);
 
-const skiAreasURL = "https://skimap.org/SkiAreas/index.geojson";
+const skiAreasURL = overpassURLForQuery(`
+[out:json][timeout:1800];(
+  node[~"^([A-Za-z]+:)?landuse$"~"^winter_sports$"];
+  way[~"^([A-Za-z]+:)?landuse$"~"^winter_sports$"];
+  rel[~"^([A-Za-z]+:)?landuse$"~"^winter_sports$"];
+);
+(._; >;);
+out;
+`);
+
+const skiMapSkiAreasURL = "https://skimap.org/SkiAreas/index.geojson";
 
 export default async function downloadAndConvertToGeoJSON(
     folder: string
 ): Promise<GeoJSONInputPaths> {
     const paths = new GeoJSONInputPaths(folder);
+
     await Promise.all([
         downloadAndConvertOSMToGeoJSON(runsURL, paths.runs),
         downloadAndConvertOSMToGeoJSON(liftsURL, paths.lifts),
-        downloadToFile(skiAreasURL, paths.skiAreas)
+        downloadAndConvertOSMToGeoJSON(skiAreasURL, paths.skiAreas),
+        downloadToFile(skiMapSkiAreasURL, paths.skiMapSkiAreas)
     ]);
 
     return paths;

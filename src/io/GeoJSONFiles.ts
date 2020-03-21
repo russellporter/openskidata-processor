@@ -8,13 +8,15 @@ interface CommonGeoJSONPaths {
   readonly lifts: string;
 }
 
-export class GeoJSONInputPaths implements CommonGeoJSONPaths {
+export class GeoJSONInputPaths {
+  readonly skiMapSkiAreas: string;
   readonly skiAreas: string;
   readonly runs: string;
   readonly lifts: string;
 
   constructor(folder: string) {
-    this.skiAreas = join(folder, "input_ski_areas.geojson");
+    this.skiMapSkiAreas = join(folder, "input_skimap_ski_areas.geojson");
+    this.skiAreas = join(folder, "input_openstreetmap_ski_areas.geojson");
     this.runs = join(folder, "input_runs.geojson");
     this.lifts = join(folder, "input_lifts.geojson");
   }

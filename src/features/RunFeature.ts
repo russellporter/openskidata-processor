@@ -10,6 +10,9 @@ import {
 export type InputRunProperties = {
   [key: string]: string | undefined;
 
+  // OpenStreetMap ID
+  id: string;
+
   "piste:type"?: string;
   "piste:difficulty"?: string;
   "piste:grooming"?: string;

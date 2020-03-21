@@ -22,7 +22,12 @@ afterEach(() => {
 });
 
 it("produces empty output for empty input", async () => {
-  TestHelpers.mockOSMFiles([], [], []);
+  TestHelpers.mockInputFiles({
+    skiMapSkiAreas: [],
+    openStreetMapSkiAreas: [],
+    lifts: [],
+    runs: []
+  });
 
   await prepare(input, intermediate, output, config);
 
@@ -57,15 +62,17 @@ it("produces empty output for empty input", async () => {
 });
 
 it("produces output for simple input", async () => {
-  TestHelpers.mockOSMFiles(
-    [
+  TestHelpers.mockInputFiles({
+    skiMapSkiAreas: [
       {
         type: "Feature",
         properties: {
           id: "13666",
           name: "Rabenkopflift Oberau",
-          operating_status: "operating",
-          activities: [Activity.Downhill]
+          status: null,
+          activities: [Activity.Downhill],
+          scalerank: 1,
+          official_website: null
         },
         geometry: {
           type: "Point",
@@ -73,7 +80,8 @@ it("produces output for simple input", async () => {
         }
       }
     ],
-    [
+    openStreetMapSkiAreas: [],
+    lifts: [
       {
         type: "Feature",
         id: "way/227407273",
@@ -84,11 +92,14 @@ it("produces output for simple input", async () => {
         },
         geometry: {
           type: "LineString",
-          coordinates: [[11.1223444, 47.5572422], [11.1164297, 47.5581563]]
+          coordinates: [
+            [11.1223444, 47.5572422],
+            [11.1164297, 47.5581563]
+          ]
         }
       }
     ],
-    [
+    runs: [
       {
         type: "Feature",
         id: "way/227407268",
@@ -111,7 +122,7 @@ it("produces output for simple input", async () => {
         }
       }
     ]
-  );
+  });
 
   await prepare(input, intermediate, output, config);
 
@@ -238,10 +249,11 @@ it("produces output for simple input", async () => {
             "properties": Object {
               "downhillDistance": null,
               "has_downhill": true,
-              "id": "f3c8f7809801b95eb53abdf786feffa120cecb39",
+              "id": "7bcb329a21523941296ea6695580b44343243e53",
               "maxElevation": null,
               "name": "Rabenkopflift Oberau",
               "nordicDistance": null,
+              "status": null,
               "vertical": null,
             },
             "type": "Feature",
@@ -315,7 +327,7 @@ it("produces output for simple input", async () => {
                 "downhill",
               ],
               "generated": false,
-              "id": "f3c8f7809801b95eb53abdf786feffa120cecb39",
+              "id": "7bcb329a21523941296ea6695580b44343243e53",
               "name": "Rabenkopflift Oberau",
               "runConvention": "europe",
               "sources": Array [
@@ -324,7 +336,9 @@ it("produces output for simple input", async () => {
                   "type": "skimap.org",
                 },
               ],
+              "status": null,
               "type": "skiArea",
+              "website": null,
             },
             "type": "Feature",
           },
@@ -336,16 +350,18 @@ it("produces output for simple input", async () => {
 });
 
 it("shortens ski area names for Mapbox GL output", async () => {
-  TestHelpers.mockOSMFiles(
-    [
+  TestHelpers.mockInputFiles({
+    skiMapSkiAreas: [
       {
         type: "Feature",
         properties: {
           id: "13666",
           name:
             "Ski Welt (Wilder Kaiser – Gosau, Scheffau, Ellmau - Going, Söll, Brixen, Westendorf, Hopfgarten - Itter - Kelchsau)",
-          operating_status: "operating",
-          activities: [Activity.Downhill]
+          status: null,
+          activities: [Activity.Downhill],
+          scalerank: 1,
+          official_website: null
         },
         geometry: {
           type: "Point",
@@ -353,85 +369,89 @@ it("shortens ski area names for Mapbox GL output", async () => {
         }
       }
     ],
-    [],
-    []
-  );
+    openStreetMapSkiAreas: [],
+    lifts: [],
+    runs: []
+  });
 
   await prepare(input, intermediate, output, config);
 
   expect(TestHelpers.folderContents("output")).toMatchInlineSnapshot(`
-    Map {
-      "output/lifts.geojson" => Object {
-        "features": Array [],
-        "type": "FeatureCollection",
+Map {
+  "output/lifts.geojson" => Object {
+    "features": Array [],
+    "type": "FeatureCollection",
+  },
+  "output/mapboxgl_lifts.geojson" => Object {
+    "features": Array [],
+    "type": "FeatureCollection",
+  },
+  "output/mapboxgl_runs.geojson" => Object {
+    "features": Array [],
+    "type": "FeatureCollection",
+  },
+  "output/mapboxgl_ski_areas.geojson" => Object {
+    "features": Array [
+      Object {
+        "geometry": Object {
+          "coordinates": Array [
+            11.122066084534,
+            47.557111836837,
+          ],
+          "type": "Point",
+        },
+        "properties": Object {
+          "downhillDistance": null,
+          "has_downhill": true,
+          "id": "fe979dc3e5fd0774182f2f77940f49a89c5e55b6",
+          "maxElevation": null,
+          "name": "Ski Welt",
+          "nordicDistance": null,
+          "status": null,
+          "vertical": null,
+        },
+        "type": "Feature",
       },
-      "output/mapboxgl_lifts.geojson" => Object {
-        "features": Array [],
-        "type": "FeatureCollection",
-      },
-      "output/mapboxgl_runs.geojson" => Object {
-        "features": Array [],
-        "type": "FeatureCollection",
-      },
-      "output/mapboxgl_ski_areas.geojson" => Object {
-        "features": Array [
-          Object {
-            "geometry": Object {
-              "coordinates": Array [
-                11.122066084534,
-                47.557111836837,
-              ],
-              "type": "Point",
+    ],
+    "type": "FeatureCollection",
+  },
+  "output/runs.geojson" => Object {
+    "features": Array [],
+    "type": "FeatureCollection",
+  },
+  "output/ski_areas.geojson" => Object {
+    "features": Array [
+      Object {
+        "geometry": Object {
+          "coordinates": Array [
+            11.122066084534,
+            47.557111836837,
+          ],
+          "type": "Point",
+        },
+        "properties": Object {
+          "activities": Array [
+            "downhill",
+          ],
+          "generated": false,
+          "id": "fe979dc3e5fd0774182f2f77940f49a89c5e55b6",
+          "name": "Ski Welt (Wilder Kaiser – Gosau, Scheffau, Ellmau - Going, Söll, Brixen, Westendorf, Hopfgarten - Itter - Kelchsau)",
+          "runConvention": "europe",
+          "sources": Array [
+            Object {
+              "id": "13666",
+              "type": "skimap.org",
             },
-            "properties": Object {
-              "downhillDistance": null,
-              "has_downhill": true,
-              "id": "e66cc35be7ab43ad92cc6e6af25e7480fb68d551",
-              "maxElevation": null,
-              "name": "Ski Welt",
-              "nordicDistance": null,
-              "vertical": null,
-            },
-            "type": "Feature",
-          },
-        ],
-        "type": "FeatureCollection",
+          ],
+          "status": null,
+          "type": "skiArea",
+          "website": null,
+        },
+        "type": "Feature",
       },
-      "output/runs.geojson" => Object {
-        "features": Array [],
-        "type": "FeatureCollection",
-      },
-      "output/ski_areas.geojson" => Object {
-        "features": Array [
-          Object {
-            "geometry": Object {
-              "coordinates": Array [
-                11.122066084534,
-                47.557111836837,
-              ],
-              "type": "Point",
-            },
-            "properties": Object {
-              "activities": Array [
-                "downhill",
-              ],
-              "generated": false,
-              "id": "e66cc35be7ab43ad92cc6e6af25e7480fb68d551",
-              "name": "Ski Welt (Wilder Kaiser – Gosau, Scheffau, Ellmau - Going, Söll, Brixen, Westendorf, Hopfgarten - Itter - Kelchsau)",
-              "runConvention": "europe",
-              "sources": Array [
-                Object {
-                  "id": "13666",
-                  "type": "skimap.org",
-                },
-              ],
-              "type": "skiArea",
-            },
-            "type": "Feature",
-          },
-        ],
-        "type": "FeatureCollection",
-      },
-    }
-  `);
+    ],
+    "type": "FeatureCollection",
+  },
+}
+`);
 });

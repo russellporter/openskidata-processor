@@ -1,4 +1,4 @@
-import * as turf from "@turf/turf";
+import * as turf from "@turf/helpers";
 import { GeoJsonObject } from "geojson";
 import { RunFeature, RunGeometry, RunProperties } from "openskidata-format";
 import * as topojsonClient from "topojson-client";
@@ -28,24 +28,26 @@ export class RunNormalizerAccumulator
     const features = this.features;
     this.features = [];
 
-    const topology = mergeOverlappingRuns(topojsonServer.topology({
-      runs: turf.featureCollection(features) as GeoJsonObject
-    }) as RunTopology);
-
-    return combineRunSegments(topojsonClient.feature(
-      topology,
-      topology.objects.runs
-    ) as GeoJSON.FeatureCollection<RunGeometry, RunProperties>).features.map(
-      f => {
-        // Re-compute id hashes after normalizing
-        return buildFeature(
-          f.geometry,
-          (() => {
-            delete f.properties.id;
-            return f.properties;
-          })()
-        );
-      }
+    const topology = mergeOverlappingRuns(
+      topojsonServer.topology({
+        runs: turf.featureCollection(features) as GeoJsonObject
+      }) as RunTopology
     );
+
+    return combineRunSegments(
+      topojsonClient.feature(
+        topology,
+        topology.objects.runs
+      ) as GeoJSON.FeatureCollection<RunGeometry, RunProperties>
+    ).features.map(f => {
+      // Re-compute id hashes after normalizing
+      return buildFeature(
+        f.geometry,
+        (() => {
+          delete f.properties.id;
+          return f.properties;
+        })()
+      );
+    });
   }
 }

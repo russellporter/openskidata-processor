@@ -9,6 +9,7 @@ import {
   RunStatisticsByDifficulty,
   SkiAreaFeature
 } from "openskidata-format";
+import { centralPointInObjects as centralPointInGeometry } from "../clustering/GeoTransforms";
 import {
   MapboxGLLiftFeature,
   MapboxGLLiftProperties
@@ -137,7 +138,7 @@ export function formatter(
 
     return {
       type: feature.type,
-      geometry: feature.geometry,
+      geometry: centralPointInGeometry(feature.geometry),
       properties: mapboxGLProperties
     };
   }

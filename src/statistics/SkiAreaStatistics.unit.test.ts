@@ -12,14 +12,21 @@ describe("SkiAreaStatistics", () => {
       difficulty: RunDifficulty.EASY,
       geometry: {
         type: "LineString",
-        coordinates: [[0, 0], [0, 1]]
+        coordinates: [
+          [0, 0],
+          [0, 1]
+        ]
       },
       geometryWithElevations: {
         type: "LineString",
-        coordinates: [[0, 0], [0, 1]]
+        coordinates: [
+          [0, 0],
+          [0, 1]
+        ]
       },
       skiAreas: [],
-      isBasisForNewSkiArea: true
+      isBasisForNewSkiArea: true,
+      isInSkiAreaPolygon: false
     };
 
     const statistics = skiAreaStatistics([run]);
@@ -54,13 +61,20 @@ describe("SkiAreaStatistics", () => {
       activities: [Activity.Downhill],
       geometry: {
         type: "LineString",
-        coordinates: [[0, 0], [0, 1]]
+        coordinates: [
+          [0, 0],
+          [0, 1]
+        ]
       },
       geometryWithElevations: {
         type: "LineString",
-        coordinates: [[0, 0], [0, 1]]
+        coordinates: [
+          [0, 0],
+          [0, 1]
+        ]
       },
-      skiAreas: []
+      skiAreas: [],
+      isInSkiAreaPolygon: false
     };
 
     const statistics = skiAreaStatistics([lift]);
@@ -91,14 +105,29 @@ describe("SkiAreaStatistics", () => {
       difficulty: RunDifficulty.EASY,
       geometry: {
         type: "Polygon",
-        coordinates: [[[0, 0], [0, 1], [1, 0], [0, 0]]]
+        coordinates: [
+          [
+            [0, 0],
+            [0, 1],
+            [1, 0],
+            [0, 0]
+          ]
+        ]
       },
       geometryWithElevations: {
         type: "Polygon",
-        coordinates: [[[0, 0], [0, 1], [1, 0], [0, 0]]]
+        coordinates: [
+          [
+            [0, 0],
+            [0, 1],
+            [1, 0],
+            [0, 0]
+          ]
+        ]
       },
       skiAreas: [],
-      isBasisForNewSkiArea: true
+      isBasisForNewSkiArea: true,
+      isInSkiAreaPolygon: false
     };
 
     const statistics = skiAreaStatistics([run]);
@@ -125,14 +154,21 @@ it("should not count backcountry activity in mixed use runs", () => {
     difficulty: RunDifficulty.EASY,
     geometry: {
       type: "LineString",
-      coordinates: [[0, 0], [0, 1]]
+      coordinates: [
+        [0, 0],
+        [0, 1]
+      ]
     },
     geometryWithElevations: {
       type: "LineString",
-      coordinates: [[0, 0], [0, 1]]
+      coordinates: [
+        [0, 0],
+        [0, 1]
+      ]
     },
     skiAreas: [],
-    isBasisForNewSkiArea: true
+    isBasisForNewSkiArea: true,
+    isInSkiAreaPolygon: false
   };
 
   const statistics = skiAreaStatistics([run]);

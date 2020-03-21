@@ -48,9 +48,10 @@ function mockElevationServer(code: number) {
 
 it("adds elevations to lift geometry", async () => {
   mockElevationServer(200);
-  TestHelpers.mockOSMFiles(
-    [],
-    [
+  TestHelpers.mockInputFiles({
+    skiMapSkiAreas: [],
+    openStreetMapSkiAreas: [],
+    lifts: [
       {
         type: "Feature",
         id: "way/227407273",
@@ -61,12 +62,15 @@ it("adds elevations to lift geometry", async () => {
         },
         geometry: {
           type: "LineString",
-          coordinates: [[11.1223444, 47.5572422], [11.1164297, 47.5581563]]
+          coordinates: [
+            [11.1223444, 47.5572422],
+            [11.1164297, 47.5581563]
+          ]
         }
       }
     ],
-    []
-  );
+    runs: []
+  });
 
   await prepare(input, intermediate, output, config);
 
@@ -118,10 +122,11 @@ it("adds elevations to lift geometry", async () => {
 it("adds elevations to run geometry & elevation profile", async () => {
   mockElevationServer(200);
 
-  TestHelpers.mockOSMFiles(
-    [],
-    [],
-    [
+  TestHelpers.mockInputFiles({
+    skiMapSkiAreas: [],
+    openStreetMapSkiAreas: [],
+    lifts: [],
+    runs: [
       {
         type: "Feature",
         id: "way/227407268",
@@ -142,7 +147,7 @@ it("adds elevations to run geometry & elevation profile", async () => {
         }
       }
     ]
-  );
+  });
 
   await prepare(input, intermediate, output, config);
 
@@ -219,9 +224,10 @@ it("adds elevations to run geometry & elevation profile", async () => {
 
 it("completes without adding elevations when elevation server fails", async () => {
   mockElevationServer(500);
-  TestHelpers.mockOSMFiles(
-    [],
-    [
+  TestHelpers.mockInputFiles({
+    skiMapSkiAreas: [],
+    openStreetMapSkiAreas: [],
+    lifts: [
       {
         type: "Feature",
         id: "way/227407273",
@@ -232,12 +238,15 @@ it("completes without adding elevations when elevation server fails", async () =
         },
         geometry: {
           type: "LineString",
-          coordinates: [[11.1223444, 47.5572422], [11.1164297, 47.5581563]]
+          coordinates: [
+            [11.1223444, 47.5572422],
+            [11.1164297, 47.5581563]
+          ]
         }
       }
     ],
-    []
-  );
+    runs: []
+  });
 
   await prepare(input, intermediate, output, config);
 
@@ -287,10 +296,11 @@ it("completes without adding elevations when elevation server fails", async () =
 it("adds elevations to run polygons", async () => {
   mockElevationServer(200);
 
-  TestHelpers.mockOSMFiles(
-    [],
-    [],
-    [
+  TestHelpers.mockInputFiles({
+    skiMapSkiAreas: [],
+    openStreetMapSkiAreas: [],
+    lifts: [],
+    runs: [
       {
         type: "Feature",
         id: "way/227407273",
@@ -318,7 +328,7 @@ it("adds elevations to run polygons", async () => {
         }
       }
     ]
-  );
+  });
 
   await prepare(input, intermediate, output, config);
 

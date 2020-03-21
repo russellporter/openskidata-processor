@@ -4,18 +4,24 @@ import { formatRun } from "./RunFormatter";
 describe("RunFormatter", () => {
   it("filters out runs with 'piste:abandoned' tag", () => {
     const run = formatRun(
-      inputRun({ "piste:type": "downhill", "piste:abandoned": "yes" })
+      inputRun({
+        id: "way/1",
+        "piste:type": "downhill",
+        "piste:abandoned": "yes"
+      })
     );
     expect(run).toBeNull();
   });
 
   it("filters out runs with lifecycle prefix", () => {
-    const run = formatRun(inputRun({ "proposed:piste:type": "downhill" }));
+    const run = formatRun(
+      inputRun({ id: "way/1", "proposed:piste:type": "downhill" })
+    );
     expect(run).toBeNull();
   });
 
   it("formats simple run", () => {
-    const run = formatRun(inputRun({ "piste:type": "downhill" }));
+    const run = formatRun(inputRun({ id: "way/1", "piste:type": "downhill" }));
     expect(run!.properties).toMatchInlineSnapshot(`
       Object {
         "color": "hsl(298, 87%, 43%)",
@@ -44,7 +50,13 @@ describe("RunFormatter", () => {
 function inputRun(properties: InputRunProperties): InputRunFeature {
   return {
     type: "Feature",
-    geometry: { type: "LineString", coordinates: [[0, 0], [1, 1]] },
+    geometry: {
+      type: "LineString",
+      coordinates: [
+        [0, 0],
+        [1, 1]
+      ]
+    },
     properties: properties
   };
 }

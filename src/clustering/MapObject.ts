@@ -3,7 +3,8 @@ import {
   LiftGeometry,
   LiftType,
   RunDifficulty,
-  SkiAreaProperties
+  SkiAreaProperties,
+  SourceType
 } from "openskidata-format";
 
 export type MapObject = DraftMapObject & { _id: string };
@@ -18,6 +19,7 @@ export interface DraftRun extends BaseDraftMapObject {
   geometry: RunGeometry;
   geometryWithElevations: RunGeometry;
   isBasisForNewSkiArea: boolean;
+  isInSkiAreaPolygon: boolean;
   difficulty: RunDifficulty | null;
 }
 
@@ -31,16 +33,22 @@ export interface DraftLift extends BaseDraftMapObject {
   geometry: LiftGeometry;
   geometryWithElevations: LiftGeometry;
   liftType: LiftType;
+  isInSkiAreaPolygon: boolean;
 }
 
 export interface DraftSkiArea extends BaseDraftMapObject {
   id: string;
   type: MapObjectType.SkiArea;
   geometry: SkiAreaGeometry;
+  source: SourceType;
+  isPolygon: boolean;
   properties: SkiAreaProperties;
 }
 
-export type SkiAreaGeometry = GeoJSON.Point;
+export type SkiAreaGeometry =
+  | GeoJSON.Point
+  | GeoJSON.Polygon
+  | GeoJSON.MultiPolygon;
 
 interface BaseDraftMapObject {
   _key: string;

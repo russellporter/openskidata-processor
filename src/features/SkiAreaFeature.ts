@@ -1,12 +1,30 @@
 import { Activity, Status } from "openskidata-format";
 
-export interface InputSkiAreaProperties {
+// A ski area from Skimap.org
+export interface InputSkiMapOrgSkiAreaProperties {
   id: string;
   name?: string;
   scalerank: number;
   status: Status | null;
   activities: Activity[];
   official_website: string | null;
+}
+
+// A ski area from OpenStreetMap
+export interface InputOpenStreetMapSkiAreaProperties {
+  [key: string]: string | undefined;
+
+  id: string;
+
+  name?: string;
+  website?: string;
+
+  landuse?: string;
+  "disused:landuse"?: string;
+  "abandoned:landuse"?: string;
+  "proposed:landuse"?: string;
+  "planned:landuse"?: string;
+  "construction:landuse"?: string;
 }
 
 export interface MapboxGLSkiAreaProperties {
@@ -21,9 +39,14 @@ export interface MapboxGLSkiAreaProperties {
   nordicDistance: number | null;
 }
 
-export type InputSkiAreaFeature = GeoJSON.Feature<
+export type InputSkiMapOrgSkiAreaFeature = GeoJSON.Feature<
   GeoJSON.Point,
-  InputSkiAreaProperties
+  InputSkiMapOrgSkiAreaProperties
+>;
+
+export type InputOpenStreetMapSkiAreaFeature = GeoJSON.Feature<
+  GeoJSON.Point | GeoJSON.Polygon | GeoJSON.MultiPolygon,
+  InputOpenStreetMapSkiAreaProperties
 >;
 
 export type MapboxGLSkiAreaFeature = GeoJSON.Feature<
