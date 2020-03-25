@@ -94,6 +94,10 @@ export function centralPointsInFeature(
   geojson: GeoJSON.MultiPolygon
 ): GeoJSON.MultiPoint;
 
+export function centralPointsInFeature(
+  geojson: GeoJSON.Point | GeoJSON.Polygon | GeoJSON.MultiPolygon
+): GeoJSON.Point | GeoJSON.MultiPoint;
+
 /**
  * Finds a central point that is guaranteed to be the given polygon.
  */
