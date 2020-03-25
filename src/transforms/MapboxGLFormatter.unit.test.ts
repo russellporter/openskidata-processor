@@ -127,4 +127,54 @@ describe("MapboxGLFormatter", () => {
 
     expect(mapboxGLFeature.properties.name_and_type).toBe("Lift (Chairlift)");
   });
+
+  it("should export polygon ski area as point geometry", () => {
+    const feature = TestHelpers.mockSkiAreaFeature({
+      geometry: {
+        type: "Polygon",
+        coordinates: [
+          [
+            [0, 0],
+            [0, 1],
+            [1, 1],
+            [0, 0]
+          ]
+        ]
+      },
+      id: "1"
+    });
+    const mapboxGLFeature = formatter(FeatureType.SkiArea)(feature);
+
+    expect(mapboxGLFeature.geometry.type).toBe("Point");
+  });
+
+  it("should export multipolygon ski area as multipoint geometry", () => {
+    const feature = TestHelpers.mockSkiAreaFeature({
+      geometry: {
+        type: "MultiPolygon",
+        coordinates: [
+          [
+            [
+              [0, 0],
+              [0, 1],
+              [1, 1],
+              [0, 0]
+            ]
+          ],
+          [
+            [
+              [2, 2],
+              [2, 3],
+              [3, 3],
+              [2, 2]
+            ]
+          ]
+        ]
+      },
+      id: "1"
+    });
+    const mapboxGLFeature = formatter(FeatureType.SkiArea)(feature);
+
+    expect(mapboxGLFeature.geometry.type).toBe("MultiPoint");
+  });
 });
