@@ -1,7 +1,4 @@
 import { FeatureType, LiftType, RunUse } from "openskidata-format";
-import { MapboxGLLiftFeature } from "../features/LiftFeature";
-import { MapboxGLRunFeature } from "../features/RunFeature";
-import { MapboxGLSkiAreaFeature } from "../features/SkiAreaFeature";
 import * as TestHelpers from "../TestHelpers";
 import { formatter } from "./MapboxGLFormatter";
 describe("MapboxGLFormatter", () => {
@@ -10,9 +7,7 @@ describe("MapboxGLFormatter", () => {
       geometry: { type: "Point", coordinates: [1, 1] }
     });
 
-    const mapboxGLFeature = formatter(FeatureType.SkiArea)(
-      feature
-    ) as MapboxGLSkiAreaFeature;
+    const mapboxGLFeature = formatter(FeatureType.SkiArea)(feature);
 
     expect(mapboxGLFeature).toMatchInlineSnapshot(`
       Object {
@@ -56,9 +51,7 @@ describe("MapboxGLFormatter", () => {
         }
       }
     });
-    const mapboxGLFeature = formatter(FeatureType.SkiArea)(
-      feature
-    ) as MapboxGLSkiAreaFeature;
+    const mapboxGLFeature = formatter(FeatureType.SkiArea)(feature);
     expect(mapboxGLFeature.properties.downhillDistance).toBe(16);
     expect(mapboxGLFeature.properties.nordicDistance).toBe(1);
   });
@@ -75,9 +68,7 @@ describe("MapboxGLFormatter", () => {
         minElevation: 100.82
       }
     });
-    const mapboxGLFeature = formatter(FeatureType.SkiArea)(
-      feature
-    ) as MapboxGLSkiAreaFeature;
+    const mapboxGLFeature = formatter(FeatureType.SkiArea)(feature);
 
     expect(mapboxGLFeature.properties.vertical).toBe(922);
     expect(mapboxGLFeature.properties.maxElevation).toBe(1023);
@@ -91,9 +82,7 @@ describe("MapboxGLFormatter", () => {
       name: "Run",
       uses: [RunUse.Downhill]
     });
-    const mapboxGLFeature = formatter(FeatureType.Run)(
-      feature
-    ) as MapboxGLRunFeature;
+    const mapboxGLFeature = formatter(FeatureType.Run)(feature);
 
     expect(mapboxGLFeature.properties.name).toBe("99 - Run");
   });
@@ -106,9 +95,7 @@ describe("MapboxGLFormatter", () => {
       name: "Run",
       uses: [RunUse.Downhill]
     });
-    const mapboxGLFeature = formatter(FeatureType.Run)(
-      feature
-    ) as MapboxGLRunFeature;
+    const mapboxGLFeature = formatter(FeatureType.Run)(feature);
 
     expect(mapboxGLFeature.properties.name).toBe("Run");
   });
@@ -121,9 +108,7 @@ describe("MapboxGLFormatter", () => {
       name: "Lift",
       liftType: LiftType.ChairLift
     });
-    const mapboxGLFeature = formatter(FeatureType.Lift)(
-      feature
-    ) as MapboxGLLiftFeature;
+    const mapboxGLFeature = formatter(FeatureType.Lift)(feature);
 
     expect(mapboxGLFeature.properties.name_and_type).toBe(
       "99 - Lift (Chairlift)"
@@ -138,9 +123,7 @@ describe("MapboxGLFormatter", () => {
       name: "Lift",
       liftType: LiftType.ChairLift
     });
-    const mapboxGLFeature = formatter(FeatureType.Lift)(
-      feature
-    ) as MapboxGLLiftFeature;
+    const mapboxGLFeature = formatter(FeatureType.Lift)(feature);
 
     expect(mapboxGLFeature.properties.name_and_type).toBe("Lift (Chairlift)");
   });

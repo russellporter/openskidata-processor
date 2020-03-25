@@ -24,9 +24,25 @@ import {
 import { centralPointsInFeature } from "./GeoTransforms";
 
 export function formatter(
+  type: FeatureType.SkiArea
+): (feature: SkiAreaFeature) => MapboxGLSkiAreaFeature;
+export function formatter(
+  type: FeatureType.Lift
+): (feature: LiftFeature) => MapboxGLLiftFeature;
+export function formatter(
+  type: FeatureType.Run
+): (feature: RunFeature) => MapboxGLRunFeature;
+
+export function formatter(
+  type: FeatureType
+): (
+  feature: SkiAreaFeature | LiftFeature | RunFeature
+) => MapboxGLSkiAreaFeature | MapboxGLLiftFeature | MapboxGLRunFeature;
+
+export function formatter(
   type: FeatureType,
   skiAreaAttributes: boolean = true
-): (feature: GeoJSON.Feature) => GeoJSON.Feature {
+): (feature: GeoJSON.Feature<any, any>) => GeoJSON.Feature {
   switch (type) {
     case FeatureType.Lift:
       return formatLift as any;
