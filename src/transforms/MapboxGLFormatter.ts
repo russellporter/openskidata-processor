@@ -9,7 +9,6 @@ import {
   RunStatisticsByDifficulty,
   SkiAreaFeature
 } from "openskidata-format";
-import { centralPointInObjects as centralPointInGeometry } from "../clustering/GeoTransforms";
 import {
   MapboxGLLiftFeature,
   MapboxGLLiftProperties
@@ -22,6 +21,7 @@ import {
   MapboxGLSkiAreaFeature,
   MapboxGLSkiAreaProperties
 } from "../features/SkiAreaFeature";
+import { centralPointInObjects as centralPointInGeometry } from "./GeoTransforms";
 
 export function formatter(
   type: FeatureType,

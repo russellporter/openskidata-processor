@@ -6,8 +6,8 @@ import * as GeoJSON from "geojson";
 import { Activity, FeatureType, SourceType, Status } from "openskidata-format";
 import uuid from "uuid/v4";
 import { skiAreaStatistics } from "../statistics/SkiAreaStatistics";
+import { bufferGeometry, polygonEnclosing } from "../transforms/GeoTransforms";
 import { getRunConvention } from "../transforms/RunFormatter";
-import { bufferGeometry, polygonEnclosing } from "./GeoTransforms";
 import {
   DraftSkiArea,
   MapObject,
