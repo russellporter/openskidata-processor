@@ -50,6 +50,6 @@ export type InputOpenStreetMapSkiAreaFeature = GeoJSON.Feature<
 >;
 
 export type MapboxGLSkiAreaFeature = GeoJSON.Feature<
-  GeoJSON.Point,
+  GeoJSON.Point | GeoJSON.MultiPoint,
   MapboxGLSkiAreaProperties
 >;

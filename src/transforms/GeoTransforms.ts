@@ -1,7 +1,7 @@
 import booleanPointInPolygon from "@turf/boolean-point-in-polygon";
 import buffer from "@turf/buffer";
 import centroid from "@turf/centroid";
-import { lineString } from "@turf/helpers";
+import { lineString, multiPoint, polygon } from "@turf/helpers";
 import nearestPointOnLine, {
   NearestPointOnLine
 } from "@turf/nearest-point-on-line";
@@ -86,50 +86,64 @@ export function polygonEnclosing(
     }, initialGeometry);
 }
 
+export function centralPointsInFeature(
+  geojson: GeoJSON.Point | GeoJSON.Polygon
+): GeoJSON.Point;
+
+export function centralPointsInFeature(
+  geojson: GeoJSON.MultiPolygon
+): GeoJSON.MultiPoint;
+
 /**
  * Finds a central point that is guaranteed to be the given polygon.
  */
-export function centralPointInObjects(
+export function centralPointsInFeature(
   geojson: GeoJSON.Point | GeoJSON.Polygon | GeoJSON.MultiPolygon
-): GeoJSON.Point {
+): GeoJSON.Point | GeoJSON.MultiPoint {
   if (geojson.type === "Point") {
     return geojson;
   }
 
-  const center = centroid(geojson).geometry;
+  switch (geojson.type) {
+    case "Polygon":
+      const center = centroid(geojson).geometry;
 
-  if (booleanPointInPolygon(center, geojson)) {
-    return center;
+      if (booleanPointInPolygon(center, geojson)) {
+        return center;
+      }
+
+      return geojson.coordinates
+        .map<GeoJSON.LineString>(coords => lineString(coords).geometry)
+        .reduce(
+          (
+            nearestPointSoFar: NearestPointOnLine | null,
+            line: GeoJSON.LineString
+          ) => {
+            const nearestPointOnThisLine = nearestPointOnLine(line, center);
+            const distanceToNearestPointSoFar =
+              nearestPointSoFar?.properties?.dist;
+            const distanceToNearestPointOnThisLine =
+              nearestPointOnThisLine.properties.dist;
+            if (
+              !nearestPointSoFar ||
+              !distanceToNearestPointOnThisLine ||
+              !distanceToNearestPointSoFar
+            ) {
+              return nearestPointOnThisLine;
+            }
+
+            return distanceToNearestPointSoFar <
+              distanceToNearestPointOnThisLine
+              ? nearestPointSoFar
+              : nearestPointOnThisLine;
+          },
+          null
+        )!.geometry;
+    case "MultiPolygon":
+      return multiPoint(
+        geojson.coordinates
+          .map(coords => polygon(coords))
+          .map(polygon => centralPointsInFeature(polygon.geometry).coordinates)
+      ).geometry;
   }
-
-  const lineCoords =
-    geojson.type === "Polygon"
-      ? geojson.coordinates
-      : geojson.coordinates.flatMap(coords => coords);
-
-  return lineCoords
-    .map<GeoJSON.LineString>(coords => lineString(coords).geometry)
-    .reduce(
-      (
-        nearestPointSoFar: NearestPointOnLine | null,
-        line: GeoJSON.LineString
-      ) => {
-        const nearestPointOnThisLine = nearestPointOnLine(line, center);
-        const distanceToNearestPointSoFar = nearestPointSoFar?.properties?.dist;
-        const distanceToNearestPointOnThisLine =
-          nearestPointOnThisLine.properties.dist;
-        if (
-          !nearestPointSoFar ||
-          !distanceToNearestPointOnThisLine ||
-          !distanceToNearestPointSoFar
-        ) {
-          return nearestPointOnThisLine;
-        }
-
-        return distanceToNearestPointSoFar < distanceToNearestPointOnThisLine
-          ? nearestPointSoFar
-          : nearestPointOnThisLine;
-      },
-      null
-    )!.geometry;
 }

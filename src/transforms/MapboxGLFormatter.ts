@@ -21,7 +21,7 @@ import {
   MapboxGLSkiAreaFeature,
   MapboxGLSkiAreaProperties
 } from "../features/SkiAreaFeature";
-import { centralPointInObjects as centralPointInGeometry } from "./GeoTransforms";
+import { centralPointsInFeatures } from "./GeoTransforms";
 
 export function formatter(
   type: FeatureType,
@@ -138,7 +138,7 @@ export function formatter(
 
     return {
       type: feature.type,
-      geometry: centralPointInGeometry(feature.geometry),
+      geometry: centralPointsInFeatures(feature.geometry),
       properties: mapboxGLProperties
     };
   }
