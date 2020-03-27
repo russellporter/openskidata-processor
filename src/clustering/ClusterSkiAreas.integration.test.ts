@@ -276,20 +276,20 @@ it("generates ski areas by activity", async () => {
       Array [
         Object {
           "activities": Array [
-            "nordic",
-          ],
-          "id": "mock-UUID-1",
-          "name": null,
-        },
-        Object {
-          "activities": Array [
             "downhill",
           ],
           "id": "mock-UUID-0",
           "name": null,
         },
+        Object {
+          "activities": Array [
+            "nordic",
+          ],
+          "id": "mock-UUID-1",
+          "name": null,
+        },
       ]
-    `);
+      `);
   } finally {
     mockFS.restore();
   }
@@ -1049,6 +1049,411 @@ it("does not generate ski area for ungroomed run", async () => {
   }
 });
 
+it("associates lifts and runs with polygon openstreetmap ski area", async () => {
+  TestHelpers.mockFeatureFiles(
+    [
+      TestHelpers.mockSkiAreaFeature({
+        id: "1",
+        name: "Rabenkopflift Oberau",
+        activities: [Activity.Downhill],
+        sources: [{ type: SourceType.OPENSTREETMAP, id: "13666" }],
+        geometry: {
+          type: "Polygon",
+          coordinates: [
+            [
+              [11, 47],
+              [12, 47],
+              [12, 48],
+              [11, 48],
+              [11, 47]
+            ]
+          ]
+        }
+      })
+    ],
+    [
+      TestHelpers.mockLiftFeature({
+        id: "2",
+        name: "Skilift Oberau",
+        liftType: LiftType.TBar,
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [11.1223444, 47.5572422],
+            [11.1164297, 47.5581563]
+          ]
+        }
+      })
+    ],
+    [
+      TestHelpers.mockRunFeature({
+        id: "3",
+        name: "Oberauer Skiabfahrt",
+        uses: [RunUse.Downhill],
+        difficulty: RunDifficulty.EASY,
+        geometry: {
+          type: "Polygon",
+          coordinates: [
+            [
+              [11.1164229, 47.558125],
+              [11.1163655, 47.5579742],
+              [11.1171866, 47.5576413],
+              [11.1164229, 47.558125]
+            ]
+          ]
+        }
+      })
+    ]
+  );
+
+  try {
+    await clusterSkiAreas(
+      "intermediate_ski_areas.geojson",
+      "output/ski_areas.geojson",
+      "intermediate_lifts.geojson",
+      "output/lifts.geojson",
+      "intermediate_runs.geojson",
+      "output/runs.geojson",
+      "http://localhost:" + container.getMappedPort(8529)
+    );
+
+    expect(
+      TestHelpers.fileContents("output/lifts.geojson").features.map(
+        simplifiedLiftFeature
+      )
+    ).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "id": "2",
+          "name": "Skilift Oberau",
+          "skiAreas": Array [
+            "1",
+          ],
+        },
+      ]
+    `);
+
+    expect(
+      TestHelpers.fileContents("output/runs.geojson").features.map(
+        simplifiedRunFeature
+      )
+    ).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "id": "3",
+          "name": "Oberauer Skiabfahrt",
+          "skiAreas": Array [
+            "1",
+          ],
+        },
+      ]
+    `);
+  } finally {
+    mockFS.restore();
+  }
+});
+
+it("associates lifts and runs adjacent to polygon openstreetmap ski area when no other polygon contains them", async () => {
+  TestHelpers.mockFeatureFiles(
+    [
+      TestHelpers.mockSkiAreaFeature({
+        id: "1",
+        name: "Ski Area",
+        activities: [Activity.Downhill],
+        sources: [{ type: SourceType.OPENSTREETMAP, id: "13666" }],
+        geometry: {
+          type: "Polygon",
+          coordinates: [
+            [
+              [0, 0.0001],
+              [0.0001, 0.0001],
+              [0.0001, 0.0002],
+              [0, 0.0002],
+              [0, 0.0001]
+            ]
+          ]
+        }
+      })
+    ],
+    [
+      TestHelpers.mockLiftFeature({
+        id: "2",
+        name: "Lift",
+        liftType: LiftType.TBar,
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [0, 0],
+            [1, 0]
+          ]
+        }
+      })
+    ],
+    [
+      TestHelpers.mockRunFeature({
+        id: "3",
+        name: "Run",
+        uses: [RunUse.Downhill],
+        difficulty: RunDifficulty.EASY,
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [1, 0],
+            [1, 1]
+          ]
+        }
+      })
+    ]
+  );
+
+  try {
+    await clusterSkiAreas(
+      "intermediate_ski_areas.geojson",
+      "output/ski_areas.geojson",
+      "intermediate_lifts.geojson",
+      "output/lifts.geojson",
+      "intermediate_runs.geojson",
+      "output/runs.geojson",
+      "http://localhost:" + container.getMappedPort(8529)
+    );
+
+    expect(
+      TestHelpers.fileContents("output/lifts.geojson").features.map(
+        simplifiedLiftFeature
+      )
+    ).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "id": "2",
+          "name": "Lift",
+          "skiAreas": Array [
+            "1",
+          ],
+        },
+      ]
+      `);
+
+    expect(
+      TestHelpers.fileContents("output/runs.geojson").features.map(
+        simplifiedRunFeature
+      )
+    ).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "id": "3",
+          "name": "Run",
+          "skiAreas": Array [
+            "1",
+          ],
+        },
+      ]
+      `);
+  } finally {
+    mockFS.restore();
+  }
+});
+
+it("associates lifts correctly to adjacent ski areas based on their polygons", async () => {
+  TestHelpers.mockFeatureFiles(
+    [
+      TestHelpers.mockSkiAreaFeature({
+        id: "1",
+        activities: [Activity.Downhill],
+        sources: [{ type: SourceType.OPENSTREETMAP, id: "1" }],
+        geometry: {
+          type: "Polygon",
+          coordinates: [
+            [
+              [0, 0],
+              [1, 0],
+              [1, 1],
+              [0, 1],
+              [0, 0]
+            ]
+          ]
+        }
+      }),
+      TestHelpers.mockSkiAreaFeature({
+        id: "2",
+        activities: [Activity.Downhill],
+        sources: [{ type: SourceType.OPENSTREETMAP, id: "2" }],
+        geometry: {
+          type: "Polygon",
+          coordinates: [
+            [
+              [0, 0],
+              [-1, 0],
+              [-1, -1],
+              [0, -1],
+              [0, 0]
+            ]
+          ]
+        }
+      })
+    ],
+    [
+      TestHelpers.mockLiftFeature({
+        id: "3",
+        name: "Ski Area 1: Lift",
+        liftType: LiftType.TBar,
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [0.0001, 0],
+            [1, 0]
+          ]
+        }
+      }),
+      TestHelpers.mockLiftFeature({
+        id: "4",
+        name: "Ski Area 2: Lift",
+        liftType: LiftType.TBar,
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [-0.0001, 0],
+            [-1, 0]
+          ]
+        }
+      })
+    ],
+    []
+  );
+
+  try {
+    await clusterSkiAreas(
+      "intermediate_ski_areas.geojson",
+      "output/ski_areas.geojson",
+      "intermediate_lifts.geojson",
+      "output/lifts.geojson",
+      "intermediate_runs.geojson",
+      "output/runs.geojson",
+      "http://localhost:" + container.getMappedPort(8529)
+    );
+
+    expect(
+      TestHelpers.fileContents("output/lifts.geojson").features.map(
+        simplifiedLiftFeature
+      )
+    ).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "id": "3",
+          "name": "Ski Area 1: Lift",
+          "skiAreas": Array [
+            "1",
+          ],
+        },
+        Object {
+          "id": "4",
+          "name": "Ski Area 2: Lift",
+          "skiAreas": Array [
+            "2",
+          ],
+        },
+      ]
+      `);
+  } finally {
+    mockFS.restore();
+  }
+});
+
+it("merges Skimap.org ski area with OpenStreetMap ski area", async () => {
+  TestHelpers.mockFeatureFiles(
+    [
+      TestHelpers.mockSkiAreaFeature({
+        id: "1",
+        activities: [Activity.Downhill],
+        sources: [{ type: SourceType.OPENSTREETMAP, id: "1" }],
+        geometry: {
+          type: "Point",
+          coordinates: [0, 0]
+        }
+      }),
+      TestHelpers.mockSkiAreaFeature({
+        id: "2",
+        activities: [Activity.Downhill],
+        sources: [{ type: SourceType.SKIMAP_ORG, id: "2" }],
+        geometry: {
+          type: "Point",
+          coordinates: [1, 0]
+        }
+      })
+    ],
+    [
+      TestHelpers.mockLiftFeature({
+        id: "3",
+        name: "Lift",
+        liftType: LiftType.TBar,
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [0, 0],
+            [1, 0]
+          ]
+        }
+      })
+    ],
+    []
+  );
+
+  try {
+    await clusterSkiAreas(
+      "intermediate_ski_areas.geojson",
+      "output/ski_areas.geojson",
+      "intermediate_lifts.geojson",
+      "output/lifts.geojson",
+      "intermediate_runs.geojson",
+      "output/runs.geojson",
+      "http://localhost:" + container.getMappedPort(8529)
+    );
+
+    expect(
+      TestHelpers.fileContents("output/ski_areas.geojson").features.map(
+        simplifiedSkiAreaFeatureWithSources
+      )
+    ).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "activities": Array [
+            "downhill",
+          ],
+          "id": "2",
+          "name": "Name",
+          "sources": Array [
+            Object {
+              "id": "2",
+              "type": "skimap.org",
+            },
+            Object {
+              "id": "1",
+              "type": "openstreetmap",
+            },
+          ],
+        },
+      ]
+      `);
+
+    expect(
+      TestHelpers.fileContents("output/lifts.geojson").features.map(
+        simplifiedLiftFeature
+      )
+    ).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "id": "3",
+          "name": "Lift",
+          "skiAreas": Array [
+            "2",
+          ],
+        },
+      ]
+      `);
+  } finally {
+    mockFS.restore();
+  }
+});
+
 function simplifiedLiftFeature(feature: LiftFeature) {
   return {
     id: feature.properties.id,
@@ -1077,6 +1482,13 @@ function simplifiedSkiAreaFeatureWithStatistics(feature: SkiAreaFeature) {
   return {
     ...simplifiedSkiAreaFeature(feature),
     statistics: feature.properties.statistics
+  };
+}
+
+function simplifiedSkiAreaFeatureWithSources(feature: SkiAreaFeature) {
+  return {
+    ...simplifiedSkiAreaFeature(feature),
+    sources: feature.properties.sources
   };
 }
 
