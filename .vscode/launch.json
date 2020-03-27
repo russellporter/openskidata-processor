@@ -5,8 +5,14 @@
       "type": "node",
       "request": "launch",
       "name": "Debug Tests",
-      "program": "${workspaceRoot}/node_modules/jest/bin/jest.js",
-      "cwd": "${workspaceRoot}"
+      "runtimeArgs": [
+        "--inspect-brk",
+        "${workspaceRoot}/node_modules/.bin/jest",
+        "--runInBand"
+      ],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "port": 9229
     },
     {
       "name": "Current TS File",
