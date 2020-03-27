@@ -1,4 +1,3 @@
-import centroid from "@turf/centroid";
 import * as turf from "@turf/helpers";
 import { aql, Database } from "arangojs";
 import { ArrayCursor } from "arangojs/lib/cjs/cursor";
@@ -68,7 +67,7 @@ export default async function clusterArangoGraph(
   // For each remaining unclaimed run, generate a ski area for it, associating nearby unclaimed runs & lifts.
   await generateSkiAreasForUnassignedObjects();
 
-  await augmentSkiAreasWithStatistics();
+  await augmentSkiAreasBasedOnAssociatedObjects();
 
   async function assignObjectsToSkiAreas(options: {
     skiArea: {
@@ -376,10 +375,9 @@ export default async function clusterArangoGraph(
       return { type: "Feature", geometry: object.geometry, properties: {} };
     });
     const objects = turf.featureCollection(features);
-    const geometry = centroid(objects as turf.FeatureCollection<any, any>)
-      .geometry;
+    const geometry = polygonEnclosing(objects);
     if (!geometry) {
-      throw "No centroid point could be found.";
+      throw "No polygon could be created.";
     }
 
     const draftSkiArea: DraftSkiArea = {
@@ -423,25 +421,30 @@ export default async function clusterArangoGraph(
     return await cursor.all();
   }
 
-  // TODO: Also augment ski ara geometry based on runs & lifts
-  async function augmentSkiAreasWithStatistics(): Promise<void> {
+  async function augmentSkiAreasBasedOnAssociatedObjects(): Promise<void> {
     const skiAreasCursor = await getSkiAreas({});
     let skiAreas: SkiAreaObject[];
     while ((skiAreas = (await skiAreasCursor.nextBatch()) as SkiAreaObject[])) {
       await Promise.all(
         skiAreas.map(async skiArea => {
           const mapObjects = await getObjects(skiArea.id);
-          await augmentSkiAreaWithStatistics(skiArea.id, mapObjects);
+          await augmentSkiAreaBasedOnAssociatedObjects(skiArea.id, mapObjects);
         })
       );
     }
   }
 
-  async function augmentSkiAreaWithStatistics(
+  async function augmentSkiAreaBasedOnAssociatedObjects(
     id: string,
     memberObjects: MapObject[]
   ): Promise<void> {
     await objectsCollection.update(id, {
+      geometry: polygonEnclosing(
+        turf.featureCollection(
+          memberObjects.map(object => turf.feature(object.geometry))
+        )
+      ),
+      isPolygon: true,
       properties: { statistics: skiAreaStatistics(memberObjects) }
     });
   }

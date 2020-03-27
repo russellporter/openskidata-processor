@@ -5,6 +5,7 @@ import {
   point,
   polygon
 } from "@turf/helpers";
+import { Geometry } from "geojson";
 import { centralPointsInFeature, polygonEnclosing } from "./GeoTransforms";
 
 describe("GeoTransforms", () => {
@@ -952,6 +953,21 @@ describe("GeoTransforms", () => {
           "type": "Polygon",
         }
       `);
+    });
+
+    it("should work for case that exposes an infinite loop in martinez library", () => {
+      expect(
+        polygonEnclosing(
+          featureCollection<Geometry>([
+            point([0, 0]),
+            point([1, 0]),
+            lineString([
+              [0, 0],
+              [1, 0]
+            ])
+          ])
+        )?.type
+      ).toBe("Polygon");
     });
   });
 });

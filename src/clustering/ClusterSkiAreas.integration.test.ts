@@ -1458,6 +1458,83 @@ it("merges Skimap.org ski area with OpenStreetMap ski area", async () => {
   }
 });
 
+it("generates polygon geometry for ski area based on associated lifts and runs", async () => {
+  TestHelpers.mockFeatureFiles(
+    [
+      TestHelpers.mockSkiAreaFeature({
+        id: "1",
+        activities: [Activity.Downhill],
+        sources: [{ type: SourceType.OPENSTREETMAP, id: "1" }],
+        geometry: {
+          type: "Point",
+          coordinates: [0, 0]
+        }
+      })
+    ],
+    [
+      TestHelpers.mockLiftFeature({
+        id: "2",
+        name: "Lift",
+        liftType: LiftType.TBar,
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [0, 0],
+            [1, 0]
+          ]
+        }
+      })
+    ],
+    []
+  );
+
+  try {
+    await clusterSkiAreas(
+      "intermediate_ski_areas.geojson",
+      "output/ski_areas.geojson",
+      "intermediate_lifts.geojson",
+      "output/lifts.geojson",
+      "intermediate_runs.geojson",
+      "output/runs.geojson",
+      "http://localhost:" + container.getMappedPort(8529)
+    );
+
+    expect(
+      TestHelpers.fileContents("output/ski_areas.geojson").features.map(
+        (feature: SkiAreaFeature) => feature.geometry
+      )
+    ).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "coordinates": Array [
+            0,
+            0,
+          ],
+          "type": "Point",
+        },
+      ]
+      `);
+
+    expect(
+      TestHelpers.fileContents("output/lifts.geojson").features.map(
+        simplifiedLiftFeature
+      )
+    ).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "id": "2",
+          "name": "Lift",
+          "skiAreas": Array [
+            "1",
+          ],
+        },
+      ]
+      `);
+  } finally {
+    mockFS.restore();
+  }
+});
+
 function simplifiedLiftFeature(feature: LiftFeature) {
   return {
     id: feature.properties.id,
