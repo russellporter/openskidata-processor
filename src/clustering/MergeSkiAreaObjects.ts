@@ -14,6 +14,7 @@ export default function mergeSkiAreaObjects(
   const primarySkiAreaIndex =
     skimapOrgSkiAreaIndex !== -1 ? skimapOrgSkiAreaIndex : 0;
   const primarySkiArea = skiAreas[primarySkiAreaIndex];
+  delete skiAreas[primarySkiAreaIndex];
 
   return skiAreas.reduce((primarySkiArea, otherSkiArea) => {
     return {
