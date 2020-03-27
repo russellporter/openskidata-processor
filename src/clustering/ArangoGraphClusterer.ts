@@ -1,3 +1,4 @@
+import centroid from "@turf/centroid";
 import * as turf from "@turf/helpers";
 import { aql, Database } from "arangojs";
 import { ArrayCursor } from "arangojs/lib/cjs/cursor";
@@ -375,7 +376,8 @@ export default async function clusterArangoGraph(
       return { type: "Feature", geometry: object.geometry, properties: {} };
     });
     const objects = turf.featureCollection(features);
-    const geometry = polygonEnclosing(objects);
+    const geometry = centroid(objects as turf.FeatureCollection<any, any>)
+      .geometry;
     if (!geometry) {
       throw "No centroid point could be found.";
     }
