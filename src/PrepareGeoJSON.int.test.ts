@@ -350,14 +350,15 @@ it("produces output for simple input", async () => {
 });
 
 it("shortens ski area names for Mapbox GL output", async () => {
+  const longName =
+    "Ski Welt (Wilder Kaiser – Gosau, Scheffau, Ellmau - Going, Söll, Brixen, Westendorf, Hopfgarten - Itter - Kelchsau)";
   TestHelpers.mockInputFiles({
     skiMapSkiAreas: [
       {
         type: "Feature",
         properties: {
           id: "13666",
-          name:
-            "Ski Welt (Wilder Kaiser – Gosau, Scheffau, Ellmau - Going, Söll, Brixen, Westendorf, Hopfgarten - Itter - Kelchsau)",
+          name: longName,
           status: null,
           activities: [Activity.Downhill],
           scalerank: 1,
@@ -376,82 +377,70 @@ it("shortens ski area names for Mapbox GL output", async () => {
 
   await prepare(input, intermediate, output, config);
 
-  expect(TestHelpers.folderContents("output")).toMatchInlineSnapshot(`
-Map {
-  "output/lifts.geojson" => Object {
-    "features": Array [],
-    "type": "FeatureCollection",
-  },
-  "output/mapboxgl_lifts.geojson" => Object {
-    "features": Array [],
-    "type": "FeatureCollection",
-  },
-  "output/mapboxgl_runs.geojson" => Object {
-    "features": Array [],
-    "type": "FeatureCollection",
-  },
-  "output/mapboxgl_ski_areas.geojson" => Object {
-    "features": Array [
-      Object {
-        "geometry": Object {
-          "coordinates": Array [
-            11.122066084534,
-            47.557111836837,
-          ],
-          "type": "Point",
+  expect(
+    TestHelpers.fileContents("output/mapboxgl_ski_areas.geojson").features[0]
+      .properties.name
+  ).toBe("Ski Welt");
+  expect(
+    TestHelpers.fileContents("output/ski_areas.geojson").features[0].properties
+      .name
+  ).toBe(longName);
+});
+
+it("processes OpenStreetMap ski areas", async () => {
+  TestHelpers.mockInputFiles({
+    skiMapSkiAreas: [],
+    openStreetMapSkiAreas: [
+      {
+        type: "Feature",
+        properties: {
+          id: "13666",
+          landuse: "winter_sports"
         },
-        "properties": Object {
-          "downhillDistance": null,
-          "has_downhill": true,
-          "id": "fe979dc3e5fd0774182f2f77940f49a89c5e55b6",
-          "maxElevation": null,
-          "name": "Ski Welt",
-          "nordicDistance": null,
-          "status": null,
-          "vertical": null,
-        },
-        "type": "Feature",
-      },
+        geometry: {
+          type: "Point",
+          coordinates: [11.122066084534, 47.557111836837]
+        }
+      }
     ],
-    "type": "FeatureCollection",
-  },
-  "output/runs.geojson" => Object {
-    "features": Array [],
-    "type": "FeatureCollection",
-  },
-  "output/ski_areas.geojson" => Object {
-    "features": Array [
+    lifts: [],
+    runs: []
+  });
+
+  await prepare(input, intermediate, output, config);
+
+  expect(TestHelpers.fileContents("output/ski_areas.geojson"))
+    .toMatchInlineSnapshot(`
       Object {
-        "geometry": Object {
-          "coordinates": Array [
-            11.122066084534,
-            47.557111836837,
-          ],
-          "type": "Point",
-        },
-        "properties": Object {
-          "activities": Array [
-            "downhill",
-          ],
-          "generated": false,
-          "id": "fe979dc3e5fd0774182f2f77940f49a89c5e55b6",
-          "name": "Ski Welt (Wilder Kaiser – Gosau, Scheffau, Ellmau - Going, Söll, Brixen, Westendorf, Hopfgarten - Itter - Kelchsau)",
-          "runConvention": "europe",
-          "sources": Array [
-            Object {
-              "id": "13666",
-              "type": "skimap.org",
+        "features": Array [
+          Object {
+            "geometry": Object {
+              "coordinates": Array [
+                11.122066084534,
+                47.557111836837,
+              ],
+              "type": "Point",
             },
-          ],
-          "status": null,
-          "type": "skiArea",
-          "website": null,
-        },
-        "type": "Feature",
-      },
-    ],
-    "type": "FeatureCollection",
-  },
-}
-`);
+            "properties": Object {
+              "activities": Array [],
+              "generated": false,
+              "id": "3a731670d9aca990ce526448a2bb1bb092fb4ff9",
+              "name": null,
+              "runConvention": "europe",
+              "sources": Array [
+                Object {
+                  "id": "13666",
+                  "type": "openstreetmap",
+                },
+              ],
+              "status": "operating",
+              "type": "skiArea",
+              "website": null,
+            },
+            "type": "Feature",
+          },
+        ],
+        "type": "FeatureCollection",
+      }
+      `);
 });

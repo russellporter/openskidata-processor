@@ -25,7 +25,7 @@ import { SkiAreaGeometry } from "./clustering/MapObject";
 import { InputLiftFeature } from "./features/LiftFeature";
 import { InputRunFeature, InputRunGeometry } from "./features/RunFeature";
 import {
-  InputOpenStreetMapSkiAreaProperties,
+  InputOpenStreetMapSkiAreaFeature,
   InputSkiMapOrgSkiAreaFeature
 } from "./features/SkiAreaFeature";
 
@@ -33,7 +33,7 @@ export interface FolderContents extends Map<string, any | FolderContents> {}
 
 export function mockInputFiles(input: {
   skiMapSkiAreas: InputSkiMapOrgSkiAreaFeature[];
-  openStreetMapSkiAreas: InputOpenStreetMapSkiAreaProperties[];
+  openStreetMapSkiAreas: InputOpenStreetMapSkiAreaFeature[];
   lifts: InputLiftFeature[];
   runs: InputRunFeature[];
 }) {
