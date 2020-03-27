@@ -268,11 +268,15 @@ it("generates ski areas by activity", async () => {
       ]
     `);
 
-    expect(
-      TestHelpers.fileContents("output/ski_areas.geojson").features.map(
-        simplifiedSkiAreaFeature
-      )
-    ).toMatchInlineSnapshot(`
+    let features: SkiAreaFeature[] = TestHelpers.fileContents(
+      "output/ski_areas.geojson"
+    ).features;
+    let simplifiedFeatures = features
+      .map(simplifiedSkiAreaFeature)
+      // Ensure snapshots are consistent across test runs
+      .sort((left, right) => left.id.localeCompare(right.id));
+
+    expect(simplifiedFeatures).toMatchInlineSnapshot(`
       Array [
         Object {
           "activities": Array [
