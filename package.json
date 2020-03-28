@@ -25,11 +25,10 @@
     "tmp": "0.0.33",
     "topojson-client": "^3.0.0",
     "topojson-server": "^3.0.0",
-    "ts-node": "^8.0.3",
-    "typescript": "^3.7.3",
     "uuid": "^3.3.2"
   },
   "devDependencies": {
+    "@babel/cli": "^7.8.4",
     "@babel/core": "^7.9.0",
     "@babel/plugin-proposal-class-properties": "^7.8.3",
     "@babel/plugin-proposal-object-rest-spread": "^7.9.0",
@@ -56,15 +55,17 @@
     "nock": "^11.9.1",
     "prettier": "^1.19.1",
     "regenerator-runtime": "^0.13.5",
-    "testcontainers": "^1.3.1"
+    "testcontainers": "^1.3.1",
+    "typescript": "^3.7.3"
   },
   "scripts": {
+    "build": "babel src --out-dir dist --copy-files --extensions '.ts,.js'",
     "test": "jest",
     "record-tests": "jest -u",
     "check-types": "tsc",
-    "download-and-prepare": "node --max_old_space_size=3072 -r ts-node/register src/scripts/download_and_prepare.ts",
-    "prepare-geojson": "node --max_old_space_size=3072 -r ts-node/register src/scripts/prepare_geojson.ts",
-    "cluster": "node --max_old_space_size=3072 -r ts-node/register src/scripts/cluster_ski_areas.ts"
+    "download-and-prepare": "npm run build && node --max_old_space_size=3072 dist/scripts/download_and_prepare.js",
+    "prepare-geojson": "npm run build && node --max_old_space_size=3072 dist/scripts/prepare_geojson.js",
+    "cluster": "npm run build && node --max_old_space_size=3072 dist/scripts/cluster_ski_areas.js"
   },
   "author": "Russell Porter",
   "license": "ISC"
