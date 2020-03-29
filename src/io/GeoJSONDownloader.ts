@@ -49,9 +49,12 @@ export default async function downloadAndConvertToGeoJSON(
   const paths = new GeoJSONInputPaths(folder);
 
   await Promise.all([
-    downloadAndConvertOSMToGeoJSON(runsURL, paths.runs),
-    downloadAndConvertOSMToGeoJSON(liftsURL, paths.lifts),
-    downloadAndConvertOSMToGeoJSON(skiAreasURL, paths.skiAreas),
+    (async () => {
+      // Serialize downloads so we don't get rate limited by the Overpass API
+      await downloadAndConvertOSMToGeoJSON(runsURL, paths.runs);
+      await downloadAndConvertOSMToGeoJSON(liftsURL, paths.lifts);
+      await downloadAndConvertOSMToGeoJSON(skiAreasURL, paths.skiAreas);
+    })(),
     downloadToFile(skiMapSkiAreasURL, paths.skiMapSkiAreas)
   ]);
 
