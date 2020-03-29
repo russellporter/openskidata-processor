@@ -6,10 +6,9 @@ import { GeoJSONInputPaths } from "./GeoJSONFiles";
 import convertOSMToGeoJSON from "./OSMToGeoJSONConverter";
 
 function overpassURLForQuery(query: string) {
-    return (
-        "http://overpass-api.de/api/interpreter?data=" +
-        encodeURIComponent(query)
-    );
+  return (
+    "http://overpass-api.de/api/interpreter?data=" + encodeURIComponent(query)
+  );
 }
 
 const runsURL = overpassURLForQuery(`
@@ -45,50 +44,50 @@ out;
 const skiMapSkiAreasURL = "https://skimap.org/SkiAreas/index.geojson";
 
 export default async function downloadAndConvertToGeoJSON(
-    folder: string
+  folder: string
 ): Promise<GeoJSONInputPaths> {
-    const paths = new GeoJSONInputPaths(folder);
+  const paths = new GeoJSONInputPaths(folder);
 
-    await Promise.all([
-        downloadAndConvertOSMToGeoJSON(runsURL, paths.runs),
-        downloadAndConvertOSMToGeoJSON(liftsURL, paths.lifts),
-        downloadAndConvertOSMToGeoJSON(skiAreasURL, paths.skiAreas),
-        downloadToFile(skiMapSkiAreasURL, paths.skiMapSkiAreas)
-    ]);
+  await Promise.all([
+    downloadAndConvertOSMToGeoJSON(runsURL, paths.runs),
+    downloadAndConvertOSMToGeoJSON(liftsURL, paths.lifts),
+    downloadAndConvertOSMToGeoJSON(skiAreasURL, paths.skiAreas),
+    downloadToFile(skiMapSkiAreasURL, paths.skiMapSkiAreas)
+  ]);
 
-    return paths;
+  return paths;
 }
 
 async function downloadAndConvertOSMToGeoJSON(
-    sourceURL: string,
-    targetGeoJSONPath: string
+  sourceURL: string,
+  targetGeoJSONPath: string
 ): Promise<void> {
-    const tempOSMPath = tmp.fileSync().name;
-    await downloadToFile(sourceURL, tempOSMPath);
+  const tempOSMPath = tmp.fileSync().name;
+  await downloadToFile(sourceURL, tempOSMPath);
 
-    convertOSMToGeoJSON(tempOSMPath, targetGeoJSONPath);
+  convertOSMToGeoJSON(tempOSMPath, targetGeoJSONPath);
 }
 
 async function downloadToFile(
-    sourceURL: string,
-    targetPath: string
+  sourceURL: string,
+  targetPath: string
 ): Promise<void> {
-    const outputStream = Fs.createWriteStream(targetPath);
-    let statusCode: number | null = null;
-    request(sourceURL, {
-        timeout: 30 * 60 * 1000,
-        headers: { Referer: "https://openskimap.org" }
+  const outputStream = Fs.createWriteStream(targetPath);
+  let statusCode: number | null = null;
+  request(sourceURL, {
+    timeout: 30 * 60 * 1000,
+    headers: { Referer: "https://openskimap.org" }
+  })
+    .on("response", function(response) {
+      statusCode = response.statusCode;
     })
-        .on("response", function(response) {
-            statusCode = response.statusCode;
-        })
-        .pipe(outputStream);
-    await streamToPromise(outputStream);
+    .pipe(outputStream);
+  await streamToPromise(outputStream);
 
-    if (statusCode === null || statusCode < 200 || statusCode >= 300) {
-        throw "Failed downloading file at URL (status: " +
-            statusCode +
-            "): " +
-            sourceURL;
-    }
+  if (statusCode === null || statusCode < 200 || statusCode >= 300) {
+    throw "Failed downloading file at URL (status: " +
+      statusCode +
+      "): " +
+      sourceURL;
+  }
 }
