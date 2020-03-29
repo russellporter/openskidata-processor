@@ -371,7 +371,7 @@ export default async function clusterArangoGraph(
                 : aql``
             }
             RETURN object`,
-      { batchSize: batchSize }
+      { batchSize: batchSize, ttl: 3600 }
     );
   }
 
