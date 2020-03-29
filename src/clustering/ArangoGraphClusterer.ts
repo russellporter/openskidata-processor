@@ -7,7 +7,7 @@ import * as GeoJSON from "geojson";
 import { Activity, FeatureType, SourceType, Status } from "openskidata-format";
 import uuid from "uuid/v4";
 import { skiAreaStatistics } from "../statistics/SkiAreaStatistics";
-import { bufferGeometry, polygonEnclosing } from "../transforms/GeoTransforms";
+import { bufferGeometry } from "../transforms/GeoTransforms";
 import { getRunConvention } from "../transforms/RunFormatter";
 import {
   DraftSkiArea,
@@ -291,8 +291,31 @@ export default async function clusterArangoGraph(
             RETURN object
         `;
 
-    const cursor = await database.query(query);
-    return await cursor.all();
+    try {
+      const cursor = await database.query(query, { ttl: 120 });
+      return await cursor.all();
+    } catch (error) {
+      if (
+        (error.response.body.errorMessage as string).includes(
+          "Polygon is not valid"
+        ) ||
+        (error.response.body.errorMessage as string).includes(
+          "Invalid loop in polygon"
+        ) ||
+        (error.response.body.errorMessage as string).includes("Loop not closed")
+      ) {
+        // ArangoDB can fail with polygon not valid in rare cases.
+        // Seems to happen when people abuse landuse=winter_sports and add all members of a ski area to a multipolygon relation.
+        // For example https://www.openstreetmap.org/relation/6250272
+        // In that case, we just log it and move on.
+        console.log("Failed finding nearby objects (invalid polygon)");
+        console.log(error);
+        console.log("Area: " + JSON.stringify(area));
+        return [];
+      }
+
+      throw error;
+    }
   }
 
   async function markSkiArea(
