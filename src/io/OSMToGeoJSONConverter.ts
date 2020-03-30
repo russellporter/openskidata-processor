@@ -111,20 +111,13 @@ export function convertOSMToGeoJSON(
     flatProperties: true,
     uninterestingTags: (
       tags: { [key: string]: string } | null | undefined,
+      // Normally with osmtogeojson, one would not include a feature if the interesting tag is an ignored tag.
+      // This is useful for relations where both the relation and the way/node are tagged with the interesting tag.
+      // However we handle this ourselves later on by merging overlapping ski runs and ski areas, so don't do this here.
+      // By deferring this we can get better data by combining data from the ski run way and the ski run relation, for example.
+      // The same is true for winter sports relations that associate multiple ski areas together.
       ignoreTags: { [key: string]: string | boolean }
-    ) => !shouldIncludeFeature(tagsExceptIgnoredOnes(tags || {}, ignoreTags)),
+    ) => !shouldIncludeFeature(tags || {}),
     deduplicator: undefined
   });
-}
-
-function tagsExceptIgnoredOnes(
-  tags: { [key: string]: string },
-  ignoreTags: { [key: string]: string | boolean }
-): { [key: string]: string } {
-  return Object.keys(tags)
-    .filter(key => ignoreTags[key] !== true && ignoreTags[key] !== tags[key])
-    .reduce(
-      (res: { [key: string]: string }, key) => ((res[key] = tags[key]), res),
-      {}
-    );
 }

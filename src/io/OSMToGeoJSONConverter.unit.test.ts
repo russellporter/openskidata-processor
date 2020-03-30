@@ -74,7 +74,8 @@ describe("OSMToGeoJSONConverter", () => {
           tags: {
             natural: "wood",
             source: "Kartverket N50",
-            "source:date": "1989-07-01"
+            "source:date": "1989-07-01",
+            landuse: "winter_sports"
           }
         },
         {
@@ -161,6 +162,40 @@ describe("OSMToGeoJSONConverter", () => {
               "id": "relation/10001",
               "landuse": "winter_sports",
               "type": "multipolygon",
+            },
+            "type": "Feature",
+          },
+          Object {
+            "geometry": Object {
+              "coordinates": Array [
+                Array [
+                  Array [
+                    2,
+                    2,
+                  ],
+                  Array [
+                    3,
+                    3,
+                  ],
+                  Array [
+                    2,
+                    3,
+                  ],
+                  Array [
+                    2,
+                    2,
+                  ],
+                ],
+              ],
+              "type": "Polygon",
+            },
+            "id": "way/1003",
+            "properties": Object {
+              "id": "way/1003",
+              "landuse": "winter_sports",
+              "natural": "wood",
+              "source": "Kartverket N50",
+              "source:date": "1989-07-01",
             },
             "type": "Feature",
           },
