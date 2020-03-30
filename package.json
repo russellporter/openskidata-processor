@@ -3,6 +3,12 @@
   "version": "1.0.0",
   "description": "Data pipeline for processing OpenStreetMap and Skimap.org data into OpenSkiData and OpenSkiMap tiles",
   "main": "run.sh",
+  "jest": {
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/dist/"
+    ]
+  },
   "dependencies": {
     "@turf/boolean-point-in-polygon": "^6.0.1",
     "@turf/buffer": "^5.1.5",
