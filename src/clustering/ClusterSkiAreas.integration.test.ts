@@ -1539,6 +1539,121 @@ it("removes OpenStreetMap ski areas that span across multiple Skimap.org ski are
   }
 });
 
+it("adds activities to OpenStreetMap ski areas based on the associated runs", async () => {
+  TestHelpers.mockFeatureFiles(
+    [
+      TestHelpers.mockSkiAreaFeature({
+        id: "1",
+        activities: [],
+        sources: [{ type: SourceType.OPENSTREETMAP, id: "1" }],
+        geometry: {
+          type: "Polygon",
+          coordinates: [
+            [
+              [0, 0],
+              [1, 0],
+              [1, 1],
+              [0, 1],
+              [0, 0]
+            ]
+          ]
+        }
+      })
+    ],
+    [],
+    [
+      TestHelpers.mockRunFeature({
+        id: "2",
+        name: "Nordic trail",
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [0, 0],
+            [1, 0]
+          ]
+        },
+        uses: [RunUse.Nordic]
+      })
+    ]
+  );
+
+  try {
+    await clusterSkiAreas(
+      "intermediate_ski_areas.geojson",
+      "output/ski_areas.geojson",
+      "intermediate_lifts.geojson",
+      "output/lifts.geojson",
+      "intermediate_runs.geojson",
+      "output/runs.geojson",
+      "http://localhost:" + container.getMappedPort(8529)
+    );
+
+    expect(
+      TestHelpers.fileContents("output/ski_areas.geojson").features.map(
+        simplifiedSkiAreaFeature
+      )
+    ).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "activities": Array [
+            "nordic",
+          ],
+          "id": "1",
+          "name": "Name",
+        },
+      ]
+      `);
+  } finally {
+    mockFS.restore();
+  }
+});
+
+it("removes OpenStreetMap ski area without nearby runs/lifts", async () => {
+  TestHelpers.mockFeatureFiles(
+    [
+      TestHelpers.mockSkiAreaFeature({
+        id: "1",
+        activities: [],
+        sources: [{ type: SourceType.OPENSTREETMAP, id: "1" }],
+        geometry: {
+          type: "Polygon",
+          coordinates: [
+            [
+              [0, 0],
+              [1, 0],
+              [1, 1],
+              [0, 1],
+              [0, 0]
+            ]
+          ]
+        }
+      })
+    ],
+    [],
+    []
+  );
+
+  try {
+    await clusterSkiAreas(
+      "intermediate_ski_areas.geojson",
+      "output/ski_areas.geojson",
+      "intermediate_lifts.geojson",
+      "output/lifts.geojson",
+      "intermediate_runs.geojson",
+      "output/runs.geojson",
+      "http://localhost:" + container.getMappedPort(8529)
+    );
+
+    expect(
+      TestHelpers.fileContents("output/ski_areas.geojson").features.map(
+        simplifiedSkiAreaFeature
+      )
+    ).toMatchInlineSnapshot(`Array []`);
+  } finally {
+    mockFS.restore();
+  }
+});
+
 function simplifiedLiftFeature(feature: LiftFeature) {
   return {
     id: feature.properties.id,

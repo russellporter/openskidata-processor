@@ -488,6 +488,7 @@ export default async function clusterArangoGraph(
     const query = aql`
             FOR object in ${objectsCollection}
             FILTER ${skiAreaID} IN object.skiAreas
+            FILTER object.type != ${MapObjectType.SkiArea}
             RETURN object
         `;
 
@@ -513,21 +514,32 @@ export default async function clusterArangoGraph(
     skiArea: SkiAreaObject,
     memberObjects: MapObject[]
   ): Promise<void> {
-    if (memberObjects.length === 0) {
+    const noSkimapOrgSource = !skiArea.properties.sources.some(
+      source => source.type == SourceType.SKIMAP_ORG
+    );
+    if (memberObjects.length === 0 && noSkimapOrgSource) {
       // Remove OpenStreetMap ski areas with no associated runs or lifts.
       // These are likely not actually ski areas,
       // as the OpenStreetMap tagging semantics (landuse=winter_sports) are not ski area specific.
-      const noSkimapOrgSource = !skiArea.properties.sources.some(
-        source => source.type == SourceType.SKIMAP_ORG
-      );
-      if (noSkimapOrgSource) {
-        await objectsCollection.remove({ _key: skiArea._key });
-        return;
-      }
+      await objectsCollection.remove({ _key: skiArea._key });
+      return;
     }
-    await objectsCollection.update(skiArea.id, {
-      properties: { statistics: skiAreaStatistics(memberObjects) }
-    });
+
+    const activities = memberObjects.reduce((accumulatedActivities, object) => {
+      object.activities.forEach(activity => {
+        if (skiAreaActivities.has(activity)) {
+          accumulatedActivities.add(activity);
+        }
+      });
+      return accumulatedActivities;
+    }, new Set(skiArea.properties.activities));
+
+    skiArea.activities = [...activities];
+    skiArea.properties.activities = [...activities];
+
+    skiArea.properties.statistics = skiAreaStatistics(memberObjects);
+
+    await objectsCollection.update(skiArea.id, skiArea);
   }
 
   function arangoGeometry(
