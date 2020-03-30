@@ -1,6 +1,7 @@
 import centroid from "@turf/centroid";
 import * as turf from "@turf/helpers";
 import { aql, Database } from "arangojs";
+import { AqlQuery } from "arangojs/lib/cjs/aql-query";
 import { ArrayCursor } from "arangojs/lib/cjs/cursor";
 import { AssertionError } from "assert";
 import * as GeoJSON from "geojson";
@@ -42,9 +43,13 @@ export default async function clusterArangoGraph(
 ): Promise<void> {
   const objectsCollection = database.collection("objects");
 
+  await removeAmbiguousDuplicateSkiAreas();
+
   // For all ski area polygons, associate runs & lifts within that polygon.
   await assignObjectsToSkiAreas({
-    skiArea: { onlySource: SourceType.OPENSTREETMAP },
+    skiArea: {
+      onlySource: SourceType.OPENSTREETMAP
+    },
     objects: { onlyInPolygon: true }
   });
 
@@ -69,6 +74,44 @@ export default async function clusterArangoGraph(
   await generateSkiAreasForUnassignedObjects();
 
   await augmentSkiAreasWithStatistics();
+
+  /**
+   * Remove OpenStreetMap ski areas that contain multiple Skimap.org ski areas in their geometry.
+   * This step removes relations that span across a group of separate ski resorts that have a shared ticketing system,
+   * for example: https://www.openstreetmap.org/relation/10728343
+   */
+  async function removeAmbiguousDuplicateSkiAreas(): Promise<void> {
+    const cursor = await getSkiAreas({
+      onlyPolygons: true,
+      onlySource: SourceType.OPENSTREETMAP
+    });
+
+    let skiAreas: SkiAreaObject[];
+    while ((skiAreas = (await cursor.nextBatch()) as SkiAreaObject[])) {
+      await Promise.all(
+        skiAreas.map(async skiArea => {
+          if (
+            skiArea.geometry.type !== "Polygon" &&
+            skiArea.geometry.type !== "MultiPolygon"
+          ) {
+            throw new AssertionError({
+              message:
+                "getSkiAreas query should have only returned ski areas with a Polygon geometry."
+            });
+          }
+          const otherSkiAreasCursor = await getSkiAreas({
+            onlySource: SourceType.SKIMAP_ORG,
+            onlyInPolygon: skiArea.geometry
+          });
+
+          const otherSkiAreas = await otherSkiAreasCursor.all();
+          if (otherSkiAreas.length > 1) {
+            await objectsCollection.remove({ _key: skiArea._key });
+          }
+        })
+      );
+    }
+  }
 
   async function assignObjectsToSkiAreas(options: {
     skiArea: {
@@ -278,9 +321,7 @@ export default async function clusterArangoGraph(
   ): Promise<MapObject[]> {
     const query = aql`
             FOR object in ${objectsCollection}
-            FILTER GEO_INTERSECTS(${
-              area.type === "Polygon" ? aql`GEO_POLYGON` : aql`GEO_MULTIPOLYGON`
-            }(${area.coordinates}), object.geometry)
+            FILTER GEO_INTERSECTS(${arangoGeometry(area)}, object.geometry)
             FILTER ${context.id} NOT IN object.skiAreas
             ${
               context.excludeObjectsAlreadyInSkiAreaPolygon
@@ -354,11 +395,19 @@ export default async function clusterArangoGraph(
   async function getSkiAreas(options: {
     onlySource?: SourceType | null;
     onlyPolygons?: boolean;
+    onlyInPolygon?: GeoJSON.Polygon | GeoJSON.MultiPolygon | null;
   }): Promise<ArrayCursor> {
-    const batchSize = 10;
+    const batchSize = 50;
     return await database.query(
       aql`
             FOR object IN ${objectsCollection}
+            ${
+              options.onlyInPolygon
+                ? aql`FILTER GEO_INTERSECTS(${arangoGeometry(
+                    options.onlyInPolygon
+                  )}, object.geometry)`
+                : aql``
+            }
             FILTER object.type == ${MapObjectType.SkiArea}
             ${
               options.onlySource
@@ -467,5 +516,16 @@ export default async function clusterArangoGraph(
     await objectsCollection.update(id, {
       properties: { statistics: skiAreaStatistics(memberObjects) }
     });
+  }
+
+  function arangoGeometry(
+    object: GeoJSON.Polygon | GeoJSON.MultiPolygon
+  ): AqlQuery {
+    switch (object.type) {
+      case "Polygon":
+        return aql`GEO_POLYGON(${object.coordinates})`;
+      case "MultiPolygon":
+        return aql`GEO_MULTIPOLYGON(${object.coordinates})`;
+    }
   }
 }

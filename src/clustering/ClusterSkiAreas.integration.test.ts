@@ -274,7 +274,7 @@ it("generates ski areas by activity", async () => {
     let simplifiedFeatures = features
       .map(simplifiedSkiAreaFeature)
       // Ensure snapshots are consistent across test runs
-      .sort((left, right) => left.id.localeCompare(right.id));
+      .sort(orderedByID);
 
     expect(simplifiedFeatures).toMatchInlineSnapshot(`
       Array [
@@ -1458,6 +1458,87 @@ it("merges Skimap.org ski area with OpenStreetMap ski area", async () => {
   }
 });
 
+it("removes OpenStreetMap ski areas that span across multiple Skimap.org ski areas", async () => {
+  TestHelpers.mockFeatureFiles(
+    [
+      TestHelpers.mockSkiAreaFeature({
+        id: "1",
+        activities: [Activity.Downhill],
+        sources: [{ type: SourceType.OPENSTREETMAP, id: "1" }],
+        geometry: {
+          type: "Polygon",
+          coordinates: [
+            [
+              [0, 0],
+              [1, 0],
+              [1, 1],
+              [0, 1],
+              [0, 0]
+            ]
+          ]
+        }
+      }),
+      TestHelpers.mockSkiAreaFeature({
+        id: "2",
+        activities: [Activity.Downhill],
+        sources: [{ type: SourceType.SKIMAP_ORG, id: "2" }],
+        geometry: {
+          type: "Point",
+          coordinates: [0.25, 0.25]
+        }
+      }),
+      TestHelpers.mockSkiAreaFeature({
+        id: "3",
+        activities: [Activity.Downhill],
+        sources: [{ type: SourceType.SKIMAP_ORG, id: "2" }],
+        geometry: {
+          type: "Point",
+          coordinates: [0.75, 0.75]
+        }
+      })
+    ],
+    [],
+    []
+  );
+
+  try {
+    await clusterSkiAreas(
+      "intermediate_ski_areas.geojson",
+      "output/ski_areas.geojson",
+      "intermediate_lifts.geojson",
+      "output/lifts.geojson",
+      "intermediate_runs.geojson",
+      "output/runs.geojson",
+      "http://localhost:" + container.getMappedPort(8529)
+    );
+
+    expect(
+      TestHelpers.fileContents("output/ski_areas.geojson")
+        .features.map(simplifiedSkiAreaFeature)
+        .sort(orderedByID)
+    ).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "activities": Array [
+            "downhill",
+          ],
+          "id": "2",
+          "name": "Name",
+        },
+        Object {
+          "activities": Array [
+            "downhill",
+          ],
+          "id": "3",
+          "name": "Name",
+        },
+      ]
+      `);
+  } finally {
+    mockFS.restore();
+  }
+});
+
 function simplifiedLiftFeature(feature: LiftFeature) {
   return {
     id: feature.properties.id,
@@ -1515,4 +1596,8 @@ function restoreConsoleLog() {
   logMock.mockRestore();
   accumulatedLogs.map(el => console.log(...el));
   accumulatedLogs = [];
+}
+
+function orderedByID(left: { id: string }, right: { id: string }): number {
+  return left.id.localeCompare(right.id);
 }
