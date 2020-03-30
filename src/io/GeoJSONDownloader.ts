@@ -38,7 +38,17 @@ async function downloadAndConvertOSMToGeoJSON(
   targetGeoJSONPath: string
 ): Promise<void> {
   const tempOSMPath = tmp.fileSync().name;
-  await downloadToFile(config.url, tempOSMPath);
+  try {
+    await downloadToFile(config.url, tempOSMPath);
+  } catch (error) {
+    console.log(
+      "Download failed due to " + error + ". Will wait a minute and try again."
+    );
+    // Wait a bit in case we are rate limited by the server.
+    await sleep(60000);
+
+    await downloadToFile(config.url, tempOSMPath);
+  }
 
   convertOSMFileToGeoJSON(
     tempOSMPath,
@@ -69,4 +79,10 @@ async function downloadToFile(
       "): " +
       sourceURL;
   }
+}
+
+function sleep(ms: number) {
+  return new Promise(resolve => {
+    setTimeout(resolve, ms);
+  });
 }
