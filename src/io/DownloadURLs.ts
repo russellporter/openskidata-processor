@@ -38,7 +38,6 @@ export const liftsDownloadConfig: OSMDownloadConfig = {
 export const skiAreasDownloadConfig: OSMDownloadConfig = {
   query: `
     [out:json][timeout:1800];(
-      node[~"^([A-Za-z]+:)?landuse$"~"^winter_sports$"];
       way[~"^([A-Za-z]+:)?landuse$"~"^winter_sports$"];
       rel[~"^([A-Za-z]+:)?landuse$"~"^winter_sports$"];
     );
