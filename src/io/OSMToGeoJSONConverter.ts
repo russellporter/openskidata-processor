@@ -110,9 +110,9 @@ export function convertOSMToGeoJSON(
     polygonFeatures: polygonFeatures,
     flatProperties: true,
     uninterestingTags: (
-      tags: { [key: string]: string },
+      tags: { [key: string]: string } | null | undefined,
       ignoreTags: { [key: string]: string | boolean }
-    ) => !shouldIncludeFeature(tagsExceptIgnoredOnes(tags, ignoreTags)),
+    ) => !shouldIncludeFeature(tagsExceptIgnoredOnes(tags || {}, ignoreTags)),
     deduplicator: undefined
   });
 }
