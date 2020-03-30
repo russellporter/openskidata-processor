@@ -45,7 +45,7 @@ export default async function clusterArangoGraph(
 
   await removeAmbiguousDuplicateSkiAreas();
 
-  // For all ski area polygons, associate runs & lifts within that polygon.
+  // For all OpenStreetMap ski areas (polygons), associate runs & lifts within that polygon.
   await assignObjectsToSkiAreas({
     skiArea: {
       onlySource: SourceType.OPENSTREETMAP
@@ -53,7 +53,7 @@ export default async function clusterArangoGraph(
     objects: { onlyInPolygon: true }
   });
 
-  // For all OpenStreetMap ski areas, associate nearby runs & lifts that are not already assigned to a ski area area polygon.
+  // For all OpenStreetMap ski areas, in a second pass, associate nearby runs & lifts that are not already assigned to a ski area polygon.
   await assignObjectsToSkiAreas({
     skiArea: { onlySource: SourceType.OPENSTREETMAP },
     objects: { onlyIfNotAlreadyAssignedToPolygon: true }
