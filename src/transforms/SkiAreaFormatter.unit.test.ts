@@ -10,8 +10,15 @@ describe("SkiAreaFormatter", () => {
     const feature: InputOpenStreetMapSkiAreaFeature = {
       type: "Feature",
       geometry: {
-        type: "Point",
-        coordinates: [0, 0]
+        type: "Polygon",
+        coordinates: [
+          [
+            [0, 0],
+            [0, 1],
+            [1, 0],
+            [0, 0]
+          ]
+        ]
       },
       properties: {
         id: "1",
@@ -26,15 +33,31 @@ describe("SkiAreaFormatter", () => {
       Object {
         "geometry": Object {
           "coordinates": Array [
-            0,
-            0,
+            Array [
+              Array [
+                0,
+                0,
+              ],
+              Array [
+                0,
+                1,
+              ],
+              Array [
+                1,
+                0,
+              ],
+              Array [
+                0,
+                0,
+              ],
+            ],
           ],
-          "type": "Point",
+          "type": "Polygon",
         },
         "properties": Object {
           "activities": Array [],
           "generated": false,
-          "id": "7be2874a9d9a64e5e60f373aec00af20338becbb",
+          "id": "2963e77902e033785a94e78f704b58025c05d02c",
           "name": "Ski Area",
           "runConvention": "europe",
           "sources": Array [
@@ -56,8 +79,15 @@ describe("SkiAreaFormatter", () => {
     const feature: InputOpenStreetMapSkiAreaFeature = {
       type: "Feature",
       geometry: {
-        type: "Point",
-        coordinates: [0, 0]
+        type: "Polygon",
+        coordinates: [
+          [
+            [0, 0],
+            [0, 1],
+            [1, 0],
+            [0, 0]
+          ]
+        ]
       },
       properties: {
         id: "1",
@@ -66,7 +96,7 @@ describe("SkiAreaFormatter", () => {
     };
 
     expect(
-      formatSkiArea(SourceType.OPENSTREETMAP)(feature).properties.status
+      formatSkiArea(SourceType.OPENSTREETMAP)(feature)?.properties.status
     ).toBe(Status.Abandoned);
   });
 
@@ -74,8 +104,15 @@ describe("SkiAreaFormatter", () => {
     const feature: InputOpenStreetMapSkiAreaFeature = {
       type: "Feature",
       geometry: {
-        type: "Point",
-        coordinates: [0, 0]
+        type: "Polygon",
+        coordinates: [
+          [
+            [0, 0],
+            [0, 1],
+            [1, 0],
+            [0, 0]
+          ]
+        ]
       },
       properties: {
         id: "1",
@@ -85,7 +122,7 @@ describe("SkiAreaFormatter", () => {
     };
 
     expect(
-      formatSkiArea(SourceType.OPENSTREETMAP)(feature).properties.status
+      formatSkiArea(SourceType.OPENSTREETMAP)(feature)?.properties.status
     ).toBe(Status.Abandoned);
   });
 

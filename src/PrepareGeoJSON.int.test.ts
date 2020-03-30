@@ -398,8 +398,15 @@ it("processes OpenStreetMap ski areas", async () => {
           landuse: "winter_sports"
         },
         geometry: {
-          type: "Point",
-          coordinates: [11.122066084534, 47.557111836837]
+          type: "Polygon",
+          coordinates: [
+            [
+              [0, 0],
+              [0, 1],
+              [1, 0],
+              [0, 0]
+            ]
+          ]
         }
       }
     ],
@@ -411,36 +418,52 @@ it("processes OpenStreetMap ski areas", async () => {
 
   expect(TestHelpers.fileContents("output/ski_areas.geojson"))
     .toMatchInlineSnapshot(`
-      Object {
-        "features": Array [
+Object {
+  "features": Array [
+    Object {
+      "geometry": Object {
+        "coordinates": Array [
+          Array [
+            Array [
+              0,
+              0,
+            ],
+            Array [
+              0,
+              1,
+            ],
+            Array [
+              1,
+              0,
+            ],
+            Array [
+              0,
+              0,
+            ],
+          ],
+        ],
+        "type": "Polygon",
+      },
+      "properties": Object {
+        "activities": Array [],
+        "generated": false,
+        "id": "d352ff09b19cdb6368feca23a4cf259f85d1f13e",
+        "name": null,
+        "runConvention": "europe",
+        "sources": Array [
           Object {
-            "geometry": Object {
-              "coordinates": Array [
-                11.122066084534,
-                47.557111836837,
-              ],
-              "type": "Point",
-            },
-            "properties": Object {
-              "activities": Array [],
-              "generated": false,
-              "id": "3a731670d9aca990ce526448a2bb1bb092fb4ff9",
-              "name": null,
-              "runConvention": "europe",
-              "sources": Array [
-                Object {
-                  "id": "13666",
-                  "type": "openstreetmap",
-                },
-              ],
-              "status": "operating",
-              "type": "skiArea",
-              "website": null,
-            },
-            "type": "Feature",
+            "id": "13666",
+            "type": "openstreetmap",
           },
         ],
-        "type": "FeatureCollection",
-      }
-      `);
+        "status": "operating",
+        "type": "skiArea",
+        "website": null,
+      },
+      "type": "Feature",
+    },
+  ],
+  "type": "FeatureCollection",
+}
+`);
 });
