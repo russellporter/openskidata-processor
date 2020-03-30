@@ -73,7 +73,7 @@ export default async function clusterArangoGraph(
   // For each remaining unclaimed run, generate a ski area for it, associating nearby unclaimed runs & lifts.
   await generateSkiAreasForUnassignedObjects();
 
-  await augmentSkiAreasWithStatistics();
+  await augmentSkiAreasBasedOnAssignedLiftsAndRuns();
 
   /**
    * Remove OpenStreetMap ski areas that contain multiple Skimap.org ski areas in their geometry.
@@ -496,24 +496,36 @@ export default async function clusterArangoGraph(
   }
 
   // TODO: Also augment ski ara geometry based on runs & lifts
-  async function augmentSkiAreasWithStatistics(): Promise<void> {
+  async function augmentSkiAreasBasedOnAssignedLiftsAndRuns(): Promise<void> {
     const skiAreasCursor = await getSkiAreas({});
     let skiAreas: SkiAreaObject[];
     while ((skiAreas = (await skiAreasCursor.nextBatch()) as SkiAreaObject[])) {
       await Promise.all(
         skiAreas.map(async skiArea => {
           const mapObjects = await getObjects(skiArea.id);
-          await augmentSkiAreaWithStatistics(skiArea.id, mapObjects);
+          await augmentSkiAreaBasedOnAssignedLiftsAndRuns(skiArea, mapObjects);
         })
       );
     }
   }
 
-  async function augmentSkiAreaWithStatistics(
-    id: string,
+  async function augmentSkiAreaBasedOnAssignedLiftsAndRuns(
+    skiArea: SkiAreaObject,
     memberObjects: MapObject[]
   ): Promise<void> {
-    await objectsCollection.update(id, {
+    if (memberObjects.length === 0) {
+      // Remove OpenStreetMap ski areas with no associated runs or lifts.
+      // These are likely not actually ski areas,
+      // as the OpenStreetMap tagging semantics (landuse=winter_sports) are not ski area specific.
+      const noSkimapOrgSource = !skiArea.properties.sources.some(
+        source => source.type == SourceType.SKIMAP_ORG
+      );
+      if (noSkimapOrgSource) {
+        await objectsCollection.remove({ _key: skiArea._key });
+        return;
+      }
+    }
+    await objectsCollection.update(skiArea.id, {
       properties: { statistics: skiAreaStatistics(memberObjects) }
     });
   }
