@@ -34,10 +34,10 @@ export default async function prepare(
     [
       merge([
         readGeoJSONFeatures(inputPaths.skiAreas).pipe(
-          map(formatSkiArea(SourceType.OPENSTREETMAP))
+          flatMap(formatSkiArea(SourceType.OPENSTREETMAP))
         ),
         readGeoJSONFeatures(inputPaths.skiMapSkiAreas).pipe(
-          map(formatSkiArea(SourceType.SKIMAP_ORG))
+          flatMap(formatSkiArea(SourceType.SKIMAP_ORG))
         )
       ]).pipe(
         writeGeoJSONFeatures(

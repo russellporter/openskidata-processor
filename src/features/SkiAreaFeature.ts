@@ -25,6 +25,8 @@ export interface InputOpenStreetMapSkiAreaProperties {
   "proposed:landuse"?: string;
   "planned:landuse"?: string;
   "construction:landuse"?: string;
+
+  sport?: string;
 }
 
 export interface MapboxGLSkiAreaProperties {

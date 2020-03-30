@@ -17,15 +17,28 @@ export function formatSkiArea(
   source: SourceType
 ): (
   feature: InputSkiMapOrgSkiAreaFeature | InputOpenStreetMapSkiAreaFeature
-) => SkiAreaFeature {
+) => SkiAreaFeature | null {
   return feature => {
     switch (source) {
       case SourceType.OPENSTREETMAP:
+        const osmFeature = feature as InputOpenStreetMapSkiAreaFeature;
+        if (
+          osmFeature.properties["sport"] !== undefined &&
+          osmFeature.properties["sport"] !== "skiing" &&
+          osmFeature.properties["sport"] !== "ski"
+        ) {
+          return null;
+        }
+        if (
+          osmFeature.geometry.type !== "Polygon" &&
+          osmFeature.geometry.type !== "MultiPolygon"
+        ) {
+          return null;
+        }
+
         return buildFeature(
-          feature.geometry,
-          propertiesForOpenStreetMapSkiArea(
-            feature as InputOpenStreetMapSkiAreaFeature
-          )
+          osmFeature.geometry,
+          propertiesForOpenStreetMapSkiArea(osmFeature)
         );
       case SourceType.SKIMAP_ORG:
         return buildFeature(
