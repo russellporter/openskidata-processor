@@ -1,13 +1,24 @@
-export const runsURL = overpassURLForQuery(`
+import { lifecycleStates } from "../transforms/Status";
+
+export interface OSMDownloadConfig {
+  url: string;
+  shouldIncludeFeature: (tags: { [key: string]: string }) => boolean;
+}
+
+export const runsDownloadConfig: OSMDownloadConfig = {
+  url: overpassURLForQuery(`
 [out:json][timeout:1800];(
   way["piste:type"];
   rel["piste:type"];
 );
 (._; >;);
 out;
-`);
+`),
+  shouldIncludeFeature: tags => tags["piste:type"] !== undefined
+};
 
-export const liftsURL = overpassURLForQuery(`
+export const liftsDownloadConfig: OSMDownloadConfig = {
+  url: overpassURLForQuery(`
 [out:json][timeout:1800];(
   way[~"^([A-Za-z]+:)?aerialway$"~"^.*$"];
   rel[~"^([A-Za-z]+:)?aerialway$"~"^.*$"];
@@ -16,9 +27,16 @@ export const liftsURL = overpassURLForQuery(`
 );
 (._; >;);
 out;
-`);
+`),
+  shouldIncludeFeature: tags =>
+    lifecyclePrefixes.some(prefix => {
+      tags[prefix + "aerialway"] !== undefined ||
+        tags[prefix + "railway"] === "funicular";
+    })
+};
 
-export const skiAreasURL = overpassURLForQuery(`
+export const skiAreasDownloadConfig: OSMDownloadConfig = {
+  url: overpassURLForQuery(`
 [out:json][timeout:1800];(
   node[~"^([A-Za-z]+:)?landuse$"~"^winter_sports$"];
   way[~"^([A-Za-z]+:)?landuse$"~"^winter_sports$"];
@@ -26,9 +44,18 @@ export const skiAreasURL = overpassURLForQuery(`
 );
 (._; >;);
 out;
-`);
-
+`),
+  shouldIncludeFeature: tags =>
+    lifecyclePrefixes.some(prefix => {
+      tags[prefix + "landuse"] === "winter_sports";
+    })
+};
 export const skiMapSkiAreasURL = "https://skimap.org/SkiAreas/index.geojson";
+
+const lifecyclePrefixes = (() => {
+  const statePrefixes = [...lifecycleStates].map(state => state + ":");
+  return ["", ...statePrefixes];
+})();
 
 function overpassURLForQuery(query: string) {
   return (

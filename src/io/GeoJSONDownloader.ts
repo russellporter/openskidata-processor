@@ -3,13 +3,14 @@ import request from "request";
 import streamToPromise from "stream-to-promise";
 import * as tmp from "tmp";
 import {
-  liftsURL,
-  runsURL,
-  skiAreasURL,
+  liftsDownloadConfig,
+  OSMDownloadConfig,
+  runsDownloadConfig,
+  skiAreasDownloadConfig,
   skiMapSkiAreasURL
 } from "./DownloadURLs";
 import { GeoJSONInputPaths } from "./GeoJSONFiles";
-import convertOSMToGeoJSON from "./OSMToGeoJSONConverter";
+import convertOSMFileToGeoJSON from "./OSMToGeoJSONConverter";
 
 export default async function downloadAndConvertToGeoJSON(
   folder: string
@@ -19,9 +20,12 @@ export default async function downloadAndConvertToGeoJSON(
   await Promise.all([
     (async () => {
       // Serialize downloads so we don't get rate limited by the Overpass API
-      await downloadAndConvertOSMToGeoJSON(runsURL, paths.runs);
-      await downloadAndConvertOSMToGeoJSON(liftsURL, paths.lifts);
-      await downloadAndConvertOSMToGeoJSON(skiAreasURL, paths.skiAreas);
+      await downloadAndConvertOSMToGeoJSON(runsDownloadConfig, paths.runs);
+      await downloadAndConvertOSMToGeoJSON(liftsDownloadConfig, paths.lifts);
+      await downloadAndConvertOSMToGeoJSON(
+        skiAreasDownloadConfig,
+        paths.skiAreas
+      );
     })(),
     downloadToFile(skiMapSkiAreasURL, paths.skiMapSkiAreas)
   ]);
@@ -30,13 +34,17 @@ export default async function downloadAndConvertToGeoJSON(
 }
 
 async function downloadAndConvertOSMToGeoJSON(
-  sourceURL: string,
+  config: OSMDownloadConfig,
   targetGeoJSONPath: string
 ): Promise<void> {
   const tempOSMPath = tmp.fileSync().name;
-  await downloadToFile(sourceURL, tempOSMPath);
+  await downloadToFile(config.url, tempOSMPath);
 
-  convertOSMToGeoJSON(tempOSMPath, targetGeoJSONPath);
+  convertOSMFileToGeoJSON(
+    tempOSMPath,
+    targetGeoJSONPath,
+    config.shouldIncludeFeature
+  );
 }
 
 async function downloadToFile(

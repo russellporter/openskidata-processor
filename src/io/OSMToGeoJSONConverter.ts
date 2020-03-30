@@ -87,21 +87,44 @@ const polygonFeatures = {
   }
 };
 
-export default function convertOSMToGeoJSON(
+export default function convertOSMFileToGeoJSON(
   inputFile: string,
-  outputFile: string
+  outputFile: string,
+  shouldIncludeFeature: (tags: { [key: string]: string }) => boolean
 ) {
   const content = Fs.readFileSync(inputFile, "utf8");
   Fs.writeFileSync(
     outputFile,
     JSON.stringify(
-      osmtogeojson(JSON.parse(content), {
-        verbose: false,
-        polygonFeatures: polygonFeatures,
-        flatProperties: true,
-        uninterestingTags: [],
-        deduplicator: undefined
-      })
+      convertOSMToGeoJSON(JSON.parse(content), shouldIncludeFeature)
     )
   );
+}
+
+export function convertOSMToGeoJSON(
+  osmJSON: any,
+  shouldIncludeFeature: (tags: { [key: string]: string }) => boolean
+) {
+  return osmtogeojson(osmJSON, {
+    verbose: false,
+    polygonFeatures: polygonFeatures,
+    flatProperties: true,
+    uninterestingTags: (
+      tags: { [key: string]: string },
+      ignoreTags: { [key: string]: string | boolean }
+    ) => !shouldIncludeFeature(tagsExceptIgnoredOnes(tags, ignoreTags)),
+    deduplicator: undefined
+  });
+}
+
+function tagsExceptIgnoredOnes(
+  tags: { [key: string]: string },
+  ignoreTags: { [key: string]: string | boolean }
+): { [key: string]: string } {
+  return Object.keys(tags)
+    .filter(key => ignoreTags[key] !== true && ignoreTags[key] !== tags[key])
+    .reduce(
+      (res: { [key: string]: string }, key) => ((res[key] = tags[key]), res),
+      {}
+    );
 }

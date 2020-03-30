@@ -44,7 +44,7 @@ export default function getStatusAndValue(
   };
 }
 
-const lifecycleStates = new Set([
+export const lifecycleStates = new Set([
   Status.Disused,
   Status.Abandoned,
   Status.Proposed,
