@@ -106,6 +106,11 @@ export default async function clusterArangoGraph(
 
           const otherSkiAreas = await otherSkiAreasCursor.all();
           if (otherSkiAreas.length > 1) {
+            console.log(
+              "Removing OpenStreetMap ski area as it contains multiple Skimap.org ski areas and can't be merged correctly."
+            );
+            console.log(JSON.stringify(skiArea));
+
             await objectsCollection.remove({ _key: skiArea._key });
           }
         })
@@ -521,6 +526,11 @@ export default async function clusterArangoGraph(
       // Remove OpenStreetMap ski areas with no associated runs or lifts.
       // These are likely not actually ski areas,
       // as the OpenStreetMap tagging semantics (landuse=winter_sports) are not ski area specific.
+      console.log(
+        "Removing OpenStreetMap ski area without associated runs/lifts."
+      );
+      console.log(JSON.stringify(skiArea));
+
       await objectsCollection.remove({ _key: skiArea._key });
       return;
     }
