@@ -1716,24 +1716,24 @@ it("uses runs fully contained in the ski area polygon to determine activities wh
     );
 
     expect(
-      TestHelpers.fileContents("output/ski_areas.geojson").features.map(
-        simplifiedSkiAreaFeature
-      )
+      TestHelpers.fileContents("output/ski_areas.geojson")
+        .features.map(simplifiedSkiAreaFeature)
+        .sort(orderedByID)
     ).toMatchInlineSnapshot(`
       Array [
-        Object {
-          "activities": Array [
-            "nordic",
-          ],
-          "id": "mock-UUID-0",
-          "name": null,
-        },
         Object {
           "activities": Array [
             "downhill",
           ],
           "id": "1",
           "name": "Name",
+        },
+        Object {
+          "activities": Array [
+            "nordic",
+          ],
+          "id": "mock-UUID-0",
+          "name": null,
         },
       ]
     `);
