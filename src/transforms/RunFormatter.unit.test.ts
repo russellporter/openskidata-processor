@@ -24,13 +24,13 @@ describe("RunFormatter", () => {
     const run = formatRun(inputRun({ id: "way/1", "piste:type": "downhill" }));
     expect(run!.properties).toMatchInlineSnapshot(`
       Object {
-        "color": "hsl(0, 0%, 65%)",
+        "color": "hsl(0, 0%, 35%)",
         "colorName": "grey",
         "description": null,
         "difficulty": null,
         "gladed": null,
         "grooming": null,
-        "id": "9e9439e791c9dbdde8298c6e9f7c09f4b7e00ccd",
+        "id": "b056a7d86b5ce41afc8337ccd0cc14f1ceee48f2",
         "lit": null,
         "name": null,
         "oneway": null,
