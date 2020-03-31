@@ -242,19 +242,25 @@ export default async function clusterArangoGraph(
     geometry: GeoJSON.Polygon
   ): Promise<MapObject[]> {
     const isInSkiAreaPolygon = context.searchPolygon ? true : false;
-    let foundObjects: MapObject[] = [];
     const objects = await findNearbyObjects(
       geometry,
       isInSkiAreaPolygon ? "contains" : "intersects",
       context
     );
     await markSkiArea(context.id, isInSkiAreaPolygon, objects);
-    for (let i = 0; i < objects.length; i++) {
-      foundObjects = foundObjects.concat(
-        await visitObject(context, objects[i])
-      );
+
+    // Skip further traversal if we are searching a fixed polygon.
+    if (isInSkiAreaPolygon) {
+      return objects;
+    } else {
+      let foundObjects: MapObject[] = [];
+      for (let i = 0; i < objects.length; i++) {
+        foundObjects = foundObjects.concat(
+          await visitObject(context, objects[i])
+        );
+      }
+      return foundObjects;
     }
-    return foundObjects;
   }
 
   async function visitObject(
