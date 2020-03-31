@@ -293,7 +293,7 @@ it("generates ski areas by activity", async () => {
           "name": null,
         },
       ]
-      `);
+    `);
   } finally {
     mockFS.restore();
   }
@@ -942,7 +942,7 @@ it("generates ski area which includes the snow park", async () => {
           ],
         },
       ]
-      `);
+    `);
   } finally {
     mockFS.restore();
   }
@@ -1602,7 +1602,7 @@ it("adds activities to OpenStreetMap ski areas based on the associated runs", as
           "name": "Name",
         },
       ]
-      `);
+    `);
   } finally {
     mockFS.restore();
   }
@@ -1649,6 +1649,94 @@ it("removes OpenStreetMap ski area without nearby runs/lifts", async () => {
         simplifiedSkiAreaFeature
       )
     ).toMatchInlineSnapshot(`Array []`);
+  } finally {
+    mockFS.restore();
+  }
+});
+
+it("uses runs fully contained in the ski area polygon to determine activities when they are not known", async () => {
+  TestHelpers.mockFeatureFiles(
+    [
+      TestHelpers.mockSkiAreaFeature({
+        id: "1",
+        activities: [],
+        sources: [{ type: SourceType.OPENSTREETMAP, id: "1" }],
+        geometry: {
+          type: "Polygon",
+          coordinates: [
+            [
+              [0, 0],
+              [1, 0],
+              [1, 1],
+              [0, 1],
+              [0, 0]
+            ]
+          ]
+        }
+      })
+    ],
+    [],
+    [
+      TestHelpers.mockRunFeature({
+        id: "2",
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [0.5, 0.5],
+            [1.5, 1.5]
+          ]
+        },
+        name: "Run extending beyond ski area",
+        uses: [RunUse.Nordic]
+      }),
+      TestHelpers.mockRunFeature({
+        id: "3",
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [0, 0],
+            [1, 1]
+          ]
+        },
+        name: "Run within ski area",
+        uses: [RunUse.Downhill]
+      })
+    ]
+  );
+
+  try {
+    await clusterSkiAreas(
+      "intermediate_ski_areas.geojson",
+      "output/ski_areas.geojson",
+      "intermediate_lifts.geojson",
+      "output/lifts.geojson",
+      "intermediate_runs.geojson",
+      "output/runs.geojson",
+      "http://localhost:" + container.getMappedPort(8529)
+    );
+
+    expect(
+      TestHelpers.fileContents("output/ski_areas.geojson").features.map(
+        simplifiedSkiAreaFeature
+      )
+    ).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "activities": Array [
+            "nordic",
+          ],
+          "id": "mock-UUID-0",
+          "name": null,
+        },
+        Object {
+          "activities": Array [
+            "downhill",
+          ],
+          "id": "1",
+          "name": "Name",
+        },
+      ]
+    `);
   } finally {
     mockFS.restore();
   }

@@ -14,7 +14,7 @@ import {
 import StreamToPromise from "stream-to-promise";
 import { readGeoJSONFeatures } from "../io/GeoJSONReader";
 import { mapAsync } from "../transforms/StreamTransforms";
-import { skiAreaActivities } from "./ArangoGraphClusterer";
+import { allSkiAreaActivities } from "./ArangoGraphClusterer";
 import {
   DraftLift,
   DraftMapObject,
@@ -81,11 +81,7 @@ export default async function loadArangoGraph(
       type: MapObjectType.SkiArea,
       geometry: feature.geometry,
       skiAreas: [],
-      activities:
-        properties.activities.length > 0
-          ? properties.activities
-          : // For clustering, cluster by all activities if we don't know what activities the ski area has.
-            [Activity.Downhill, Activity.Nordic],
+      activities: properties.activities,
       properties: properties
     };
   }
@@ -141,7 +137,7 @@ export default async function loadArangoGraph(
         // So only start generating a new ski area from a run if the use was explicitly downhill or nordic.
         (properties.uses.includes(RunUse.Downhill) ||
           properties.uses.includes(RunUse.Nordic)) &&
-        activities.some(activity => skiAreaActivities.has(activity)),
+        activities.some(activity => allSkiAreaActivities.has(activity)),
       skiAreas: [],
       activities: activities,
       difficulty: feature.properties.difficulty,

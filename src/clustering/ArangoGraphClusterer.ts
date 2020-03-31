@@ -28,7 +28,10 @@ interface VisitContext {
 
 const maxDistanceInKilometers = 0.5;
 
-export const skiAreaActivities = new Set([Activity.Downhill, Activity.Nordic]);
+export const allSkiAreaActivities = new Set([
+  Activity.Downhill,
+  Activity.Nordic
+]);
 
 /**
  * - Associate runs & lifts with ski areas.
@@ -167,16 +170,46 @@ export default async function clusterArangoGraph(
             }
           }
 
-          await visitObject(
+          const hasKnownSkiAreaActivities = skiArea.activities.length > 0;
+          const activitiesForClustering = hasKnownSkiAreaActivities
+            ? skiArea.activities
+            : [...allSkiAreaActivities];
+          skiArea.activities = activitiesForClustering;
+
+          const memberObjects = await visitObject(
             {
               id: id,
-              activities: skiArea.activities,
+              activities: activitiesForClustering,
               searchPolygon: searchPolygon,
               excludeObjectsAlreadyInSkiAreaPolygon:
                 options.objects.onlyIfNotAlreadyAssignedToPolygon || false
             },
             skiArea
           );
+
+          // Determine ski area activities based on the clustered objects.
+          if (!hasKnownSkiAreaActivities) {
+            const activities = memberObjects
+              .filter(object => object.type !== MapObjectType.SkiArea)
+              .reduce((accumulatedActivities, object) => {
+                object.activities.forEach(activity => {
+                  if (allSkiAreaActivities.has(activity)) {
+                    accumulatedActivities.add(activity);
+                  }
+                });
+                return accumulatedActivities;
+              }, new Set(skiArea.properties.activities));
+
+            await objectsCollection.update(
+              { _key: skiArea._key },
+              {
+                activities: [...activities],
+                properties: {
+                  activities: [...activities]
+                }
+              }
+            );
+          }
         })
       );
     }
@@ -190,7 +223,7 @@ export default async function clusterArangoGraph(
         // Workaround for ArangoDB intersect bug
         await markSkiArea(newSkiAreaID, false, [unassignedRun]);
         const activities = unassignedRun.activities.filter(activity =>
-          skiAreaActivities.has(activity)
+          allSkiAreaActivities.has(activity)
         );
         const memberObjects = await visitObject(
           { id: newSkiAreaID, activities: activities },
@@ -208,13 +241,14 @@ export default async function clusterArangoGraph(
     context: VisitContext,
     geometry: GeoJSON.Polygon
   ): Promise<MapObject[]> {
+    const isInSkiAreaPolygon = context.searchPolygon ? true : false;
     let foundObjects: MapObject[] = [];
-    const objects = await findNearbyObjects(geometry, context);
-    await markSkiArea(
-      context.id,
-      context.searchPolygon ? true : false,
-      objects
+    const objects = await findNearbyObjects(
+      geometry,
+      isInSkiAreaPolygon ? "contains" : "intersects",
+      context
     );
+    await markSkiArea(context.id, isInSkiAreaPolygon, objects);
     for (let i = 0; i < objects.length; i++) {
       foundObjects = foundObjects.concat(
         await visitObject(context, objects[i])
@@ -272,7 +306,7 @@ export default async function clusterArangoGraph(
       return [];
     }
 
-    const nearbyObjects = await findNearbyObjects(buffer, {
+    const nearbyObjects = await findNearbyObjects(buffer, "intersects", {
       id: skiArea.id,
       activities: skiArea.activities
     });
@@ -322,11 +356,14 @@ export default async function clusterArangoGraph(
 
   async function findNearbyObjects(
     area: GeoJSON.Polygon | GeoJSON.MultiPolygon,
+    match: "intersects" | "contains",
     context: VisitContext
   ): Promise<MapObject[]> {
     const query = aql`
             FOR object in ${objectsCollection}
-            FILTER GEO_INTERSECTS(${arangoGeometry(area)}, object.geometry)
+            FILTER ${
+              match === "intersects" ? aql`GEO_INTERSECTS` : aql`GEO_CONTAINS`
+            }(${arangoGeometry(area)}, object.geometry)
             FILTER ${context.id} NOT IN object.skiAreas
             ${
               context.excludeObjectsAlreadyInSkiAreaPolygon
@@ -534,18 +571,6 @@ export default async function clusterArangoGraph(
       await objectsCollection.remove({ _key: skiArea._key });
       return;
     }
-
-    const activities = memberObjects.reduce((accumulatedActivities, object) => {
-      object.activities.forEach(activity => {
-        if (skiAreaActivities.has(activity)) {
-          accumulatedActivities.add(activity);
-        }
-      });
-      return accumulatedActivities;
-    }, new Set(skiArea.properties.activities));
-
-    skiArea.activities = [...activities];
-    skiArea.properties.activities = [...activities];
 
     skiArea.properties.statistics = skiAreaStatistics(memberObjects);
 
