@@ -22,7 +22,7 @@ export const liftsDownloadConfig: OSMDownloadConfig = {
     [out:json][timeout:1800];(
       way[~"^([A-Za-z]+:)?aerialway$"~"^.*$"];
       way[~"^([A-Za-z]+:)?railway$"~"^funicular$"];
-      way["^rack$"~"^(yes|riggenbach|strub|abt|locher)$"];
+      way[~"^rack$"~"^(yes|riggenbach|strub|abt|locher)$"];
     );
     (._; >;);
     out;
