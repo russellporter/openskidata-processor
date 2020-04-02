@@ -2,7 +2,6 @@ import booleanPointInPolygon from "@turf/boolean-point-in-polygon";
 import turfCenter from "@turf/center";
 import * as turf from "@turf/helpers";
 import { AllGeoJSON } from "@turf/helpers";
-import _ from "lodash";
 import {
   FeatureType,
   getColorName,
@@ -20,7 +19,7 @@ import {
   FormattedInputRunProperties
 } from "./FormattedInputRunFeature";
 import { Omit } from "./Omit";
-import { mapOSMBoolean, mapOSMString } from "./OSMTransforms";
+import { getOSMName, mapOSMBoolean, mapOSMString } from "./OSMTransforms";
 import getStatusAndValue from "./Status";
 
 export function formatRun(
@@ -48,7 +47,7 @@ export function formatRun(
   const properties: Omit<FormattedInputRunProperties, "id"> = {
     type: FeatureType.Run,
     uses: uses,
-    name: getName(inputProperties),
+    name: getOSMName(inputProperties, "piste:name", "name"),
     ref: mapOSMString(getOrElse(inputProperties, "piste:ref", "ref")),
     description: mapOSMString(
       getOrElse(inputProperties, "piste:description", "description")
@@ -151,36 +150,6 @@ function getDifficulty(properties: InputRunProperties): RunDifficulty | null {
   return value && Object.values(RunDifficulty).includes(value as RunDifficulty)
     ? (value as RunDifficulty)
     : null;
-}
-
-function nameKeysForRootKey(rootKey: string, properties: InputRunProperties) {
-  const names = _.pickBy(properties, function(_, key) {
-    return key === rootKey || key.startsWith(rootKey + ":");
-  });
-  return Object.keys(names);
-}
-
-function sortedNameKeys(properties: InputRunProperties) {
-  let keys = nameKeysForRootKey("piste:name", properties);
-  if (keys.length == 0) {
-    keys = nameKeysForRootKey("name", properties);
-  }
-
-  return keys.sort();
-}
-
-function getName(properties: InputRunProperties) {
-  const keys = sortedNameKeys(properties);
-
-  if (keys.length === 0) {
-    return null;
-  }
-
-  return keys
-    .map(function(key) {
-      return properties[key];
-    })
-    .join(", ");
 }
 
 const euPoly = turf.polygon([

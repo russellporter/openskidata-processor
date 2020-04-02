@@ -7,7 +7,7 @@ describe("RunFormatter", () => {
       inputRun({
         id: "way/1",
         "piste:type": "downhill",
-        "piste:abandoned": "yes"
+        "piste:abandoned": "yes",
       })
     );
     expect(run).toBeNull();
@@ -45,6 +45,21 @@ describe("RunFormatter", () => {
       }
     `);
   });
+
+  it("uses piste name instead of other name", () => {
+    const run = formatRun(
+      inputRun({
+        id: "way/1",
+        "piste:type": "downhill",
+        "piste:name": "🇫🇷 Nom de la piste",
+        "piste:name:en": "Run name",
+        name: "Name that shouldn't be shown",
+      })
+    );
+    expect(run!.properties.name).toMatchInlineSnapshot(
+      `"🇫🇷 Nom de la piste, Run name"`
+    );
+  });
 });
 
 function inputRun(properties: InputRunProperties): InputRunFeature {
@@ -54,9 +69,9 @@ function inputRun(properties: InputRunProperties): InputRunFeature {
       type: "LineString",
       coordinates: [
         [0, 0],
-        [1, 1]
-      ]
+        [1, 1],
+      ],
     },
-    properties: properties
+    properties: properties,
   };
 }
