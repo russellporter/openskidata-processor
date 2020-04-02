@@ -7,7 +7,12 @@ import {
 } from "openskidata-format";
 import { InputLiftFeature, InputLiftProperties } from "../features/LiftFeature";
 import buildFeature from "./FeatureBuilder";
-import { mapOSMBoolean, mapOSMNumber, mapOSMString } from "./OSMTransforms";
+import {
+  getOSMName,
+  mapOSMBoolean,
+  mapOSMNumber,
+  mapOSMString
+} from "./OSMTransforms";
 import getStatusAndValue from "./Status";
 
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
@@ -40,7 +45,7 @@ export function formatLift(feature: InputLiftFeature): LiftFeature | null {
     type: FeatureType.Lift,
     liftType: liftType,
     status: status,
-    name: mapOSMString(inputProperties.name),
+    name: getOSMName(inputProperties, "name"),
     oneway: mapOSMBoolean(inputProperties.oneway),
     ref: mapOSMString(inputProperties.ref),
     description: inputProperties.description || null,
@@ -57,14 +62,20 @@ export function formatLift(feature: InputLiftFeature): LiftFeature | null {
 }
 
 function getStatusAndLiftType(properties: InputLiftProperties) {
-  let { status, value } = getStatusAndValue("aerialway", properties as {
-    [key: string]: string;
-  });
+  let { status, value } = getStatusAndValue(
+    "aerialway",
+    properties as {
+      [key: string]: string;
+    }
+  );
 
   if (value === null) {
-    ({ status, value } = getStatusAndValue("railway", properties as {
-      [key: string]: string;
-    }));
+    ({ status, value } = getStatusAndValue(
+      "railway",
+      properties as {
+        [key: string]: string;
+      }
+    ));
   }
 
   const liftType = Object.values(LiftType).includes(value as LiftType)

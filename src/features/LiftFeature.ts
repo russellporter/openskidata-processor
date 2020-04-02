@@ -1,6 +1,8 @@
 import { LiftGeometry, Status } from "openskidata-format";
 
 export type InputLiftProperties = {
+  [key: string]: string | undefined;
+
   // OpenStreetMap ID
   id: string;
 
