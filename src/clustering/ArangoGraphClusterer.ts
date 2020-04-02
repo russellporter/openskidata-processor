@@ -370,6 +370,11 @@ export default async function clusterArangoGraph(
   }
 
   async function mergeSkiAreas(skiAreas: SkiAreaObject[]): Promise<void> {
+    console.log(
+      "Merging ski areas: " +
+        skiAreas.map(object => JSON.stringify(object.properties)).join(", ")
+    );
+
     const ids = new Set(skiAreas.map(skiArea => skiArea._key));
     const skiArea = mergeSkiAreaObjects(skiAreas);
     if (skiArea === null) {
