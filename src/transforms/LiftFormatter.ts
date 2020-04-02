@@ -30,7 +30,8 @@ export function formatLift(feature: InputLiftFeature): LiftFeature | null {
     inputProperties["foot"] == "no" ||
     inputProperties["foot"] == "private" ||
     inputProperties["usage"] == "freight" ||
-    inputProperties["usage"] == "industrial"
+    inputProperties["usage"] == "industrial" ||
+    inputProperties["railway:traffic_mode"] == "freight"
   ) {
     return null;
   }
@@ -76,6 +77,14 @@ function getStatusAndLiftType(properties: InputLiftProperties) {
         [key: string]: string;
       }
     ));
+
+    if (
+      value !== "funicular" &&
+      properties.rack !== undefined &&
+      properties.rack !== "no"
+    ) {
+      value = LiftType.RackRailway;
+    }
   }
 
   const liftType = Object.values(LiftType).includes(value as LiftType)

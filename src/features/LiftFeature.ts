@@ -20,6 +20,9 @@ export type InputLiftProperties = {
   "planned:railway"?: string;
   "construction:railway"?: string;
 
+  "railway:traffic_mode"?: string;
+  rack?: string;
+
   name?: string;
   oneway?: string;
   ref?: string;
