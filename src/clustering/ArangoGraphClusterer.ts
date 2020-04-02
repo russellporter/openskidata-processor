@@ -24,6 +24,7 @@ interface VisitContext {
   activities: Activity[];
   excludeObjectsAlreadyInSkiAreaPolygon?: boolean;
   searchPolygon?: GeoJSON.Polygon | GeoJSON.MultiPolygon | null;
+  alreadyVisited: string[];
 }
 
 const maxDistanceInKilometers = 0.5;
@@ -181,10 +182,17 @@ export default async function clusterArangoGraph(
               id: id,
               activities: activitiesForClustering,
               searchPolygon: searchPolygon,
+              alreadyVisited: [skiArea._key],
               excludeObjectsAlreadyInSkiAreaPolygon:
                 options.objects.onlyIfNotAlreadyAssignedToPolygon || false
             },
             skiArea
+          );
+
+          await markSkiArea(
+            id,
+            options.objects.onlyInPolygon || false,
+            memberObjects
           );
 
           // Determine ski area activities based on the clustered objects.
@@ -220,13 +228,15 @@ export default async function clusterArangoGraph(
     while ((unassignedRun = await nextUnassignedRun())) {
       try {
         const newSkiAreaID = uuid();
-        // Workaround for ArangoDB intersect bug
-        await markSkiArea(newSkiAreaID, false, [unassignedRun]);
         const activities = unassignedRun.activities.filter(activity =>
           allSkiAreaActivities.has(activity)
         );
         const memberObjects = await visitObject(
-          { id: newSkiAreaID, activities: activities },
+          {
+            id: newSkiAreaID,
+            activities: activities,
+            alreadyVisited: [unassignedRun._key]
+          },
           unassignedRun
         );
 
@@ -247,7 +257,6 @@ export default async function clusterArangoGraph(
       isInSkiAreaPolygon ? "contains" : "intersects",
       context
     );
-    await markSkiArea(context.id, isInSkiAreaPolygon, objects);
 
     // Skip further traversal if we are searching a fixed polygon.
     if (isInSkiAreaPolygon) {
@@ -314,7 +323,8 @@ export default async function clusterArangoGraph(
 
     const nearbyObjects = await findNearbyObjects(buffer, "intersects", {
       id: skiArea.id,
-      activities: skiArea.activities
+      activities: skiArea.activities,
+      alreadyVisited: []
     });
 
     const otherSkiAreaIDs = new Set(
@@ -371,6 +381,7 @@ export default async function clusterArangoGraph(
               match === "intersects" ? aql`GEO_INTERSECTS` : aql`GEO_CONTAINS`
             }(${arangoGeometry(area)}, object.geometry)
             FILTER ${context.id} NOT IN object.skiAreas
+            FILTER object._key NOT IN ${context.alreadyVisited}
             ${
               context.excludeObjectsAlreadyInSkiAreaPolygon
                 ? aql`FILTER object.isInSkiAreaPolygon != true`
@@ -382,7 +393,9 @@ export default async function clusterArangoGraph(
 
     try {
       const cursor = await database.query(query, { ttl: 120 });
-      return await cursor.all();
+      const allFound: MapObject[] = await cursor.all();
+      allFound.forEach(object => context.alreadyVisited.push(object._key));
+      return allFound;
     } catch (error) {
       if (
         (error.response.body.errorMessage as string).includes(
@@ -530,6 +543,8 @@ export default async function clusterArangoGraph(
       console.log("Failed saving ski area", exception);
       throw exception;
     }
+
+    await markSkiArea(id, false, memberObjects);
   }
 
   async function getObjects(skiAreaID: string): Promise<MapObject[]> {
