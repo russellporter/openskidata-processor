@@ -352,52 +352,44 @@ it("generates ski areas by activity", async () => {
       "http://localhost:" + container.getMappedPort(8529)
     );
 
+    const skiAreas: SkiAreaFeature[] = TestHelpers.fileContents(
+      "output/ski_areas.geojson"
+    ).features;
+
+    const runs: RunFeature[] = TestHelpers.fileContents("output/runs.geojson")
+      .features;
     expect(
-      TestHelpers.fileContents("output/runs.geojson").features.map(
-        simplifiedRunFeature
-      )
+      runs.map(simplifiedRunFeature).map(feature => {
+        return {
+          ...feature,
+          // Inline only the ski area activities to avoid flaky test failures due to mismatched ski area IDs
+          //  when one ski area is generated before the other.
+          skiAreas: feature.skiAreas.map(
+            id =>
+              skiAreas.find(skiArea => skiArea.properties.id == id)?.properties
+                .activities
+          )
+        };
+      })
     ).toMatchInlineSnapshot(`
       Array [
         Object {
           "id": "3",
           "name": "Downhill Run",
           "skiAreas": Array [
-            "mock-UUID-1",
+            Array [
+              "downhill",
+            ],
           ],
         },
         Object {
           "id": "4",
           "name": "Nordic run",
           "skiAreas": Array [
-            "mock-UUID-0",
+            Array [
+              "nordic",
+            ],
           ],
-        },
-      ]
-    `);
-
-    let features: SkiAreaFeature[] = TestHelpers.fileContents(
-      "output/ski_areas.geojson"
-    ).features;
-    let simplifiedFeatures = features
-      .map(simplifiedSkiAreaFeature)
-      // Ensure snapshots are consistent across test runs
-      .sort(orderedByID);
-
-    expect(simplifiedFeatures).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "activities": Array [
-            "nordic",
-          ],
-          "id": "mock-UUID-0",
-          "name": null,
-        },
-        Object {
-          "activities": Array [
-            "downhill",
-          ],
-          "id": "mock-UUID-1",
-          "name": null,
         },
       ]
     `);
