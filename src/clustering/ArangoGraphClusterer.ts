@@ -227,24 +227,53 @@ export default async function clusterArangoGraph(
     let unassignedRun: MapObject;
     while ((unassignedRun = await nextUnassignedRun())) {
       try {
-        const newSkiAreaID = uuid();
-        const activities = unassignedRun.activities.filter(activity =>
-          allSkiAreaActivities.has(activity)
-        );
-        const memberObjects = await visitObject(
-          {
-            id: newSkiAreaID,
-            activities: activities,
-            alreadyVisited: [unassignedRun._key]
-          },
-          unassignedRun
-        );
-
-        await createGeneratedSkiArea(newSkiAreaID, activities, memberObjects);
+        await generateSkiAreaForRun(unassignedRun);
       } catch (exception) {
         console.log("Processing unassigned run failed.", exception);
       }
     }
+  }
+
+  async function generateSkiAreaForRun(unassignedRun: RunObject) {
+    const newSkiAreaID = uuid();
+    let activities = unassignedRun.activities.filter(activity =>
+      allSkiAreaActivities.has(activity)
+    );
+    let memberObjects = await visitObject(
+      {
+        id: newSkiAreaID,
+        activities: activities,
+        alreadyVisited: [unassignedRun._key]
+      },
+      unassignedRun
+    );
+
+    // Downhill ski areas must contain at least one lift.
+    if (
+      activities.includes(Activity.Downhill) &&
+      !memberObjects.some(object => object.type == MapObjectType.Lift)
+    ) {
+      activities = activities.filter(
+        activity => activity !== Activity.Downhill
+      );
+      memberObjects = memberObjects.filter(object => {
+        const hasAnotherActivity = object.activities.some(
+          activity =>
+            activity !== Activity.Downhill && allSkiAreaActivities.has(activity)
+        );
+        return hasAnotherActivity;
+      });
+    }
+
+    if (activities.length === 0 || memberObjects.length === 0) {
+      await objectsCollection.update(
+        { _key: unassignedRun._key },
+        { isBasisForNewSkiArea: false }
+      );
+      return;
+    }
+
+    await createGeneratedSkiArea(newSkiAreaID, activities, memberObjects);
   }
 
   async function visitPolygon(
