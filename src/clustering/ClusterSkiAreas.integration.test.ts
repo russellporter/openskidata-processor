@@ -1269,6 +1269,19 @@ it("associates lifts and runs adjacent to polygon openstreetmap ski area when no
             [1, 1]
           ]
         }
+      }),
+      TestHelpers.mockRunFeature({
+        id: "4",
+        name: "Run",
+        uses: [RunUse.Downhill],
+        difficulty: RunDifficulty.EASY,
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [0, 0.0001],
+            [0.0001, 0.0002]
+          ]
+        }
       })
     ]
   );
@@ -1313,8 +1326,15 @@ it("associates lifts and runs adjacent to polygon openstreetmap ski area when no
             "1",
           ],
         },
+        Object {
+          "id": "4",
+          "name": "Run",
+          "skiAreas": Array [
+            "1",
+          ],
+        },
       ]
-      `);
+    `);
   } finally {
     mockFS.restore();
   }
