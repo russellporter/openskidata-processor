@@ -1805,6 +1805,92 @@ it("uses runs fully contained in the ski area polygon to determine activities wh
   }
 });
 
+it("removes an OpenStreetMap ski area that does not contain any runs/lifts as it might be representing something other than a ski area", async () => {
+  TestHelpers.mockFeatureFiles(
+    [
+      TestHelpers.mockSkiAreaFeature({
+        id: "1",
+        activities: [],
+        sources: [{ type: SourceType.OPENSTREETMAP, id: "1" }],
+        geometry: {
+          type: "Polygon",
+          coordinates: [
+            [
+              [0, 0],
+              [1, 0],
+              [1, 1],
+              [0, 1],
+              [0, 0]
+            ]
+          ]
+        }
+      })
+    ],
+    [],
+    [
+      TestHelpers.mockRunFeature({
+        id: "2",
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [1.0001, 1.0001],
+            [1.5, 1.5]
+          ]
+        },
+        name:
+          "Run outside the ski area should be associated with a separate, generated ski area",
+        uses: [RunUse.Nordic]
+      })
+    ]
+  );
+
+  try {
+    await clusterSkiAreas(
+      "intermediate_ski_areas.geojson",
+      "output/ski_areas.geojson",
+      "intermediate_lifts.geojson",
+      "output/lifts.geojson",
+      "intermediate_runs.geojson",
+      "output/runs.geojson",
+      "http://localhost:" + container.getMappedPort(8529)
+    );
+
+    expect(
+      TestHelpers.fileContents("output/ski_areas.geojson").features.map(
+        simplifiedSkiAreaFeature
+      )
+    ).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "activities": Array [
+            "nordic",
+          ],
+          "id": "mock-UUID-0",
+          "name": null,
+        },
+      ]
+    `);
+
+    expect(
+      TestHelpers.fileContents("output/runs.geojson").features.map(
+        simplifiedRunFeature
+      )
+    ).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "id": "2",
+          "name": "Run outside the ski area should be associated with a separate, generated ski area",
+          "skiAreas": Array [
+            "mock-UUID-0",
+          ],
+        },
+      ]
+    `);
+  } finally {
+    mockFS.restore();
+  }
+});
+
 function simplifiedLiftFeature(feature: LiftFeature) {
   return {
     id: feature.properties.id,

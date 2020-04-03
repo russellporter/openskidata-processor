@@ -52,7 +52,8 @@ export default async function clusterArangoGraph(
   // For all OpenStreetMap ski areas (polygons), associate runs & lifts within that polygon.
   await assignObjectsToSkiAreas({
     skiArea: {
-      onlySource: SourceType.OPENSTREETMAP
+      onlySource: SourceType.OPENSTREETMAP,
+      removeIfNoObjectsFound: true
     },
     objects: { onlyInPolygon: true }
   });
@@ -126,6 +127,7 @@ export default async function clusterArangoGraph(
     skiArea: {
       onlySource: SourceType;
       mergeWithOtherSourceIfNearby?: boolean;
+      removeIfNoObjectsFound?: boolean;
     };
     objects: {
       onlyIfNotAlreadyAssignedToPolygon?: boolean;
@@ -194,6 +196,16 @@ export default async function clusterArangoGraph(
             options.objects.onlyInPolygon || false,
             memberObjects
           );
+
+          if (
+            options.skiArea.removeIfNoObjectsFound &&
+            !memberObjects.some(object => object.type !== MapObjectType.SkiArea)
+          ) {
+            console.log("Removing ski area as no objects were found.");
+            console.log(JSON.stringify(options));
+            await objectsCollection.remove({ _key: skiArea._key });
+            return;
+          }
 
           // Determine ski area activities based on the clustered objects.
           if (!hasKnownSkiAreaActivities) {
