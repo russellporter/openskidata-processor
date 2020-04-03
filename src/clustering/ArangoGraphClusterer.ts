@@ -2,7 +2,6 @@ import centroid from "@turf/centroid";
 import * as turf from "@turf/helpers";
 import { aql, Database } from "arangojs";
 import { AqlQuery } from "arangojs/lib/cjs/aql-query";
-import { ArrayCursor } from "arangojs/lib/cjs/cursor";
 import { AssertionError } from "assert";
 import * as GeoJSON from "geojson";
 import { Activity, FeatureType, SourceType, Status } from "openskidata-format";
@@ -18,6 +17,7 @@ import {
   SkiAreaObject
 } from "./MapObject";
 import mergeSkiAreaObjects from "./MergeSkiAreaObjects";
+import { emptySkiAreasCursor, SkiAreasCursor } from "./SkiAreasCursor";
 
 interface VisitContext {
   id: string;
@@ -431,15 +431,7 @@ export default async function clusterArangoGraph(
       allFound.forEach(object => context.alreadyVisited.push(object._key));
       return allFound;
     } catch (error) {
-      if (
-        (error.response.body.errorMessage as string).includes(
-          "Polygon is not valid"
-        ) ||
-        (error.response.body.errorMessage as string).includes(
-          "Invalid loop in polygon"
-        ) ||
-        (error.response.body.errorMessage as string).includes("Loop not closed")
-      ) {
+      if (isInvalidGeometryError(error)) {
         // ArangoDB can fail with polygon not valid in rare cases.
         // Seems to happen when people abuse landuse=winter_sports and add all members of a ski area to a multipolygon relation.
         // For example https://www.openstreetmap.org/relation/6250272
@@ -478,7 +470,7 @@ export default async function clusterArangoGraph(
     await database.query(query);
   }
 
-  async function getSkiAreasByID(ids: string[]): Promise<ArrayCursor> {
+  async function getSkiAreasByID(ids: string[]): Promise<SkiAreasCursor> {
     return await database.query(
       aql`
             FOR object IN ${objectsCollection}
@@ -491,10 +483,11 @@ export default async function clusterArangoGraph(
     onlySource?: SourceType | null;
     onlyPolygons?: boolean;
     onlyInPolygon?: GeoJSON.Polygon | GeoJSON.MultiPolygon | null;
-  }): Promise<ArrayCursor> {
+  }): Promise<SkiAreasCursor> {
     const batchSize = 50;
-    return await database.query(
-      aql`
+    try {
+      return await database.query(
+        aql`
             FOR object IN ${objectsCollection}
             ${
               options.onlyInPolygon
@@ -515,8 +508,17 @@ export default async function clusterArangoGraph(
                 : aql``
             }
             RETURN object`,
-      { batchSize: batchSize, ttl: 3600 }
-    );
+        { batchSize: batchSize, ttl: 3600 }
+      );
+    } catch (error) {
+      if (isInvalidGeometryError(error)) {
+        console.log("Failed getting ski areas (invalid geometry)");
+        console.log(error);
+        console.log("Options: " + JSON.stringify(options));
+        return emptySkiAreasCursor();
+      }
+      throw error;
+    }
   }
 
   // Find a run that isn't part of a ski area.
@@ -641,5 +643,17 @@ export default async function clusterArangoGraph(
       case "MultiPolygon":
         return aql`GEO_MULTIPOLYGON(${object.coordinates})`;
     }
+  }
+
+  function isInvalidGeometryError(error: any): boolean {
+    return (
+      (error.response.body.errorMessage as string).includes(
+        "Polygon is not valid"
+      ) ||
+      (error.response.body.errorMessage as string).includes(
+        "Invalid loop in polygon"
+      ) ||
+      (error.response.body.errorMessage as string).includes("Loop not closed")
+    );
   }
 }
