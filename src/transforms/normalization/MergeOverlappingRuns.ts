@@ -6,6 +6,7 @@ import {
   RunProperties,
   Status
 } from "openskidata-format";
+import Source, { SourceType } from "openskidata-format/dist/Source";
 import * as TopoJSON from "topojson-specification";
 
 export type RunTopology = TopoJSON.Topology<{
@@ -27,7 +28,7 @@ interface RunArc {
 
 // Finds overlapping run segments and merges them
 export function mergeOverlappingRuns(data: RunTopology) {
-  const lines = _.remove(data.objects.runs.geometries, function(
+  const lines = _.remove(data.objects.runs.geometries, function (
     geometry: TopoJSON.GeometryObject
   ) {
     return (
@@ -110,7 +111,7 @@ function forEachArc(
   arcs: number[],
   callback: (arc: number, isReversed: boolean) => void
 ) {
-  _.forEach(arcs, function(arc) {
+  _.forEach(arcs, function (arc) {
     arc = Number(arc);
     const isReversed = arc < 0;
     if (isReversed) {
@@ -185,7 +186,8 @@ function propertiesForArcData(data: ArcData): RunProperties {
     color: difficultyAndColor.color,
     colorName: difficultyAndColor.colorName,
     skiAreas: Array.from(new Set(allProps.flatMap(p => p.skiAreas))),
-    elevationProfile: allProps[0].elevationProfile
+    elevationProfile: allProps[0].elevationProfile,
+    sources: uniquedSources(allProps.flatMap(properties => properties.sources))
   };
 }
 
@@ -250,6 +252,22 @@ function sortPriority<T>(values: T[]): Map<T, number> {
 
 function priorityReducer<V>(values: V[]): Reducer<V> {
   return pickReducer(sortPriority(values));
+}
+
+function uniquedSources(sources: Source[]): Source[] {
+  const map = new Map<SourceType, Set<string>>();
+  return sources.reduce((uniquedSources: Source[], source) => {
+    if (!map.has(source.type)) {
+      map.set(source.type, new Set());
+    }
+    const sourceIDs = map.get(source.type)!;
+    if (!sourceIDs.has(source.id)) {
+      sourceIDs.add(source.id);
+      uniquedSources.push(source);
+    }
+
+    return uniquedSources;
+  }, []);
 }
 
 const difficultyPriority = sortPriority([

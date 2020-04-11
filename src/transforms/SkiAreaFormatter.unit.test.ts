@@ -1,7 +1,7 @@
 import { Activity, SourceType, Status } from "openskidata-format";
 import {
   InputOpenStreetMapSkiAreaFeature,
-  InputSkiMapOrgSkiAreaFeature
+  InputSkiMapOrgSkiAreaFeature,
 } from "../features/SkiAreaFeature";
 import { formatSkiArea } from "./SkiAreaFormatter";
 
@@ -16,16 +16,16 @@ describe("SkiAreaFormatter", () => {
             [0, 0],
             [0, 1],
             [1, 0],
-            [0, 0]
-          ]
-        ]
+            [0, 0],
+          ],
+        ],
       },
       properties: {
         id: "1",
         landuse: "winter_sports",
         name: "Ski Area",
-        website: "http://example.com"
-      }
+        website: "http://example.com",
+      },
     };
 
     expect(formatSkiArea(SourceType.OPENSTREETMAP)(feature))
@@ -57,7 +57,7 @@ describe("SkiAreaFormatter", () => {
         "properties": Object {
           "activities": Array [],
           "generated": false,
-          "id": "2963e77902e033785a94e78f704b58025c05d02c",
+          "id": "c638251d70817a3d3ad227cce5d353d3abff6abb",
           "name": "Ski Area",
           "runConvention": "europe",
           "sources": Array [
@@ -85,14 +85,14 @@ describe("SkiAreaFormatter", () => {
             [0, 0],
             [0, 1],
             [1, 0],
-            [0, 0]
-          ]
-        ]
+            [0, 0],
+          ],
+        ],
       },
       properties: {
         id: "1",
-        "abandoned:landuse": "winter_sports"
-      }
+        "abandoned:landuse": "winter_sports",
+      },
     };
 
     expect(
@@ -110,15 +110,15 @@ describe("SkiAreaFormatter", () => {
             [0, 0],
             [0, 1],
             [1, 0],
-            [0, 0]
-          ]
-        ]
+            [0, 0],
+          ],
+        ],
       },
       properties: {
         id: "1",
         landuse: "winter_sports",
-        abandoned: "yes"
-      }
+        abandoned: "yes",
+      },
     };
 
     expect(
@@ -131,7 +131,7 @@ describe("SkiAreaFormatter", () => {
       type: "Feature",
       geometry: {
         type: "Point",
-        coordinates: [0, 0]
+        coordinates: [0, 0],
       },
       properties: {
         id: "1",
@@ -139,8 +139,8 @@ describe("SkiAreaFormatter", () => {
         official_website: "http://example.com",
         scalerank: 1,
         activities: [Activity.Downhill],
-        status: Status.Operating
-      }
+        status: Status.Operating,
+      },
     };
 
     expect(formatSkiArea(SourceType.SKIMAP_ORG)(feature))
@@ -158,7 +158,7 @@ describe("SkiAreaFormatter", () => {
             "downhill",
           ],
           "generated": false,
-          "id": "7289533053d66d84ce0c5646af1988342508d22c",
+          "id": "fde59eba834efdc0f8859c40c4211027d9b6e3e9",
           "name": "Ski Area",
           "runConvention": "europe",
           "sources": Array [

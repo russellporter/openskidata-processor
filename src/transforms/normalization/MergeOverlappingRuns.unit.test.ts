@@ -2,6 +2,7 @@ import * as TurfHelper from "@turf/helpers";
 import * as assert from "assert";
 import { GeoJsonObject } from "geojson";
 import { RunProperties } from "openskidata-format";
+import Source, { SourceType } from "openskidata-format/dist/Source";
 import * as TopoJSONClient from "topojson-client";
 import * as TopoJSONServer from "topojson-server";
 import { InputRunGeometry } from "../../features/RunFeature";
@@ -21,16 +22,24 @@ function mockRun<G extends InputRunGeometry>(options: {
   name?: string | null;
   oneway?: boolean | null;
   geometry?: G;
+  sources?: Source[] | undefined;
 }) {
   return TestHelpers.mockRunFeature({
     id: "1",
     name: options.name !== undefined ? options.name : null,
     oneway: options.oneway !== undefined ? options.oneway : null,
     uses: [],
+    sources: options.sources,
     geometry:
       options.geometry !== undefined
         ? options.geometry
-        : { type: "LineString", coordinates: [[0, 0], [1, 1]] }
+        : {
+            type: "LineString",
+            coordinates: [
+              [0, 0],
+              [1, 1]
+            ]
+          }
   });
 }
 
@@ -43,6 +52,37 @@ describe("MergeOverlappingRuns", () => {
     assert.deepStrictEqual(
       merge([mockRun({ name: "A" }), mockRun({ name: "B" })]),
       [mockRun({ name: "A, B" })]
+    );
+  });
+
+  it("should unique sources when merging features with some duplicated sources", () => {
+    assert.deepStrictEqual(
+      merge([
+        mockRun({
+          name: "A",
+          sources: [
+            { type: SourceType.OPENSTREETMAP, id: "way/1" },
+            { type: SourceType.OPENSTREETMAP, id: "relation/1" }
+          ]
+        }),
+        mockRun({
+          name: "B",
+          sources: [
+            { type: SourceType.OPENSTREETMAP, id: "way/1" },
+            { type: SourceType.OPENSTREETMAP, id: "relation/2" }
+          ]
+        })
+      ]),
+      [
+        mockRun({
+          name: "A, B",
+          sources: [
+            { type: SourceType.OPENSTREETMAP, id: "way/1" },
+            { type: SourceType.OPENSTREETMAP, id: "relation/1" },
+            { type: SourceType.OPENSTREETMAP, id: "relation/2" }
+          ]
+        })
+      ]
     );
   });
 
@@ -62,18 +102,36 @@ describe("MergeOverlappingRuns", () => {
         mockRun({
           name: "A",
           oneway: true,
-          geometry: { type: "LineString", coordinates: [[0, 0], [1, 1]] }
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [0, 0],
+              [1, 1]
+            ]
+          }
         }),
         mockRun({
           name: "B",
-          geometry: { type: "LineString", coordinates: [[1, 1], [0, 0]] }
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [1, 1],
+              [0, 0]
+            ]
+          }
         })
       ]),
       [
         mockRun({
           name: "A, B",
           oneway: true,
-          geometry: { type: "LineString", coordinates: [[0, 0], [1, 1]] }
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [0, 0],
+              [1, 1]
+            ]
+          }
         })
       ]
     );
@@ -95,19 +153,37 @@ describe("MergeOverlappingRuns", () => {
         mockRun({
           name: "A",
           oneway: true,
-          geometry: { type: "LineString", coordinates: [[0, 0], [1, 1]] }
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [0, 0],
+              [1, 1]
+            ]
+          }
         }),
         mockRun({
           name: "B",
           oneway: true,
-          geometry: { type: "LineString", coordinates: [[1, 1], [0, 0]] }
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [1, 1],
+              [0, 0]
+            ]
+          }
         })
       ]),
       [
         mockRun({
           name: "A, B",
           oneway: false,
-          geometry: { type: "LineString", coordinates: [[0, 0], [1, 1]] }
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [0, 0],
+              [1, 1]
+            ]
+          }
         })
       ]
     );
@@ -119,14 +195,24 @@ describe("MergeOverlappingRuns", () => {
         mockRun({
           name: "A",
           oneway: true,
-          geometry: { type: "LineString", coordinates: [[0, 0], [1, 1]] }
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [0, 0],
+              [1, 1]
+            ]
+          }
         }),
         mockRun({
           name: "A",
           oneway: true,
           geometry: {
             type: "LineString",
-            coordinates: [[1, 1], [2, 2], [0, 0]]
+            coordinates: [
+              [1, 1],
+              [2, 2],
+              [0, 0]
+            ]
           }
         })
       ]),
@@ -134,14 +220,24 @@ describe("MergeOverlappingRuns", () => {
         mockRun({
           name: "A",
           oneway: true,
-          geometry: { type: "LineString", coordinates: [[0, 0], [1, 1]] }
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [0, 0],
+              [1, 1]
+            ]
+          }
         }),
         mockRun({
           name: "A",
           oneway: true,
           geometry: {
             type: "LineString",
-            coordinates: [[1, 1], [2, 2], [0, 0]]
+            coordinates: [
+              [1, 1],
+              [2, 2],
+              [0, 0]
+            ]
           }
         })
       ]
@@ -153,13 +249,23 @@ describe("MergeOverlappingRuns", () => {
       merge([
         mockRun({
           oneway: true,
-          geometry: { type: "LineString", coordinates: [[0, 0], [1, 1]] }
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [0, 0],
+              [1, 1]
+            ]
+          }
         }),
         mockRun({
           oneway: true,
           geometry: {
             type: "LineString",
-            coordinates: [[1, 1], [2, 2], [0, 0]]
+            coordinates: [
+              [1, 1],
+              [2, 2],
+              [0, 0]
+            ]
           }
         }),
         mockRun({
@@ -167,9 +273,19 @@ describe("MergeOverlappingRuns", () => {
           geometry: {
             type: "MultiLineString",
             coordinates: [
-              [[0, 0], [1, 1]],
-              [[0, 0], [3, 3]],
-              [[0, 0], [2, 2], [1, 1]]
+              [
+                [0, 0],
+                [1, 1]
+              ],
+              [
+                [0, 0],
+                [3, 3]
+              ],
+              [
+                [0, 0],
+                [2, 2],
+                [1, 1]
+              ]
             ]
           }
         })
@@ -178,19 +294,35 @@ describe("MergeOverlappingRuns", () => {
         mockRun({
           name: "Relation",
           oneway: true,
-          geometry: { type: "LineString", coordinates: [[0, 0], [1, 1]] }
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [0, 0],
+              [1, 1]
+            ]
+          }
         }),
         mockRun({
           name: "Relation",
           oneway: true,
           geometry: {
             type: "LineString",
-            coordinates: [[1, 1], [2, 2], [0, 0]]
+            coordinates: [
+              [1, 1],
+              [2, 2],
+              [0, 0]
+            ]
           }
         }),
         mockRun({
           name: "Relation",
-          geometry: { type: "LineString", coordinates: [[0, 0], [3, 3]] }
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [0, 0],
+              [3, 3]
+            ]
+          }
         })
       ]
     );
@@ -204,21 +336,41 @@ describe("MergeOverlappingRuns", () => {
           geometry: {
             type: "MultiLineString",
             coordinates: [
-              [[0, 0], [1, 1]],
-              [[0, 0], [3, 3]],
-              [[0, 0], [2, 2], [1, 1]]
+              [
+                [0, 0],
+                [1, 1]
+              ],
+              [
+                [0, 0],
+                [3, 3]
+              ],
+              [
+                [0, 0],
+                [2, 2],
+                [1, 1]
+              ]
             ]
           }
         }),
         mockRun({
           oneway: true,
-          geometry: { type: "LineString", coordinates: [[0, 0], [1, 1]] }
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [0, 0],
+              [1, 1]
+            ]
+          }
         }),
         mockRun({
           oneway: true,
           geometry: {
             type: "LineString",
-            coordinates: [[1, 1], [2, 2], [0, 0]]
+            coordinates: [
+              [1, 1],
+              [2, 2],
+              [0, 0]
+            ]
           }
         })
       ]),
@@ -226,18 +378,34 @@ describe("MergeOverlappingRuns", () => {
         mockRun({
           name: "Relation",
           oneway: true,
-          geometry: { type: "LineString", coordinates: [[0, 0], [1, 1]] }
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [0, 0],
+              [1, 1]
+            ]
+          }
         }),
         mockRun({
           name: "Relation",
-          geometry: { type: "LineString", coordinates: [[0, 0], [3, 3]] }
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [0, 0],
+              [3, 3]
+            ]
+          }
         }),
         mockRun({
           name: "Relation",
           oneway: true,
           geometry: {
             type: "LineString",
-            coordinates: [[1, 1], [2, 2], [0, 0]]
+            coordinates: [
+              [1, 1],
+              [2, 2],
+              [0, 0]
+            ]
           }
         })
       ]
@@ -251,37 +419,78 @@ describe("MergeOverlappingRuns", () => {
           name: "Line",
           geometry: {
             type: "LineString",
-            coordinates: [[0, 0], [1, 1], [2, 2], [3, 3]]
+            coordinates: [
+              [0, 0],
+              [1, 1],
+              [2, 2],
+              [3, 3]
+            ]
           }
         }),
         mockRun({
           oneway: true,
-          geometry: { type: "LineString", coordinates: [[1, 1], [0, 0]] }
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [1, 1],
+              [0, 0]
+            ]
+          }
         }),
         mockRun({
           oneway: true,
-          geometry: { type: "LineString", coordinates: [[2, 2], [1, 1]] }
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [2, 2],
+              [1, 1]
+            ]
+          }
         }),
         mockRun({
           oneway: true,
-          geometry: { type: "LineString", coordinates: [[2, 2], [3, 3]] }
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [2, 2],
+              [3, 3]
+            ]
+          }
         })
       ]),
       [
         mockRun({
           name: "Line",
           oneway: true,
-          geometry: { type: "LineString", coordinates: [[1, 1], [0, 0]] }
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [1, 1],
+              [0, 0]
+            ]
+          }
         }),
         mockRun({
           name: "Line",
           oneway: true,
-          geometry: { type: "LineString", coordinates: [[2, 2], [1, 1]] }
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [2, 2],
+              [1, 1]
+            ]
+          }
         }),
         mockRun({
           name: "Line",
           oneway: true,
-          geometry: { type: "LineString", coordinates: [[2, 2], [3, 3]] }
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [2, 2],
+              [3, 3]
+            ]
+          }
         })
       ]
     );

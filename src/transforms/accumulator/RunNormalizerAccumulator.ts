@@ -41,13 +41,7 @@ export class RunNormalizerAccumulator
       ) as GeoJSON.FeatureCollection<RunGeometry, RunProperties>
     ).features.map(f => {
       // Re-compute id hashes after normalizing
-      return buildFeature(
-        f.geometry,
-        (() => {
-          delete f.properties.id;
-          return f.properties;
-        })()
-      );
+      return buildFeature(f.geometry, f.properties);
     });
   }
 }

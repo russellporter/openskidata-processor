@@ -30,13 +30,19 @@ describe("RunFormatter", () => {
         "difficulty": null,
         "gladed": null,
         "grooming": null,
-        "id": "b056a7d86b5ce41afc8337ccd0cc14f1ceee48f2",
+        "id": "64e1be16905be0666594b5c433d4aa1aa1a64e5f",
         "lit": null,
         "name": null,
         "oneway": null,
         "patrolled": null,
         "ref": null,
         "skiAreas": Array [],
+        "sources": Array [
+          Object {
+            "id": "way/1",
+            "type": "openstreetmap",
+          },
+        ],
         "status": "operating",
         "type": "run",
         "uses": Array [

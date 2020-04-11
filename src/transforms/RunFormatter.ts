@@ -10,6 +10,7 @@ import {
   RunDifficulty,
   RunGrooming,
   RunUse,
+  SourceType,
   Status
 } from "openskidata-format";
 import { InputRunFeature, InputRunProperties } from "../features/RunFeature";
@@ -63,7 +64,8 @@ export function formatRun(
     colorName: getColorName(color),
     grooming: getGrooming(inputProperties),
     skiAreas: [],
-    status: status
+    status: status,
+    sources: [{ type: SourceType.OPENSTREETMAP, id: inputProperties["id"] }]
   };
 
   return buildFeature(feature.geometry, properties);

@@ -1,19 +1,25 @@
 import objectHash from "object-hash";
+import {
+  LiftProperties,
+  RunProperties,
+  SkiAreaProperties
+} from "openskidata-format";
 
-export default function buildFeature<G extends GeoJSON.Geometry, P>(
-  geometry: G,
-  propertiesExceptID: P
-): GeoJSON.Feature<G, P & { id: string }> {
+export default function buildFeature<
+  G extends GeoJSON.Geometry,
+  P extends SkiAreaProperties | LiftProperties | RunProperties
+>(geometry: G, properties: P): GeoJSON.Feature<G, P & { id: string }> {
   const id = objectHash({
     type: "Feature",
-    properties: propertiesExceptID,
+    properties: {
+      type: properties.type
+    },
     geometry: geometry
   });
 
-  const properties: P & { id: string } = { ...propertiesExceptID, id: id };
   return {
     type: "Feature",
-    properties: properties,
+    properties: { ...properties, id: id },
     geometry: geometry
   };
 }

@@ -3,6 +3,7 @@ import {
   LiftFeature,
   LiftProperties,
   LiftType,
+  SourceType,
   Status
 } from "openskidata-format";
 import { InputLiftFeature, InputLiftProperties } from "../features/LiftFeature";
@@ -56,7 +57,8 @@ export function formatLift(feature: InputLiftFeature): LiftFeature | null {
     bubble: mapOSMBoolean(inputProperties["aerialway:bubble"]),
     heating: mapOSMBoolean(inputProperties["aerialway:heating"]),
     color: getColor(status),
-    skiAreas: []
+    skiAreas: [],
+    sources: [{ type: SourceType.OPENSTREETMAP, id: inputProperties["id"] }]
   };
 
   return buildFeature(feature.geometry, properties);

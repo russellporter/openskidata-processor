@@ -4,7 +4,7 @@ import { Config } from "./Config";
 import {
   GeoJSONInputPaths,
   GeoJSONIntermediatePaths,
-  GeoJSONOutputPaths
+  GeoJSONOutputPaths,
 } from "./io/GeoJSONFiles";
 import prepare from "./PrepareGeoJSON";
 import * as TestHelpers from "./TestHelpers";
@@ -14,7 +14,7 @@ const intermediate = new GeoJSONIntermediatePaths(".");
 const output = new GeoJSONOutputPaths("output");
 const config: Config = {
   arangoDBURLForClustering: null,
-  elevationServerURL: "http://elevation.example.com"
+  elevationServerURL: "http://elevation.example.com",
 };
 // Work around https://github.com/tschaub/mock-fs/issues/234
 let logs: any[] = [];
@@ -29,7 +29,7 @@ beforeEach(() => {
 afterEach(() => {
   logMock.mockRestore();
   mockFS.restore();
-  logs.map(el => console.log(...el));
+  logs.map((el) => console.log(...el));
   logs = [];
 });
 
@@ -58,18 +58,18 @@ it("adds elevations to lift geometry", async () => {
         properties: {
           aerialway: "t-bar",
           name: "Skilift Oberau",
-          id: "way/227407273"
+          id: "way/227407273",
         },
         geometry: {
           type: "LineString",
           coordinates: [
             [11.1223444, 47.5572422],
-            [11.1164297, 47.5581563]
-          ]
-        }
-      }
+            [11.1164297, 47.5581563],
+          ],
+        },
+      },
     ],
-    runs: []
+    runs: [],
   });
 
   await prepare(input, intermediate, output, config);
@@ -101,13 +101,19 @@ it("adds elevations to lift geometry", async () => {
             "description": null,
             "duration": null,
             "heating": null,
-            "id": "8edb81293f323abb197cd7dd28c141bfdc8b7de4",
+            "id": "4d07b91974c5a5b3a0ad9e1928c0a6d433c5093b",
             "liftType": "t-bar",
             "name": "Skilift Oberau",
             "occupancy": null,
             "oneway": null,
             "ref": null,
             "skiAreas": Array [],
+            "sources": Array [
+              Object {
+                "id": "way/227407273",
+                "type": "openstreetmap",
+              },
+            ],
             "status": "operating",
             "type": "lift",
           },
@@ -135,18 +141,18 @@ it("adds elevations to run geometry & elevation profile", async () => {
           "piste:difficulty": "easy",
           "piste:type": "downhill",
           sport: "skiing",
-          id: "way/227407268"
+          id: "way/227407268",
         },
         geometry: {
           type: "LineString",
           coordinates: [
             [11.1164229, 47.558125],
             [11.1163655, 47.5579742],
-            [11.1171866, 47.5556413]
-          ]
-        }
-      }
-    ]
+            [11.1171866, 47.5556413],
+          ],
+        },
+      },
+    ],
   });
 
   await prepare(input, intermediate, output, config);
@@ -201,13 +207,19 @@ it("adds elevations to run geometry & elevation profile", async () => {
             },
             "gladed": null,
             "grooming": null,
-            "id": "319b96256dfe6ce185fa15a90a586ebcceedd73d",
+            "id": "cb4efcbcad7ad727b54420fecc11af95be8baf2d",
             "lit": null,
             "name": "Oberauer Skiabfahrt",
             "oneway": null,
             "patrolled": null,
             "ref": null,
             "skiAreas": Array [],
+            "sources": Array [
+              Object {
+                "id": "way/227407268",
+                "type": "openstreetmap",
+              },
+            ],
             "status": "operating",
             "type": "run",
             "uses": Array [
@@ -234,18 +246,18 @@ it("completes without adding elevations when elevation server fails", async () =
         properties: {
           aerialway: "t-bar",
           name: "Skilift Oberau",
-          id: "way/227407273"
+          id: "way/227407273",
         },
         geometry: {
           type: "LineString",
           coordinates: [
             [11.1223444, 47.5572422],
-            [11.1164297, 47.5581563]
-          ]
-        }
-      }
+            [11.1164297, 47.5581563],
+          ],
+        },
+      },
     ],
-    runs: []
+    runs: [],
   });
 
   await prepare(input, intermediate, output, config);
@@ -275,13 +287,19 @@ it("completes without adding elevations when elevation server fails", async () =
             "description": null,
             "duration": null,
             "heating": null,
-            "id": "8edb81293f323abb197cd7dd28c141bfdc8b7de4",
+            "id": "4d07b91974c5a5b3a0ad9e1928c0a6d433c5093b",
             "liftType": "t-bar",
             "name": "Skilift Oberau",
             "occupancy": null,
             "oneway": null,
             "ref": null,
             "skiAreas": Array [],
+            "sources": Array [
+              Object {
+                "id": "way/227407273",
+                "type": "openstreetmap",
+              },
+            ],
             "status": "operating",
             "type": "lift",
           },
@@ -309,7 +327,7 @@ it("adds elevations to run polygons", async () => {
           "piste:difficulty": "easy",
           "piste:type": "downhill",
           sport: "skiing",
-          id: "way/227407268"
+          id: "way/227407268",
         },
         geometry: {
           type: "Polygon",
@@ -317,17 +335,17 @@ it("adds elevations to run polygons", async () => {
             [
               [6.544500899999999, 45.3230511],
               [6.543409400000001, 45.323173700000005],
-              [6.544500899999999, 45.3230511]
+              [6.544500899999999, 45.3230511],
             ],
             [
               [6.5502579, 45.3224134],
               [6.550612, 45.3222571],
-              [6.5502579, 45.3224134]
-            ]
-          ]
-        }
-      }
-    ]
+              [6.5502579, 45.3224134],
+            ],
+          ],
+        },
+      },
+    ],
   });
 
   await prepare(input, intermediate, output, config);
@@ -394,13 +412,19 @@ it("adds elevations to run polygons", async () => {
             "elevationProfile": null,
             "gladed": null,
             "grooming": null,
-            "id": "fd6903627525eb793a2865011499252f719f143d",
+            "id": "acdfe959fe57b0ecd5fb65f3f463a4a62fb9fc67",
             "lit": null,
             "name": "Oberauer Skiabfahrt",
             "oneway": null,
             "patrolled": null,
             "ref": null,
             "skiAreas": Array [],
+            "sources": Array [
+              Object {
+                "id": "way/227407268",
+                "type": "openstreetmap",
+              },
+            ],
             "status": "operating",
             "type": "run",
             "uses": Array [
