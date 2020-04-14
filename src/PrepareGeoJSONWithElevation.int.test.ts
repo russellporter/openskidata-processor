@@ -1,5 +1,6 @@
 import mockFS from "mock-fs";
 import nock from "nock";
+import { RunFeature } from "openskidata-format";
 import { Config } from "./Config";
 import {
   GeoJSONInputPaths,
@@ -157,79 +158,49 @@ it("adds elevations to run geometry & elevation profile", async () => {
 
   await prepare(input, intermediate, output, config);
 
-  expect(TestHelpers.fileContents("output/runs.geojson"))
-    .toMatchInlineSnapshot(`
+  const feature: RunFeature = TestHelpers.fileContents("output/runs.geojson")
+    .features[0];
+
+  expect(feature.properties.elevationProfile).toMatchInlineSnapshot(`
     Object {
-      "features": Array [
-        Object {
-          "geometry": Object {
-            "coordinates": Array [
-              Array [
-                11.1164229,
-                47.558125000000004,
-                0,
-              ],
-              Array [
-                11.116365499999999,
-                47.5579742,
-                1,
-              ],
-              Array [
-                11.1171866,
-                47.5556413,
-                2,
-              ],
-            ],
-            "type": "LineString",
-          },
-          "properties": Object {
-            "color": "hsl(208, 100%, 33%)",
-            "colorName": "blue",
-            "description": null,
-            "difficulty": "easy",
-            "elevationProfile": Object {
-              "heights": Array [
-                3,
-                4,
-                5,
-                6,
-                7,
-                8,
-                9,
-                10,
-                11,
-                12,
-                13,
-                14,
-                15,
-              ],
-              "resolution": 25,
-            },
-            "gladed": null,
-            "grooming": null,
-            "id": "cb4efcbcad7ad727b54420fecc11af95be8baf2d",
-            "lit": null,
-            "name": "Oberauer Skiabfahrt",
-            "oneway": null,
-            "patrolled": null,
-            "ref": null,
-            "skiAreas": Array [],
-            "sources": Array [
-              Object {
-                "id": "way/227407268",
-                "type": "openstreetmap",
-              },
-            ],
-            "status": "operating",
-            "type": "run",
-            "uses": Array [
-              "downhill",
-            ],
-          },
-          "type": "Feature",
-        },
+      "heights": Array [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
       ],
-      "type": "FeatureCollection",
+      "resolution": 25,
+    }
+  `);
+  expect(feature.geometry).toMatchInlineSnapshot(`
+    Object {
+      "coordinates": Array [
+        Array [
+          11.1164229,
+          47.558125000000004,
+          0,
+        ],
+        Array [
+          11.116365499999999,
+          47.5579742,
+          1,
+        ],
+        Array [
+          11.1171866,
+          47.5556413,
+          2,
+        ],
+      ],
+      "type": "LineString",
     }
   `);
 });
@@ -350,91 +321,56 @@ it("adds elevations to run polygons", async () => {
 
   await prepare(input, intermediate, output, config);
 
-  expect(TestHelpers.fileContents("output/runs.geojson"))
+  expect(TestHelpers.fileContents("output/runs.geojson").features[0].geometry)
     .toMatchInlineSnapshot(`
     Object {
-      "features": Array [
-        Object {
-          "geometry": Object {
-            "coordinates": Array [
-              Array [
-                Array [
-                  6.544500899999997,
-                  45.3230511,
-                  0,
-                ],
-                Array [
-                  6.543409400000002,
-                  45.32317370000001,
-                  1,
-                ],
-                Array [
-                  6.544500899999997,
-                  45.3230511,
-                  2,
-                ],
-                Array [
-                  6.544500899999997,
-                  45.3230511,
-                  0,
-                ],
-              ],
-              Array [
-                Array [
-                  6.5502579,
-                  45.3224134,
-                  4,
-                ],
-                Array [
-                  6.550612,
-                  45.3222571,
-                  5,
-                ],
-                Array [
-                  6.5502579,
-                  45.3224134,
-                  6,
-                ],
-                Array [
-                  6.5502579,
-                  45.3224134,
-                  4,
-                ],
-              ],
-            ],
-            "type": "Polygon",
-          },
-          "properties": Object {
-            "color": "hsl(208, 100%, 33%)",
-            "colorName": "blue",
-            "description": null,
-            "difficulty": "easy",
-            "elevationProfile": null,
-            "gladed": null,
-            "grooming": null,
-            "id": "acdfe959fe57b0ecd5fb65f3f463a4a62fb9fc67",
-            "lit": null,
-            "name": "Oberauer Skiabfahrt",
-            "oneway": null,
-            "patrolled": null,
-            "ref": null,
-            "skiAreas": Array [],
-            "sources": Array [
-              Object {
-                "id": "way/227407268",
-                "type": "openstreetmap",
-              },
-            ],
-            "status": "operating",
-            "type": "run",
-            "uses": Array [
-              "downhill",
-            ],
-          },
-          "type": "Feature",
-        },
+      "coordinates": Array [
+        Array [
+          Array [
+            6.544500899999997,
+            45.3230511,
+            0,
+          ],
+          Array [
+            6.543409400000002,
+            45.32317370000001,
+            1,
+          ],
+          Array [
+            6.544500899999997,
+            45.3230511,
+            2,
+          ],
+          Array [
+            6.544500899999997,
+            45.3230511,
+            0,
+          ],
+        ],
+        Array [
+          Array [
+            6.5502579,
+            45.3224134,
+            4,
+          ],
+          Array [
+            6.550612,
+            45.3222571,
+            5,
+          ],
+          Array [
+            6.5502579,
+            45.3224134,
+            6,
+          ],
+          Array [
+            6.5502579,
+            45.3224134,
+            4,
+          ],
+        ],
       ],
-      "type": "FeatureCollection",
+      "type": "Polygon",
     }
   `);
 });

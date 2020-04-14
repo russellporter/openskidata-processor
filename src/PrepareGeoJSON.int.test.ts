@@ -296,6 +296,7 @@ it("produces output for simple input", async () => {
             "properties": Object {
               "color": "hsl(208, 100%, 33%)",
               "colorName": "blue",
+              "convention": "europe",
               "description": null,
               "difficulty": "easy",
               "gladed": null,

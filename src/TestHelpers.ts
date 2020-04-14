@@ -117,6 +117,7 @@ export function mockRunFeature<G extends InputRunGeometry>(options: {
   grooming?: RunGrooming | null;
   uses: RunUse[];
   difficulty?: RunDifficulty;
+  convention?: RunConvention;
   geometry: G;
   status?: Status;
   sources?: Source[];
@@ -129,6 +130,7 @@ export function mockRunFeature<G extends InputRunGeometry>(options: {
       id: options.id,
       name: options.name,
       difficulty: options.difficulty || null,
+      convention: options.convention || RunConvention.EUROPE,
       ref: options.ref || null,
       oneway: options.oneway !== undefined ? options.oneway : null,
       lit: null,

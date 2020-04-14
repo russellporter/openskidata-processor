@@ -177,6 +177,7 @@ function propertiesForArcData(data: ArcData): RunProperties {
     ref: sanitizeUniqueAndJoin(allProps.map(p => p.ref)),
     description: sanitizeUniqueAndJoin(allProps.map(p => p.description)),
     difficulty: difficultyAndColor.difficulty,
+    convention: allProps[0].convention,
     status: allProps.map(p => p.status).reduce(statusReducer),
     oneway: directionData.oneway,
     lit: allProps.map(p => p.lit).reduce(litReducer),

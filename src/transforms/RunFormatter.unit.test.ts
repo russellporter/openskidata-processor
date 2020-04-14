@@ -26,6 +26,7 @@ describe("RunFormatter", () => {
       Object {
         "color": "hsl(0, 0%, 35%)",
         "colorName": "grey",
+        "convention": "europe",
         "description": null,
         "difficulty": null,
         "gladed": null,

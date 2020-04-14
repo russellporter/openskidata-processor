@@ -43,7 +43,8 @@ export function formatRun(
   }
 
   const difficulty = getDifficulty(inputProperties);
-  const color = getRunColor(getRunConvention(feature), difficulty);
+  const convention = getRunConvention(feature);
+  const color = getRunColor(convention, difficulty);
 
   const properties: Omit<FormattedInputRunProperties, "id"> = {
     type: FeatureType.Run,
@@ -54,6 +55,7 @@ export function formatRun(
       getOrElse(inputProperties, "piste:description", "description")
     ),
     difficulty: difficulty,
+    convention: convention,
     oneway: getOneway(inputProperties, uses),
     gladed: mapOSMBoolean(getOrElse(inputProperties, "piste:gladed", "gladed")),
     patrolled: mapOSMBoolean(
