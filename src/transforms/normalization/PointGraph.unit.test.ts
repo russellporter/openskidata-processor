@@ -1,140 +1,146 @@
-import * as turf from "@turf/helpers";
 import assert from "assert";
-import { RunLineFeature } from "../../features/RunFeature";
+import * as TestHelpers from "../../TestHelpers";
 import PointGraph from "./PointGraph";
 
 describe("PointGraph", () => {
   describe("#merge()", () => {
     it("should merge forward, oneway", () => {
       const graph = new PointGraph();
-      const head = turf.lineString(
-        [
+      const head = TestHelpers.mockRunFeature({
+        id: "1",
+        geometry: lineString([
           [0, 0],
           [1, 1]
-        ],
-        {
-          oneway: true
-        }
-      ) as RunLineFeature;
-      const tail = turf.lineString(
-        [
+        ]),
+        oneway: true
+      });
+      const tail = TestHelpers.mockRunFeature({
+        id: "1",
+        geometry: lineString([
           [1, 1],
           [2, 2]
-        ],
-        {
-          oneway: true
-        }
-      ) as RunLineFeature;
+        ]),
+        oneway: true
+      });
       graph.addFeature(head);
       graph.addFeature(tail);
       assert.deepStrictEqual(
         graph.merge(head),
-        turf.lineString(
-          [
+        TestHelpers.mockRunFeature({
+          id: "1",
+          geometry: lineString([
             [0, 0],
             [1, 1],
             [2, 2]
-          ],
-          { oneway: true }
-        )
+          ]),
+          oneway: true
+        })
       );
       assert.equal(graph.merge(tail), null);
     });
 
     it("should merge backward, oneway", () => {
       const graph = new PointGraph();
-      const head = turf.lineString(
-        [
+      const head = TestHelpers.mockRunFeature({
+        id: "1",
+        geometry: lineString([
           [0, 0],
           [1, 1]
-        ],
-        {
-          oneway: true
-        }
-      ) as RunLineFeature;
-      const tail = turf.lineString(
-        [
+        ]),
+        oneway: true
+      });
+      const tail = TestHelpers.mockRunFeature({
+        id: "1",
+        geometry: lineString([
           [1, 1],
           [2, 2]
-        ],
-        {
-          oneway: true
-        }
-      ) as RunLineFeature;
+        ]),
+        oneway: true
+      });
       graph.addFeature(head);
       graph.addFeature(tail);
       assert.deepStrictEqual(
         graph.merge(tail),
-        turf.lineString(
-          [
+        TestHelpers.mockRunFeature({
+          id: "1",
+          geometry: lineString([
             [0, 0],
             [1, 1],
             [2, 2]
-          ],
-          { oneway: true }
-        )
+          ]),
+          oneway: true
+        })
       );
       assert.equal(graph.merge(head), null);
     });
 
     it("should not merge, oneway", () => {
       const graph = new PointGraph();
-      const head = turf.lineString(
-        [
+      const head = TestHelpers.mockRunFeature({
+        id: "1",
+        geometry: lineString([
           [0, 0],
           [1, 1]
-        ],
-        {
-          oneway: true
-        }
-      ) as RunLineFeature;
-      const tail = turf.lineString(
-        [
+        ]),
+        oneway: true
+      });
+      const tail = TestHelpers.mockRunFeature({
+        id: "1",
+        geometry: lineString([
           [2, 2],
           [1, 1]
-        ],
-        {
-          oneway: true
-        }
-      ) as RunLineFeature;
+        ]),
+        oneway: true
+      });
       graph.addFeature(head);
       graph.addFeature(tail);
       assert.deepStrictEqual(
         graph.merge(tail),
-        turf.lineString(
-          [
+        TestHelpers.mockRunFeature({
+          id: "1",
+          geometry: lineString([
             [2, 2],
             [1, 1]
-          ],
-          { oneway: true }
-        )
+          ]),
+          oneway: true
+        })
       );
 
       assert.deepStrictEqual(
         graph.merge(head),
-        turf.lineString(
-          [
+        TestHelpers.mockRunFeature({
+          id: "1",
+          geometry: lineString([
             [0, 0],
             [1, 1]
-          ],
-          { oneway: true }
-        )
+          ]),
+          oneway: true
+        })
       );
     });
 
     it("should merge multi, head", () => {
-      const head = turf.lineString([
-        [0, 0],
-        [1, 1]
-      ]) as RunLineFeature;
-      const mid = turf.lineString([
-        [2, 2],
-        [1, 1]
-      ]) as RunLineFeature;
-      const tail = turf.lineString([
-        [2, 2],
-        [3, 3]
-      ]) as RunLineFeature;
+      const head = TestHelpers.mockRunFeature({
+        id: "1",
+        geometry: lineString([
+          [0, 0],
+          [1, 1]
+        ])
+      });
+      const mid = TestHelpers.mockRunFeature({
+        id: "1",
+        geometry: lineString([
+          [2, 2],
+          [1, 1]
+        ])
+      });
+      const tail = TestHelpers.mockRunFeature({
+        id: "1",
+        geometry: lineString([
+          [2, 2],
+          [3, 3]
+        ])
+      });
 
       const graph = new PointGraph();
       graph.addFeature(head);
@@ -142,12 +148,15 @@ describe("PointGraph", () => {
       graph.addFeature(tail);
       assert.deepStrictEqual(
         graph.merge(head),
-        turf.lineString([
-          [0, 0],
-          [1, 1],
-          [2, 2],
-          [3, 3]
-        ])
+        TestHelpers.mockRunFeature({
+          id: "1",
+          geometry: lineString([
+            [0, 0],
+            [1, 1],
+            [2, 2],
+            [3, 3]
+          ])
+        })
       );
 
       assert.equal(graph.merge(mid), null);
@@ -155,18 +164,27 @@ describe("PointGraph", () => {
     });
 
     it("should merge multi, mid", () => {
-      const head = turf.lineString([
-        [0, 0],
-        [1, 1]
-      ]) as RunLineFeature;
-      const mid = turf.lineString([
-        [2, 2],
-        [1, 1]
-      ]) as RunLineFeature;
-      const tail = turf.lineString([
-        [2, 2],
-        [3, 3]
-      ]) as RunLineFeature;
+      const head = TestHelpers.mockRunFeature({
+        id: "1",
+        geometry: lineString([
+          [0, 0],
+          [1, 1]
+        ])
+      });
+      const mid = TestHelpers.mockRunFeature({
+        id: "1",
+        geometry: lineString([
+          [2, 2],
+          [1, 1]
+        ])
+      });
+      const tail = TestHelpers.mockRunFeature({
+        id: "1",
+        geometry: lineString([
+          [2, 2],
+          [3, 3]
+        ])
+      });
 
       const graph = new PointGraph();
       graph.addFeature(head);
@@ -174,12 +192,15 @@ describe("PointGraph", () => {
       graph.addFeature(tail);
       assert.deepStrictEqual(
         graph.merge(mid),
-        turf.lineString([
-          [3, 3],
-          [2, 2],
-          [1, 1],
-          [0, 0]
-        ])
+        TestHelpers.mockRunFeature({
+          id: "1",
+          geometry: lineString([
+            [3, 3],
+            [2, 2],
+            [1, 1],
+            [0, 0]
+          ])
+        })
       );
 
       assert.equal(graph.merge(head), null);
@@ -187,18 +208,27 @@ describe("PointGraph", () => {
     });
 
     it("should merge multi, tail", () => {
-      const head = turf.lineString([
-        [0, 0],
-        [1, 1]
-      ]) as RunLineFeature;
-      const mid = turf.lineString([
-        [2, 2],
-        [1, 1]
-      ]) as RunLineFeature;
-      const tail = turf.lineString([
-        [2, 2],
-        [3, 3]
-      ]) as RunLineFeature;
+      const head = TestHelpers.mockRunFeature({
+        id: "1",
+        geometry: lineString([
+          [0, 0],
+          [1, 1]
+        ])
+      });
+      const mid = TestHelpers.mockRunFeature({
+        id: "1",
+        geometry: lineString([
+          [2, 2],
+          [1, 1]
+        ])
+      });
+      const tail = TestHelpers.mockRunFeature({
+        id: "1",
+        geometry: lineString([
+          [2, 2],
+          [3, 3]
+        ])
+      });
 
       const graph = new PointGraph();
       graph.addFeature(head);
@@ -206,12 +236,15 @@ describe("PointGraph", () => {
       graph.addFeature(tail);
       assert.deepStrictEqual(
         graph.merge(tail),
-        turf.lineString([
-          [0, 0],
-          [1, 1],
-          [2, 2],
-          [3, 3]
-        ])
+        TestHelpers.mockRunFeature({
+          id: "1",
+          geometry: lineString([
+            [0, 0],
+            [1, 1],
+            [2, 2],
+            [3, 3]
+          ])
+        })
       );
 
       assert.equal(graph.merge(head), null);
@@ -219,22 +252,34 @@ describe("PointGraph", () => {
     });
 
     it("should merge graph", () => {
-      const head = turf.lineString([
-        [0, 0],
-        [1, 1]
-      ]) as RunLineFeature;
-      const mid = turf.lineString([
-        [2, 2],
-        [1, 1]
-      ]) as RunLineFeature;
-      const tail = turf.lineString([
-        [2, 2],
-        [3, 3]
-      ]) as RunLineFeature;
-      const other = turf.lineString([
-        [2, 2],
-        [3, 3]
-      ]) as RunLineFeature;
+      const head = TestHelpers.mockRunFeature({
+        id: "1",
+        geometry: lineString([
+          [0, 0],
+          [1, 1]
+        ])
+      });
+      const mid = TestHelpers.mockRunFeature({
+        id: "1",
+        geometry: lineString([
+          [2, 2],
+          [1, 1]
+        ])
+      });
+      const tail = TestHelpers.mockRunFeature({
+        id: "1",
+        geometry: lineString([
+          [2, 2],
+          [3, 3]
+        ])
+      });
+      const other = TestHelpers.mockRunFeature({
+        id: "1",
+        geometry: lineString([
+          [2, 2],
+          [3, 3]
+        ])
+      });
 
       const graph = new PointGraph();
       graph.addFeature(head);
@@ -243,13 +288,16 @@ describe("PointGraph", () => {
       graph.addFeature(other);
       assert.deepStrictEqual(
         graph.merge(tail),
-        turf.lineString([
-          [0, 0],
-          [1, 1],
-          [2, 2],
-          [3, 3],
-          [2, 2]
-        ])
+        TestHelpers.mockRunFeature({
+          id: "1",
+          geometry: lineString([
+            [0, 0],
+            [1, 1],
+            [2, 2],
+            [3, 3],
+            [2, 2]
+          ])
+        })
       );
       assert.equal(graph.merge(other), null);
       assert.equal(graph.merge(head), null);
@@ -257,42 +305,38 @@ describe("PointGraph", () => {
     });
 
     it("should merge oneway graph", () => {
-      const head = turf.lineString(
-        [
+      const head = TestHelpers.mockRunFeature({
+        id: "1",
+        geometry: lineString([
           [0, 0],
           [1, 1]
-        ],
-        {
-          oneway: true
-        }
-      ) as RunLineFeature;
-      const mid = turf.lineString(
-        [
+        ]),
+        oneway: true
+      });
+      const mid = TestHelpers.mockRunFeature({
+        id: "1",
+        geometry: lineString([
           [1, 1],
           [2, 2]
-        ],
-        {
-          oneway: true
-        }
-      ) as RunLineFeature;
-      const tail = turf.lineString(
-        [
+        ]),
+        oneway: true
+      });
+      const tail = TestHelpers.mockRunFeature({
+        id: "1",
+        geometry: lineString([
           [2, 2],
           [3, 3]
-        ],
-        {
-          oneway: true
-        }
-      ) as RunLineFeature;
-      const other = turf.lineString(
-        [
+        ]),
+        oneway: true
+      });
+      const other = TestHelpers.mockRunFeature({
+        id: "1",
+        geometry: lineString([
           [2, 2],
           [3, 3]
-        ],
-        {
-          oneway: true
-        }
-      ) as RunLineFeature;
+        ]),
+        oneway: true
+      });
 
       const graph = new PointGraph();
       graph.addFeature(head);
@@ -301,48 +345,62 @@ describe("PointGraph", () => {
       graph.addFeature(other);
       assert.deepStrictEqual(
         graph.merge(mid),
-        turf.lineString(
-          [
+        TestHelpers.mockRunFeature({
+          id: "1",
+          geometry: lineString([
             [0, 0],
             [1, 1],
             [2, 2],
             [3, 3]
-          ],
-          { oneway: true }
-        )
+          ]),
+          oneway: true
+        })
       );
       assert.deepStrictEqual(
         graph.merge(other),
-        turf.lineString(
-          [
+        TestHelpers.mockRunFeature({
+          id: "1",
+          geometry: lineString([
             [2, 2],
             [3, 3]
-          ],
-          { oneway: true }
-        )
+          ]),
+          oneway: true
+        })
       );
       assert.equal(graph.merge(head), null);
       assert.equal(graph.merge(tail), null);
     });
 
     it("should merge cycle", () => {
-      const cycle = turf.lineString([
-        [0, 0],
-        [1, 1],
-        [0, 0]
-      ]) as RunLineFeature;
-      const mid = turf.lineString([
-        [2, 2],
-        [0, 0]
-      ]) as RunLineFeature;
-      const outward = turf.lineString([
-        [2, 2],
-        [3, 3]
-      ]) as RunLineFeature;
-      const inward = turf.lineString([
-        [4, 4],
-        [2, 2]
-      ]) as RunLineFeature;
+      const cycle = TestHelpers.mockRunFeature({
+        id: "1",
+        geometry: lineString([
+          [0, 0],
+          [1, 1],
+          [0, 0]
+        ])
+      });
+      const mid = TestHelpers.mockRunFeature({
+        id: "1",
+        geometry: lineString([
+          [2, 2],
+          [0, 0]
+        ])
+      });
+      const outward = TestHelpers.mockRunFeature({
+        id: "1",
+        geometry: lineString([
+          [2, 2],
+          [3, 3]
+        ])
+      });
+      const inward = TestHelpers.mockRunFeature({
+        id: "1",
+        geometry: lineString([
+          [4, 4],
+          [2, 2]
+        ])
+      });
       const tests = [
         {
           f: cycle,
@@ -389,45 +447,57 @@ describe("PointGraph", () => {
         graph.addFeature(mid);
         graph.addFeature(outward);
         graph.addFeature(inward);
-        assert.deepStrictEqual(graph.merge(test.f), turf.lineString(test.e));
+        assert.deepStrictEqual(
+          graph.merge(test.f),
+          TestHelpers.mockRunFeature({
+            id: "1",
+            geometry: lineString(test.e)
+          })
+        );
       }
     });
 
     it("should merge oneway circle", () => {
-      const out = turf.lineString(
-        [
+      const out = TestHelpers.mockRunFeature({
+        id: "1",
+        geometry: lineString([
           [0, 0],
           [1, 1]
-        ],
-        {
-          oneway: true
-        }
-      ) as RunLineFeature;
-      const back = turf.lineString(
-        [
+        ]),
+        oneway: true
+      });
+      const back = TestHelpers.mockRunFeature({
+        id: "1",
+        geometry: lineString([
           [1, 1],
           [2, 2],
           [0, 0]
-        ],
-        {
-          oneway: true
-        }
-      ) as RunLineFeature;
+        ]),
+        oneway: true
+      });
       const graph = new PointGraph();
       graph.addFeature(out);
       graph.addFeature(back);
       assert.deepStrictEqual(
         graph.merge(out),
-        turf.lineString(
-          [
+        TestHelpers.mockRunFeature({
+          id: "1",
+          geometry: lineString([
             [1, 1],
             [2, 2],
             [0, 0],
             [1, 1]
-          ],
-          { oneway: true }
-        )
+          ]),
+          oneway: true
+        })
       );
     });
   });
 });
+
+function lineString(coordinates: number[][]): GeoJSON.LineString {
+  return {
+    type: "LineString",
+    coordinates: coordinates
+  };
+}

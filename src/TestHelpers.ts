@@ -110,12 +110,12 @@ export function fileContents(path: string): any {
 
 export function mockRunFeature<G extends InputRunGeometry>(options: {
   id: string;
-  name: string | null;
+  name?: string | null;
   oneway?: boolean | null;
   patrolled?: boolean | null;
   ref?: string | null;
   grooming?: RunGrooming | null;
-  uses: RunUse[];
+  uses?: RunUse[];
   difficulty?: RunDifficulty;
   convention?: RunConvention;
   geometry: G;
@@ -126,9 +126,9 @@ export function mockRunFeature<G extends InputRunGeometry>(options: {
     type: "Feature",
     properties: {
       type: FeatureType.Run,
-      uses: options.uses,
+      uses: options.uses || [RunUse.Downhill],
       id: options.id,
-      name: options.name,
+      name: options.name || null,
       difficulty: options.difficulty || null,
       convention: options.convention || RunConvention.EUROPE,
       ref: options.ref || null,
