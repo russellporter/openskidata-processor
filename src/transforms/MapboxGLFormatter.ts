@@ -45,13 +45,12 @@ export function formatter(
 ): (feature: GeoJSON.Feature<any, any>) => GeoJSON.Feature {
   switch (type) {
     case FeatureType.Lift:
-      return formatLift as any;
+      return formatLift;
     case FeatureType.Run:
-      return formatRun as any;
+      return formatRun;
     case FeatureType.SkiArea:
-      return formatSkiArea as any;
+      return formatSkiArea;
   }
-  throw "Unhandled type " + type;
 
   function formatRun(feature: RunFeature): MapboxGLRunFeature {
     const properties = feature.properties;
