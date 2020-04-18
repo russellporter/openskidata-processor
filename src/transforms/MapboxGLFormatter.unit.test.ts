@@ -1,4 +1,5 @@
 import { FeatureType, LiftType, RunUse } from "openskidata-format";
+import { MapboxGLRunUse } from "../features/RunFeature";
 import * as TestHelpers from "../TestHelpers";
 import { formatter } from "./MapboxGLFormatter";
 describe("MapboxGLFormatter", () => {
@@ -176,5 +177,26 @@ describe("MapboxGLFormatter", () => {
     const mapboxGLFeature = formatter(FeatureType.SkiArea)(feature);
 
     expect(mapboxGLFeature.geometry.type).toBe("MultiPoint");
+  });
+
+  it("should export ski run with multiple uses", () => {
+    const feature = TestHelpers.mockRunFeature({
+      id: "1",
+      name: "Run",
+      uses: [RunUse.Downhill, RunUse.Hike, RunUse.Skitour],
+      geometry: {
+        type: "LineString",
+        coordinates: [
+          [0, 0],
+          [1, 1]
+        ]
+      }
+    });
+    const mapboxGLFeature = formatter(FeatureType.Run)(feature);
+
+    expect(mapboxGLFeature.properties.uses).toEqual([
+      MapboxGLRunUse.Downhill,
+      MapboxGLRunUse.Other
+    ]);
   });
 });

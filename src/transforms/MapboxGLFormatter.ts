@@ -7,6 +7,7 @@ import {
   RunDifficulty,
   RunFeature,
   RunStatisticsByDifficulty,
+  RunUse,
   SkiAreaFeature
 } from "openskidata-format";
 import {
@@ -15,7 +16,8 @@ import {
 } from "../features/LiftFeature";
 import {
   MapboxGLRunFeature,
-  MapboxGLRunProperties
+  MapboxGLRunProperties,
+  MapboxGLRunUse
 } from "../features/RunFeature";
 import {
   MapboxGLSkiAreaFeature,
@@ -57,6 +59,7 @@ export function formatter(
     const mapboxGLProperties: MapboxGLRunProperties = {
       // TODO: Find a better approach to multi-use runs
       use: properties.uses[0],
+      uses: unique(properties.uses.map(mapboxGLRunUse)),
       id: properties.id,
       name: getNameIncludingRef(properties.name, properties.ref),
       difficulty: properties.difficulty,
@@ -173,4 +176,19 @@ function getNameIncludingRef(name: string | null, ref: string | null) {
   }
 
   return ref + " - " + name;
+}
+
+function unique<T>(input: T[]): T[] {
+  return [...new Set(input)];
+}
+
+function mapboxGLRunUse(runUse: RunUse): MapboxGLRunUse {
+  switch (runUse) {
+    case RunUse.Downhill:
+      return MapboxGLRunUse.Downhill;
+    case RunUse.Nordic:
+      return MapboxGLRunUse.Nordic;
+    default:
+      return MapboxGLRunUse.Other;
+  }
 }

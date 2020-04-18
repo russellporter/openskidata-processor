@@ -56,6 +56,7 @@ export type MapboxGLRunProperties = {
   [key: string]: any;
 
   use: RunUse;
+  uses: MapboxGLRunUse[];
   id: string;
   name: string | null;
   difficulty: RunDifficulty | null;
@@ -73,3 +74,9 @@ export type MapboxGLRunFeature = GeoJSON.Feature<
 >;
 
 export type RunLineFeature = GeoJSON.Feature<GeoJSON.LineString, RunProperties>;
+
+export enum MapboxGLRunUse {
+  Downhill = "downhill",
+  Nordic = "nordic",
+  Other = "other"
+}
