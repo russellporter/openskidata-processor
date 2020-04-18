@@ -1,6 +1,7 @@
 import * as _ from "lodash";
 import { RunLineFeature } from "../../features/RunFeature";
 import PointMultiMap from "./PointMultiMap";
+import { isPartOfSameRun, mergedProperties } from "./RunJoining";
 
 enum Direction {
   FORWARD,
@@ -36,6 +37,10 @@ export default class PointGraph {
     }
 
     feature = _.cloneDeep(feature);
+
+    feature.properties = mergedProperties(
+      features.map(f => f.feature.properties)
+    );
 
     feature.geometry.coordinates = features.reduce(
       (coordinates: number[][], featureInfo) => {
@@ -80,17 +85,19 @@ export default class PointGraph {
     const head = reversed ? tailPoint(feature) : headPoint(feature);
     const tail = reversed ? headPoint(feature) : tailPoint(feature);
     const features = [];
+    const featureMatcher = (otherFeature: RunLineFeature) =>
+      feature !== otherFeature && isPartOfSameRun(feature, otherFeature);
 
     if (direction !== Direction.FORWARD) {
       const inbound = this._expand(
-        this.inbound.getMatchingFeature(head, feature),
+        this.inbound.getFeatures(head).find(featureMatcher) || null,
         Direction.BACKWARD
       );
       features.push(...inbound);
       if (inbound.length === 0) {
         features.push(
           ...this._expandInReverse(
-            this.outbound.getMatchingFeature(head, feature),
+            this.outbound.getFeatures(head).find(featureMatcher) || null,
             Direction.BACKWARD
           )
         );
@@ -101,14 +108,14 @@ export default class PointGraph {
 
     if (direction !== Direction.BACKWARD) {
       const outbound = this._expand(
-        this.outbound.getMatchingFeature(tail, feature),
+        this.outbound.getFeatures(tail).find(featureMatcher) || null,
         Direction.FORWARD
       );
       features.push(...outbound);
       if (outbound.length === 0) {
         features.push(
           ...this._expandInReverse(
-            this.inbound.getMatchingFeature(tail, feature),
+            this.inbound.getFeatures(tail).find(featureMatcher) || null,
             Direction.FORWARD
           )
         );

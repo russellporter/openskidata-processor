@@ -1,4 +1,5 @@
 import assert from "assert";
+import { SourceType } from "openskidata-format";
 import * as TestHelpers from "../../TestHelpers";
 import PointGraph from "./PointGraph";
 
@@ -492,6 +493,48 @@ describe("PointGraph", () => {
         })
       );
     });
+  });
+
+  it("should merge runs with different ids and sources", () => {
+    const out = TestHelpers.mockRunFeature({
+      id: "1",
+      geometry: lineString([
+        [0, 0],
+        [1, 1]
+      ]),
+      oneway: true,
+      sources: [{ type: SourceType.OPENSTREETMAP, id: "1" }]
+    });
+    const back = TestHelpers.mockRunFeature({
+      id: "2",
+      geometry: lineString([
+        [1, 1],
+        [2, 2],
+        [0, 0]
+      ]),
+      oneway: true,
+      sources: [{ type: SourceType.SKIMAP_ORG, id: "1" }]
+    });
+    const graph = new PointGraph();
+    graph.addFeature(out);
+    graph.addFeature(back);
+    assert.deepStrictEqual(
+      graph.merge(out),
+      TestHelpers.mockRunFeature({
+        id: "2",
+        geometry: lineString([
+          [1, 1],
+          [2, 2],
+          [0, 0],
+          [1, 1]
+        ]),
+        oneway: true,
+        sources: [
+          { type: SourceType.SKIMAP_ORG, id: "1" },
+          { type: SourceType.OPENSTREETMAP, id: "1" }
+        ]
+      })
+    );
   });
 });
 

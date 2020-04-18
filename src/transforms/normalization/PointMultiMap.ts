@@ -1,4 +1,3 @@
-import _ from "lodash";
 import { RunLineFeature } from "../../features/RunFeature";
 
 export default class PointMultiMap {
@@ -12,17 +11,8 @@ export default class PointMultiMap {
     this._get(point).add(feature);
   }
 
-  getMatchingFeature(point: number[], feature: RunLineFeature) {
-    const set: Set<RunLineFeature> = this._get(point);
-    for (let adjacentFeature of set) {
-      if (
-        feature !== adjacentFeature &&
-        _.isEqual(adjacentFeature.properties, feature.properties)
-      ) {
-        return adjacentFeature;
-      }
-    }
-    return null;
+  getFeatures(point: number[]): RunLineFeature[] {
+    return [...this._get(point)];
   }
 
   _get(point: number[]) {
