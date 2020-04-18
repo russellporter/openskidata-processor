@@ -1,4 +1,5 @@
 import { Activity, SkiAreaProperties, SourceType } from "openskidata-format";
+import uniquedSources from "../transforms/UniqueSources";
 import { SkiAreaObject } from "./MapObject";
 
 export default function mergeSkiAreaObjects(
@@ -51,7 +52,9 @@ function mergeSkiAreaProperties(
     ),
     generated: primarySkiArea.generated && otherSkiArea.generated,
     runConvention: primarySkiArea.runConvention,
-    sources: [...primarySkiArea.sources, ...otherSkiArea.sources],
+    sources: uniquedSources(
+      primarySkiArea.sources.concat(otherSkiArea.sources)
+    ),
     status: primarySkiArea.status || otherSkiArea.status,
     type: primarySkiArea.type,
     website: primarySkiArea.website || otherSkiArea.website,

@@ -6,8 +6,8 @@ import {
   RunProperties,
   Status
 } from "openskidata-format";
-import Source, { SourceType } from "openskidata-format/dist/Source";
 import * as TopoJSON from "topojson-specification";
+import uniquedSources from "../UniqueSources";
 
 export type RunTopology = TopoJSON.Topology<{
   runs: TopoJSON.GeometryCollection<RunProperties>;
@@ -253,22 +253,6 @@ function sortPriority<T>(values: T[]): Map<T, number> {
 
 function priorityReducer<V>(values: V[]): Reducer<V> {
   return pickReducer(sortPriority(values));
-}
-
-function uniquedSources(sources: Source[]): Source[] {
-  const map = new Map<SourceType, Set<string>>();
-  return sources.reduce((uniquedSources: Source[], source) => {
-    if (!map.has(source.type)) {
-      map.set(source.type, new Set());
-    }
-    const sourceIDs = map.get(source.type)!;
-    if (!sourceIDs.has(source.id)) {
-      sourceIDs.add(source.id);
-      uniquedSources.push(source);
-    }
-
-    return uniquedSources;
-  }, []);
 }
 
 const difficultyPriority = sortPriority([
