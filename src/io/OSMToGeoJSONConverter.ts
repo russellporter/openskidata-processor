@@ -7,16 +7,16 @@ const polygonFeatures = {
     included_values: {
       services: true,
       rest_area: true,
-      escape: true
-    }
+      escape: true,
+    },
   },
   natural: {
     excluded_values: {
       coastline: true,
       ridge: true,
       arete: true,
-      tree_row: true
-    }
+      tree_row: true,
+    },
   },
   landuse: true,
   waterway: {
@@ -24,8 +24,8 @@ const polygonFeatures = {
       riverbank: true,
       dock: true,
       boatyard: true,
-      dam: true
-    }
+      dam: true,
+    },
   },
   amenity: true,
   leisure: true,
@@ -36,16 +36,16 @@ const polygonFeatures = {
       hedge: true,
       retaining_wall: true,
       wall: true,
-      spikes: true
-    }
+      spikes: true,
+    },
   },
   railway: {
     included_values: {
       station: true,
       turntable: true,
       roundhouse: true,
-      platform: true
-    }
+      platform: true,
+    },
   },
   area: true,
   boundary: true,
@@ -53,23 +53,23 @@ const polygonFeatures = {
     excluded_values: {
       cutline: true,
       embankment: true,
-      pipeline: true
-    }
+      pipeline: true,
+    },
   },
   power: {
     included_values: {
       generator: true,
       station: true,
       sub_station: true,
-      transformer: true
-    }
+      transformer: true,
+    },
   },
   place: true,
   shop: true,
   aeroway: {
     excluded_values: {
-      taxiway: true
-    }
+      taxiway: true,
+    },
   },
   tourism: true,
   historic: true,
@@ -82,9 +82,9 @@ const polygonFeatures = {
   craft: true,
   "piste:type": {
     included_values: {
-      downhill: true
-    }
-  }
+      downhill: true,
+    },
+  },
 };
 
 export default function convertOSMFileToGeoJSON(
@@ -118,6 +118,6 @@ export function convertOSMToGeoJSON(
       // The same is true for winter sports relations that associate multiple ski areas together.
       ignoreTags: { [key: string]: string | boolean }
     ) => !shouldIncludeFeature(tags || {}),
-    deduplicator: undefined
+    deduplicator: undefined,
   });
 }

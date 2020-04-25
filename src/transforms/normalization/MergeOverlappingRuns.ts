@@ -33,26 +33,26 @@ export function mergeOverlappingRuns(data: RunTopology) {
   // store mapping of arc ID to merged properties for that arc
   const arcProperties: { [key: number]: ArcData } = {};
 
-  _.forEach(lines, line => {
+  _.forEach(lines, (line) => {
     const properties = line.properties;
     if (properties === undefined) {
       throw "Missing properties";
     }
 
-    _.forEach(getArcsList(line), arcs => {
+    _.forEach(getArcsList(line), (arcs) => {
       forEachArc(arcs, (arc, isReversed) => {
         const arcData = arcProperties[arc] || { runs: [] };
         arcData.runs.push({
           isReversed: isReversed,
-          properties: properties
+          properties: properties,
         });
         arcProperties[arc] = arcData;
       });
     });
   });
 
-  _.forEach(lines, line => {
-    _.forEach(getArcsList(line), arcs => {
+  _.forEach(lines, (line) => {
+    _.forEach(getArcsList(line), (arcs) => {
       let lastArcProperties: ArcData | null = null;
       let accumulatedArcs: number[] = [];
 
@@ -68,7 +68,7 @@ export function mergeOverlappingRuns(data: RunTopology) {
           data.objects.runs.geometries.push({
             type: "LineString",
             properties: propertiesForArcData(lastArcProperties),
-            arcs: accumulatedArcs
+            arcs: accumulatedArcs,
           });
 
           accumulatedArcs = [];
@@ -121,7 +121,7 @@ function getDirectionData(runs: RunArc[]) {
   }
   type DirectionData = { isReversed: boolean; oneway: boolean | null };
   const result = runs
-    .map<DirectionData>(run => {
+    .map<DirectionData>((run) => {
       return { isReversed: run.isReversed, oneway: run.properties.oneway };
     })
     .reduce((previous: DirectionData, current: DirectionData) => {
@@ -145,7 +145,7 @@ function getDirectionData(runs: RunArc[]) {
 }
 
 function propertiesForArcData(data: ArcData): RunProperties {
-  const properties = mergedProperties(data.runs.map(run => run.properties));
+  const properties = mergedProperties(data.runs.map((run) => run.properties));
   properties.oneway = getDirectionData(data.runs).oneway;
   return properties;
 }

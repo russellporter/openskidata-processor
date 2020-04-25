@@ -15,7 +15,7 @@ export default function combineRunSegments(
   }
 
   runs = runs
-    .map(run => {
+    .map((run) => {
       if (run.geometry.type === "LineString") {
         return graph.merge(run as RunLineFeature);
       } else {

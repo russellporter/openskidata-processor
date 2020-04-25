@@ -2,7 +2,7 @@ import { configFromEnvironment } from "../Config";
 import {
   GeoJSONInputPaths,
   GeoJSONIntermediatePaths,
-  GeoJSONOutputPaths
+  GeoJSONOutputPaths,
 } from "../io/GeoJSONFiles";
 import prepare from "../PrepareGeoJSON";
 

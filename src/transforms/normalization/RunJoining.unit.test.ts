@@ -14,9 +14,9 @@ describe("RunJoining", () => {
               type: "LineString",
               coordinates: [
                 [0, 0],
-                [1, 1]
-              ]
-            }
+                [1, 1],
+              ],
+            },
           }),
           TestHelpers.mockRunFeature({
             id: "2",
@@ -25,9 +25,9 @@ describe("RunJoining", () => {
               type: "LineString",
               coordinates: [
                 [2, 2],
-                [3, 3]
-              ]
-            }
+                [3, 3],
+              ],
+            },
           })
         )
       ).toBe(true);

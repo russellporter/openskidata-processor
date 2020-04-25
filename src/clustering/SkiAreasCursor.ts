@@ -16,6 +16,6 @@ export function emptySkiAreasCursor(): SkiAreasCursor {
     },
     nextBatch: async () => {
       return undefined;
-    }
+    },
   };
 }

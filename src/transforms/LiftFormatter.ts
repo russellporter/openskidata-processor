@@ -4,7 +4,7 @@ import {
   LiftProperties,
   LiftType,
   SourceType,
-  Status
+  Status,
 } from "openskidata-format";
 import { InputLiftFeature, InputLiftProperties } from "../features/LiftFeature";
 import buildFeature from "./FeatureBuilder";
@@ -12,7 +12,7 @@ import {
   getOSMName,
   mapOSMBoolean,
   mapOSMNumber,
-  mapOSMString
+  mapOSMString,
 } from "./OSMTransforms";
 import getStatusAndValue from "./Status";
 
@@ -58,7 +58,7 @@ export function formatLift(feature: InputLiftFeature): LiftFeature | null {
     heating: mapOSMBoolean(inputProperties["aerialway:heating"]),
     color: getColor(status),
     skiAreas: [],
-    sources: [{ type: SourceType.OPENSTREETMAP, id: inputProperties["id"] }]
+    sources: [{ type: SourceType.OPENSTREETMAP, id: inputProperties["id"] }],
   };
 
   return buildFeature(feature.geometry, properties);

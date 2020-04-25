@@ -2,7 +2,7 @@ import { Config } from "./Config";
 import downloadAndConvertToGeoJSON from "./io/GeoJSONDownloader";
 import {
   GeoJSONIntermediatePaths,
-  GeoJSONOutputPaths
+  GeoJSONOutputPaths,
 } from "./io/GeoJSONFiles";
 import prepare from "./PrepareGeoJSON";
 

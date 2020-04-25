@@ -6,7 +6,7 @@ import { isPartOfSameRun, mergedProperties } from "./RunJoining";
 enum Direction {
   FORWARD,
   BACKWARD,
-  BOTH
+  BOTH,
 }
 
 export default class PointGraph {
@@ -39,7 +39,7 @@ export default class PointGraph {
     feature = _.cloneDeep(feature);
 
     feature.properties = mergedProperties(
-      features.map(f => f.feature.properties)
+      features.map((f) => f.feature.properties)
     );
 
     feature.geometry.coordinates = features.reduce(

@@ -22,11 +22,11 @@ export default async function exportSkiAreasGeoJSON(
   await streamToPromise(
     arangoQueryStream(cursor, client)
       .pipe(
-        map<SkiAreaObject, SkiAreaFeature>(skiArea => {
+        map<SkiAreaObject, SkiAreaFeature>((skiArea) => {
           return {
             properties: skiArea.properties,
             type: "Feature",
-            geometry: skiArea.geometry
+            geometry: skiArea.geometry,
           };
         })
       )
@@ -40,17 +40,17 @@ function arangoQueryStream(
 ): Readable {
   return new Readable({
     objectMode: true,
-    read: function(this: Readable, _) {
+    read: function (this: Readable, _) {
       const readable = this;
       streamingCursor
         .next()
-        .catch(_ => {
+        .catch((_) => {
           console.log("Failed querying ArangoDB, stopping.");
           readable.push(null);
         })
-        .then(value => {
+        .then((value) => {
           readable.push(value || null);
         });
-    }
+    },
   });
 }

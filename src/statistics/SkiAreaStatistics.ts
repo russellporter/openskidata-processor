@@ -3,14 +3,14 @@ import {
   LiftStatistics,
   MapObjectStatistics,
   RunStatistics,
-  SkiAreaStatistics
+  SkiAreaStatistics,
 } from "openskidata-format";
 import { allSkiAreaActivities } from "../clustering/ArangoGraphClusterer";
 import {
   LiftObject,
   MapObject,
   MapObjectType,
-  RunObject
+  RunObject,
 } from "../clustering/MapObject";
 
 function isRun(object: MapObject): object is RunObject {
@@ -26,7 +26,7 @@ export function skiAreaStatistics(mapObjects: MapObject[]): SkiAreaStatistics {
   const liftStats = liftStatistics(mapObjects.filter(isLift));
   const statistics: SkiAreaStatistics = {
     runs: runStats,
-    lifts: liftStats
+    lifts: liftStats,
   };
   const max = maxElevation(runStats.maxElevation, liftStats.maxElevation);
   if (max) {
@@ -75,38 +75,38 @@ function elevationStatistics(geometry: GeoJSON.Geometry) {
     }, -Number.MAX_VALUE),
     minElevation: coordinates.reduce((previous, coordinate) => {
       return Math.min(coordinate[2], previous);
-    }, Number.MAX_VALUE)
+    }, Number.MAX_VALUE),
   };
 }
 
 function runStatistics(runs: RunObject[]): RunStatistics {
   return runs
-    .filter(run => {
+    .filter((run) => {
       // Exclude polygons from statistics as these are typically redundant with LineString based runs
       return run.geometry.type !== "Polygon";
     })
-    .map(run => {
+    .map((run) => {
       return {
         ...elevationStatistics(run.geometryWithElevations),
         difficulty: run.difficulty,
-        activities: run.activities.filter(activity =>
+        activities: run.activities.filter((activity) =>
           allSkiAreaActivities.has(activity)
         ),
-        distance: turfLength(run.geometryWithElevations)
+        distance: turfLength(run.geometryWithElevations),
       };
     })
     .reduce(
       (statistics, run) => {
-        run.activities.forEach(activity => {
+        run.activities.forEach((activity) => {
           const activityStatistics = statistics.byActivity[activity] || {
-            byDifficulty: {}
+            byDifficulty: {},
           };
           statistics.byActivity[activity] = activityStatistics;
 
           const difficulty = run.difficulty || "other";
           const runStats = activityStatistics.byDifficulty[difficulty] || {
             count: 0,
-            lengthInKm: 0
+            lengthInKm: 0,
           };
           activityStatistics.byDifficulty[difficulty] = runStats;
 
@@ -117,18 +117,18 @@ function runStatistics(runs: RunObject[]): RunStatistics {
         return statistics;
       },
       {
-        byActivity: {}
+        byActivity: {},
       } as RunStatistics
     );
 }
 
 function liftStatistics(lifts: LiftObject[]): LiftStatistics {
   return lifts
-    .map(lift => {
+    .map((lift) => {
       return {
         ...elevationStatistics(lift.geometryWithElevations),
         distance: turfLength(lift.geometryWithElevations),
-        type: lift.liftType
+        type: lift.liftType,
       };
     })
     .reduce(
@@ -136,7 +136,7 @@ function liftStatistics(lifts: LiftObject[]): LiftStatistics {
         const liftType = lift.type || "other";
         const liftTypeStatistics = statistics.byType[liftType] || {
           count: 0,
-          lengthInKm: 0
+          lengthInKm: 0,
         };
         statistics.byType[liftType] = liftTypeStatistics;
 

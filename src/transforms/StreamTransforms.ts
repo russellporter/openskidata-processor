@@ -7,7 +7,7 @@ export function map<X, Y>(mapper: (input: X) => Y): Transform {
     objectMode: true,
     transform: (data: X, _, done) => {
       done(null, mapper(data));
-    }
+    },
   });
 }
 
@@ -20,10 +20,10 @@ export function mapAsync<X, Y>(
   }
   return transform(parallelism, { objectMode: true }, (data, done) => {
     mapper(data)
-      .then(value => {
+      .then((value) => {
         done(null, value);
       })
-      .catch(error => {
+      .catch((error) => {
         done(error);
       });
   });
@@ -35,7 +35,7 @@ export function get<X>(operation: (input: X) => void): Transform {
     transform: (data: X, _, done) => {
       operation(data);
       done(null, data);
-    }
+    },
   });
 }
 
@@ -44,13 +44,13 @@ export function andFinally<X>(mapper: (input: X) => Promise<void>): Writable {
     objectMode: true,
     write: (data: X, _, done) => {
       mapper(data)
-        .then(value => {
+        .then((value) => {
           done();
         })
-        .catch(error => {
+        .catch((error) => {
           done(error);
         });
-    }
+    },
   });
 }
 
@@ -61,7 +61,7 @@ export function flatMap<X, Y>(mapper: (input: X) => Y | null): Transform {
       const result = mapper(data);
 
       result ? done(null, result) : done(null);
-    }
+    },
   });
 }
 
@@ -70,7 +70,7 @@ export function filter<X>(filter: (input: X) => Boolean): Transform {
     objectMode: true,
     transform: (data: X, _, done) => {
       filter(data) ? done(null, data) : done(null);
-    }
+    },
   });
 }
 
@@ -82,10 +82,10 @@ export function accumulate<X, Y>(accumulator: Accumulator<X, Y>): Duplex {
       accumulator.accumulate(data);
       done();
     },
-    read() {}
+    read() {},
   });
   duplex.on("finish", () => {
-    accumulator.results().forEach(result => {
+    accumulator.results().forEach((result) => {
       duplex.push(result);
     });
     duplex.push(null);

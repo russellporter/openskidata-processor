@@ -5,7 +5,7 @@ import { formatter } from "./MapboxGLFormatter";
 describe("MapboxGLFormatter", () => {
   it("should export basic ski area", () => {
     const feature = TestHelpers.mockSkiAreaFeature({
-      geometry: { type: "Point", coordinates: [1, 1] }
+      geometry: { type: "Point", coordinates: [1, 1] },
     });
 
     const mapboxGLFeature = formatter(FeatureType.SkiArea)(feature);
@@ -44,13 +44,13 @@ describe("MapboxGLFormatter", () => {
             downhill: {
               byDifficulty: {
                 advanced: { lengthInKm: 10.12312, count: 1 },
-                other: { lengthInKm: 5.7, count: 1 }
-              }
+                other: { lengthInKm: 5.7, count: 1 },
+              },
             },
-            nordic: { byDifficulty: { easy: { lengthInKm: 1, count: 1 } } }
-          }
-        }
-      }
+            nordic: { byDifficulty: { easy: { lengthInKm: 1, count: 1 } } },
+          },
+        },
+      },
     });
     const mapboxGLFeature = formatter(FeatureType.SkiArea)(feature);
     expect(mapboxGLFeature.properties.downhillDistance).toBe(16);
@@ -63,11 +63,11 @@ describe("MapboxGLFormatter", () => {
       statistics: {
         lifts: { byType: {} },
         runs: {
-          byActivity: {}
+          byActivity: {},
         },
         maxElevation: 1023.2323,
-        minElevation: 100.82
-      }
+        minElevation: 100.82,
+      },
     });
     const mapboxGLFeature = formatter(FeatureType.SkiArea)(feature);
 
@@ -81,7 +81,7 @@ describe("MapboxGLFormatter", () => {
       id: "1",
       ref: "99",
       name: "Run",
-      uses: [RunUse.Downhill]
+      uses: [RunUse.Downhill],
     });
     const mapboxGLFeature = formatter(FeatureType.Run)(feature);
 
@@ -94,7 +94,7 @@ describe("MapboxGLFormatter", () => {
       id: "1",
       ref: null,
       name: "Run",
-      uses: [RunUse.Downhill]
+      uses: [RunUse.Downhill],
     });
     const mapboxGLFeature = formatter(FeatureType.Run)(feature);
 
@@ -107,7 +107,7 @@ describe("MapboxGLFormatter", () => {
       id: "1",
       ref: "99",
       name: "Lift",
-      liftType: LiftType.ChairLift
+      liftType: LiftType.ChairLift,
     });
     const mapboxGLFeature = formatter(FeatureType.Lift)(feature);
 
@@ -122,7 +122,7 @@ describe("MapboxGLFormatter", () => {
       id: "1",
       ref: null,
       name: "Lift",
-      liftType: LiftType.ChairLift
+      liftType: LiftType.ChairLift,
     });
     const mapboxGLFeature = formatter(FeatureType.Lift)(feature);
 
@@ -138,11 +138,11 @@ describe("MapboxGLFormatter", () => {
             [0, 0],
             [0, 1],
             [1, 1],
-            [0, 0]
-          ]
-        ]
+            [0, 0],
+          ],
+        ],
       },
-      id: "1"
+      id: "1",
     });
     const mapboxGLFeature = formatter(FeatureType.SkiArea)(feature);
 
@@ -159,20 +159,20 @@ describe("MapboxGLFormatter", () => {
               [0, 0],
               [0, 1],
               [1, 1],
-              [0, 0]
-            ]
+              [0, 0],
+            ],
           ],
           [
             [
               [2, 2],
               [2, 3],
               [3, 3],
-              [2, 2]
-            ]
-          ]
-        ]
+              [2, 2],
+            ],
+          ],
+        ],
       },
-      id: "1"
+      id: "1",
     });
     const mapboxGLFeature = formatter(FeatureType.SkiArea)(feature);
 
@@ -188,15 +188,15 @@ describe("MapboxGLFormatter", () => {
         type: "LineString",
         coordinates: [
           [0, 0],
-          [1, 1]
-        ]
-      }
+          [1, 1],
+        ],
+      },
     });
     const mapboxGLFeature = formatter(FeatureType.Run)(feature);
 
     expect(mapboxGLFeature.properties.uses).toEqual([
       MapboxGLRunUse.Downhill,
-      MapboxGLRunUse.Other
+      MapboxGLRunUse.Other,
     ]);
   });
 });

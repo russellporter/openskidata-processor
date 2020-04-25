@@ -4,7 +4,7 @@ import {
   RunGeometry,
   RunGrooming,
   RunProperties,
-  RunUse
+  RunUse,
 } from "openskidata-format";
 
 export type InputRunProperties = {
@@ -78,5 +78,5 @@ export type RunLineFeature = GeoJSON.Feature<GeoJSON.LineString, RunProperties>;
 export enum MapboxGLRunUse {
   Downhill = "downhill",
   Nordic = "nordic",
-  Other = "other"
+  Other = "other",
 }

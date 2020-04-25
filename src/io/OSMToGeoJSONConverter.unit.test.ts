@@ -8,44 +8,44 @@ describe("OSMToGeoJSONConverter", () => {
       osm3s: {
         timestamp_osm_base: "2020-03-29T23:48:02Z",
         copyright:
-          "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL."
+          "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL.",
       },
       elements: [
         {
           type: "node",
           id: 1,
           lat: 0,
-          lon: 0
+          lon: 0,
         },
         {
           type: "node",
           id: 2,
           lat: 1,
-          lon: 0
+          lon: 0,
         },
         {
           type: "node",
           id: 3,
           lat: 1,
-          lon: 1
+          lon: 1,
         },
         {
           type: "node",
           id: 4,
           lat: 2,
-          lon: 2
+          lon: 2,
         },
         {
           type: "node",
           id: 5,
           lat: 3,
-          lon: 2
+          lon: 2,
         },
         {
           type: "node",
           id: 6,
           lat: 3,
-          lon: 3
+          lon: 3,
         },
         {
           type: "way",
@@ -54,8 +54,8 @@ describe("OSMToGeoJSONConverter", () => {
           tags: {
             natural: "wood",
             source: "Kartverket N50",
-            "source:date": "1989-07-01"
-          }
+            "source:date": "1989-07-01",
+          },
         },
         {
           type: "way",
@@ -64,8 +64,8 @@ describe("OSMToGeoJSONConverter", () => {
           tags: {
             natural: "wood",
             source: "Kartverket N50",
-            "source:date": "1989-07-01"
-          }
+            "source:date": "1989-07-01",
+          },
         },
         {
           type: "way",
@@ -75,8 +75,8 @@ describe("OSMToGeoJSONConverter", () => {
             natural: "wood",
             source: "Kartverket N50",
             "source:date": "1989-07-01",
-            landuse: "winter_sports"
-          }
+            landuse: "winter_sports",
+          },
         },
         {
           type: "relation",
@@ -85,29 +85,29 @@ describe("OSMToGeoJSONConverter", () => {
             {
               type: "way",
               ref: 1001,
-              role: "outer"
+              role: "outer",
             },
             {
               type: "way",
               ref: 1002,
-              role: "outer"
+              role: "outer",
             },
             {
               type: "way",
               ref: 1003,
-              role: "outer"
-            }
+              role: "outer",
+            },
           ],
           tags: {
             landuse: "winter_sports",
-            type: "multipolygon"
-          }
-        }
-      ]
+            type: "multipolygon",
+          },
+        },
+      ],
     };
 
     expect(
-      convertOSMToGeoJSON(input, tags => tags["landuse"] === "winter_sports")
+      convertOSMToGeoJSON(input, (tags) => tags["landuse"] === "winter_sports")
     ).toMatchInlineSnapshot(`
       Object {
         "features": Array [

@@ -8,14 +8,14 @@ export default function buildFeature<
   const id = objectHash({
     type: "Feature",
     properties: {
-      type: properties.type
+      type: properties.type,
     },
-    geometry: geometry
+    geometry: geometry,
   });
 
   return {
     type: "Feature",
     properties: { ...properties, id: id },
-    geometry: geometry
+    geometry: geometry,
   };
 }

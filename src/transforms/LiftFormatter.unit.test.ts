@@ -9,7 +9,7 @@ describe("LiftFormatter", () => {
         id: "way/1",
         railway: "funicular",
         name: "🇫🇷 Nom de la téléski",
-        "name:en": "Lift name"
+        "name:en": "Lift name",
       })
     );
     expect(feature!.properties.liftType).toBe(LiftType.Funicular);
@@ -21,7 +21,7 @@ describe("LiftFormatter", () => {
         id: "way/1",
         rack: "riggenbach",
         railway: "narrow_gauge",
-        "railway:traffic_mode": "passenger"
+        "railway:traffic_mode": "passenger",
       })
     );
     expect(feature!.properties.liftType).toBe(LiftType.RackRailway);
@@ -33,7 +33,7 @@ describe("LiftFormatter", () => {
         id: "way/1",
         aerialway: "chair_lift",
         name: "🇫🇷 Nom de la téléski",
-        "name:en": "Lift name"
+        "name:en": "Lift name",
       })
     );
     expect(feature!.properties.name).toMatchInlineSnapshot(
@@ -46,7 +46,7 @@ describe("LiftFormatter", () => {
       formatLift(
         inputLift({
           id: "way/1",
-          aerialway: "zip_line"
+          aerialway: "zip_line",
         })
       )
     ).toBeNull();
@@ -55,7 +55,7 @@ describe("LiftFormatter", () => {
       formatLift(
         inputLift({
           id: "way/1",
-          aerialway: "goods"
+          aerialway: "goods",
         })
       )
     ).toBeNull();
@@ -67,7 +67,7 @@ describe("LiftFormatter", () => {
         inputLift({
           id: "way/1",
           aerialway: "chair_lift",
-          access: "private"
+          access: "private",
         })
       )
     ).toBeNull();
@@ -77,7 +77,7 @@ describe("LiftFormatter", () => {
         inputLift({
           id: "way/1",
           aerialway: "chair_lift",
-          foot: "no"
+          foot: "no",
         })
       )
     ).toBeNull();
@@ -88,7 +88,7 @@ describe("LiftFormatter", () => {
           id: "way/1",
           rack: "riggenbach",
           railway: "narrow_gauge",
-          "railway:traffic_mode": "freight"
+          "railway:traffic_mode": "freight",
         })
       )
     ).toBeNull();
@@ -102,9 +102,9 @@ function inputLift(properties: InputLiftProperties): InputLiftFeature {
       type: "LineString",
       coordinates: [
         [0, 0],
-        [1, 1]
-      ]
+        [1, 1],
+      ],
     },
-    properties: properties
+    properties: properties,
   };
 }

@@ -9,7 +9,7 @@ import {
   RunUse,
   SkiAreaFeature,
   SourceType,
-  Status
+  Status,
 } from "openskidata-format";
 import { GenericContainer } from "testcontainers";
 import { StartedTestContainer } from "testcontainers/dist/test-container";
@@ -66,11 +66,11 @@ it("skips generating ski areas for runs with unsupported activity", async () => 
               [11.1164229, 47.558125],
               [11.1163655, 47.5579742],
               [11.1171866, 47.5576413],
-              [11.1164229, 47.558125]
-            ]
-          ]
-        }
-      })
+              [11.1164229, 47.558125],
+            ],
+          ],
+        },
+      }),
     ]
   );
 
@@ -109,10 +109,10 @@ it("generates ski areas for runs without them", async () => {
           type: "LineString",
           coordinates: [
             [11.1164229, 47.558125],
-            [11.1163655, 47.5579742]
-          ]
-        }
-      })
+            [11.1163655, 47.5579742],
+          ],
+        },
+      }),
     ],
     [
       TestHelpers.mockRunFeature({
@@ -127,10 +127,10 @@ it("generates ski areas for runs without them", async () => {
               [11.1164229, 47.558125],
               [11.1163655, 47.5579742],
               [11.1171866, 47.5576413],
-              [11.1164229, 47.558125]
-            ]
-          ]
-        }
+              [11.1164229, 47.558125],
+            ],
+          ],
+        },
       }),
       TestHelpers.mockRunFeature({
         id: "4",
@@ -144,11 +144,11 @@ it("generates ski areas for runs without them", async () => {
               [11.1164229, 47.558125],
               [11.1163655, 47.5579742],
               [11.1171866, 47.5576413],
-              [11.1164229, 47.558125]
-            ]
-          ]
-        }
-      })
+              [11.1164229, 47.558125],
+            ],
+          ],
+        },
+      }),
     ]
   );
 
@@ -222,10 +222,10 @@ it("does not generate ski area for lone downhill run without lift", async () => 
               [11.1164229, 47.558125],
               [11.1163655, 47.5579742],
               [11.1171866, 47.5576413],
-              [11.1164229, 47.558125]
-            ]
-          ]
-        }
+              [11.1164229, 47.558125],
+            ],
+          ],
+        },
       }),
       TestHelpers.mockRunFeature({
         id: "4",
@@ -239,11 +239,11 @@ it("does not generate ski area for lone downhill run without lift", async () => 
               [11.1164229, 47.558125],
               [11.1163655, 47.5579742],
               [11.1171866, 47.5576413],
-              [11.1164229, 47.558125]
-            ]
-          ]
-        }
-      })
+              [11.1164229, 47.558125],
+            ],
+          ],
+        },
+      }),
     ]
   );
 
@@ -298,10 +298,10 @@ it("generates ski areas by activity", async () => {
           type: "LineString",
           coordinates: [
             [11.1164229, 47.558125],
-            [11.1163655, 47.5579742]
-          ]
-        }
-      })
+            [11.1163655, 47.5579742],
+          ],
+        },
+      }),
     ],
     [
       TestHelpers.mockRunFeature({
@@ -316,10 +316,10 @@ it("generates ski areas by activity", async () => {
               [11.1164229, 47.558125],
               [11.1163655, 47.5579742],
               [11.1171866, 47.5576413],
-              [11.1164229, 47.558125]
-            ]
-          ]
-        }
+              [11.1164229, 47.558125],
+            ],
+          ],
+        },
       }),
       TestHelpers.mockRunFeature({
         id: "4",
@@ -333,11 +333,11 @@ it("generates ski areas by activity", async () => {
               [11.1164229, 47.558125],
               [11.1163655, 47.5579742],
               [11.1171866, 47.5576413],
-              [11.1164229, 47.558125]
-            ]
-          ]
-        }
-      })
+              [11.1164229, 47.558125],
+            ],
+          ],
+        },
+      }),
     ]
   );
 
@@ -359,16 +359,16 @@ it("generates ski areas by activity", async () => {
     const runs: RunFeature[] = TestHelpers.fileContents("output/runs.geojson")
       .features;
     expect(
-      runs.map(simplifiedRunFeature).map(feature => {
+      runs.map(simplifiedRunFeature).map((feature) => {
         return {
           ...feature,
           // Inline only the ski area activities to avoid flaky test failures due to mismatched ski area IDs
           //  when one ski area is generated before the other.
           skiAreas: feature.skiAreas.map(
-            id =>
-              skiAreas.find(skiArea => skiArea.properties.id == id)?.properties
-                .activities
-          )
+            (id) =>
+              skiAreas.find((skiArea) => skiArea.properties.id == id)
+                ?.properties.activities
+          ),
         };
       })
     ).toMatchInlineSnapshot(`
@@ -409,9 +409,9 @@ it("clusters ski areas", async () => {
         sources: [{ type: SourceType.SKIMAP_ORG, id: "13666" }],
         geometry: {
           type: "Point",
-          coordinates: [11.122066084534, 47.557111836837]
-        }
-      })
+          coordinates: [11.122066084534, 47.557111836837],
+        },
+      }),
     ],
     [
       TestHelpers.mockLiftFeature({
@@ -423,10 +423,10 @@ it("clusters ski areas", async () => {
           type: "LineString",
           coordinates: [
             [11.1223444, 47.5572422],
-            [11.1164297, 47.5581563]
-          ]
-        }
-      })
+            [11.1164297, 47.5581563],
+          ],
+        },
+      }),
     ],
     [
       TestHelpers.mockRunFeature({
@@ -441,11 +441,11 @@ it("clusters ski areas", async () => {
               [11.1164229, 47.558125],
               [11.1163655, 47.5579742],
               [11.1171866, 47.5576413],
-              [11.1164229, 47.558125]
-            ]
-          ]
-        }
-      })
+              [11.1164229, 47.558125],
+            ],
+          ],
+        },
+      }),
     ]
   );
 
@@ -520,9 +520,9 @@ it("clusters ski area activities independently", async () => {
         activities: [Activity.Downhill, Activity.Nordic],
         geometry: {
           type: "Point",
-          coordinates: [0, 0]
-        }
-      })
+          coordinates: [0, 0],
+        },
+      }),
     ],
     [],
     [
@@ -534,9 +534,9 @@ it("clusters ski area activities independently", async () => {
           type: "LineString",
           coordinates: [
             [0, 0],
-            [1, 1]
-          ]
-        }
+            [1, 1],
+          ],
+        },
       }),
       TestHelpers.mockRunFeature({
         id: "3",
@@ -546,9 +546,9 @@ it("clusters ski area activities independently", async () => {
           type: "LineString",
           coordinates: [
             [0, 0],
-            [-1, -1]
-          ]
-        }
+            [-1, -1],
+          ],
+        },
       }),
       TestHelpers.mockRunFeature({
         id: "4",
@@ -558,10 +558,10 @@ it("clusters ski area activities independently", async () => {
           type: "LineString",
           coordinates: [
             [1, 1],
-            [2, 2]
-          ]
-        }
-      })
+            [2, 2],
+          ],
+        },
+      }),
     ]
   );
 
@@ -622,10 +622,10 @@ it("generates a downhill ski area but does not include backcountry runs when clu
           type: "LineString",
           coordinates: [
             [0, 0],
-            [1, 0]
-          ]
-        }
-      })
+            [1, 0],
+          ],
+        },
+      }),
     ],
     [
       TestHelpers.mockRunFeature({
@@ -636,9 +636,9 @@ it("generates a downhill ski area but does not include backcountry runs when clu
           type: "LineString",
           coordinates: [
             [0, 0],
-            [1, 0]
-          ]
-        }
+            [1, 0],
+          ],
+        },
       }),
       TestHelpers.mockRunFeature({
         id: "4",
@@ -649,10 +649,10 @@ it("generates a downhill ski area but does not include backcountry runs when clu
           type: "LineString",
           coordinates: [
             [0, 0],
-            [0, 1]
-          ]
-        }
-      })
+            [0, 1],
+          ],
+        },
+      }),
     ]
   );
 
@@ -705,10 +705,10 @@ it("generates elevation statistics for run & lift based on lift served skiable v
           type: "LineString",
           coordinates: [
             [11.1223444, 47.5572422, 100],
-            [11.1164297, 47.5581563, 200]
-          ]
-        }
-      })
+            [11.1164297, 47.5581563, 200],
+          ],
+        },
+      }),
     ],
     [
       TestHelpers.mockRunFeature({
@@ -719,10 +719,10 @@ it("generates elevation statistics for run & lift based on lift served skiable v
           type: "LineString",
           coordinates: [
             [11.1220444, 47.5572422, 150],
-            [11.1160297, 47.5581563, 250]
-          ]
-        }
-      })
+            [11.1160297, 47.5581563, 250],
+          ],
+        },
+      }),
     ]
   );
 
@@ -805,14 +805,14 @@ it("allows point & multilinestring lifts to be processed", async () => {
           coordinates: [
             [
               [25.430488, 36.420539900000016, 238.44396972656193],
-              [25.4273675, 36.4188913, 18.190246582031193]
+              [25.4273675, 36.4188913, 18.190246582031193],
             ],
             [
               [25.427413799999993, 36.4188392, 15.1902456283569],
-              [25.430537199999993, 36.4204801, 237.44396972656193]
-            ]
-          ]
-        }
+              [25.430537199999993, 36.4204801, 237.44396972656193],
+            ],
+          ],
+        },
       }),
       TestHelpers.mockLiftFeature({
         id: "3",
@@ -820,9 +820,9 @@ it("allows point & multilinestring lifts to be processed", async () => {
         liftType: LiftType.Gondola,
         geometry: {
           type: "Point",
-          coordinates: [12.2447153, 47.5270405, 719.0122680664059]
-        }
-      })
+          coordinates: [12.2447153, 47.5270405, 719.0122680664059],
+        },
+      }),
     ],
     []
   );
@@ -878,11 +878,11 @@ it("does not generate ski area for lone snow park", async () => {
               [11.1164229, 47.558125],
               [11.1163655, 47.5579742],
               [11.1171866, 47.5576413],
-              [11.1164229, 47.558125]
-            ]
-          ]
-        }
-      })
+              [11.1164229, 47.558125],
+            ],
+          ],
+        },
+      }),
     ]
   );
 
@@ -921,10 +921,10 @@ it("generates ski area which includes the snow park", async () => {
           type: "LineString",
           coordinates: [
             [11.1223444, 47.5572422],
-            [11.1164297, 47.5581563]
-          ]
-        }
-      })
+            [11.1164297, 47.5581563],
+          ],
+        },
+      }),
     ],
     [
       TestHelpers.mockRunFeature({
@@ -936,9 +936,9 @@ it("generates ski area which includes the snow park", async () => {
           type: "LineString",
           coordinates: [
             [11.1223444, 47.5572422],
-            [11.1164297, 47.5581563]
-          ]
-        }
+            [11.1164297, 47.5581563],
+          ],
+        },
       }),
       TestHelpers.mockRunFeature({
         id: "2",
@@ -952,11 +952,11 @@ it("generates ski area which includes the snow park", async () => {
               [11.1164229, 47.558125],
               [11.1163655, 47.5579742],
               [11.1171866, 47.5576413],
-              [11.1164229, 47.558125]
-            ]
-          ]
-        }
-      })
+              [11.1164229, 47.558125],
+            ],
+          ],
+        },
+      }),
     ]
   );
 
@@ -1010,10 +1010,10 @@ it("generates ski area which includes the patrolled ungroomed run", async () => 
           type: "LineString",
           coordinates: [
             [11.1164229, 47.558125],
-            [11.1163655, 47.5579742]
-          ]
-        }
-      })
+            [11.1163655, 47.5579742],
+          ],
+        },
+      }),
     ],
     [
       TestHelpers.mockRunFeature({
@@ -1029,11 +1029,11 @@ it("generates ski area which includes the patrolled ungroomed run", async () => 
               [11.1164229, 47.558125],
               [11.1163655, 47.5579742],
               [11.1171866, 47.5576413],
-              [11.1164229, 47.558125]
-            ]
-          ]
-        }
-      })
+              [11.1164229, 47.558125],
+            ],
+          ],
+        },
+      }),
     ]
   );
 
@@ -1085,11 +1085,11 @@ it("does not generate ski area for ungroomed run", async () => {
               [11.1164229, 47.558125],
               [11.1163655, 47.5579742],
               [11.1171866, 47.5576413],
-              [11.1164229, 47.558125]
-            ]
-          ]
-        }
-      })
+              [11.1164229, 47.558125],
+            ],
+          ],
+        },
+      }),
     ]
   );
 
@@ -1132,11 +1132,11 @@ it("associates lifts and runs with polygon openstreetmap ski area", async () => 
               [12, 47],
               [12, 48],
               [11, 48],
-              [11, 47]
-            ]
-          ]
-        }
-      })
+              [11, 47],
+            ],
+          ],
+        },
+      }),
     ],
     [
       TestHelpers.mockLiftFeature({
@@ -1147,10 +1147,10 @@ it("associates lifts and runs with polygon openstreetmap ski area", async () => 
           type: "LineString",
           coordinates: [
             [11.1223444, 47.5572422],
-            [11.1164297, 47.5581563]
-          ]
-        }
-      })
+            [11.1164297, 47.5581563],
+          ],
+        },
+      }),
     ],
     [
       TestHelpers.mockRunFeature({
@@ -1165,11 +1165,11 @@ it("associates lifts and runs with polygon openstreetmap ski area", async () => 
               [11.1164229, 47.558125],
               [11.1163655, 47.5579742],
               [11.1171866, 47.5576413],
-              [11.1164229, 47.558125]
-            ]
-          ]
-        }
-      })
+              [11.1164229, 47.558125],
+            ],
+          ],
+        },
+      }),
     ]
   );
 
@@ -1236,11 +1236,11 @@ it("associates lifts and runs adjacent to polygon openstreetmap ski area when no
               [0.0001, 0.0001],
               [0.0001, 0.0002],
               [0, 0.0002],
-              [0, 0.0001]
-            ]
-          ]
-        }
-      })
+              [0, 0.0001],
+            ],
+          ],
+        },
+      }),
     ],
     [
       TestHelpers.mockLiftFeature({
@@ -1251,10 +1251,10 @@ it("associates lifts and runs adjacent to polygon openstreetmap ski area when no
           type: "LineString",
           coordinates: [
             [0, 0],
-            [1, 0]
-          ]
-        }
-      })
+            [1, 0],
+          ],
+        },
+      }),
     ],
     [
       TestHelpers.mockRunFeature({
@@ -1266,9 +1266,9 @@ it("associates lifts and runs adjacent to polygon openstreetmap ski area when no
           type: "LineString",
           coordinates: [
             [1, 0],
-            [1, 1]
-          ]
-        }
+            [1, 1],
+          ],
+        },
       }),
       TestHelpers.mockRunFeature({
         id: "4",
@@ -1279,10 +1279,10 @@ it("associates lifts and runs adjacent to polygon openstreetmap ski area when no
           type: "LineString",
           coordinates: [
             [0, 0.0001],
-            [0.0001, 0.0002]
-          ]
-        }
-      })
+            [0.0001, 0.0002],
+          ],
+        },
+      }),
     ]
   );
 
@@ -1355,10 +1355,10 @@ it("associates lifts correctly to adjacent ski areas based on their polygons", a
               [1, 0],
               [1, 1],
               [0, 1],
-              [0, 0]
-            ]
-          ]
-        }
+              [0, 0],
+            ],
+          ],
+        },
       }),
       TestHelpers.mockSkiAreaFeature({
         id: "2",
@@ -1372,11 +1372,11 @@ it("associates lifts correctly to adjacent ski areas based on their polygons", a
               [-1, 0],
               [-1, -1],
               [0, -1],
-              [0, 0]
-            ]
-          ]
-        }
-      })
+              [0, 0],
+            ],
+          ],
+        },
+      }),
     ],
     [
       TestHelpers.mockLiftFeature({
@@ -1387,9 +1387,9 @@ it("associates lifts correctly to adjacent ski areas based on their polygons", a
           type: "LineString",
           coordinates: [
             [0.0001, 0],
-            [1, 0]
-          ]
-        }
+            [1, 0],
+          ],
+        },
       }),
       TestHelpers.mockLiftFeature({
         id: "4",
@@ -1399,10 +1399,10 @@ it("associates lifts correctly to adjacent ski areas based on their polygons", a
           type: "LineString",
           coordinates: [
             [-0.0001, 0],
-            [-1, 0]
-          ]
-        }
-      })
+            [-1, 0],
+          ],
+        },
+      }),
     ],
     []
   );
@@ -1454,8 +1454,8 @@ it("merges Skimap.org ski area with OpenStreetMap ski area", async () => {
         sources: [{ type: SourceType.OPENSTREETMAP, id: "1" }],
         geometry: {
           type: "Point",
-          coordinates: [0, 0]
-        }
+          coordinates: [0, 0],
+        },
       }),
       TestHelpers.mockSkiAreaFeature({
         id: "2",
@@ -1463,9 +1463,9 @@ it("merges Skimap.org ski area with OpenStreetMap ski area", async () => {
         sources: [{ type: SourceType.SKIMAP_ORG, id: "2" }],
         geometry: {
           type: "Point",
-          coordinates: [1, 0]
-        }
-      })
+          coordinates: [1, 0],
+        },
+      }),
     ],
     [
       TestHelpers.mockLiftFeature({
@@ -1476,10 +1476,10 @@ it("merges Skimap.org ski area with OpenStreetMap ski area", async () => {
           type: "LineString",
           coordinates: [
             [0, 0],
-            [1, 0]
-          ]
-        }
-      })
+            [1, 0],
+          ],
+        },
+      }),
     ],
     []
   );
@@ -1556,10 +1556,10 @@ it("removes OpenStreetMap ski areas that span across multiple Skimap.org ski are
               [1, 0],
               [1, 1],
               [0, 1],
-              [0, 0]
-            ]
-          ]
-        }
+              [0, 0],
+            ],
+          ],
+        },
       }),
       TestHelpers.mockSkiAreaFeature({
         id: "2",
@@ -1567,8 +1567,8 @@ it("removes OpenStreetMap ski areas that span across multiple Skimap.org ski are
         sources: [{ type: SourceType.SKIMAP_ORG, id: "2" }],
         geometry: {
           type: "Point",
-          coordinates: [0.25, 0.25]
-        }
+          coordinates: [0.25, 0.25],
+        },
       }),
       TestHelpers.mockSkiAreaFeature({
         id: "3",
@@ -1576,9 +1576,9 @@ it("removes OpenStreetMap ski areas that span across multiple Skimap.org ski are
         sources: [{ type: SourceType.SKIMAP_ORG, id: "2" }],
         geometry: {
           type: "Point",
-          coordinates: [0.75, 0.75]
-        }
-      })
+          coordinates: [0.75, 0.75],
+        },
+      }),
     ],
     [],
     []
@@ -1637,11 +1637,11 @@ it("adds activities to OpenStreetMap ski areas based on the associated runs", as
               [1, 0],
               [1, 1],
               [0, 1],
-              [0, 0]
-            ]
-          ]
-        }
-      })
+              [0, 0],
+            ],
+          ],
+        },
+      }),
     ],
     [],
     [
@@ -1652,11 +1652,11 @@ it("adds activities to OpenStreetMap ski areas based on the associated runs", as
           type: "LineString",
           coordinates: [
             [0, 0],
-            [1, 0]
-          ]
+            [1, 0],
+          ],
         },
-        uses: [RunUse.Nordic]
-      })
+        uses: [RunUse.Nordic],
+      }),
     ]
   );
 
@@ -1706,11 +1706,11 @@ it("removes OpenStreetMap ski area without nearby runs/lifts", async () => {
               [1, 0],
               [1, 1],
               [0, 1],
-              [0, 0]
-            ]
-          ]
-        }
-      })
+              [0, 0],
+            ],
+          ],
+        },
+      }),
     ],
     [],
     []
@@ -1752,11 +1752,11 @@ it("uses runs fully contained in the ski area polygon to determine activities wh
               [1, 0],
               [1, 1],
               [0, 1],
-              [0, 0]
-            ]
-          ]
-        }
-      })
+              [0, 0],
+            ],
+          ],
+        },
+      }),
     ],
     [],
     [
@@ -1766,11 +1766,11 @@ it("uses runs fully contained in the ski area polygon to determine activities wh
           type: "LineString",
           coordinates: [
             [0.5, 0.5],
-            [1.5, 1.5]
-          ]
+            [1.5, 1.5],
+          ],
         },
         name: "Run extending beyond ski area",
-        uses: [RunUse.Nordic]
+        uses: [RunUse.Nordic],
       }),
       TestHelpers.mockRunFeature({
         id: "3",
@@ -1778,12 +1778,12 @@ it("uses runs fully contained in the ski area polygon to determine activities wh
           type: "LineString",
           coordinates: [
             [0, 0],
-            [1, 1]
-          ]
+            [1, 1],
+          ],
         },
         name: "Run within ski area",
-        uses: [RunUse.Downhill]
-      })
+        uses: [RunUse.Downhill],
+      }),
     ]
   );
 
@@ -1840,11 +1840,11 @@ it("removes an OpenStreetMap ski area that does not contain any runs/lifts as it
               [1, 0],
               [1, 1],
               [0, 1],
-              [0, 0]
-            ]
-          ]
-        }
-      })
+              [0, 0],
+            ],
+          ],
+        },
+      }),
     ],
     [],
     [
@@ -1854,13 +1854,13 @@ it("removes an OpenStreetMap ski area that does not contain any runs/lifts as it
           type: "LineString",
           coordinates: [
             [1.0001, 1.0001],
-            [1.5, 1.5]
-          ]
+            [1.5, 1.5],
+          ],
         },
         name:
           "Run outside the ski area should be associated with a separate, generated ski area",
-        uses: [RunUse.Nordic]
-      })
+        uses: [RunUse.Nordic],
+      }),
     ]
   );
 
@@ -1915,7 +1915,7 @@ function simplifiedLiftFeature(feature: LiftFeature) {
   return {
     id: feature.properties.id,
     name: feature.properties.name,
-    skiAreas: feature.properties.skiAreas
+    skiAreas: feature.properties.skiAreas,
   };
 }
 
@@ -1923,7 +1923,7 @@ function simplifiedRunFeature(feature: RunFeature) {
   return {
     id: feature.properties.id,
     name: feature.properties.name,
-    skiAreas: feature.properties.skiAreas
+    skiAreas: feature.properties.skiAreas,
   };
 }
 
@@ -1931,26 +1931,26 @@ function simplifiedSkiAreaFeature(feature: SkiAreaFeature) {
   return {
     id: feature.properties.id,
     name: feature.properties.name,
-    activities: feature.properties.activities
+    activities: feature.properties.activities,
   };
 }
 
 function simplifiedSkiAreaFeatureWithStatistics(feature: SkiAreaFeature) {
   return {
     ...simplifiedSkiAreaFeature(feature),
-    statistics: feature.properties.statistics
+    statistics: feature.properties.statistics,
   };
 }
 
 function simplifiedSkiAreaFeatureWithSources(feature: SkiAreaFeature) {
   return {
     ...simplifiedSkiAreaFeature(feature),
-    sources: feature.properties.sources
+    sources: feature.properties.sources,
   };
 }
 
 async function sleep(ms: number) {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     setTimeout(resolve, ms);
   });
 }
@@ -1966,7 +1966,7 @@ function mockConsoleLog() {
 
 function restoreConsoleLog() {
   logMock.mockRestore();
-  accumulatedLogs.map(el => console.log(...el));
+  accumulatedLogs.map((el) => console.log(...el));
   accumulatedLogs = [];
 }
 

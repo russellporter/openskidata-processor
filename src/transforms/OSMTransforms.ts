@@ -54,7 +54,7 @@ function nameKeysForRootKey<Properties extends OSMTags>(
   rootKey: keyof Properties
 ): (keyof Properties)[] {
   return Object.keys(properties).filter(
-    key => key === rootKey || key.startsWith(rootKey + ":")
+    (key) => key === rootKey || key.startsWith(rootKey + ":")
   );
 }
 

@@ -14,7 +14,7 @@ import {
   MapObject,
   MapObjectType,
   RunObject,
-  SkiAreaObject
+  SkiAreaObject,
 } from "./MapObject";
 import mergeSkiAreaObjects from "./MergeSkiAreaObjects";
 import { emptySkiAreasCursor, SkiAreasCursor } from "./SkiAreasCursor";
@@ -31,7 +31,7 @@ const maxDistanceInKilometers = 0.5;
 
 export const allSkiAreaActivities = new Set([
   Activity.Downhill,
-  Activity.Nordic
+  Activity.Nordic,
 ]);
 
 /**
@@ -53,15 +53,15 @@ export default async function clusterArangoGraph(
   await assignObjectsToSkiAreas({
     skiArea: {
       onlySource: SourceType.OPENSTREETMAP,
-      removeIfNoObjectsFound: true
+      removeIfNoObjectsFound: true,
     },
-    objects: { onlyInPolygon: true }
+    objects: { onlyInPolygon: true },
   });
 
   // For all OpenStreetMap ski areas, in a second pass, associate nearby runs & lifts that are not already assigned to a ski area polygon.
   await assignObjectsToSkiAreas({
     skiArea: { onlySource: SourceType.OPENSTREETMAP },
-    objects: { onlyIfNotAlreadyAssignedToPolygon: true }
+    objects: { onlyIfNotAlreadyAssignedToPolygon: true },
   });
 
   // For all Skimap.org ski areas, associate nearby runs & lifts that are not already assigned to a ski area area polygon.
@@ -70,9 +70,9 @@ export default async function clusterArangoGraph(
   await assignObjectsToSkiAreas({
     skiArea: {
       onlySource: SourceType.SKIMAP_ORG,
-      mergeWithOtherSourceIfNearby: true
+      mergeWithOtherSourceIfNearby: true,
     },
-    objects: { onlyIfNotAlreadyAssignedToPolygon: true }
+    objects: { onlyIfNotAlreadyAssignedToPolygon: true },
   });
 
   // For each remaining unclaimed run, generate a ski area for it, associating nearby unclaimed runs & lifts.
@@ -88,25 +88,25 @@ export default async function clusterArangoGraph(
   async function removeAmbiguousDuplicateSkiAreas(): Promise<void> {
     const cursor = await getSkiAreas({
       onlyPolygons: true,
-      onlySource: SourceType.OPENSTREETMAP
+      onlySource: SourceType.OPENSTREETMAP,
     });
 
     let skiAreas: SkiAreaObject[];
     while ((skiAreas = (await cursor.nextBatch()) as SkiAreaObject[])) {
       await Promise.all(
-        skiAreas.map(async skiArea => {
+        skiAreas.map(async (skiArea) => {
           if (
             skiArea.geometry.type !== "Polygon" &&
             skiArea.geometry.type !== "MultiPolygon"
           ) {
             throw new AssertionError({
               message:
-                "getSkiAreas query should have only returned ski areas with a Polygon geometry."
+                "getSkiAreas query should have only returned ski areas with a Polygon geometry.",
             });
           }
           const otherSkiAreasCursor = await getSkiAreas({
             onlySource: SourceType.SKIMAP_ORG,
-            onlyInPolygon: skiArea.geometry
+            onlyInPolygon: skiArea.geometry,
           });
 
           const otherSkiAreas = await otherSkiAreasCursor.all();
@@ -136,13 +136,13 @@ export default async function clusterArangoGraph(
   }): Promise<void> {
     const skiAreasCursor = await getSkiAreas({
       onlyPolygons: options.objects.onlyInPolygon || false,
-      onlySource: options.skiArea.onlySource
+      onlySource: options.skiArea.onlySource,
     });
 
     let skiAreas: SkiAreaObject[];
     while ((skiAreas = (await skiAreasCursor.nextBatch()) as SkiAreaObject[])) {
       await Promise.all(
-        skiAreas.map(async skiArea => {
+        skiAreas.map(async (skiArea) => {
           const id = skiArea.properties.id;
           if (!id) {
             throw "No ID for ski area starting object";
@@ -168,7 +168,7 @@ export default async function clusterArangoGraph(
               searchPolygon = skiArea.geometry;
             } else {
               throw new AssertionError({
-                message: "Ski area geometry must be a polygon."
+                message: "Ski area geometry must be a polygon.",
               });
             }
           }
@@ -186,7 +186,7 @@ export default async function clusterArangoGraph(
               searchPolygon: searchPolygon,
               alreadyVisited: [skiArea._key],
               excludeObjectsAlreadyInSkiAreaPolygon:
-                options.objects.onlyIfNotAlreadyAssignedToPolygon || false
+                options.objects.onlyIfNotAlreadyAssignedToPolygon || false,
             },
             skiArea
           );
@@ -199,7 +199,9 @@ export default async function clusterArangoGraph(
 
           if (
             options.skiArea.removeIfNoObjectsFound &&
-            !memberObjects.some(object => object.type !== MapObjectType.SkiArea)
+            !memberObjects.some(
+              (object) => object.type !== MapObjectType.SkiArea
+            )
           ) {
             console.log("Removing ski area as no objects were found.");
             console.log(JSON.stringify(options));
@@ -210,9 +212,9 @@ export default async function clusterArangoGraph(
           // Determine ski area activities based on the clustered objects.
           if (!hasKnownSkiAreaActivities) {
             const activities = memberObjects
-              .filter(object => object.type !== MapObjectType.SkiArea)
+              .filter((object) => object.type !== MapObjectType.SkiArea)
               .reduce((accumulatedActivities, object) => {
-                object.activities.forEach(activity => {
+                object.activities.forEach((activity) => {
                   if (allSkiAreaActivities.has(activity)) {
                     accumulatedActivities.add(activity);
                   }
@@ -225,8 +227,8 @@ export default async function clusterArangoGraph(
               {
                 activities: [...activities],
                 properties: {
-                  activities: [...activities]
-                }
+                  activities: [...activities],
+                },
               }
             );
           }
@@ -248,14 +250,14 @@ export default async function clusterArangoGraph(
 
   async function generateSkiAreaForRun(unassignedRun: RunObject) {
     const newSkiAreaID = uuid();
-    let activities = unassignedRun.activities.filter(activity =>
+    let activities = unassignedRun.activities.filter((activity) =>
       allSkiAreaActivities.has(activity)
     );
     let memberObjects = await visitObject(
       {
         id: newSkiAreaID,
         activities: activities,
-        alreadyVisited: [unassignedRun._key]
+        alreadyVisited: [unassignedRun._key],
       },
       unassignedRun
     );
@@ -263,14 +265,14 @@ export default async function clusterArangoGraph(
     // Downhill ski areas must contain at least one lift.
     if (
       activities.includes(Activity.Downhill) &&
-      !memberObjects.some(object => object.type == MapObjectType.Lift)
+      !memberObjects.some((object) => object.type == MapObjectType.Lift)
     ) {
       activities = activities.filter(
-        activity => activity !== Activity.Downhill
+        (activity) => activity !== Activity.Downhill
       );
-      memberObjects = memberObjects.filter(object => {
+      memberObjects = memberObjects.filter((object) => {
         const hasAnotherActivity = object.activities.some(
-          activity =>
+          (activity) =>
             activity !== Activity.Downhill && allSkiAreaActivities.has(activity)
         );
         return hasAnotherActivity;
@@ -326,9 +328,9 @@ export default async function clusterArangoGraph(
     }
     const objectContext = {
       ...context,
-      activities: context.activities.filter(activity =>
+      activities: context.activities.filter((activity) =>
         object.activities.includes(activity)
-      )
+      ),
     };
     switch (searchArea.type) {
       case "Polygon":
@@ -365,11 +367,11 @@ export default async function clusterArangoGraph(
     const nearbyObjects = await findNearbyObjects(buffer, "intersects", {
       id: skiArea.id,
       activities: skiArea.activities,
-      alreadyVisited: []
+      alreadyVisited: [],
     });
 
     const otherSkiAreaIDs = new Set(
-      nearbyObjects.flatMap(object => object.skiAreas)
+      nearbyObjects.flatMap((object) => object.skiAreas)
     );
     const otherSkiAreasCursor = await getSkiAreasByID(
       Array.from(otherSkiAreaIDs)
@@ -377,17 +379,17 @@ export default async function clusterArangoGraph(
     const otherSkiAreas: SkiAreaObject[] = await otherSkiAreasCursor.all();
 
     return otherSkiAreas.filter(
-      otherSkiArea => otherSkiArea.source != skiArea.source
+      (otherSkiArea) => otherSkiArea.source != skiArea.source
     );
   }
 
   async function mergeSkiAreas(skiAreas: SkiAreaObject[]): Promise<void> {
     console.log(
       "Merging ski areas: " +
-        skiAreas.map(object => JSON.stringify(object.properties)).join(", ")
+        skiAreas.map((object) => JSON.stringify(object.properties)).join(", ")
     );
 
-    const ids = new Set(skiAreas.map(skiArea => skiArea._key));
+    const ids = new Set(skiAreas.map((skiArea) => skiArea._key));
     const skiArea = mergeSkiAreaObjects(skiAreas);
     if (skiArea === null) {
       return;
@@ -440,7 +442,7 @@ export default async function clusterArangoGraph(
     try {
       const cursor = await database.query(query, { ttl: 120 });
       const allFound: MapObject[] = await cursor.all();
-      allFound.forEach(object => context.alreadyVisited.push(object._key));
+      allFound.forEach((object) => context.alreadyVisited.push(object._key));
       return allFound;
     } catch (error) {
       if (isInvalidGeometryError(error)) {
@@ -465,7 +467,7 @@ export default async function clusterArangoGraph(
   ): Promise<void> {
     const query = aql`
             FOR object in ${objectsCollection}
-            FILTER object._key IN ${objects.map(object => object._key)}
+            FILTER object._key IN ${objects.map((object) => object._key)}
             UPDATE {
               _key: object._key,
               isBasisForNewSkiArea: false,
@@ -553,7 +555,7 @@ export default async function clusterArangoGraph(
     activities: Activity[],
     memberObjects: MapObject[]
   ): Promise<void> {
-    const features = memberObjects.map<GeoJSON.Feature>(object => {
+    const features = memberObjects.map<GeoJSON.Feature>((object) => {
       return { type: "Feature", geometry: object.geometry, properties: {} };
     });
     const objects = turf.featureCollection(features);
@@ -581,8 +583,8 @@ export default async function clusterArangoGraph(
         status: Status.Operating,
         sources: [],
         runConvention: getRunConvention(geometry),
-        website: null
-      }
+        website: null,
+      },
     };
 
     try {
@@ -613,7 +615,7 @@ export default async function clusterArangoGraph(
     let skiAreas: SkiAreaObject[];
     while ((skiAreas = (await skiAreasCursor.nextBatch()) as SkiAreaObject[])) {
       await Promise.all(
-        skiAreas.map(async skiArea => {
+        skiAreas.map(async (skiArea) => {
           const mapObjects = await getObjects(skiArea.id);
           await augmentSkiAreaBasedOnAssignedLiftsAndRuns(skiArea, mapObjects);
         })
@@ -626,7 +628,7 @@ export default async function clusterArangoGraph(
     memberObjects: MapObject[]
   ): Promise<void> {
     const noSkimapOrgSource = !skiArea.properties.sources.some(
-      source => source.type == SourceType.SKIMAP_ORG
+      (source) => source.type == SourceType.SKIMAP_ORG
     );
     if (memberObjects.length === 0 && noSkimapOrgSource) {
       // Remove OpenStreetMap ski areas with no associated runs or lifts.

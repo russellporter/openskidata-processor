@@ -11,7 +11,7 @@ import { mergeOverlappingRuns, RunTopology } from "./MergeOverlappingRuns";
 
 function merge(features: GeoJSON.Feature<InputRunGeometry, RunProperties>[]) {
   const inputTopology = TopoJSONServer.topology({
-    runs: TurfHelper.featureCollection(features) as GeoJsonObject
+    runs: TurfHelper.featureCollection(features) as GeoJsonObject,
   }) as RunTopology;
   const resultTopology = mergeOverlappingRuns(inputTopology);
   return TopoJSONClient.feature(resultTopology, resultTopology.objects.runs)
@@ -37,9 +37,9 @@ function mockRun<G extends InputRunGeometry>(options: {
             type: "LineString",
             coordinates: [
               [0, 0],
-              [1, 1]
-            ]
-          }
+              [1, 1],
+            ],
+          },
   });
 }
 
@@ -62,16 +62,16 @@ describe("MergeOverlappingRuns", () => {
           name: "A",
           sources: [
             { type: SourceType.OPENSTREETMAP, id: "way/1" },
-            { type: SourceType.OPENSTREETMAP, id: "relation/1" }
-          ]
+            { type: SourceType.OPENSTREETMAP, id: "relation/1" },
+          ],
         }),
         mockRun({
           name: "B",
           sources: [
             { type: SourceType.OPENSTREETMAP, id: "way/1" },
-            { type: SourceType.OPENSTREETMAP, id: "relation/2" }
-          ]
-        })
+            { type: SourceType.OPENSTREETMAP, id: "relation/2" },
+          ],
+        }),
       ]),
       [
         mockRun({
@@ -79,9 +79,9 @@ describe("MergeOverlappingRuns", () => {
           sources: [
             { type: SourceType.OPENSTREETMAP, id: "way/1" },
             { type: SourceType.OPENSTREETMAP, id: "relation/1" },
-            { type: SourceType.OPENSTREETMAP, id: "relation/2" }
-          ]
-        })
+            { type: SourceType.OPENSTREETMAP, id: "relation/2" },
+          ],
+        }),
       ]
     );
   });
@@ -90,7 +90,7 @@ describe("MergeOverlappingRuns", () => {
     assert.deepStrictEqual(
       merge([
         mockRun({ name: "A", oneway: true }),
-        mockRun({ name: "B", oneway: true })
+        mockRun({ name: "B", oneway: true }),
       ]),
       [mockRun({ name: "A, B", oneway: true })]
     );
@@ -106,9 +106,9 @@ describe("MergeOverlappingRuns", () => {
             type: "LineString",
             coordinates: [
               [0, 0],
-              [1, 1]
-            ]
-          }
+              [1, 1],
+            ],
+          },
         }),
         mockRun({
           name: "B",
@@ -116,10 +116,10 @@ describe("MergeOverlappingRuns", () => {
             type: "LineString",
             coordinates: [
               [1, 1],
-              [0, 0]
-            ]
-          }
-        })
+              [0, 0],
+            ],
+          },
+        }),
       ]),
       [
         mockRun({
@@ -129,10 +129,10 @@ describe("MergeOverlappingRuns", () => {
             type: "LineString",
             coordinates: [
               [0, 0],
-              [1, 1]
-            ]
-          }
-        })
+              [1, 1],
+            ],
+          },
+        }),
       ]
     );
   });
@@ -141,7 +141,7 @@ describe("MergeOverlappingRuns", () => {
     assert.deepStrictEqual(
       merge([
         mockRun({ name: "A", oneway: true }),
-        mockRun({ name: "B", oneway: false })
+        mockRun({ name: "B", oneway: false }),
       ]),
       [mockRun({ name: "A, B", oneway: false })]
     );
@@ -157,9 +157,9 @@ describe("MergeOverlappingRuns", () => {
             type: "LineString",
             coordinates: [
               [0, 0],
-              [1, 1]
-            ]
-          }
+              [1, 1],
+            ],
+          },
         }),
         mockRun({
           name: "B",
@@ -168,10 +168,10 @@ describe("MergeOverlappingRuns", () => {
             type: "LineString",
             coordinates: [
               [1, 1],
-              [0, 0]
-            ]
-          }
-        })
+              [0, 0],
+            ],
+          },
+        }),
       ]),
       [
         mockRun({
@@ -181,10 +181,10 @@ describe("MergeOverlappingRuns", () => {
             type: "LineString",
             coordinates: [
               [0, 0],
-              [1, 1]
-            ]
-          }
-        })
+              [1, 1],
+            ],
+          },
+        }),
       ]
     );
   });
@@ -199,9 +199,9 @@ describe("MergeOverlappingRuns", () => {
             type: "LineString",
             coordinates: [
               [0, 0],
-              [1, 1]
-            ]
-          }
+              [1, 1],
+            ],
+          },
         }),
         mockRun({
           name: "A",
@@ -211,10 +211,10 @@ describe("MergeOverlappingRuns", () => {
             coordinates: [
               [1, 1],
               [2, 2],
-              [0, 0]
-            ]
-          }
-        })
+              [0, 0],
+            ],
+          },
+        }),
       ]),
       [
         mockRun({
@@ -224,9 +224,9 @@ describe("MergeOverlappingRuns", () => {
             type: "LineString",
             coordinates: [
               [0, 0],
-              [1, 1]
-            ]
-          }
+              [1, 1],
+            ],
+          },
         }),
         mockRun({
           name: "A",
@@ -236,10 +236,10 @@ describe("MergeOverlappingRuns", () => {
             coordinates: [
               [1, 1],
               [2, 2],
-              [0, 0]
-            ]
-          }
-        })
+              [0, 0],
+            ],
+          },
+        }),
       ]
     );
   });
@@ -253,9 +253,9 @@ describe("MergeOverlappingRuns", () => {
             type: "LineString",
             coordinates: [
               [0, 0],
-              [1, 1]
-            ]
-          }
+              [1, 1],
+            ],
+          },
         }),
         mockRun({
           oneway: true,
@@ -264,9 +264,9 @@ describe("MergeOverlappingRuns", () => {
             coordinates: [
               [1, 1],
               [2, 2],
-              [0, 0]
-            ]
-          }
+              [0, 0],
+            ],
+          },
         }),
         mockRun({
           name: "Relation",
@@ -275,20 +275,20 @@ describe("MergeOverlappingRuns", () => {
             coordinates: [
               [
                 [0, 0],
-                [1, 1]
+                [1, 1],
               ],
               [
                 [0, 0],
-                [3, 3]
+                [3, 3],
               ],
               [
                 [0, 0],
                 [2, 2],
-                [1, 1]
-              ]
-            ]
-          }
-        })
+                [1, 1],
+              ],
+            ],
+          },
+        }),
       ]),
       [
         mockRun({
@@ -298,9 +298,9 @@ describe("MergeOverlappingRuns", () => {
             type: "LineString",
             coordinates: [
               [0, 0],
-              [1, 1]
-            ]
-          }
+              [1, 1],
+            ],
+          },
         }),
         mockRun({
           name: "Relation",
@@ -310,9 +310,9 @@ describe("MergeOverlappingRuns", () => {
             coordinates: [
               [1, 1],
               [2, 2],
-              [0, 0]
-            ]
-          }
+              [0, 0],
+            ],
+          },
         }),
         mockRun({
           name: "Relation",
@@ -320,10 +320,10 @@ describe("MergeOverlappingRuns", () => {
             type: "LineString",
             coordinates: [
               [0, 0],
-              [3, 3]
-            ]
-          }
-        })
+              [3, 3],
+            ],
+          },
+        }),
       ]
     );
   });
@@ -338,19 +338,19 @@ describe("MergeOverlappingRuns", () => {
             coordinates: [
               [
                 [0, 0],
-                [1, 1]
+                [1, 1],
               ],
               [
                 [0, 0],
-                [3, 3]
+                [3, 3],
               ],
               [
                 [0, 0],
                 [2, 2],
-                [1, 1]
-              ]
-            ]
-          }
+                [1, 1],
+              ],
+            ],
+          },
         }),
         mockRun({
           oneway: true,
@@ -358,9 +358,9 @@ describe("MergeOverlappingRuns", () => {
             type: "LineString",
             coordinates: [
               [0, 0],
-              [1, 1]
-            ]
-          }
+              [1, 1],
+            ],
+          },
         }),
         mockRun({
           oneway: true,
@@ -369,10 +369,10 @@ describe("MergeOverlappingRuns", () => {
             coordinates: [
               [1, 1],
               [2, 2],
-              [0, 0]
-            ]
-          }
-        })
+              [0, 0],
+            ],
+          },
+        }),
       ]),
       [
         mockRun({
@@ -382,9 +382,9 @@ describe("MergeOverlappingRuns", () => {
             type: "LineString",
             coordinates: [
               [0, 0],
-              [1, 1]
-            ]
-          }
+              [1, 1],
+            ],
+          },
         }),
         mockRun({
           name: "Relation",
@@ -392,9 +392,9 @@ describe("MergeOverlappingRuns", () => {
             type: "LineString",
             coordinates: [
               [0, 0],
-              [3, 3]
-            ]
-          }
+              [3, 3],
+            ],
+          },
         }),
         mockRun({
           name: "Relation",
@@ -404,10 +404,10 @@ describe("MergeOverlappingRuns", () => {
             coordinates: [
               [1, 1],
               [2, 2],
-              [0, 0]
-            ]
-          }
-        })
+              [0, 0],
+            ],
+          },
+        }),
       ]
     );
   });
@@ -423,9 +423,9 @@ describe("MergeOverlappingRuns", () => {
               [0, 0],
               [1, 1],
               [2, 2],
-              [3, 3]
-            ]
-          }
+              [3, 3],
+            ],
+          },
         }),
         mockRun({
           oneway: true,
@@ -433,9 +433,9 @@ describe("MergeOverlappingRuns", () => {
             type: "LineString",
             coordinates: [
               [1, 1],
-              [0, 0]
-            ]
-          }
+              [0, 0],
+            ],
+          },
         }),
         mockRun({
           oneway: true,
@@ -443,9 +443,9 @@ describe("MergeOverlappingRuns", () => {
             type: "LineString",
             coordinates: [
               [2, 2],
-              [1, 1]
-            ]
-          }
+              [1, 1],
+            ],
+          },
         }),
         mockRun({
           oneway: true,
@@ -453,10 +453,10 @@ describe("MergeOverlappingRuns", () => {
             type: "LineString",
             coordinates: [
               [2, 2],
-              [3, 3]
-            ]
-          }
-        })
+              [3, 3],
+            ],
+          },
+        }),
       ]),
       [
         mockRun({
@@ -466,9 +466,9 @@ describe("MergeOverlappingRuns", () => {
             type: "LineString",
             coordinates: [
               [1, 1],
-              [0, 0]
-            ]
-          }
+              [0, 0],
+            ],
+          },
         }),
         mockRun({
           name: "Line",
@@ -477,9 +477,9 @@ describe("MergeOverlappingRuns", () => {
             type: "LineString",
             coordinates: [
               [2, 2],
-              [1, 1]
-            ]
-          }
+              [1, 1],
+            ],
+          },
         }),
         mockRun({
           name: "Line",
@@ -488,10 +488,10 @@ describe("MergeOverlappingRuns", () => {
             type: "LineString",
             coordinates: [
               [2, 2],
-              [3, 3]
-            ]
-          }
-        })
+              [3, 3],
+            ],
+          },
+        }),
       ]
     );
   });

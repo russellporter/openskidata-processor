@@ -6,6 +6,6 @@ export interface Config {
 export function configFromEnvironment(): Config {
   return {
     arangoDBURLForClustering: process.env["CLUSTERING_ARANGODB_URL"] || null,
-    elevationServerURL: process.env["ELEVATION_SERVER_URL"] || null
+    elevationServerURL: process.env["ELEVATION_SERVER_URL"] || null,
   };
 }

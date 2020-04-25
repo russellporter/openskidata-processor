@@ -9,7 +9,7 @@ import {
   RunGrooming,
   RunUse,
   SkiAreaFeature,
-  Status
+  Status,
 } from "openskidata-format";
 import StreamToPromise from "stream-to-promise";
 import { readGeoJSONFeatures } from "../io/GeoJSONReader";
@@ -20,7 +20,7 @@ import {
   DraftMapObject,
   DraftRun,
   DraftSkiArea,
-  MapObjectType
+  MapObjectType,
 } from "./MapObject";
 
 export default async function loadArangoGraph(
@@ -36,7 +36,7 @@ export default async function loadArangoGraph(
     [
       load(skiAreasPath, prepareSkiArea),
       load(liftsPath, prepareLift),
-      load(runsPath, prepareRun)
+      load(runsPath, prepareRun),
     ].map<Promise<Buffer>>(StreamToPromise)
   );
 
@@ -44,7 +44,7 @@ export default async function loadArangoGraph(
   await objectsCollection.createSkipList(["type", "source", "isPolygon"]);
   await objectsCollection.createSkipList("skiAreas");
   await objectsCollection.createSkipList("isBasisForNewSkiArea", {
-    sparse: true
+    sparse: true,
   });
 
   function load(
@@ -82,7 +82,7 @@ export default async function loadArangoGraph(
       geometry: feature.geometry,
       skiAreas: [],
       activities: properties.activities,
-      properties: properties
+      properties: properties,
     };
   }
 
@@ -97,7 +97,7 @@ export default async function loadArangoGraph(
         properties["status"] === Status.Operating ? [Activity.Downhill] : [],
       skiAreas: [],
       liftType: properties.liftType,
-      isInSkiAreaPolygon: false
+      isInSkiAreaPolygon: false,
     };
   }
 
@@ -112,7 +112,7 @@ export default async function loadArangoGraph(
         return [Activity.Backcountry];
       }
 
-      return properties.uses.flatMap(use => {
+      return properties.uses.flatMap((use) => {
         switch (use) {
           case RunUse.Downhill:
           case RunUse.SnowPark:
@@ -137,11 +137,11 @@ export default async function loadArangoGraph(
         // So only start generating a new ski area from a run if the use was explicitly downhill or nordic.
         (properties.uses.includes(RunUse.Downhill) ||
           properties.uses.includes(RunUse.Nordic)) &&
-        activities.some(activity => allSkiAreaActivities.has(activity)),
+        activities.some((activity) => allSkiAreaActivities.has(activity)),
       skiAreas: [],
       activities: activities,
       difficulty: feature.properties.difficulty,
-      isInSkiAreaPolygon: false
+      isInSkiAreaPolygon: false,
     };
   }
 }
@@ -153,35 +153,35 @@ function geometryWithoutElevations(
     case "Point":
       return {
         type: "Point",
-        coordinates: [geometry.coordinates[0], geometry.coordinates[1]]
+        coordinates: [geometry.coordinates[0], geometry.coordinates[1]],
       };
     case "LineString":
       return {
         type: "LineString",
-        coordinates: geometry.coordinates.map(coordinate => [
+        coordinates: geometry.coordinates.map((coordinate) => [
           coordinate[0],
-          coordinate[1]
-        ])
+          coordinate[1],
+        ]),
       };
     case "MultiLineString":
     case "Polygon":
       return {
         type: geometry.type,
-        coordinates: geometry.coordinates.map(coordinates =>
-          coordinates.map(coordinate => [coordinate[0], coordinate[1]])
-        )
+        coordinates: geometry.coordinates.map((coordinates) =>
+          coordinates.map((coordinate) => [coordinate[0], coordinate[1]])
+        ),
       };
     case "MultiPolygon":
       return {
         type: "MultiPolygon",
-        coordinates: geometry.coordinates.map(coordinates =>
-          coordinates.map(coordinatess =>
-            coordinatess.map(coordinatesss => [
+        coordinates: geometry.coordinates.map((coordinates) =>
+          coordinates.map((coordinatess) =>
+            coordinatess.map((coordinatesss) => [
               coordinatesss[0],
-              coordinatesss[1]
+              coordinatesss[1],
             ])
           )
-        )
+        ),
       };
     default:
       throw "Unsupported geometry type " + geometry.type;

@@ -11,13 +11,13 @@ import {
   RunGrooming,
   RunUse,
   SourceType,
-  Status
+  Status,
 } from "openskidata-format";
 import { InputRunFeature, InputRunProperties } from "../features/RunFeature";
 import buildFeature from "./FeatureBuilder";
 import {
   FormattedInputRunFeature,
-  FormattedInputRunProperties
+  FormattedInputRunProperties,
 } from "./FormattedInputRunFeature";
 import { Omit } from "./Omit";
 import { getOSMName, mapOSMBoolean, mapOSMString } from "./OSMTransforms";
@@ -67,7 +67,7 @@ export function formatRun(
     grooming: getGrooming(inputProperties),
     skiAreas: [],
     status: status,
-    sources: [{ type: SourceType.OPENSTREETMAP, id: inputProperties["id"] }]
+    sources: [{ type: SourceType.OPENSTREETMAP, id: inputProperties["id"] }],
   };
 
   return buildFeature(feature.geometry, properties);
@@ -91,8 +91,8 @@ function getStatusAndUses(properties: InputRunProperties) {
 function getUses(type: string): RunUse[] {
   return type
     .split(";")
-    .map(t => t.trim().toLowerCase())
-    .flatMap(t =>
+    .map((t) => t.trim().toLowerCase())
+    .flatMap((t) =>
       Object.values(RunUse).includes(t as RunUse) ? [t as RunUse] : []
     );
 }
@@ -162,8 +162,8 @@ const euPoly = turf.polygon([
     [104.0629035075, -38.4405631112],
     [104.0629035075, 79.5008734769],
     [-20.8273687679, 79.5008734769],
-    [-20.8273687679, -38.4405631112]
-  ]
+    [-20.8273687679, -38.4405631112],
+  ],
 ]);
 const jpPoly = turf.polygon([
   [
@@ -171,8 +171,8 @@ const jpPoly = turf.polygon([
     [127.647873113, 31.9109304183],
     [141.4351555235, 45.50454598],
     [152.5506504114, 46.803648984],
-    [134.5454501506, 26.7303804756]
-  ]
+    [134.5454501506, 26.7303804756],
+  ],
 ]);
 
 export function getRunConvention(geojson: AllGeoJSON): RunConvention {

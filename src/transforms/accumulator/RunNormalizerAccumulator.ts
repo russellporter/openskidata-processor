@@ -8,7 +8,7 @@ import { FormattedInputRunFeature } from "../FormattedInputRunFeature";
 import combineRunSegments from "../normalization/CombineRunSegments";
 import {
   mergeOverlappingRuns,
-  RunTopology
+  RunTopology,
 } from "../normalization/MergeOverlappingRuns";
 import Accumulator from "./Accumulator";
 
@@ -30,7 +30,7 @@ export class RunNormalizerAccumulator
 
     const topology = mergeOverlappingRuns(
       topojsonServer.topology({
-        runs: turf.featureCollection(features) as GeoJsonObject
+        runs: turf.featureCollection(features) as GeoJsonObject,
       }) as RunTopology
     );
 
@@ -39,7 +39,7 @@ export class RunNormalizerAccumulator
         topology,
         topology.objects.runs
       ) as GeoJSON.FeatureCollection<RunGeometry, RunProperties>
-    ).features.map(f => {
+    ).features.map((f) => {
       // Re-compute id hashes after normalizing
       return buildFeature(f.geometry, f.properties);
     });

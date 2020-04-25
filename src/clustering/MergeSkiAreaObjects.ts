@@ -10,7 +10,7 @@ export default function mergeSkiAreaObjects(
   }
 
   const skimapOrgSkiAreaIndex = skiAreas.findIndex(
-    skiArea => skiArea.source === SourceType.SKIMAP_ORG
+    (skiArea) => skiArea.source === SourceType.SKIMAP_ORG
   );
   const primarySkiAreaIndex =
     skimapOrgSkiAreaIndex !== -1 ? skimapOrgSkiAreaIndex : 0;
@@ -34,7 +34,7 @@ export default function mergeSkiAreaObjects(
       properties: mergeSkiAreaProperties(
         primarySkiArea.properties,
         otherSkiArea.properties
-      )
+      ),
     };
   }, primarySkiArea);
 }
@@ -58,7 +58,7 @@ function mergeSkiAreaProperties(
     status: primarySkiArea.status || otherSkiArea.status,
     type: primarySkiArea.type,
     website: primarySkiArea.website || otherSkiArea.website,
-    statistics: primarySkiArea.statistics
+    statistics: primarySkiArea.statistics,
   };
 }
 

@@ -14,7 +14,7 @@ export const runsDownloadConfig: OSMDownloadConfig = {
     (._; >;);
     out;
     `,
-  shouldIncludeFeature: tags => tags["piste:type"] !== undefined
+  shouldIncludeFeature: (tags) => tags["piste:type"] !== undefined,
 };
 
 export const liftsDownloadConfig: OSMDownloadConfig = {
@@ -27,12 +27,12 @@ export const liftsDownloadConfig: OSMDownloadConfig = {
     (._; >;);
     out;
     `,
-  shouldIncludeFeature: tags =>
-    lifecyclePrefixes.some(prefix => {
+  shouldIncludeFeature: (tags) =>
+    lifecyclePrefixes.some((prefix) => {
       tags[prefix + "aerialway"] !== undefined ||
         tags[prefix + "railway"] === "funicular";
     }) ||
-    (tags.rack !== undefined && tags.rack !== "no")
+    (tags.rack !== undefined && tags.rack !== "no"),
 };
 
 export const skiAreasDownloadConfig: OSMDownloadConfig = {
@@ -44,14 +44,14 @@ export const skiAreasDownloadConfig: OSMDownloadConfig = {
     (._; >;);
     out;
     `,
-  shouldIncludeFeature: tags =>
-    lifecyclePrefixes.some(prefix => {
+  shouldIncludeFeature: (tags) =>
+    lifecyclePrefixes.some((prefix) => {
       tags[prefix + "landuse"] === "winter_sports";
-    })
+    }),
 };
 export const skiMapSkiAreasURL = "https://skimap.org/SkiAreas/index.geojson";
 
 const lifecyclePrefixes = (() => {
-  const statePrefixes = [...lifecycleStates].map(state => state + ":");
+  const statePrefixes = [...lifecycleStates].map((state) => state + ":");
   return ["", ...statePrefixes];
 })();

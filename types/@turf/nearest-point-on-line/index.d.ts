@@ -4,7 +4,7 @@ import {
   LineString,
   MultiLineString,
   Point,
-  Units
+  Units,
 } from "@turf/helpers";
 
 export interface NearestPointOnLine extends Feature<Point> {

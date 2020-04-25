@@ -17,7 +17,7 @@ import {
   SkiAreaFeature,
   SkiAreaProperties,
   SkiAreaStatistics,
-  Status
+  Status,
 } from "openskidata-format";
 import Source, { SourceType } from "openskidata-format/dist/Source";
 import { join } from "path";
@@ -26,7 +26,7 @@ import { InputLiftFeature } from "./features/LiftFeature";
 import { InputRunFeature, InputRunGeometry } from "./features/RunFeature";
 import {
   InputOpenStreetMapSkiAreaFeature,
-  InputSkiMapOrgSkiAreaFeature
+  InputSkiMapOrgSkiAreaFeature,
 } from "./features/SkiAreaFeature";
 
 export interface FolderContents extends Map<string, any | FolderContents> {}
@@ -40,20 +40,20 @@ export function mockInputFiles(input: {
   mockFS({
     "input_skimap_ski_areas.geojson": JSON.stringify({
       type: "FeatureCollection",
-      features: input.skiMapSkiAreas
+      features: input.skiMapSkiAreas,
     }),
     "input_openstreetmap_ski_areas.geojson": JSON.stringify({
       type: "FeatureCollection",
-      features: input.openStreetMapSkiAreas
+      features: input.openStreetMapSkiAreas,
     }),
     "input_lifts.geojson": JSON.stringify({
       type: "FeatureCollection",
-      features: input.lifts
+      features: input.lifts,
     }),
     "input_runs.geojson": JSON.stringify({
       type: "FeatureCollection",
-      features: input.runs
-    })
+      features: input.runs,
+    }),
   });
 
   fs.mkdirSync("output");
@@ -68,16 +68,16 @@ export function mockFeatureFiles(
   mockFS({
     "intermediate_ski_areas.geojson": JSON.stringify({
       type: "FeatureCollection",
-      features: skiAreas
+      features: skiAreas,
     }),
     "intermediate_lifts.geojson": JSON.stringify({
       type: "FeatureCollection",
-      features: lifts
+      features: lifts,
     }),
     "intermediate_runs.geojson": JSON.stringify({
       type: "FeatureCollection",
-      features: runs
-    })
+      features: runs,
+    }),
   });
 
   fs.mkdirSync("output");
@@ -87,7 +87,7 @@ export function mockFeatureFiles(
 export function folderContents(folder: string): FolderContents {
   return fs
     .readdirSync(folder)
-    .map(path => {
+    .map((path) => {
       path = join(folder, path);
       const stat = fs.lstatSync(path);
       if (stat.isFile()) {
@@ -143,9 +143,9 @@ export function mockRunFeature<G extends InputRunGeometry>(options: {
       skiAreas: [],
       elevationProfile: null,
       status: options.status || Status.Operating,
-      sources: options.sources || []
+      sources: options.sources || [],
     },
-    geometry: options.geometry
+    geometry: options.geometry,
   };
 }
 
@@ -176,9 +176,9 @@ export function mockLiftFeature<G extends LiftGeometry>(options: {
       bubble: null,
       heating: null,
       skiAreas: [],
-      sources: options.sources || []
+      sources: options.sources || [],
     },
-    geometry: options.geometry
+    geometry: options.geometry,
   };
 }
 
@@ -209,8 +209,8 @@ export function mockSkiAreaFeature<G extends SkiAreaGeometry>(options: {
           : [{ id: "1", type: SourceType.SKIMAP_ORG }],
       runConvention: RunConvention.EUROPE,
       statistics: options.statistics,
-      website: null
+      website: null,
     },
-    geometry: options.geometry
+    geometry: options.geometry,
   };
 }

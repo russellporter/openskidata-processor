@@ -2,11 +2,11 @@ import {
   FeatureType,
   SkiAreaFeature,
   SkiAreaProperties,
-  SourceType
+  SourceType,
 } from "openskidata-format";
 import {
   InputOpenStreetMapSkiAreaFeature,
-  InputSkiMapOrgSkiAreaFeature
+  InputSkiMapOrgSkiAreaFeature,
 } from "../features/SkiAreaFeature";
 import buildFeature from "./FeatureBuilder";
 import { Omit } from "./Omit";
@@ -18,7 +18,7 @@ export function formatSkiArea(
 ): (
   feature: InputSkiMapOrgSkiAreaFeature | InputOpenStreetMapSkiAreaFeature
 ) => SkiAreaFeature | null {
-  return feature => {
+  return (feature) => {
     switch (source) {
       case SourceType.OPENSTREETMAP:
         const osmFeature = feature as InputOpenStreetMapSkiAreaFeature;
@@ -58,8 +58,8 @@ function propertiesForOpenStreetMapSkiArea(
     sources: [
       {
         type: SourceType.OPENSTREETMAP,
-        id: feature.properties.id
-      }
+        id: feature.properties.id,
+      },
     ],
     activities: [],
     generated: false,
@@ -69,7 +69,7 @@ function propertiesForOpenStreetMapSkiArea(
       feature.properties as { [key: string]: string }
     ).status,
     website: feature.properties.website || null,
-    runConvention: getRunConvention(feature)
+    runConvention: getRunConvention(feature),
   };
 }
 
@@ -83,13 +83,13 @@ function propertiesForSkiMapOrgSkiArea(
     sources: [
       {
         type: SourceType.SKIMAP_ORG,
-        id: feature.properties.id
-      }
+        id: feature.properties.id,
+      },
     ],
     activities: activities,
     generated: false,
     status: feature.properties.status,
     runConvention: getRunConvention(feature),
-    website: feature.properties.official_website
+    website: feature.properties.official_website,
   };
 }

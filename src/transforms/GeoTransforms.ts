@@ -3,7 +3,7 @@ import buffer from "@turf/buffer";
 import centroid from "@turf/centroid";
 import { lineString, multiPoint, polygon } from "@turf/helpers";
 import nearestPointOnLine, {
-  NearestPointOnLine
+  NearestPointOnLine,
 } from "@turf/nearest-point-on-line";
 import union from "@turf/union";
 
@@ -19,7 +19,7 @@ export function bufferGeometry(
 ): GeoJSON.Polygon | GeoJSON.MultiPolygon | null {
   try {
     const bufferArea = buffer(geometry, radius, {
-      steps: 16
+      steps: 16,
     }).geometry;
     if (!bufferArea) {
       console.log(
@@ -44,7 +44,7 @@ export function bufferFeatureCollection(
 ) {
   try {
     const bufferArea = buffer(featureCollection, radius, {
-      steps: 16
+      steps: 16,
     });
     if (!bufferArea) {
       console.log(
@@ -78,7 +78,7 @@ export function polygonEnclosing(
   }
 
   return features
-    .flatMap<GeoJSON.Polygon | GeoJSON.MultiPolygon>(feature =>
+    .flatMap<GeoJSON.Polygon | GeoJSON.MultiPolygon>((feature) =>
       feature.geometry ? [feature.geometry] : []
     )
     .reduce((unionedGeometry, otherGeometry) => {
@@ -117,7 +117,7 @@ export function centralPointsInFeature(
       }
 
       return geojson.coordinates
-        .map<GeoJSON.LineString>(coords => lineString(coords).geometry)
+        .map<GeoJSON.LineString>((coords) => lineString(coords).geometry)
         .reduce(
           (
             nearestPointSoFar: NearestPointOnLine | null,
@@ -146,8 +146,10 @@ export function centralPointsInFeature(
     case "MultiPolygon":
       return multiPoint(
         geojson.coordinates
-          .map(coords => polygon(coords))
-          .map(polygon => centralPointsInFeature(polygon.geometry).coordinates)
+          .map((coords) => polygon(coords))
+          .map(
+            (polygon) => centralPointsInFeature(polygon.geometry).coordinates
+          )
       ).geometry;
   }
 }

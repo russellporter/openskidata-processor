@@ -15,7 +15,7 @@ export default function getStatusAndValue(
     if (lifecycleStates.has(valueOrStatus as any)) {
       return {
         status: valueOrStatus as any,
-        value: properties[valueOrStatus] || null
+        value: properties[valueOrStatus] || null,
       };
     }
   } else {
@@ -24,7 +24,7 @@ export default function getStatusAndValue(
       if (properties.hasOwnProperty(lifecycleKey)) {
         return {
           status: state,
-          value: properties[lifecycleKey] || null
+          value: properties[lifecycleKey] || null,
         };
       }
     }
@@ -40,7 +40,7 @@ export default function getStatusAndValue(
 
   return {
     status: status,
-    value: properties[key] || null
+    value: properties[key] || null,
   };
 }
 
@@ -49,7 +49,7 @@ export const lifecycleStates = new Set([
   Status.Abandoned,
   Status.Proposed,
   Status.Planned,
-  Status.Construction
+  Status.Construction,
 ]);
 
 function lifecyclePrefixForStatus(status: Status) {

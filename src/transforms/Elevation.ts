@@ -35,7 +35,7 @@ export default function addElevation(
         profileElevations.length > 0
           ? {
               heights: profileElevations,
-              resolution: elevationProfileResolution
+              resolution: elevationProfileResolution,
             }
           : null;
     }
@@ -55,7 +55,7 @@ function loadElevations(
       {
         method: "POST",
         json: coordinates,
-        timeout: 5 * 60 * 1000
+        timeout: 5 * 60 * 1000,
       },
       (error, response) => {
         if (error) {
@@ -104,7 +104,7 @@ function getCoordinates(feature: RunFeature | LiftFeature) {
   }
 
   // Remove elevation in case it was already added to this point
-  return coordinates.map(coordinate => [coordinate[0], coordinate[1]]);
+  return coordinates.map((coordinate) => [coordinate[0], coordinate[1]]);
 }
 
 function getCoordinatesForElevationProfile(feature: RunFeature | LiftFeature) {
@@ -152,22 +152,22 @@ function addElevations(
     case "Point":
       return addElevationToCoords(feature.geometry.coordinates, elevations[i]);
     case "LineString":
-      return feature.geometry.coordinates.forEach(coords => {
+      return feature.geometry.coordinates.forEach((coords) => {
         addElevationToCoords(coords, elevations[i]);
         i++;
       });
     case "MultiLineString":
     case "Polygon":
-      return feature.geometry.coordinates.forEach(coordsSet => {
-        coordsSet.forEach(coords => {
+      return feature.geometry.coordinates.forEach((coordsSet) => {
+        coordsSet.forEach((coords) => {
           addElevationToCoords(coords, elevations[i]);
           i++;
         });
       });
     case "MultiPolygon":
-      return feature.geometry.coordinates.forEach(coordsSet => {
-        coordsSet.forEach(innerCoordsSet => {
-          innerCoordsSet.forEach(coords => {
+      return feature.geometry.coordinates.forEach((coordsSet) => {
+        coordsSet.forEach((innerCoordsSet) => {
+          innerCoordsSet.forEach((coords) => {
             addElevationToCoords(coords, elevations[i]);
             i++;
           });

@@ -7,7 +7,7 @@ import {
   OSMDownloadConfig,
   runsDownloadConfig,
   skiAreasDownloadConfig,
-  skiMapSkiAreasURL
+  skiMapSkiAreasURL,
 } from "./DownloadURLs";
 import { GeoJSONInputPaths } from "./GeoJSONFiles";
 import convertOSMFileToGeoJSON from "./OSMToGeoJSONConverter";
@@ -36,7 +36,7 @@ export default async function downloadAndConvertToGeoJSON(
         paths.skiAreas
       );
     })(),
-    downloadToFile(skiMapSkiAreasURL, paths.skiMapSkiAreas)
+    downloadToFile(skiMapSkiAreasURL, paths.skiMapSkiAreas),
   ]);
 
   return paths;
@@ -44,7 +44,7 @@ export default async function downloadAndConvertToGeoJSON(
 
 enum OSMEndpoint {
   LZ4 = "https://lz4.overpass-api.de/api/interpreter",
-  Z = "https://z.overpass-api.de/api/interpreter"
+  Z = "https://z.overpass-api.de/api/interpreter",
 }
 
 async function downloadAndConvertOSMToGeoJSON(
@@ -81,24 +81,26 @@ async function downloadToFile(
   let statusCode: number | null = null;
   request(sourceURL, {
     timeout: 30 * 60 * 1000,
-    headers: { Referer: "https://openskimap.org" }
+    headers: { Referer: "https://openskimap.org" },
   })
-    .on("response", function(response) {
+    .on("response", function (response) {
       statusCode = response.statusCode;
     })
     .pipe(outputStream);
   await streamToPromise(outputStream);
 
   if (statusCode === null || statusCode < 200 || statusCode >= 300) {
-    throw "Failed downloading file at URL (status: " +
+    throw (
+      "Failed downloading file at URL (status: " +
       statusCode +
       "): " +
-      sourceURL;
+      sourceURL
+    );
   }
 }
 
 function sleep(ms: number) {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     setTimeout(resolve, ms);
   });
 }

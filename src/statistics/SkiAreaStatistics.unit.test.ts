@@ -14,19 +14,19 @@ describe("SkiAreaStatistics", () => {
         type: "LineString",
         coordinates: [
           [0, 0],
-          [0, 1]
-        ]
+          [0, 1],
+        ],
       },
       geometryWithElevations: {
         type: "LineString",
         coordinates: [
           [0, 0],
-          [0, 1]
-        ]
+          [0, 1],
+        ],
       },
       skiAreas: [],
       isBasisForNewSkiArea: true,
-      isInSkiAreaPolygon: false
+      isInSkiAreaPolygon: false,
     };
 
     const statistics = skiAreaStatistics([run]);
@@ -63,18 +63,18 @@ describe("SkiAreaStatistics", () => {
         type: "LineString",
         coordinates: [
           [0, 0],
-          [0, 1]
-        ]
+          [0, 1],
+        ],
       },
       geometryWithElevations: {
         type: "LineString",
         coordinates: [
           [0, 0],
-          [0, 1]
-        ]
+          [0, 1],
+        ],
       },
       skiAreas: [],
-      isInSkiAreaPolygon: false
+      isInSkiAreaPolygon: false,
     };
 
     const statistics = skiAreaStatistics([lift]);
@@ -110,9 +110,9 @@ describe("SkiAreaStatistics", () => {
             [0, 0],
             [0, 1],
             [1, 0],
-            [0, 0]
-          ]
-        ]
+            [0, 0],
+          ],
+        ],
       },
       geometryWithElevations: {
         type: "Polygon",
@@ -121,13 +121,13 @@ describe("SkiAreaStatistics", () => {
             [0, 0],
             [0, 1],
             [1, 0],
-            [0, 0]
-          ]
-        ]
+            [0, 0],
+          ],
+        ],
       },
       skiAreas: [],
       isBasisForNewSkiArea: true,
-      isInSkiAreaPolygon: false
+      isInSkiAreaPolygon: false,
     };
 
     const statistics = skiAreaStatistics([run]);
@@ -156,19 +156,19 @@ it("should not count backcountry activity in mixed use runs", () => {
       type: "LineString",
       coordinates: [
         [0, 0],
-        [0, 1]
-      ]
+        [0, 1],
+      ],
     },
     geometryWithElevations: {
       type: "LineString",
       coordinates: [
         [0, 0],
-        [0, 1]
-      ]
+        [0, 1],
+      ],
     },
     skiAreas: [],
     isBasisForNewSkiArea: true,
-    isInSkiAreaPolygon: false
+    isInSkiAreaPolygon: false,
   };
 
   const statistics = skiAreaStatistics([run]);

@@ -8,20 +8,20 @@ import {
   RunFeature,
   RunStatisticsByDifficulty,
   RunUse,
-  SkiAreaFeature
+  SkiAreaFeature,
 } from "openskidata-format";
 import {
   MapboxGLLiftFeature,
-  MapboxGLLiftProperties
+  MapboxGLLiftProperties,
 } from "../features/LiftFeature";
 import {
   MapboxGLRunFeature,
   MapboxGLRunProperties,
-  MapboxGLRunUse
+  MapboxGLRunUse,
 } from "../features/RunFeature";
 import {
   MapboxGLSkiAreaFeature,
-  MapboxGLSkiAreaProperties
+  MapboxGLSkiAreaProperties,
 } from "../features/SkiAreaFeature";
 import { centralPointsInFeature } from "./GeoTransforms";
 
@@ -68,7 +68,7 @@ export function formatter(
       gladed: properties.gladed,
       color: properties.color,
       colorName: properties.colorName,
-      grooming: properties.grooming
+      grooming: properties.grooming,
     };
 
     if (skiAreaAttributes) {
@@ -80,7 +80,7 @@ export function formatter(
     return {
       type: feature.type,
       geometry: feature.geometry,
-      properties: mapboxGLProperties
+      properties: mapboxGLProperties,
     };
   }
 
@@ -94,7 +94,7 @@ export function formatter(
         properties.ref
       ),
       color: properties.color,
-      status: properties.status
+      status: properties.status,
     };
 
     if (skiAreaAttributes) {
@@ -106,7 +106,7 @@ export function formatter(
     return {
       type: feature.type,
       geometry: feature.geometry,
-      properties: mapboxGLProperties
+      properties: mapboxGLProperties,
     };
   }
 
@@ -143,7 +143,7 @@ export function formatter(
       vertical:
         statistics && statistics.maxElevation && statistics.minElevation
           ? Math.round(statistics.maxElevation - statistics.minElevation)
-          : null
+          : null,
     };
 
     if (properties.activities.includes(Activity.Downhill)) {
@@ -157,7 +157,7 @@ export function formatter(
     return {
       type: feature.type,
       geometry: centralPointsInFeature(feature.geometry),
-      properties: mapboxGLProperties
+      properties: mapboxGLProperties,
     };
   }
 }

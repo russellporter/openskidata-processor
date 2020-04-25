@@ -7,7 +7,7 @@ import {
   GeoJSONInputPaths,
   GeoJSONIntermediatePaths,
   GeoJSONOutputPaths,
-  getPath
+  getPath,
 } from "./io/GeoJSONFiles";
 import { readGeoJSONFeatures } from "./io/GeoJSONReader";
 import { writeGeoJSONFeatures } from "./io/GeoJSONWriter";
@@ -21,7 +21,7 @@ import {
   accumulate,
   flatMap,
   map,
-  mapAsync
+  mapAsync,
 } from "./transforms/StreamTransforms";
 
 export default async function prepare(
@@ -38,7 +38,7 @@ export default async function prepare(
         ),
         readGeoJSONFeatures(inputPaths.skiMapSkiAreas).pipe(
           flatMap(formatSkiArea(SourceType.SKIMAP_ORG))
-        )
+        ),
       ]).pipe(
         writeGeoJSONFeatures(
           config.arangoDBURLForClustering
@@ -82,8 +82,8 @@ export default async function prepare(
               ? intermediatePaths.lifts
               : outputPaths.lifts
           )
-        )
-    ].map(stream => {
+        ),
+    ].map((stream) => {
       return StreamToPromise(stream);
     })
   );
@@ -101,7 +101,7 @@ export default async function prepare(
   }
 
   await Promise.all(
-    [FeatureType.SkiArea, FeatureType.Lift, FeatureType.Run].map(type => {
+    [FeatureType.SkiArea, FeatureType.Lift, FeatureType.Run].map((type) => {
       return StreamToPromise(
         readGeoJSONFeatures(getPath(outputPaths, type))
           .pipe(map(MapboxGLFormatter.formatter(type)))

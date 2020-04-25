@@ -4,7 +4,7 @@ import {
   LiftType,
   RunDifficulty,
   SkiAreaProperties,
-  SourceType
+  SourceType,
 } from "openskidata-format";
 
 export type MapObject = DraftMapObject & { _id: string };
@@ -59,7 +59,7 @@ interface BaseDraftMapObject {
 export enum MapObjectType {
   SkiArea = "SKI_AREA",
   Lift = "LIFT",
-  Run = "RUN"
+  Run = "RUN",
 }
 
 export interface MapFeatureProperties {

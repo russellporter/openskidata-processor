@@ -11,17 +11,17 @@ describe("PointGraph", () => {
         id: "1",
         geometry: lineString([
           [0, 0],
-          [1, 1]
+          [1, 1],
         ]),
-        oneway: true
+        oneway: true,
       });
       const tail = TestHelpers.mockRunFeature({
         id: "1",
         geometry: lineString([
           [1, 1],
-          [2, 2]
+          [2, 2],
         ]),
-        oneway: true
+        oneway: true,
       });
       graph.addFeature(head);
       graph.addFeature(tail);
@@ -32,9 +32,9 @@ describe("PointGraph", () => {
           geometry: lineString([
             [0, 0],
             [1, 1],
-            [2, 2]
+            [2, 2],
           ]),
-          oneway: true
+          oneway: true,
         })
       );
       assert.equal(graph.merge(tail), null);
@@ -46,17 +46,17 @@ describe("PointGraph", () => {
         id: "1",
         geometry: lineString([
           [0, 0],
-          [1, 1]
+          [1, 1],
         ]),
-        oneway: true
+        oneway: true,
       });
       const tail = TestHelpers.mockRunFeature({
         id: "1",
         geometry: lineString([
           [1, 1],
-          [2, 2]
+          [2, 2],
         ]),
-        oneway: true
+        oneway: true,
       });
       graph.addFeature(head);
       graph.addFeature(tail);
@@ -67,9 +67,9 @@ describe("PointGraph", () => {
           geometry: lineString([
             [0, 0],
             [1, 1],
-            [2, 2]
+            [2, 2],
           ]),
-          oneway: true
+          oneway: true,
         })
       );
       assert.equal(graph.merge(head), null);
@@ -81,17 +81,17 @@ describe("PointGraph", () => {
         id: "1",
         geometry: lineString([
           [0, 0],
-          [1, 1]
+          [1, 1],
         ]),
-        oneway: true
+        oneway: true,
       });
       const tail = TestHelpers.mockRunFeature({
         id: "1",
         geometry: lineString([
           [2, 2],
-          [1, 1]
+          [1, 1],
         ]),
-        oneway: true
+        oneway: true,
       });
       graph.addFeature(head);
       graph.addFeature(tail);
@@ -101,9 +101,9 @@ describe("PointGraph", () => {
           id: "1",
           geometry: lineString([
             [2, 2],
-            [1, 1]
+            [1, 1],
           ]),
-          oneway: true
+          oneway: true,
         })
       );
 
@@ -113,9 +113,9 @@ describe("PointGraph", () => {
           id: "1",
           geometry: lineString([
             [0, 0],
-            [1, 1]
+            [1, 1],
           ]),
-          oneway: true
+          oneway: true,
         })
       );
     });
@@ -125,22 +125,22 @@ describe("PointGraph", () => {
         id: "1",
         geometry: lineString([
           [0, 0],
-          [1, 1]
-        ])
+          [1, 1],
+        ]),
       });
       const mid = TestHelpers.mockRunFeature({
         id: "1",
         geometry: lineString([
           [2, 2],
-          [1, 1]
-        ])
+          [1, 1],
+        ]),
       });
       const tail = TestHelpers.mockRunFeature({
         id: "1",
         geometry: lineString([
           [2, 2],
-          [3, 3]
-        ])
+          [3, 3],
+        ]),
       });
 
       const graph = new PointGraph();
@@ -155,8 +155,8 @@ describe("PointGraph", () => {
             [0, 0],
             [1, 1],
             [2, 2],
-            [3, 3]
-          ])
+            [3, 3],
+          ]),
         })
       );
 
@@ -169,22 +169,22 @@ describe("PointGraph", () => {
         id: "1",
         geometry: lineString([
           [0, 0],
-          [1, 1]
-        ])
+          [1, 1],
+        ]),
       });
       const mid = TestHelpers.mockRunFeature({
         id: "1",
         geometry: lineString([
           [2, 2],
-          [1, 1]
-        ])
+          [1, 1],
+        ]),
       });
       const tail = TestHelpers.mockRunFeature({
         id: "1",
         geometry: lineString([
           [2, 2],
-          [3, 3]
-        ])
+          [3, 3],
+        ]),
       });
 
       const graph = new PointGraph();
@@ -199,8 +199,8 @@ describe("PointGraph", () => {
             [3, 3],
             [2, 2],
             [1, 1],
-            [0, 0]
-          ])
+            [0, 0],
+          ]),
         })
       );
 
@@ -213,22 +213,22 @@ describe("PointGraph", () => {
         id: "1",
         geometry: lineString([
           [0, 0],
-          [1, 1]
-        ])
+          [1, 1],
+        ]),
       });
       const mid = TestHelpers.mockRunFeature({
         id: "1",
         geometry: lineString([
           [2, 2],
-          [1, 1]
-        ])
+          [1, 1],
+        ]),
       });
       const tail = TestHelpers.mockRunFeature({
         id: "1",
         geometry: lineString([
           [2, 2],
-          [3, 3]
-        ])
+          [3, 3],
+        ]),
       });
 
       const graph = new PointGraph();
@@ -243,8 +243,8 @@ describe("PointGraph", () => {
             [0, 0],
             [1, 1],
             [2, 2],
-            [3, 3]
-          ])
+            [3, 3],
+          ]),
         })
       );
 
@@ -257,29 +257,29 @@ describe("PointGraph", () => {
         id: "1",
         geometry: lineString([
           [0, 0],
-          [1, 1]
-        ])
+          [1, 1],
+        ]),
       });
       const mid = TestHelpers.mockRunFeature({
         id: "1",
         geometry: lineString([
           [2, 2],
-          [1, 1]
-        ])
+          [1, 1],
+        ]),
       });
       const tail = TestHelpers.mockRunFeature({
         id: "1",
         geometry: lineString([
           [2, 2],
-          [3, 3]
-        ])
+          [3, 3],
+        ]),
       });
       const other = TestHelpers.mockRunFeature({
         id: "1",
         geometry: lineString([
           [2, 2],
-          [3, 3]
-        ])
+          [3, 3],
+        ]),
       });
 
       const graph = new PointGraph();
@@ -296,8 +296,8 @@ describe("PointGraph", () => {
             [1, 1],
             [2, 2],
             [3, 3],
-            [2, 2]
-          ])
+            [2, 2],
+          ]),
         })
       );
       assert.equal(graph.merge(other), null);
@@ -310,33 +310,33 @@ describe("PointGraph", () => {
         id: "1",
         geometry: lineString([
           [0, 0],
-          [1, 1]
+          [1, 1],
         ]),
-        oneway: true
+        oneway: true,
       });
       const mid = TestHelpers.mockRunFeature({
         id: "1",
         geometry: lineString([
           [1, 1],
-          [2, 2]
+          [2, 2],
         ]),
-        oneway: true
+        oneway: true,
       });
       const tail = TestHelpers.mockRunFeature({
         id: "1",
         geometry: lineString([
           [2, 2],
-          [3, 3]
+          [3, 3],
         ]),
-        oneway: true
+        oneway: true,
       });
       const other = TestHelpers.mockRunFeature({
         id: "1",
         geometry: lineString([
           [2, 2],
-          [3, 3]
+          [3, 3],
         ]),
-        oneway: true
+        oneway: true,
       });
 
       const graph = new PointGraph();
@@ -352,9 +352,9 @@ describe("PointGraph", () => {
             [0, 0],
             [1, 1],
             [2, 2],
-            [3, 3]
+            [3, 3],
           ]),
-          oneway: true
+          oneway: true,
         })
       );
       assert.deepStrictEqual(
@@ -363,9 +363,9 @@ describe("PointGraph", () => {
           id: "1",
           geometry: lineString([
             [2, 2],
-            [3, 3]
+            [3, 3],
           ]),
-          oneway: true
+          oneway: true,
         })
       );
       assert.equal(graph.merge(head), null);
@@ -378,29 +378,29 @@ describe("PointGraph", () => {
         geometry: lineString([
           [0, 0],
           [1, 1],
-          [0, 0]
-        ])
+          [0, 0],
+        ]),
       });
       const mid = TestHelpers.mockRunFeature({
         id: "1",
         geometry: lineString([
           [2, 2],
-          [0, 0]
-        ])
+          [0, 0],
+        ]),
       });
       const outward = TestHelpers.mockRunFeature({
         id: "1",
         geometry: lineString([
           [2, 2],
-          [3, 3]
-        ])
+          [3, 3],
+        ]),
       });
       const inward = TestHelpers.mockRunFeature({
         id: "1",
         geometry: lineString([
           [4, 4],
-          [2, 2]
-        ])
+          [2, 2],
+        ]),
       });
       const tests = [
         {
@@ -410,8 +410,8 @@ describe("PointGraph", () => {
             [2, 2],
             [0, 0],
             [1, 1],
-            [0, 0]
-          ]
+            [0, 0],
+          ],
         },
         {
           f: mid,
@@ -420,16 +420,16 @@ describe("PointGraph", () => {
             [2, 2],
             [0, 0],
             [1, 1],
-            [0, 0]
-          ]
+            [0, 0],
+          ],
         },
         {
           f: outward,
           e: [
             [4, 4],
             [2, 2],
-            [3, 3]
-          ]
+            [3, 3],
+          ],
         },
         {
           f: inward,
@@ -438,9 +438,9 @@ describe("PointGraph", () => {
             [2, 2],
             [0, 0],
             [1, 1],
-            [0, 0]
-          ]
-        }
+            [0, 0],
+          ],
+        },
       ];
       for (let test of tests) {
         const graph = new PointGraph();
@@ -452,7 +452,7 @@ describe("PointGraph", () => {
           graph.merge(test.f),
           TestHelpers.mockRunFeature({
             id: "1",
-            geometry: lineString(test.e)
+            geometry: lineString(test.e),
           })
         );
       }
@@ -463,18 +463,18 @@ describe("PointGraph", () => {
         id: "1",
         geometry: lineString([
           [0, 0],
-          [1, 1]
+          [1, 1],
         ]),
-        oneway: true
+        oneway: true,
       });
       const back = TestHelpers.mockRunFeature({
         id: "1",
         geometry: lineString([
           [1, 1],
           [2, 2],
-          [0, 0]
+          [0, 0],
         ]),
-        oneway: true
+        oneway: true,
       });
       const graph = new PointGraph();
       graph.addFeature(out);
@@ -487,9 +487,9 @@ describe("PointGraph", () => {
             [1, 1],
             [2, 2],
             [0, 0],
-            [1, 1]
+            [1, 1],
           ]),
-          oneway: true
+          oneway: true,
         })
       );
     });
@@ -500,20 +500,20 @@ describe("PointGraph", () => {
       id: "1",
       geometry: lineString([
         [0, 0],
-        [1, 1]
+        [1, 1],
       ]),
       oneway: true,
-      sources: [{ type: SourceType.OPENSTREETMAP, id: "1" }]
+      sources: [{ type: SourceType.OPENSTREETMAP, id: "1" }],
     });
     const back = TestHelpers.mockRunFeature({
       id: "2",
       geometry: lineString([
         [1, 1],
         [2, 2],
-        [0, 0]
+        [0, 0],
       ]),
       oneway: true,
-      sources: [{ type: SourceType.SKIMAP_ORG, id: "1" }]
+      sources: [{ type: SourceType.SKIMAP_ORG, id: "1" }],
     });
     const graph = new PointGraph();
     graph.addFeature(out);
@@ -526,13 +526,13 @@ describe("PointGraph", () => {
           [1, 1],
           [2, 2],
           [0, 0],
-          [1, 1]
+          [1, 1],
         ]),
         oneway: true,
         sources: [
           { type: SourceType.SKIMAP_ORG, id: "1" },
-          { type: SourceType.OPENSTREETMAP, id: "1" }
-        ]
+          { type: SourceType.OPENSTREETMAP, id: "1" },
+        ],
       })
     );
   });
@@ -541,6 +541,6 @@ describe("PointGraph", () => {
 function lineString(coordinates: number[][]): GeoJSON.LineString {
   return {
     type: "LineString",
-    coordinates: coordinates
+    coordinates: coordinates,
   };
 }

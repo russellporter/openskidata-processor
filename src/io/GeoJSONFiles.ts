@@ -52,7 +52,7 @@ export class GeoJSONOutputPaths implements CommonGeoJSONPaths {
     this.mapboxGL = {
       skiAreas: join(folder, "mapboxgl_ski_areas.geojson"),
       runs: join(folder, "mapboxgl_runs.geojson"),
-      lifts: join(folder, "mapboxgl_lifts.geojson")
+      lifts: join(folder, "mapboxgl_lifts.geojson"),
     };
   }
 }

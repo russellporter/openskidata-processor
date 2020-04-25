@@ -5,7 +5,7 @@ import {
   RunFeature,
   RunGrooming,
   RunProperties,
-  Status
+  Status,
 } from "openskidata-format";
 import uniquedSources from "../UniqueSources";
 
@@ -49,11 +49,11 @@ export function mergedProperties(
   }
 
   const difficultyAndColor = allProperties
-    .map(p => {
+    .map((p) => {
       return {
         difficulty: p.difficulty,
         color: p.color,
-        colorName: p.colorName
+        colorName: p.colorName,
       };
     })
     .reduce(difficultyReducer);
@@ -61,13 +61,13 @@ export function mergedProperties(
   return {
     type: FeatureType.Run,
     id: allProperties[0].id,
-    uses: Array.from(new Set(allProperties.flatMap(p => p.uses))),
-    name: sanitizeUniqueAndJoin(allProperties.map(p => p.name)),
-    ref: sanitizeUniqueAndJoin(allProperties.map(p => p.ref)),
-    description: sanitizeUniqueAndJoin(allProperties.map(p => p.description)),
+    uses: Array.from(new Set(allProperties.flatMap((p) => p.uses))),
+    name: sanitizeUniqueAndJoin(allProperties.map((p) => p.name)),
+    ref: sanitizeUniqueAndJoin(allProperties.map((p) => p.ref)),
+    description: sanitizeUniqueAndJoin(allProperties.map((p) => p.description)),
     difficulty: difficultyAndColor.difficulty,
     convention: allProperties[0].convention,
-    status: allProperties.map(p => p.status).reduce(statusReducer),
+    status: allProperties.map((p) => p.status).reduce(statusReducer),
     oneway: allProperties.reduce((accumulated, properties) => {
       if (accumulated === null) {
         return properties.oneway;
@@ -77,17 +77,17 @@ export function mergedProperties(
       }
       return accumulated && properties.oneway;
     }, null as boolean | null),
-    lit: allProperties.map(p => p.lit).reduce(litReducer),
-    gladed: allProperties.map(p => p.gladed).reduce(gladedReducer),
-    patrolled: allProperties.map(p => p.patrolled).reduce(patrolledReducer),
-    grooming: allProperties.map(p => p.grooming).reduce(groomingReducer),
+    lit: allProperties.map((p) => p.lit).reduce(litReducer),
+    gladed: allProperties.map((p) => p.gladed).reduce(gladedReducer),
+    patrolled: allProperties.map((p) => p.patrolled).reduce(patrolledReducer),
+    grooming: allProperties.map((p) => p.grooming).reduce(groomingReducer),
     color: difficultyAndColor.color,
     colorName: difficultyAndColor.colorName,
-    skiAreas: Array.from(new Set(allProperties.flatMap(p => p.skiAreas))),
+    skiAreas: Array.from(new Set(allProperties.flatMap((p) => p.skiAreas))),
     elevationProfile: allProperties[0].elevationProfile,
     sources: uniquedSources(
-      allProperties.flatMap(properties => properties.sources)
-    )
+      allProperties.flatMap((properties) => properties.sources)
+    ),
   };
 }
 
@@ -95,7 +95,7 @@ type Reducer<V> = (previousValue: V, currentValue: V) => V;
 
 enum ComparisonResult {
   LEFT,
-  RIGHT
+  RIGHT,
 }
 
 function comparePriority<V>(
@@ -130,10 +130,10 @@ function sanitizeUniqueAndJoin(values: (string | null)[]): string | null {
   let uniqueValues = new Set(
     values
       .filter((v): v is string => v !== null)
-      .map(value => {
+      .map((value) => {
         return value.trim();
       })
-      .filter(value => {
+      .filter((value) => {
         return value.length > 0;
       })
   );
@@ -162,7 +162,7 @@ const difficultyPriority = sortPriority([
   RunDifficulty.EXPERT,
   RunDifficulty.FREERIDE,
   RunDifficulty.EXTREME,
-  null
+  null,
 ]);
 
 function difficultyReducer<V extends { difficulty: RunDifficulty | null }>(
@@ -185,7 +185,7 @@ const groomingReducer = priorityReducer([
   RunGrooming.Mogul,
   RunGrooming.Scooter,
   RunGrooming.Backcountry,
-  null
+  null,
 ]);
 
 const statusReducer = priorityReducer([
@@ -194,7 +194,7 @@ const statusReducer = priorityReducer([
   Status.Planned,
   Status.Proposed,
   Status.Disused,
-  Status.Abandoned
+  Status.Abandoned,
 ]);
 
 const gladedReducer = priorityReducer([true, false, null]);

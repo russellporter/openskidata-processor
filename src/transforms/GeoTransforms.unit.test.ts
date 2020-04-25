@@ -3,7 +3,7 @@ import {
   lineString,
   multiPolygon,
   point,
-  polygon
+  polygon,
 } from "@turf/helpers";
 import { centralPointsInFeature, polygonEnclosing } from "./GeoTransforms";
 
@@ -33,8 +33,8 @@ describe("GeoTransforms", () => {
               [0, 1],
               [1, 1],
               [1, 0],
-              [0, 0]
-            ]
+              [0, 0],
+            ],
           ]).geometry
         )
       ).toMatchInlineSnapshot(`
@@ -57,15 +57,15 @@ describe("GeoTransforms", () => {
               [0, 1],
               [1, 1],
               [1, 0],
-              [0, 0]
+              [0, 0],
             ],
             [
               [0.25, 0.25],
               [0.75, 0.25],
               [0.75, 0.75],
               [0.25, 0.75],
-              [0.25, 0.25]
-            ]
+              [0.25, 0.25],
+            ],
           ]).geometry
         )
       ).toMatchInlineSnapshot(`
@@ -86,8 +86,8 @@ describe("GeoTransforms", () => {
           [0, 1],
           [1, 1],
           [1, 0],
-          [0, 0]
-        ]
+          [0, 0],
+        ],
       ];
       const secondShape: GeoJSON.Polygon["coordinates"] = [
         [
@@ -95,8 +95,8 @@ describe("GeoTransforms", () => {
           [2, 3],
           [3, 3],
           [3, 2],
-          [2, 2]
-        ]
+          [2, 2],
+        ],
       ];
 
       expect(
@@ -273,8 +273,8 @@ describe("GeoTransforms", () => {
               [0, 1],
               [1, 1],
               [1, 0],
-              [0, 0]
-            ])
+              [0, 0],
+            ]),
           ])
         )
       ).toMatchInlineSnapshot(`
