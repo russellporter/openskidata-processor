@@ -68,7 +68,7 @@ export function formatter(
       grooming: properties.grooming,
     };
 
-    const uses = unique(properties.uses.map(mapboxGLRunUse));
+    const uses = unique(properties.uses.map(mapboxGLRunUse)).sort();
     uses.forEach((use, index) => {
       const offset = index - (uses.length - 1) / 2;
       switch (use) {
