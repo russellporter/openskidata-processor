@@ -1,5 +1,4 @@
 import { FeatureType, LiftType, RunUse } from "openskidata-format";
-import { MapboxGLRunUse } from "../features/RunFeature";
 import * as TestHelpers from "../TestHelpers";
 import { formatter } from "./MapboxGLFormatter";
 describe("MapboxGLFormatter", () => {
@@ -194,9 +193,8 @@ describe("MapboxGLFormatter", () => {
     });
     const mapboxGLFeature = formatter(FeatureType.Run)(feature);
 
-    expect(mapboxGLFeature.properties.uses).toEqual([
-      MapboxGLRunUse.Downhill,
-      MapboxGLRunUse.Other,
-    ]);
+    expect(mapboxGLFeature.properties.downhill).toBe(-0.5);
+    expect(mapboxGLFeature.properties.nordic).toBe(undefined);
+    expect(mapboxGLFeature.properties.other).toBe(0.5);
   });
 });

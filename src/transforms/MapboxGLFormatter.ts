@@ -57,9 +57,6 @@ export function formatter(
   function formatRun(feature: RunFeature): MapboxGLRunFeature {
     const properties = feature.properties;
     const mapboxGLProperties: MapboxGLRunProperties = {
-      // TODO: Find a better approach to multi-use runs
-      use: properties.uses[0],
-      uses: unique(properties.uses.map(mapboxGLRunUse)),
       id: properties.id,
       name: getNameIncludingRef(properties.name, properties.ref),
       difficulty: properties.difficulty,
@@ -70,6 +67,22 @@ export function formatter(
       colorName: properties.colorName,
       grooming: properties.grooming,
     };
+
+    const uses = unique(properties.uses.map(mapboxGLRunUse));
+    uses.forEach((use, index) => {
+      const offset = index - (uses.length - 1) / 2;
+      switch (use) {
+        case MapboxGLRunUse.Downhill:
+          mapboxGLProperties.downhill = offset;
+          break;
+        case MapboxGLRunUse.Nordic:
+          mapboxGLProperties.nordic = offset;
+          break;
+        case MapboxGLRunUse.Other:
+          mapboxGLProperties.other = offset;
+          break;
+      }
+    });
 
     if (skiAreaAttributes) {
       for (let skiAreaID of properties.skiAreas) {

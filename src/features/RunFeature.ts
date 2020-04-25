@@ -4,7 +4,6 @@ import {
   RunGeometry,
   RunGrooming,
   RunProperties,
-  RunUse,
 } from "openskidata-format";
 
 export type InputRunProperties = {
@@ -55,8 +54,6 @@ export type MapboxGLRunProperties = {
   // Contains a field per ski area - format: skiArea-{id}: true
   [key: string]: any;
 
-  use: RunUse;
-  uses: MapboxGLRunUse[];
   id: string;
   name: string | null;
   difficulty: RunDifficulty | null;
@@ -66,6 +63,11 @@ export type MapboxGLRunProperties = {
   color: string;
   colorName: ColorName | null;
   grooming: RunGrooming | null;
+  // Run uses. Multiple uses are supported by rendering parallel lines for each use.
+  // The value is the offset of the line from the baseline. The average of all offsets is always 0.
+  downhill?: number;
+  nordic?: number;
+  other?: number;
 };
 
 export type MapboxGLRunFeature = GeoJSON.Feature<
