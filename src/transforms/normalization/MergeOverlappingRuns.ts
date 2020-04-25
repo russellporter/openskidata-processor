@@ -131,7 +131,9 @@ function getDirectionData(runs: RunArc[]) {
         previous.isReversed != current.isReversed
       ) {
         return { oneway: false, isReversed: previous.isReversed };
-      } else if (previous.oneway === false || current.oneway === false) {
+      } else if (previous.oneway === false) {
+        return { oneway: false, isReversed: current.isReversed };
+      } else if (current.oneway === false) {
         return { oneway: false, isReversed: previous.isReversed };
       } else if (previous.oneway === true) {
         return previous;

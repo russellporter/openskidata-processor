@@ -147,6 +147,48 @@ describe("MergeOverlappingRuns", () => {
     );
   });
 
+  it("should preserve the direction of the oneway path when the other path is not oneway", () => {
+    assert.deepStrictEqual(
+      merge([
+        mockRun({
+          name: "B",
+          oneway: false,
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [0, 0],
+              [1, 1],
+            ],
+          },
+        }),
+        mockRun({
+          name: "A",
+          oneway: true,
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [1, 1],
+              [0, 0],
+            ],
+          },
+        }),
+      ]),
+      [
+        mockRun({
+          name: "B, A",
+          oneway: false,
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [1, 1],
+              [0, 0],
+            ],
+          },
+        }),
+      ]
+    );
+  });
+
   it("should merge different direction overlapping paths", () => {
     assert.deepStrictEqual(
       merge([
