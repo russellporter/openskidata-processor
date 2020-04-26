@@ -34,7 +34,7 @@ describe("RunFormatter", () => {
         "id": "64e1be16905be0666594b5c433d4aa1aa1a64e5f",
         "lit": null,
         "name": null,
-        "oneway": null,
+        "oneway": true,
         "patrolled": null,
         "ref": null,
         "skiAreas": Array [],
@@ -66,6 +66,27 @@ describe("RunFormatter", () => {
     expect(run!.properties.name).toMatchInlineSnapshot(
       `"🇫🇷 Nom de la piste, Run name"`
     );
+  });
+
+  it("adds oneway to downhill run if not specified", () => {
+    const run = formatRun(
+      inputRun({
+        id: "way/1",
+        "piste:type": "downhill",
+      })
+    );
+    expect(run!.properties.oneway).toBe(true);
+  });
+
+  it("preserves oneway value of bidirectional downhill run", () => {
+    const run = formatRun(
+      inputRun({
+        id: "way/1",
+        "piste:type": "downhill",
+        oneway: "no",
+      })
+    );
+    expect(run!.properties.oneway).toBe(false);
   });
 });
 

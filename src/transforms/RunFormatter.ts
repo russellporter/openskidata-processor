@@ -102,7 +102,7 @@ function getOneway(
   uses: RunUse[]
 ): boolean | null {
   const value = mapOSMBoolean(getOrElse(properties, "piste:oneway", "oneway"));
-  if (value !== undefined) {
+  if (value !== null) {
     return value;
   }
 
