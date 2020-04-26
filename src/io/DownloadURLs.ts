@@ -6,15 +6,9 @@ export interface OSMDownloadConfig {
   shouldIncludeFeature: (tags: { [key: string]: string }) => boolean;
 }
 
-function bboxQuery(bbox: GeoJSON.BBox) {
-  assert(bbox.length == 4, "Only 2d boxes are supported");
-  // south,west,north,east
-  return `[bbox:${bbox[1]},${bbox[0]},${bbox[3]},${bbox[2]}]`;
-}
-
 export const runsDownloadConfig: OSMDownloadConfig = {
   query: (bbox) => `
-    [out:json][timeout:1800]${bbox && bboxQuery(bbox)};(
+    [out:json][timeout:1800]${bboxQuery(bbox)};(
       way["piste:type"];
       rel["piste:type"];
     );
@@ -26,7 +20,7 @@ export const runsDownloadConfig: OSMDownloadConfig = {
 
 export const liftsDownloadConfig: OSMDownloadConfig = {
   query: (bbox) => `
-    [out:json][timeout:1800]${bbox && bboxQuery(bbox)};(
+    [out:json][timeout:1800]${bboxQuery(bbox)};(
       way[~"^([A-Za-z]+:)?aerialway$"~"^.*$"];
       way[~"^([A-Za-z]+:)?railway$"~"^funicular$"];
     );
@@ -43,7 +37,7 @@ export const liftsDownloadConfig: OSMDownloadConfig = {
 
 export const skiAreasDownloadConfig: OSMDownloadConfig = {
   query: (bbox) => `
-    [out:json][timeout:1800]${bbox && bboxQuery(bbox)};(
+    [out:json][timeout:1800]${bboxQuery(bbox)};(
       way[~"^([A-Za-z]+:)?landuse$"~"^winter_sports$"];
       rel[~"^([A-Za-z]+:)?landuse$"~"^winter_sports$"];
     );
@@ -61,3 +55,12 @@ const lifecyclePrefixes = (() => {
   const statePrefixes = [...lifecycleStates].map((state) => state + ":");
   return ["", ...statePrefixes];
 })();
+
+function bboxQuery(bbox: GeoJSON.BBox | null) {
+  if (bbox === null) {
+    return "";
+  }
+  assert(bbox.length == 4, "Only 2d boxes are supported");
+  // south,west,north,east
+  return `[bbox:${bbox[1]},${bbox[0]},${bbox[3]},${bbox[2]}]`;
+}
