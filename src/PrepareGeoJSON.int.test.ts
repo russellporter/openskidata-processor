@@ -15,6 +15,7 @@ const output = new GeoJSONOutputPaths("output");
 const config: Config = {
   arangoDBURLForClustering: null,
   elevationServerURL: null,
+  bbox: null,
 };
 
 afterEach(() => {

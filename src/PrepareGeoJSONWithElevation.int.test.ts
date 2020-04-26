@@ -16,6 +16,7 @@ const output = new GeoJSONOutputPaths("output");
 const config: Config = {
   arangoDBURLForClustering: null,
   elevationServerURL: "http://elevation.example.com",
+  bbox: null,
 };
 // Work around https://github.com/tschaub/mock-fs/issues/234
 let logs: any[] = [];
