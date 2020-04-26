@@ -182,7 +182,7 @@ describe("MapboxGLFormatter", () => {
     const feature = TestHelpers.mockRunFeature({
       id: "1",
       name: "Run",
-      uses: [RunUse.Downhill, RunUse.Hike, RunUse.Skitour],
+      uses: [RunUse.Downhill, RunUse.Hike, RunUse.Sled],
       geometry: {
         type: "LineString",
         coordinates: [

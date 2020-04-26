@@ -67,6 +67,7 @@ export type MapboxGLRunProperties = {
   // The value is the offset of the line from the baseline. The average of all offsets is always 0.
   downhill?: number;
   nordic?: number;
+  skitour?: number;
   other?: number;
 };
 
@@ -80,5 +81,6 @@ export type RunLineFeature = GeoJSON.Feature<GeoJSON.LineString, RunProperties>;
 export enum MapboxGLRunUse {
   Downhill = "downhill",
   Nordic = "nordic",
+  Skitour = "skitour",
   Other = "other",
 }

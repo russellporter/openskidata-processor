@@ -78,6 +78,9 @@ export function formatter(
         case MapboxGLRunUse.Nordic:
           mapboxGLProperties.nordic = offset;
           break;
+        case MapboxGLRunUse.Skitour:
+          mapboxGLProperties.skitour = offset;
+          break;
         case MapboxGLRunUse.Other:
           mapboxGLProperties.other = offset;
           break;
@@ -201,6 +204,8 @@ function mapboxGLRunUse(runUse: RunUse): MapboxGLRunUse {
       return MapboxGLRunUse.Downhill;
     case RunUse.Nordic:
       return MapboxGLRunUse.Nordic;
+    case RunUse.Skitour:
+      return MapboxGLRunUse.Skitour;
     default:
       return MapboxGLRunUse.Other;
   }
