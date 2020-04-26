@@ -14,6 +14,8 @@ Install Docker
 
 `npm run download-and-prepare`
 
+To download only a specific area, specify a GeoJSON format bounding box in an environment variable: `BBOX="[8.593668937683105, 46.63066709037708, 8.61976146697998, 46.64740340708274]"`
+
 If you want to use already downloaded input data:
 `npm run prepare-geojson`
 

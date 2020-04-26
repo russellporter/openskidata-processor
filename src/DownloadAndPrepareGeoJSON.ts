@@ -10,7 +10,7 @@ export default async function downloadAndPrepare(
   outputFolder: string,
   config: Config
 ) {
-  const input = await downloadAndConvertToGeoJSON(outputFolder);
+  const input = await downloadAndConvertToGeoJSON(outputFolder, config.bbox);
   await prepare(
     input,
     new GeoJSONIntermediatePaths(outputFolder),

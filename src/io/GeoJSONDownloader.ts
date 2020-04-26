@@ -13,7 +13,8 @@ import { GeoJSONInputPaths } from "./GeoJSONFiles";
 import convertOSMFileToGeoJSON from "./OSMToGeoJSONConverter";
 
 export default async function downloadAndConvertToGeoJSON(
-  folder: string
+  folder: string,
+  bbox: GeoJSON.BBox | null
 ): Promise<GeoJSONInputPaths> {
   const paths = new GeoJSONInputPaths(folder);
 
@@ -21,19 +22,22 @@ export default async function downloadAndConvertToGeoJSON(
     downloadAndConvertOSMToGeoJSON(
       OSMEndpoint.Z,
       runsDownloadConfig,
-      paths.runs
+      paths.runs,
+      bbox
     ),
     (async () => {
       // Serialize downloads using the same endpoint so we don't get rate limited by the Overpass API
       await downloadAndConvertOSMToGeoJSON(
         OSMEndpoint.LZ4,
         liftsDownloadConfig,
-        paths.lifts
+        paths.lifts,
+        bbox
       );
       await downloadAndConvertOSMToGeoJSON(
         OSMEndpoint.LZ4,
         skiAreasDownloadConfig,
-        paths.skiAreas
+        paths.skiAreas,
+        bbox
       );
     })(),
     downloadToFile(skiMapSkiAreasURL, paths.skiMapSkiAreas),
@@ -50,10 +54,11 @@ enum OSMEndpoint {
 async function downloadAndConvertOSMToGeoJSON(
   endpoint: OSMEndpoint,
   config: OSMDownloadConfig,
-  targetGeoJSONPath: string
+  targetGeoJSONPath: string,
+  bbox: GeoJSON.BBox | null
 ): Promise<void> {
   const tempOSMPath = tmp.fileSync().name;
-  const url = overpassURLForQuery(endpoint, config.query);
+  const url = overpassURLForQuery(endpoint, config.query(bbox));
   try {
     await downloadToFile(url, tempOSMPath);
   } catch (error) {
