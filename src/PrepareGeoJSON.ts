@@ -1,19 +1,15 @@
 import centroid from "@turf/centroid";
+import { createWriteStream } from "fs";
 import merge from "merge2";
 import { FeatureType, SkiAreaFeature, SourceType } from "openskidata-format";
 import StreamToPromise from "stream-to-promise";
 import clusterSkiAreas from "./clustering/ClusterSkiAreas";
 import { Config } from "./Config";
-import {
-  GeoJSONInputPaths,
-  GeoJSONIntermediatePaths,
-  GeoJSONOutputPaths,
-  getPath,
-} from "./io/GeoJSONFiles";
+import { GeoJSONPaths, getPath } from "./io/GeoJSONFiles";
 import { readGeoJSONFeatures } from "./io/GeoJSONReader";
-import { writeGeoJSONFeatures } from "./io/GeoJSONWriter";
 import { RunNormalizerAccumulator } from "./transforms/accumulator/RunNormalizerAccumulator";
 import addElevation from "./transforms/Elevation";
+import toFeatureCollection from "./transforms/FeatureCollection";
 import Geocoder from "./transforms/Geocoder";
 import { formatLift } from "./transforms/LiftFormatter";
 import * as MapboxGLFormatter from "./transforms/MapboxGLFormatter";
@@ -26,12 +22,7 @@ import {
   mapAsync,
 } from "./transforms/StreamTransforms";
 
-export default async function prepare(
-  inputPaths: GeoJSONInputPaths,
-  intermediatePaths: GeoJSONIntermediatePaths,
-  outputPaths: GeoJSONOutputPaths,
-  config: Config
-) {
+export default async function prepare(paths: GeoJSONPaths, config: Config) {
   const geocoder =
     config.geocodingServer !== null
       ? new Geocoder(config.geocodingServer)
@@ -39,10 +30,10 @@ export default async function prepare(
   await Promise.all(
     [
       merge([
-        readGeoJSONFeatures(inputPaths.skiAreas).pipe(
+        readGeoJSONFeatures(paths.input.skiAreas).pipe(
           flatMap(formatSkiArea(SourceType.OPENSTREETMAP))
         ),
-        readGeoJSONFeatures(inputPaths.skiMapSkiAreas).pipe(
+        readGeoJSONFeatures(paths.input.skiMapSkiAreas).pipe(
           flatMap(formatSkiArea(SourceType.SKIMAP_ORG))
         ),
       ])
@@ -55,15 +46,16 @@ export default async function prepare(
             return feature;
           })
         )
+        .pipe(toFeatureCollection())
         .pipe(
-          writeGeoJSONFeatures(
+          createWriteStream(
             config.arangoDBURLForClustering
-              ? intermediatePaths.skiAreas
-              : outputPaths.skiAreas
+              ? paths.intermediate.skiAreas
+              : paths.output.skiAreas
           )
         ),
 
-      readGeoJSONFeatures(inputPaths.runs)
+      readGeoJSONFeatures(paths.input.runs)
         .pipe(flatMap(formatRun))
         .pipe(accumulate(new RunNormalizerAccumulator()))
         .pipe(
@@ -74,15 +66,16 @@ export default async function prepare(
             10
           )
         )
+        .pipe(toFeatureCollection())
         .pipe(
-          writeGeoJSONFeatures(
+          createWriteStream(
             config.arangoDBURLForClustering
-              ? intermediatePaths.runs
-              : outputPaths.runs
+              ? paths.intermediate.runs
+              : paths.output.runs
           )
         ),
 
-      readGeoJSONFeatures(inputPaths.lifts)
+      readGeoJSONFeatures(paths.input.lifts)
         .pipe(flatMap(formatLift))
         .pipe(
           mapAsync(
@@ -92,11 +85,12 @@ export default async function prepare(
             10
           )
         )
+        .pipe(toFeatureCollection())
         .pipe(
-          writeGeoJSONFeatures(
+          createWriteStream(
             config.arangoDBURLForClustering
-              ? intermediatePaths.lifts
-              : outputPaths.lifts
+              ? paths.intermediate.lifts
+              : paths.output.lifts
           )
         ),
     ].map((stream) => {
@@ -106,12 +100,8 @@ export default async function prepare(
 
   if (config.arangoDBURLForClustering) {
     await clusterSkiAreas(
-      intermediatePaths.skiAreas,
-      outputPaths.skiAreas,
-      intermediatePaths.lifts,
-      outputPaths.lifts,
-      intermediatePaths.runs,
-      outputPaths.runs,
+      paths.intermediate,
+      paths.output,
       config.arangoDBURLForClustering
     );
   }
@@ -119,9 +109,10 @@ export default async function prepare(
   await Promise.all(
     [FeatureType.SkiArea, FeatureType.Lift, FeatureType.Run].map((type) => {
       return StreamToPromise(
-        readGeoJSONFeatures(getPath(outputPaths, type))
+        readGeoJSONFeatures(getPath(paths.output, type))
           .pipe(map(MapboxGLFormatter.formatter(type)))
-          .pipe(writeGeoJSONFeatures(getPath(outputPaths.mapboxGL, type)))
+          .pipe(toFeatureCollection())
+          .pipe(createWriteStream(getPath(paths.output.mapboxGL, type)))
       );
     })
   );

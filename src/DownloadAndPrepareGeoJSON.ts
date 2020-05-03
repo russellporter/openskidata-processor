@@ -12,9 +12,11 @@ export default async function downloadAndPrepare(
 ) {
   const input = await downloadAndConvertToGeoJSON(outputFolder, config.bbox);
   await prepare(
-    input,
-    new GeoJSONIntermediatePaths(outputFolder),
-    new GeoJSONOutputPaths(outputFolder),
+    {
+      input: input,
+      intermediate: new GeoJSONIntermediatePaths(outputFolder),
+      output: new GeoJSONOutputPaths(outputFolder),
+    },
     config
   );
 }

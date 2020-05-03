@@ -1,6 +1,6 @@
 import turfLineChunk from "@turf/line-chunk";
 import { FeatureType, LiftFeature, RunFeature } from "openskidata-format";
-import request from "request";
+import request from "request-promise-native";
 
 const elevationProfileResolution = 25;
 
@@ -20,7 +20,7 @@ export default function addElevation(
         elevationServerURL
       );
     } catch (error) {
-      console.log(error);
+      console.log("Failed to load elevations");
       return feature;
     }
 
@@ -45,42 +45,33 @@ export default function addElevation(
   };
 }
 
-function loadElevations(
+async function loadElevations(
   coordinates: number[][],
   elevationServerURL: string
 ): Promise<number[]> {
-  return new Promise((resolve, reject) => {
-    request(
-      elevationServerURL,
-      {
-        method: "POST",
-        json: coordinates,
-        timeout: 5 * 60 * 1000,
-      },
-      (error, response) => {
-        if (error) {
-          reject(
-            "Failed with error: " + error + " coordinates: " + coordinates
-          );
-        } else if (response.statusCode < 200 || response.statusCode >= 300) {
-          reject("Failed status code: " + response.statusCode);
-        } else {
-          const elevations = response.toJSON().body;
-
-          if (coordinates.length !== elevations.length) {
-            reject(
-              "Number of coordinates (" +
-                coordinates.length +
-                ") is different than number of elevations (" +
-                elevations.length +
-                ")"
-            );
-          }
-          resolve(elevations);
-        }
-      }
-    );
+  const response = await request(elevationServerURL, {
+    method: "POST",
+    json: coordinates,
+    timeout: 5 * 60 * 1000,
+    resolveWithFullResponse: true,
   });
+
+  if (response.statusCode < 200 || response.statusCode >= 300) {
+    throw "Failed status code: " + response.statusCode;
+  }
+
+  const elevations = response.toJSON().body;
+
+  if (coordinates.length !== elevations.length) {
+    throw (
+      "Number of coordinates (" +
+      coordinates.length +
+      ") is different than number of elevations (" +
+      elevations.length +
+      ")"
+    );
+  }
+  return elevations;
 }
 
 function getCoordinates(feature: RunFeature | LiftFeature) {

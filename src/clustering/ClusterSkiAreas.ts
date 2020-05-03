@@ -1,16 +1,16 @@
 import * as arangojs from "arangojs";
+import {
+  GeoJSONIntermediatePaths,
+  GeoJSONOutputPaths,
+} from "../io/GeoJSONFiles";
 import clusterArangoGraph from "./ArangoGraphClusterer";
 import loadArangoGraph from "./ArangoGraphLoader";
 import augmentGeoJSONWithSkiAreas from "./ArangoGraphSkiAreaAugmenter";
 import exportSkiAreasGeoJSON from "./ArangoSkiAreasExporter";
 
 export default async function clusterSkiAreas(
-  skiAreasPath: string,
-  outputSkiAreasPath: string,
-  liftsPath: string,
-  outputLiftsPath: string,
-  runsPath: string,
-  outputRunsPath: string,
+  intermediatePaths: GeoJSONIntermediatePaths,
+  outputPaths: GeoJSONOutputPaths,
   arangoDBURL: string
 ): Promise<void> {
   const client = new arangojs.Database(arangoDBURL);
@@ -23,17 +23,30 @@ export default async function clusterSkiAreas(
   client.useDatabase("cluster");
 
   console.log("Loading graph into ArangoDB");
-  await loadArangoGraph(skiAreasPath, liftsPath, runsPath, client);
+  await loadArangoGraph(
+    intermediatePaths.skiAreas,
+    intermediatePaths.lifts,
+    intermediatePaths.runs,
+    client
+  );
 
   console.log("Clustering ski areas");
   await clusterArangoGraph(client);
 
   console.log("Augmenting runs");
-  await augmentGeoJSONWithSkiAreas(runsPath, outputRunsPath, client);
+  await augmentGeoJSONWithSkiAreas(
+    intermediatePaths.runs,
+    outputPaths.runs,
+    client
+  );
 
   console.log("Augmenting lifts");
-  await augmentGeoJSONWithSkiAreas(liftsPath, outputLiftsPath, client);
+  await augmentGeoJSONWithSkiAreas(
+    intermediatePaths.lifts,
+    outputPaths.lifts,
+    client
+  );
 
   console.log("Exporting ski areas");
-  await exportSkiAreasGeoJSON(outputSkiAreasPath, client);
+  await exportSkiAreasGeoJSON(outputPaths.skiAreas, client);
 }

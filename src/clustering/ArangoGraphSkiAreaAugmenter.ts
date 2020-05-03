@@ -1,7 +1,8 @@
 import { aql, Database } from "arangojs";
+import { createWriteStream } from "fs";
 import streamToPromise from "stream-to-promise";
 import { readGeoJSONFeatures } from "../io/GeoJSONReader";
-import { writeGeoJSONFeatures } from "../io/GeoJSONWriter";
+import toFeatureCollection from "../transforms/FeatureCollection";
 import { mapAsync } from "../transforms/StreamTransforms";
 import { AugmentedMapFeature, MapFeature } from "./MapObject";
 
@@ -20,7 +21,8 @@ export default async function augmentGeoJSONWithSkiAreas(
           return feature;
         }, 10)
       )
-      .pipe(writeGeoJSONFeatures(outputPath))
+      .pipe(toFeatureCollection())
+      .pipe(createWriteStream(outputPath))
   );
 }
 

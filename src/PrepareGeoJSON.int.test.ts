@@ -1,17 +1,8 @@
-import mockFS from "mock-fs";
 import { Activity } from "openskidata-format";
 import { Config } from "./Config";
-import {
-  GeoJSONInputPaths,
-  GeoJSONIntermediatePaths,
-  GeoJSONOutputPaths,
-} from "./io/GeoJSONFiles";
 import prepare from "./PrepareGeoJSON";
 import * as TestHelpers from "./TestHelpers";
 
-const input = new GeoJSONInputPaths(".");
-const intermediate = new GeoJSONIntermediatePaths(".");
-const output = new GeoJSONOutputPaths("output");
 const config: Config = {
   arangoDBURLForClustering: null,
   elevationServerURL: null,
@@ -19,34 +10,23 @@ const config: Config = {
   geocodingServer: null,
 };
 
-// Work around https://github.com/tschaub/mock-fs/issues/234
-let logs: any[] = [];
-let logMock: jest.SpyInstance;
-
-beforeEach(() => {
-  logMock = jest.spyOn(console, "log").mockImplementation((...args) => {
-    logs.push(args);
-  });
-});
-
-afterEach(() => {
-  logMock.mockRestore();
-  mockFS.restore();
-  logs.map((el) => console.log(...el));
-  logs = [];
-});
-
 it("produces empty output for empty input", async () => {
-  TestHelpers.mockInputFiles({
-    skiMapSkiAreas: [],
-    openStreetMapSkiAreas: [],
-    lifts: [],
-    runs: [],
-  });
+  const paths = TestHelpers.getFilePaths();
+  TestHelpers.mockInputFiles(
+    {
+      skiMapSkiAreas: [],
+      openStreetMapSkiAreas: [],
+      lifts: [],
+      runs: [],
+    },
+    paths.input
+  );
 
-  await prepare(input, intermediate, output, config);
+  await prepare(paths, config);
 
-  expect(TestHelpers.folderContents("output")).toMatchInlineSnapshot(`
+  // await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  expect(TestHelpers.contents(paths.output)).toMatchInlineSnapshot(`
     Map {
       "output/lifts.geojson" => Object {
         "features": Array [],
@@ -77,71 +57,75 @@ it("produces empty output for empty input", async () => {
 });
 
 it("produces output for simple input", async () => {
-  TestHelpers.mockInputFiles({
-    skiMapSkiAreas: [
-      {
-        type: "Feature",
-        properties: {
-          id: "13666",
-          name: "Rabenkopflift Oberau",
-          status: null,
-          activities: [Activity.Downhill],
-          scalerank: 1,
-          official_website: null,
+  const paths = TestHelpers.getFilePaths();
+  TestHelpers.mockInputFiles(
+    {
+      skiMapSkiAreas: [
+        {
+          type: "Feature",
+          properties: {
+            id: "13666",
+            name: "Rabenkopflift Oberau",
+            status: null,
+            activities: [Activity.Downhill],
+            scalerank: 1,
+            official_website: null,
+          },
+          geometry: {
+            type: "Point",
+            coordinates: [11.122066084534, 47.557111836837],
+          },
         },
-        geometry: {
-          type: "Point",
-          coordinates: [11.122066084534, 47.557111836837],
-        },
-      },
-    ],
-    openStreetMapSkiAreas: [],
-    lifts: [
-      {
-        type: "Feature",
-        id: "way/227407273",
-        properties: {
-          aerialway: "t-bar",
-          name: "Skilift Oberau",
+      ],
+      openStreetMapSkiAreas: [],
+      lifts: [
+        {
+          type: "Feature",
           id: "way/227407273",
-        },
-        geometry: {
-          type: "LineString",
-          coordinates: [
-            [11.1223444, 47.5572422],
-            [11.1164297, 47.5581563],
-          ],
-        },
-      },
-    ],
-    runs: [
-      {
-        type: "Feature",
-        id: "way/227407268",
-        properties: {
-          name: "Oberauer Skiabfahrt",
-          "piste:difficulty": "easy",
-          "piste:type": "downhill",
-          sport: "skiing",
-          id: "way/227407268",
-        },
-        geometry: {
-          type: "Polygon",
-          coordinates: [
-            [
-              [11.1164229, 47.558125],
-              [11.1163655, 47.5579742],
-              [11.1171866, 47.5576413],
+          properties: {
+            aerialway: "t-bar",
+            name: "Skilift Oberau",
+            id: "way/227407273",
+          },
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [11.1223444, 47.5572422],
+              [11.1164297, 47.5581563],
             ],
-          ],
+          },
         },
-      },
-    ],
-  });
+      ],
+      runs: [
+        {
+          type: "Feature",
+          id: "way/227407268",
+          properties: {
+            name: "Oberauer Skiabfahrt",
+            "piste:difficulty": "easy",
+            "piste:type": "downhill",
+            sport: "skiing",
+            id: "way/227407268",
+          },
+          geometry: {
+            type: "Polygon",
+            coordinates: [
+              [
+                [11.1164229, 47.558125],
+                [11.1163655, 47.5579742],
+                [11.1171866, 47.5576413],
+              ],
+            ],
+          },
+        },
+      ],
+    },
+    paths.input
+  );
 
-  await prepare(input, intermediate, output, config);
+  await prepare(paths, config);
 
-  expect(TestHelpers.folderContents("output")).toMatchInlineSnapshot(`
+  expect(TestHelpers.contents(paths.output)).toMatchInlineSnapshot(`
     Map {
       "output/lifts.geojson" => Object {
         "features": Array [
@@ -378,73 +362,80 @@ it("produces output for simple input", async () => {
 });
 
 it("shortens ski area names for Mapbox GL output", async () => {
+  const paths = TestHelpers.getFilePaths();
   const longName =
     "Ski Welt (Wilder Kaiser – Gosau, Scheffau, Ellmau - Going, Söll, Brixen, Westendorf, Hopfgarten - Itter - Kelchsau)";
-  TestHelpers.mockInputFiles({
-    skiMapSkiAreas: [
-      {
-        type: "Feature",
-        properties: {
-          id: "13666",
-          name: longName,
-          status: null,
-          activities: [Activity.Downhill],
-          scalerank: 1,
-          official_website: null,
+  TestHelpers.mockInputFiles(
+    {
+      skiMapSkiAreas: [
+        {
+          type: "Feature",
+          properties: {
+            id: "13666",
+            name: longName,
+            status: null,
+            activities: [Activity.Downhill],
+            scalerank: 1,
+            official_website: null,
+          },
+          geometry: {
+            type: "Point",
+            coordinates: [11.122066084534, 47.557111836837],
+          },
         },
-        geometry: {
-          type: "Point",
-          coordinates: [11.122066084534, 47.557111836837],
-        },
-      },
-    ],
-    openStreetMapSkiAreas: [],
-    lifts: [],
-    runs: [],
-  });
+      ],
+      openStreetMapSkiAreas: [],
+      lifts: [],
+      runs: [],
+    },
+    paths.input
+  );
 
-  await prepare(input, intermediate, output, config);
+  await prepare(paths, config);
 
   expect(
-    TestHelpers.fileContents("output/mapboxgl_ski_areas.geojson").features[0]
+    TestHelpers.fileContents(paths.output.mapboxGL.skiAreas).features[0]
       .properties.name
   ).toBe("Ski Welt");
   expect(
-    TestHelpers.fileContents("output/ski_areas.geojson").features[0].properties
-      .name
+    TestHelpers.fileContents(paths.output.skiAreas).features[0].properties.name
   ).toBe(longName);
 });
 
 it("processes OpenStreetMap ski areas", async () => {
-  TestHelpers.mockInputFiles({
-    skiMapSkiAreas: [],
-    openStreetMapSkiAreas: [
-      {
-        type: "Feature",
-        properties: {
-          id: "13666",
-          landuse: "winter_sports",
-        },
-        geometry: {
-          type: "Polygon",
-          coordinates: [
-            [
-              [0, 0],
-              [0, 1],
-              [1, 0],
-              [0, 0],
+  const paths = TestHelpers.getFilePaths();
+  TestHelpers.mockInputFiles(
+    {
+      skiMapSkiAreas: [],
+      openStreetMapSkiAreas: [
+        {
+          type: "Feature",
+          properties: {
+            id: "13666",
+            landuse: "winter_sports",
+          },
+          geometry: {
+            type: "Polygon",
+            coordinates: [
+              [
+                [0, 0],
+                [0, 1],
+                [1, 0],
+                [0, 0],
+              ],
             ],
-          ],
+          },
         },
-      },
-    ],
-    lifts: [],
-    runs: [],
-  });
+      ],
+      lifts: [],
+      runs: [],
+    },
+    paths.input
+  );
 
-  await prepare(input, intermediate, output, config);
+  await prepare(paths, config);
 
-  expect(TestHelpers.fileContents("output/ski_areas.geojson"))
+  expect(TestHelpers.fileContents(paths.output.skiAreas))
     .toMatchInlineSnapshot(`
     Object {
       "features": Array [

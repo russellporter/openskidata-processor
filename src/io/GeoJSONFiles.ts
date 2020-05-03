@@ -15,6 +15,9 @@ export class GeoJSONInputPaths {
   readonly lifts: string;
 
   constructor(folder: string) {
+    if (!existsSync(folder)) {
+      mkdirSync(folder);
+    }
     this.skiMapSkiAreas = join(folder, "input_skimap_ski_areas.geojson");
     this.skiAreas = join(folder, "input_openstreetmap_ski_areas.geojson");
     this.runs = join(folder, "input_runs.geojson");
@@ -28,6 +31,9 @@ export class GeoJSONIntermediatePaths {
   readonly lifts: string;
 
   constructor(folder: string) {
+    if (!existsSync(folder)) {
+      mkdirSync(folder);
+    }
     this.skiAreas = join(folder, "intermediate_ski_areas.geojson");
     this.runs = join(folder, "intermediate_runs.geojson");
     this.lifts = join(folder, "intermediate_lifts.geojson");
@@ -55,6 +61,11 @@ export class GeoJSONOutputPaths implements CommonGeoJSONPaths {
       lifts: join(folder, "mapboxgl_lifts.geojson"),
     };
   }
+}
+export interface GeoJSONPaths {
+  input: GeoJSONInputPaths;
+  intermediate: GeoJSONIntermediatePaths;
+  output: GeoJSONOutputPaths;
 }
 
 export function getPath(paths: CommonGeoJSONPaths, featureType: FeatureType) {

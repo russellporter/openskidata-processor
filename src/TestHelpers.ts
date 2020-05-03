@@ -1,5 +1,4 @@
 import * as fs from "fs";
-import mockFS from "mock-fs";
 import {
   Activity,
   ColorName,
@@ -20,7 +19,8 @@ import {
   Status,
 } from "openskidata-format";
 import Source, { SourceType } from "openskidata-format/dist/Source";
-import { join } from "path";
+import * as path from "path";
+import * as tmp from "tmp";
 import { SkiAreaGeometry } from "./clustering/MapObject";
 import { InputLiftFeature } from "./features/LiftFeature";
 import { InputRunFeature, InputRunGeometry } from "./features/RunFeature";
@@ -28,79 +28,105 @@ import {
   InputOpenStreetMapSkiAreaFeature,
   InputSkiMapOrgSkiAreaFeature,
 } from "./features/SkiAreaFeature";
+import {
+  GeoJSONInputPaths,
+  GeoJSONIntermediatePaths,
+  GeoJSONOutputPaths,
+  GeoJSONPaths,
+} from "./io/GeoJSONFiles";
 
-export interface FolderContents extends Map<string, any | FolderContents> {}
+export interface FolderContents extends Map<string, any> {}
 
-export function mockInputFiles(input: {
-  skiMapSkiAreas: InputSkiMapOrgSkiAreaFeature[];
-  openStreetMapSkiAreas: InputOpenStreetMapSkiAreaFeature[];
-  lifts: InputLiftFeature[];
-  runs: InputRunFeature[];
-}) {
-  mockFS({
-    "input_skimap_ski_areas.geojson": JSON.stringify({
+export function getFilePaths(): GeoJSONPaths {
+  const dir = tmp.dirSync().name;
+  return {
+    input: new GeoJSONInputPaths(path.join(dir, "input")),
+    intermediate: new GeoJSONIntermediatePaths(path.join(dir, "intermediate")),
+    output: new GeoJSONOutputPaths(path.join(dir, "output")),
+  };
+}
+
+export function mockInputFiles(
+  input: {
+    skiMapSkiAreas: InputSkiMapOrgSkiAreaFeature[];
+    openStreetMapSkiAreas: InputOpenStreetMapSkiAreaFeature[];
+    lifts: InputLiftFeature[];
+    runs: InputRunFeature[];
+  },
+  inputPaths: GeoJSONInputPaths
+) {
+  fs.writeFileSync(
+    inputPaths.skiMapSkiAreas,
+    JSON.stringify({
       type: "FeatureCollection",
       features: input.skiMapSkiAreas,
-    }),
-    "input_openstreetmap_ski_areas.geojson": JSON.stringify({
+    })
+  );
+  fs.writeFileSync(
+    inputPaths.skiAreas,
+    JSON.stringify({
       type: "FeatureCollection",
       features: input.openStreetMapSkiAreas,
-    }),
-    "input_lifts.geojson": JSON.stringify({
+    })
+  );
+  fs.writeFileSync(
+    inputPaths.lifts,
+    JSON.stringify({
       type: "FeatureCollection",
       features: input.lifts,
-    }),
-    "input_runs.geojson": JSON.stringify({
+    })
+  );
+  fs.writeFileSync(
+    inputPaths.runs,
+    JSON.stringify({
       type: "FeatureCollection",
       features: input.runs,
-    }),
-  });
-
-  fs.mkdirSync("output");
-  fs.mkdirSync("output/features");
+    })
+  );
 }
 
 export function mockFeatureFiles(
   skiAreas: SkiAreaFeature[],
   lifts: LiftFeature[],
-  runs: RunFeature[]
+  runs: RunFeature[],
+  intermedatePaths: GeoJSONIntermediatePaths
 ) {
-  mockFS({
-    "intermediate_ski_areas.geojson": JSON.stringify({
+  fs.writeFileSync(
+    intermedatePaths.skiAreas,
+    JSON.stringify({
       type: "FeatureCollection",
       features: skiAreas,
-    }),
-    "intermediate_lifts.geojson": JSON.stringify({
+    })
+  );
+  fs.writeFileSync(
+    intermedatePaths.lifts,
+    JSON.stringify({
       type: "FeatureCollection",
       features: lifts,
-    }),
-    "intermediate_runs.geojson": JSON.stringify({
+    })
+  );
+  fs.writeFileSync(
+    intermedatePaths.runs,
+    JSON.stringify({
       type: "FeatureCollection",
       features: runs,
-    }),
-  });
-
-  fs.mkdirSync("output");
-  fs.mkdirSync("output/features");
+    })
+  );
 }
 
-export function folderContents(folder: string): FolderContents {
-  return fs
-    .readdirSync(folder)
-    .map((path) => {
-      path = join(folder, path);
-      const stat = fs.lstatSync(path);
-      if (stat.isFile()) {
-        const map = new Map();
-        map.set(path, fileContents(path));
-        return map as FolderContents;
-      } else if (stat.isDirectory()) {
-        return folderContents(path);
-      }
-      throw "Unexpected path type";
-    })
-    .reduce((previous, current) => {
-      return new Map([...previous, ...current]);
+export function contents(paths: GeoJSONOutputPaths): FolderContents {
+  return [
+    paths.lifts,
+    paths.mapboxGL.lifts,
+    paths.mapboxGL.runs,
+    paths.mapboxGL.skiAreas,
+    paths.runs,
+    paths.skiAreas,
+  ]
+    .filter((path) => fs.existsSync(path))
+    .reduce((contents: FolderContents, filePath: string) => {
+      contents.set("output/" + path.basename(filePath), fileContents(filePath));
+      return contents;
     }, new Map());
 }
 

@@ -7,9 +7,11 @@ import {
 import prepare from "../PrepareGeoJSON";
 
 prepare(
-  new GeoJSONInputPaths("data"),
-  new GeoJSONIntermediatePaths("data"),
-  new GeoJSONOutputPaths("data"),
+  {
+    input: new GeoJSONInputPaths("data"),
+    intermediate: new GeoJSONIntermediatePaths("data"),
+    output: new GeoJSONOutputPaths("data"),
+  },
   configFromEnvironment()
 ).catch((reason: any) => {
   console.log("Failed preparing", reason);

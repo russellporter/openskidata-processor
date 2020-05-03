@@ -1,4 +1,3 @@
-import mockFS from "mock-fs";
 import {
   Activity,
   LiftFeature,
@@ -41,15 +40,10 @@ afterAll(async () => {
 
 beforeEach(() => {
   mockUuidCount = 0;
-
-  mockConsoleLog();
-});
-
-afterEach(async () => {
-  restoreConsoleLog();
 });
 
 it("skips generating ski areas for runs with unsupported activity", async () => {
+  const paths = TestHelpers.getFilePaths();
   TestHelpers.mockFeatureFiles(
     [],
     [],
@@ -71,33 +65,27 @@ it("skips generating ski areas for runs with unsupported activity", async () => 
           ],
         },
       }),
-    ]
+    ],
+    paths.intermediate
   );
 
-  try {
-    await clusterSkiAreas(
-      "intermediate_ski_areas.geojson",
-      "output/ski_areas.geojson",
-      "intermediate_lifts.geojson",
-      "output/lifts.geojson",
-      "intermediate_runs.geojson",
-      "output/runs.geojson",
-      "http://localhost:" + container.getMappedPort(8529)
-    );
+  await clusterSkiAreas(
+    paths.intermediate,
+    paths.output,
+    "http://localhost:" + container.getMappedPort(8529)
+  );
 
-    expect(TestHelpers.fileContents("output/ski_areas.geojson"))
-      .toMatchInlineSnapshot(`
+  expect(TestHelpers.fileContents(paths.output.skiAreas))
+    .toMatchInlineSnapshot(`
       Object {
         "features": Array [],
         "type": "FeatureCollection",
       }
     `);
-  } finally {
-    mockFS.restore();
-  }
 });
 
 it("generates ski areas for runs without them", async () => {
+  const paths = TestHelpers.getFilePaths();
   TestHelpers.mockFeatureFiles(
     [],
     [
@@ -149,25 +137,21 @@ it("generates ski areas for runs without them", async () => {
           ],
         },
       }),
-    ]
+    ],
+    paths.intermediate
   );
 
-  try {
-    await clusterSkiAreas(
-      "intermediate_ski_areas.geojson",
-      "output/ski_areas.geojson",
-      "intermediate_lifts.geojson",
-      "output/lifts.geojson",
-      "intermediate_runs.geojson",
-      "output/runs.geojson",
-      "http://localhost:" + container.getMappedPort(8529)
-    );
+  await clusterSkiAreas(
+    paths.intermediate,
+    paths.output,
+    "http://localhost:" + container.getMappedPort(8529)
+  );
 
-    expect(
-      TestHelpers.fileContents("output/runs.geojson").features.map(
-        simplifiedRunFeature
-      )
-    ).toMatchInlineSnapshot(`
+  expect(
+    TestHelpers.fileContents(paths.output.runs).features.map(
+      simplifiedRunFeature
+    )
+  ).toMatchInlineSnapshot(`
       Array [
         Object {
           "id": "3",
@@ -185,11 +169,11 @@ it("generates ski areas for runs without them", async () => {
         },
       ]
     `);
-    expect(
-      TestHelpers.fileContents("output/ski_areas.geojson").features.map(
-        simplifiedSkiAreaFeature
-      )
-    ).toMatchInlineSnapshot(`
+  expect(
+    TestHelpers.fileContents(paths.output.skiAreas).features.map(
+      simplifiedSkiAreaFeature
+    )
+  ).toMatchInlineSnapshot(`
       Array [
         Object {
           "activities": Array [
@@ -200,12 +184,10 @@ it("generates ski areas for runs without them", async () => {
         },
       ]
     `);
-  } finally {
-    mockFS.restore();
-  }
 });
 
 it("does not generate ski area for lone downhill run without lift", async () => {
+  const paths = TestHelpers.getFilePaths();
   TestHelpers.mockFeatureFiles(
     [],
     [],
@@ -244,25 +226,21 @@ it("does not generate ski area for lone downhill run without lift", async () => 
           ],
         },
       }),
-    ]
+    ],
+    paths.intermediate
   );
 
-  try {
-    await clusterSkiAreas(
-      "intermediate_ski_areas.geojson",
-      "output/ski_areas.geojson",
-      "intermediate_lifts.geojson",
-      "output/lifts.geojson",
-      "intermediate_runs.geojson",
-      "output/runs.geojson",
-      "http://localhost:" + container.getMappedPort(8529)
-    );
+  await clusterSkiAreas(
+    paths.intermediate,
+    paths.output,
+    "http://localhost:" + container.getMappedPort(8529)
+  );
 
-    expect(
-      TestHelpers.fileContents("output/runs.geojson").features.map(
-        simplifiedRunFeature
-      )
-    ).toMatchInlineSnapshot(`
+  expect(
+    TestHelpers.fileContents(paths.output.runs).features.map(
+      simplifiedRunFeature
+    )
+  ).toMatchInlineSnapshot(`
       Array [
         Object {
           "id": "3",
@@ -276,17 +254,15 @@ it("does not generate ski area for lone downhill run without lift", async () => 
         },
       ]
     `);
-    expect(
-      TestHelpers.fileContents("output/ski_areas.geojson").features.map(
-        simplifiedSkiAreaFeature
-      )
-    ).toMatchInlineSnapshot(`Array []`);
-  } finally {
-    mockFS.restore();
-  }
+  expect(
+    TestHelpers.fileContents(paths.output.skiAreas).features.map(
+      simplifiedSkiAreaFeature
+    )
+  ).toMatchInlineSnapshot(`Array []`);
 });
 
 it("generates ski areas by activity", async () => {
+  const paths = TestHelpers.getFilePaths();
   TestHelpers.mockFeatureFiles(
     [],
     [
@@ -338,40 +314,36 @@ it("generates ski areas by activity", async () => {
           ],
         },
       }),
-    ]
+    ],
+    paths.intermediate
   );
 
-  try {
-    await clusterSkiAreas(
-      "intermediate_ski_areas.geojson",
-      "output/ski_areas.geojson",
-      "intermediate_lifts.geojson",
-      "output/lifts.geojson",
-      "intermediate_runs.geojson",
-      "output/runs.geojson",
-      "http://localhost:" + container.getMappedPort(8529)
-    );
+  await clusterSkiAreas(
+    paths.intermediate,
+    paths.output,
+    "http://localhost:" + container.getMappedPort(8529)
+  );
 
-    const skiAreas: SkiAreaFeature[] = TestHelpers.fileContents(
-      "output/ski_areas.geojson"
-    ).features;
+  const skiAreas: SkiAreaFeature[] = TestHelpers.fileContents(
+    paths.output.skiAreas
+  ).features;
 
-    const runs: RunFeature[] = TestHelpers.fileContents("output/runs.geojson")
-      .features;
-    expect(
-      runs.map(simplifiedRunFeature).map((feature) => {
-        return {
-          ...feature,
-          // Inline only the ski area activities to avoid flaky test failures due to mismatched ski area IDs
-          //  when one ski area is generated before the other.
-          skiAreas: feature.skiAreas.map(
-            (id) =>
-              skiAreas.find((skiArea) => skiArea.properties.id == id)
-                ?.properties.activities
-          ),
-        };
-      })
-    ).toMatchInlineSnapshot(`
+  const runs: RunFeature[] = TestHelpers.fileContents(paths.output.runs)
+    .features;
+  expect(
+    runs.map(simplifiedRunFeature).map((feature) => {
+      return {
+        ...feature,
+        // Inline only the ski area activities to avoid flaky test failures due to mismatched ski area IDs
+        //  when one ski area is generated before the other.
+        skiAreas: feature.skiAreas.map(
+          (id) =>
+            skiAreas.find((skiArea) => skiArea.properties.id == id)?.properties
+              .activities
+        ),
+      };
+    })
+  ).toMatchInlineSnapshot(`
       Array [
         Object {
           "id": "3",
@@ -393,12 +365,10 @@ it("generates ski areas by activity", async () => {
         },
       ]
     `);
-  } finally {
-    mockFS.restore();
-  }
 });
 
 it("clusters ski areas", async () => {
+  const paths = TestHelpers.getFilePaths();
   TestHelpers.mockFeatureFiles(
     [
       TestHelpers.mockSkiAreaFeature({
@@ -446,25 +416,21 @@ it("clusters ski areas", async () => {
           ],
         },
       }),
-    ]
+    ],
+    paths.intermediate
   );
 
-  try {
-    await clusterSkiAreas(
-      "intermediate_ski_areas.geojson",
-      "output/ski_areas.geojson",
-      "intermediate_lifts.geojson",
-      "output/lifts.geojson",
-      "intermediate_runs.geojson",
-      "output/runs.geojson",
-      "http://localhost:" + container.getMappedPort(8529)
-    );
+  await clusterSkiAreas(
+    paths.intermediate,
+    paths.output,
+    "http://localhost:" + container.getMappedPort(8529)
+  );
 
-    expect(
-      TestHelpers.fileContents("output/lifts.geojson").features.map(
-        simplifiedLiftFeature
-      )
-    ).toMatchInlineSnapshot(`
+  expect(
+    TestHelpers.fileContents(paths.output.lifts).features.map(
+      simplifiedLiftFeature
+    )
+  ).toMatchInlineSnapshot(`
       Array [
         Object {
           "id": "2",
@@ -476,11 +442,11 @@ it("clusters ski areas", async () => {
       ]
     `);
 
-    expect(
-      TestHelpers.fileContents("output/runs.geojson").features.map(
-        simplifiedRunFeature
-      )
-    ).toMatchInlineSnapshot(`
+  expect(
+    TestHelpers.fileContents(paths.output.runs).features.map(
+      simplifiedRunFeature
+    )
+  ).toMatchInlineSnapshot(`
       Array [
         Object {
           "id": "3",
@@ -492,11 +458,11 @@ it("clusters ski areas", async () => {
       ]
     `);
 
-    expect(
-      TestHelpers.fileContents("output/ski_areas.geojson").features.map(
-        simplifiedSkiAreaFeature
-      )
-    ).toMatchInlineSnapshot(`
+  expect(
+    TestHelpers.fileContents(paths.output.skiAreas).features.map(
+      simplifiedSkiAreaFeature
+    )
+  ).toMatchInlineSnapshot(`
       Array [
         Object {
           "activities": Array [
@@ -507,12 +473,10 @@ it("clusters ski areas", async () => {
         },
       ]
     `);
-  } finally {
-    mockFS.restore();
-  }
 });
 
 it("clusters ski area activities independently", async () => {
+  const paths = TestHelpers.getFilePaths();
   TestHelpers.mockFeatureFiles(
     [
       TestHelpers.mockSkiAreaFeature({
@@ -562,25 +526,21 @@ it("clusters ski area activities independently", async () => {
           ],
         },
       }),
-    ]
+    ],
+    paths.intermediate
   );
 
-  try {
-    await clusterSkiAreas(
-      "intermediate_ski_areas.geojson",
-      "output/ski_areas.geojson",
-      "intermediate_lifts.geojson",
-      "output/lifts.geojson",
-      "intermediate_runs.geojson",
-      "output/runs.geojson",
-      "http://localhost:" + container.getMappedPort(8529)
-    );
+  await clusterSkiAreas(
+    paths.intermediate,
+    paths.output,
+    "http://localhost:" + container.getMappedPort(8529)
+  );
 
-    expect(
-      TestHelpers.fileContents("output/runs.geojson").features.map(
-        simplifiedRunFeature
-      )
-    ).toMatchInlineSnapshot(`
+  expect(
+    TestHelpers.fileContents(paths.output.runs).features.map(
+      simplifiedRunFeature
+    )
+  ).toMatchInlineSnapshot(`
       Array [
         Object {
           "id": "2",
@@ -605,12 +565,10 @@ it("clusters ski area activities independently", async () => {
         },
       ]
     `);
-  } finally {
-    mockFS.restore();
-  }
 });
 
 it("generates a downhill ski area but does not include backcountry runs when clustering from a mixed use run", async () => {
+  const paths = TestHelpers.getFilePaths();
   TestHelpers.mockFeatureFiles(
     [],
     [
@@ -653,25 +611,21 @@ it("generates a downhill ski area but does not include backcountry runs when clu
           ],
         },
       }),
-    ]
+    ],
+    paths.intermediate
   );
 
-  try {
-    await clusterSkiAreas(
-      "intermediate_ski_areas.geojson",
-      "output/ski_areas.geojson",
-      "intermediate_lifts.geojson",
-      "output/lifts.geojson",
-      "intermediate_runs.geojson",
-      "output/runs.geojson",
-      "http://localhost:" + container.getMappedPort(8529)
-    );
+  await clusterSkiAreas(
+    paths.intermediate,
+    paths.output,
+    "http://localhost:" + container.getMappedPort(8529)
+  );
 
-    expect(
-      TestHelpers.fileContents("output/runs.geojson").features.map(
-        simplifiedRunFeature
-      )
-    ).toMatchInlineSnapshot(`
+  expect(
+    TestHelpers.fileContents(paths.output.runs).features.map(
+      simplifiedRunFeature
+    )
+  ).toMatchInlineSnapshot(`
       Array [
         Object {
           "id": "3",
@@ -687,12 +641,10 @@ it("generates a downhill ski area but does not include backcountry runs when clu
         },
       ]
     `);
-  } finally {
-    mockFS.restore();
-  }
 });
 
 it("generates elevation statistics for run & lift based on lift served skiable vertical", async () => {
+  const paths = TestHelpers.getFilePaths();
   TestHelpers.mockFeatureFiles(
     [],
     [
@@ -723,25 +675,21 @@ it("generates elevation statistics for run & lift based on lift served skiable v
           ],
         },
       }),
-    ]
+    ],
+    paths.intermediate
   );
 
-  try {
-    await clusterSkiAreas(
-      "intermediate_ski_areas.geojson",
-      "output/ski_areas.geojson",
-      "intermediate_lifts.geojson",
-      "output/lifts.geojson",
-      "intermediate_runs.geojson",
-      "output/runs.geojson",
-      "http://localhost:" + container.getMappedPort(8529)
-    );
+  await clusterSkiAreas(
+    paths.intermediate,
+    paths.output,
+    "http://localhost:" + container.getMappedPort(8529)
+  );
 
-    expect(
-      TestHelpers.fileContents("output/ski_areas.geojson").features.map(
-        simplifiedSkiAreaFeatureWithStatistics
-      )
-    ).toMatchInlineSnapshot(`
+  expect(
+    TestHelpers.fileContents(paths.output.skiAreas).features.map(
+      simplifiedSkiAreaFeatureWithStatistics
+    )
+  ).toMatchInlineSnapshot(`
       Array [
         Object {
           "activities": Array [
@@ -786,12 +734,10 @@ it("generates elevation statistics for run & lift based on lift served skiable v
         },
       ]
     `);
-  } finally {
-    mockFS.restore();
-  }
 });
 
 it("allows point & multilinestring lifts to be processed", async () => {
+  const paths = TestHelpers.getFilePaths();
   TestHelpers.mockFeatureFiles(
     [],
     [
@@ -824,25 +770,21 @@ it("allows point & multilinestring lifts to be processed", async () => {
         },
       }),
     ],
-    []
+    [],
+    paths.intermediate
   );
 
-  try {
-    await clusterSkiAreas(
-      "intermediate_ski_areas.geojson",
-      "output/ski_areas.geojson",
-      "intermediate_lifts.geojson",
-      "output/lifts.geojson",
-      "intermediate_runs.geojson",
-      "output/runs.geojson",
-      "http://localhost:" + container.getMappedPort(8529)
-    );
+  await clusterSkiAreas(
+    paths.intermediate,
+    paths.output,
+    "http://localhost:" + container.getMappedPort(8529)
+  );
 
-    expect(
-      TestHelpers.fileContents("output/lifts.geojson").features.map(
-        simplifiedLiftFeature
-      )
-    ).toMatchInlineSnapshot(`
+  expect(
+    TestHelpers.fileContents(paths.output.lifts).features.map(
+      simplifiedLiftFeature
+    )
+  ).toMatchInlineSnapshot(`
       Array [
         Object {
           "id": "2",
@@ -856,12 +798,10 @@ it("allows point & multilinestring lifts to be processed", async () => {
         },
       ]
     `);
-  } finally {
-    mockFS.restore();
-  }
 });
 
 it("does not generate ski area for lone snow park", async () => {
+  const paths = TestHelpers.getFilePaths();
   TestHelpers.mockFeatureFiles(
     [],
     [],
@@ -883,33 +823,27 @@ it("does not generate ski area for lone snow park", async () => {
           ],
         },
       }),
-    ]
+    ],
+    paths.intermediate
   );
 
-  try {
-    await clusterSkiAreas(
-      "intermediate_ski_areas.geojson",
-      "output/ski_areas.geojson",
-      "intermediate_lifts.geojson",
-      "output/lifts.geojson",
-      "intermediate_runs.geojson",
-      "output/runs.geojson",
-      "http://localhost:" + container.getMappedPort(8529)
-    );
+  await clusterSkiAreas(
+    paths.intermediate,
+    paths.output,
+    "http://localhost:" + container.getMappedPort(8529)
+  );
 
-    expect(TestHelpers.fileContents("output/ski_areas.geojson"))
-      .toMatchInlineSnapshot(`
+  expect(TestHelpers.fileContents(paths.output.skiAreas))
+    .toMatchInlineSnapshot(`
       Object {
         "features": Array [],
         "type": "FeatureCollection",
       }
     `);
-  } finally {
-    mockFS.restore();
-  }
 });
 
 it("generates ski area which includes the snow park", async () => {
+  const paths = TestHelpers.getFilePaths();
   TestHelpers.mockFeatureFiles(
     [],
     [
@@ -957,25 +891,21 @@ it("generates ski area which includes the snow park", async () => {
           ],
         },
       }),
-    ]
+    ],
+    paths.intermediate
   );
 
-  try {
-    await clusterSkiAreas(
-      "intermediate_ski_areas.geojson",
-      "output/ski_areas.geojson",
-      "intermediate_lifts.geojson",
-      "output/lifts.geojson",
-      "intermediate_runs.geojson",
-      "output/runs.geojson",
-      "http://localhost:" + container.getMappedPort(8529)
-    );
+  await clusterSkiAreas(
+    paths.intermediate,
+    paths.output,
+    "http://localhost:" + container.getMappedPort(8529)
+  );
 
-    expect(
-      TestHelpers.fileContents("output/runs.geojson").features.map(
-        simplifiedRunFeature
-      )
-    ).toMatchInlineSnapshot(`
+  expect(
+    TestHelpers.fileContents(paths.output.runs).features.map(
+      simplifiedRunFeature
+    )
+  ).toMatchInlineSnapshot(`
       Array [
         Object {
           "id": "1",
@@ -993,12 +923,10 @@ it("generates ski area which includes the snow park", async () => {
         },
       ]
     `);
-  } finally {
-    mockFS.restore();
-  }
 });
 
 it("generates ski area which includes the patrolled ungroomed run", async () => {
+  const paths = TestHelpers.getFilePaths();
   TestHelpers.mockFeatureFiles(
     [],
     [
@@ -1034,25 +962,21 @@ it("generates ski area which includes the patrolled ungroomed run", async () => 
           ],
         },
       }),
-    ]
+    ],
+    paths.intermediate
   );
 
-  try {
-    await clusterSkiAreas(
-      "intermediate_ski_areas.geojson",
-      "output/ski_areas.geojson",
-      "intermediate_lifts.geojson",
-      "output/lifts.geojson",
-      "intermediate_runs.geojson",
-      "output/runs.geojson",
-      "http://localhost:" + container.getMappedPort(8529)
-    );
+  await clusterSkiAreas(
+    paths.intermediate,
+    paths.output,
+    "http://localhost:" + container.getMappedPort(8529)
+  );
 
-    expect(
-      TestHelpers.fileContents("output/runs.geojson").features.map(
-        simplifiedRunFeature
-      )
-    ).toMatchInlineSnapshot(`
+  expect(
+    TestHelpers.fileContents(paths.output.runs).features.map(
+      simplifiedRunFeature
+    )
+  ).toMatchInlineSnapshot(`
       Array [
         Object {
           "id": "1",
@@ -1063,12 +987,10 @@ it("generates ski area which includes the patrolled ungroomed run", async () => 
         },
       ]
       `);
-  } finally {
-    mockFS.restore();
-  }
 });
 
 it("does not generate ski area for ungroomed run", async () => {
+  const paths = TestHelpers.getFilePaths();
   TestHelpers.mockFeatureFiles(
     [],
     [],
@@ -1090,33 +1012,27 @@ it("does not generate ski area for ungroomed run", async () => {
           ],
         },
       }),
-    ]
+    ],
+    paths.intermediate
   );
 
-  try {
-    await clusterSkiAreas(
-      "intermediate_ski_areas.geojson",
-      "output/ski_areas.geojson",
-      "intermediate_lifts.geojson",
-      "output/lifts.geojson",
-      "intermediate_runs.geojson",
-      "output/runs.geojson",
-      "http://localhost:" + container.getMappedPort(8529)
-    );
+  await clusterSkiAreas(
+    paths.intermediate,
+    paths.output,
+    "http://localhost:" + container.getMappedPort(8529)
+  );
 
-    expect(TestHelpers.fileContents("output/ski_areas.geojson"))
-      .toMatchInlineSnapshot(`
+  expect(TestHelpers.fileContents(paths.output.skiAreas))
+    .toMatchInlineSnapshot(`
       Object {
         "features": Array [],
         "type": "FeatureCollection",
       }
     `);
-  } finally {
-    mockFS.restore();
-  }
 });
 
 it("associates lifts and runs with polygon openstreetmap ski area", async () => {
+  const paths = TestHelpers.getFilePaths();
   TestHelpers.mockFeatureFiles(
     [
       TestHelpers.mockSkiAreaFeature({
@@ -1170,25 +1086,21 @@ it("associates lifts and runs with polygon openstreetmap ski area", async () => 
           ],
         },
       }),
-    ]
+    ],
+    paths.intermediate
   );
 
-  try {
-    await clusterSkiAreas(
-      "intermediate_ski_areas.geojson",
-      "output/ski_areas.geojson",
-      "intermediate_lifts.geojson",
-      "output/lifts.geojson",
-      "intermediate_runs.geojson",
-      "output/runs.geojson",
-      "http://localhost:" + container.getMappedPort(8529)
-    );
+  await clusterSkiAreas(
+    paths.intermediate,
+    paths.output,
+    "http://localhost:" + container.getMappedPort(8529)
+  );
 
-    expect(
-      TestHelpers.fileContents("output/lifts.geojson").features.map(
-        simplifiedLiftFeature
-      )
-    ).toMatchInlineSnapshot(`
+  expect(
+    TestHelpers.fileContents(paths.output.lifts).features.map(
+      simplifiedLiftFeature
+    )
+  ).toMatchInlineSnapshot(`
       Array [
         Object {
           "id": "2",
@@ -1200,11 +1112,11 @@ it("associates lifts and runs with polygon openstreetmap ski area", async () => 
       ]
     `);
 
-    expect(
-      TestHelpers.fileContents("output/runs.geojson").features.map(
-        simplifiedRunFeature
-      )
-    ).toMatchInlineSnapshot(`
+  expect(
+    TestHelpers.fileContents(paths.output.runs).features.map(
+      simplifiedRunFeature
+    )
+  ).toMatchInlineSnapshot(`
       Array [
         Object {
           "id": "3",
@@ -1215,12 +1127,10 @@ it("associates lifts and runs with polygon openstreetmap ski area", async () => 
         },
       ]
     `);
-  } finally {
-    mockFS.restore();
-  }
 });
 
 it("associates lifts and runs adjacent to polygon openstreetmap ski area when no other polygon contains them", async () => {
+  const paths = TestHelpers.getFilePaths();
   TestHelpers.mockFeatureFiles(
     [
       TestHelpers.mockSkiAreaFeature({
@@ -1283,25 +1193,21 @@ it("associates lifts and runs adjacent to polygon openstreetmap ski area when no
           ],
         },
       }),
-    ]
+    ],
+    paths.intermediate
   );
 
-  try {
-    await clusterSkiAreas(
-      "intermediate_ski_areas.geojson",
-      "output/ski_areas.geojson",
-      "intermediate_lifts.geojson",
-      "output/lifts.geojson",
-      "intermediate_runs.geojson",
-      "output/runs.geojson",
-      "http://localhost:" + container.getMappedPort(8529)
-    );
+  await clusterSkiAreas(
+    paths.intermediate,
+    paths.output,
+    "http://localhost:" + container.getMappedPort(8529)
+  );
 
-    expect(
-      TestHelpers.fileContents("output/lifts.geojson").features.map(
-        simplifiedLiftFeature
-      )
-    ).toMatchInlineSnapshot(`
+  expect(
+    TestHelpers.fileContents(paths.output.lifts).features.map(
+      simplifiedLiftFeature
+    )
+  ).toMatchInlineSnapshot(`
       Array [
         Object {
           "id": "2",
@@ -1313,11 +1219,11 @@ it("associates lifts and runs adjacent to polygon openstreetmap ski area when no
       ]
       `);
 
-    expect(
-      TestHelpers.fileContents("output/runs.geojson").features.map(
-        simplifiedRunFeature
-      )
-    ).toMatchInlineSnapshot(`
+  expect(
+    TestHelpers.fileContents(paths.output.runs).features.map(
+      simplifiedRunFeature
+    )
+  ).toMatchInlineSnapshot(`
       Array [
         Object {
           "id": "3",
@@ -1335,12 +1241,10 @@ it("associates lifts and runs adjacent to polygon openstreetmap ski area when no
         },
       ]
     `);
-  } finally {
-    mockFS.restore();
-  }
 });
 
 it("associates lifts correctly to adjacent ski areas based on their polygons", async () => {
+  const paths = TestHelpers.getFilePaths();
   TestHelpers.mockFeatureFiles(
     [
       TestHelpers.mockSkiAreaFeature({
@@ -1404,25 +1308,21 @@ it("associates lifts correctly to adjacent ski areas based on their polygons", a
         },
       }),
     ],
-    []
+    [],
+    paths.intermediate
   );
 
-  try {
-    await clusterSkiAreas(
-      "intermediate_ski_areas.geojson",
-      "output/ski_areas.geojson",
-      "intermediate_lifts.geojson",
-      "output/lifts.geojson",
-      "intermediate_runs.geojson",
-      "output/runs.geojson",
-      "http://localhost:" + container.getMappedPort(8529)
-    );
+  await clusterSkiAreas(
+    paths.intermediate,
+    paths.output,
+    "http://localhost:" + container.getMappedPort(8529)
+  );
 
-    expect(
-      TestHelpers.fileContents("output/lifts.geojson").features.map(
-        simplifiedLiftFeature
-      )
-    ).toMatchInlineSnapshot(`
+  expect(
+    TestHelpers.fileContents(paths.output.lifts).features.map(
+      simplifiedLiftFeature
+    )
+  ).toMatchInlineSnapshot(`
       Array [
         Object {
           "id": "3",
@@ -1440,12 +1340,10 @@ it("associates lifts correctly to adjacent ski areas based on their polygons", a
         },
       ]
       `);
-  } finally {
-    mockFS.restore();
-  }
 });
 
 it("merges Skimap.org ski area with OpenStreetMap ski area", async () => {
+  const paths = TestHelpers.getFilePaths();
   TestHelpers.mockFeatureFiles(
     [
       TestHelpers.mockSkiAreaFeature({
@@ -1481,25 +1379,21 @@ it("merges Skimap.org ski area with OpenStreetMap ski area", async () => {
         },
       }),
     ],
-    []
+    [],
+    paths.intermediate
   );
 
-  try {
-    await clusterSkiAreas(
-      "intermediate_ski_areas.geojson",
-      "output/ski_areas.geojson",
-      "intermediate_lifts.geojson",
-      "output/lifts.geojson",
-      "intermediate_runs.geojson",
-      "output/runs.geojson",
-      "http://localhost:" + container.getMappedPort(8529)
-    );
+  await clusterSkiAreas(
+    paths.intermediate,
+    paths.output,
+    "http://localhost:" + container.getMappedPort(8529)
+  );
 
-    expect(
-      TestHelpers.fileContents("output/ski_areas.geojson").features.map(
-        simplifiedSkiAreaFeatureWithSources
-      )
-    ).toMatchInlineSnapshot(`
+  expect(
+    TestHelpers.fileContents(paths.output.skiAreas).features.map(
+      simplifiedSkiAreaFeatureWithSources
+    )
+  ).toMatchInlineSnapshot(`
       Array [
         Object {
           "activities": Array [
@@ -1521,11 +1415,11 @@ it("merges Skimap.org ski area with OpenStreetMap ski area", async () => {
       ]
       `);
 
-    expect(
-      TestHelpers.fileContents("output/lifts.geojson").features.map(
-        simplifiedLiftFeature
-      )
-    ).toMatchInlineSnapshot(`
+  expect(
+    TestHelpers.fileContents(paths.output.lifts).features.map(
+      simplifiedLiftFeature
+    )
+  ).toMatchInlineSnapshot(`
       Array [
         Object {
           "id": "3",
@@ -1536,12 +1430,10 @@ it("merges Skimap.org ski area with OpenStreetMap ski area", async () => {
         },
       ]
       `);
-  } finally {
-    mockFS.restore();
-  }
 });
 
 it("removes OpenStreetMap ski areas that span across multiple Skimap.org ski areas", async () => {
+  const paths = TestHelpers.getFilePaths();
   TestHelpers.mockFeatureFiles(
     [
       TestHelpers.mockSkiAreaFeature({
@@ -1581,25 +1473,21 @@ it("removes OpenStreetMap ski areas that span across multiple Skimap.org ski are
       }),
     ],
     [],
-    []
+    [],
+    paths.intermediate
   );
 
-  try {
-    await clusterSkiAreas(
-      "intermediate_ski_areas.geojson",
-      "output/ski_areas.geojson",
-      "intermediate_lifts.geojson",
-      "output/lifts.geojson",
-      "intermediate_runs.geojson",
-      "output/runs.geojson",
-      "http://localhost:" + container.getMappedPort(8529)
-    );
+  await clusterSkiAreas(
+    paths.intermediate,
+    paths.output,
+    "http://localhost:" + container.getMappedPort(8529)
+  );
 
-    expect(
-      TestHelpers.fileContents("output/ski_areas.geojson")
-        .features.map(simplifiedSkiAreaFeature)
-        .sort(orderedByID)
-    ).toMatchInlineSnapshot(`
+  expect(
+    TestHelpers.fileContents(paths.output.skiAreas)
+      .features.map(simplifiedSkiAreaFeature)
+      .sort(orderedByID)
+  ).toMatchInlineSnapshot(`
       Array [
         Object {
           "activities": Array [
@@ -1617,12 +1505,10 @@ it("removes OpenStreetMap ski areas that span across multiple Skimap.org ski are
         },
       ]
       `);
-  } finally {
-    mockFS.restore();
-  }
 });
 
 it("adds activities to OpenStreetMap ski areas based on the associated runs", async () => {
+  const paths = TestHelpers.getFilePaths();
   TestHelpers.mockFeatureFiles(
     [
       TestHelpers.mockSkiAreaFeature({
@@ -1657,25 +1543,21 @@ it("adds activities to OpenStreetMap ski areas based on the associated runs", as
         },
         uses: [RunUse.Nordic],
       }),
-    ]
+    ],
+    paths.intermediate
   );
 
-  try {
-    await clusterSkiAreas(
-      "intermediate_ski_areas.geojson",
-      "output/ski_areas.geojson",
-      "intermediate_lifts.geojson",
-      "output/lifts.geojson",
-      "intermediate_runs.geojson",
-      "output/runs.geojson",
-      "http://localhost:" + container.getMappedPort(8529)
-    );
+  await clusterSkiAreas(
+    paths.intermediate,
+    paths.output,
+    "http://localhost:" + container.getMappedPort(8529)
+  );
 
-    expect(
-      TestHelpers.fileContents("output/ski_areas.geojson").features.map(
-        simplifiedSkiAreaFeature
-      )
-    ).toMatchInlineSnapshot(`
+  expect(
+    TestHelpers.fileContents(paths.output.skiAreas).features.map(
+      simplifiedSkiAreaFeature
+    )
+  ).toMatchInlineSnapshot(`
       Array [
         Object {
           "activities": Array [
@@ -1686,12 +1568,10 @@ it("adds activities to OpenStreetMap ski areas based on the associated runs", as
         },
       ]
     `);
-  } finally {
-    mockFS.restore();
-  }
 });
 
 it("removes OpenStreetMap ski area without nearby runs/lifts", async () => {
+  const paths = TestHelpers.getFilePaths();
   TestHelpers.mockFeatureFiles(
     [
       TestHelpers.mockSkiAreaFeature({
@@ -1713,31 +1593,25 @@ it("removes OpenStreetMap ski area without nearby runs/lifts", async () => {
       }),
     ],
     [],
-    []
+    [],
+    paths.intermediate
   );
 
-  try {
-    await clusterSkiAreas(
-      "intermediate_ski_areas.geojson",
-      "output/ski_areas.geojson",
-      "intermediate_lifts.geojson",
-      "output/lifts.geojson",
-      "intermediate_runs.geojson",
-      "output/runs.geojson",
-      "http://localhost:" + container.getMappedPort(8529)
-    );
+  await clusterSkiAreas(
+    paths.intermediate,
+    paths.output,
+    "http://localhost:" + container.getMappedPort(8529)
+  );
 
-    expect(
-      TestHelpers.fileContents("output/ski_areas.geojson").features.map(
-        simplifiedSkiAreaFeature
-      )
-    ).toMatchInlineSnapshot(`Array []`);
-  } finally {
-    mockFS.restore();
-  }
+  expect(
+    TestHelpers.fileContents(paths.output.skiAreas).features.map(
+      simplifiedSkiAreaFeature
+    )
+  ).toMatchInlineSnapshot(`Array []`);
 });
 
 it("uses runs fully contained in the ski area polygon to determine activities when they are not known", async () => {
+  const paths = TestHelpers.getFilePaths();
   TestHelpers.mockFeatureFiles(
     [
       TestHelpers.mockSkiAreaFeature({
@@ -1784,25 +1658,21 @@ it("uses runs fully contained in the ski area polygon to determine activities wh
         name: "Run within ski area",
         uses: [RunUse.Downhill],
       }),
-    ]
+    ],
+    paths.intermediate
   );
 
-  try {
-    await clusterSkiAreas(
-      "intermediate_ski_areas.geojson",
-      "output/ski_areas.geojson",
-      "intermediate_lifts.geojson",
-      "output/lifts.geojson",
-      "intermediate_runs.geojson",
-      "output/runs.geojson",
-      "http://localhost:" + container.getMappedPort(8529)
-    );
+  await clusterSkiAreas(
+    paths.intermediate,
+    paths.output,
+    "http://localhost:" + container.getMappedPort(8529)
+  );
 
-    expect(
-      TestHelpers.fileContents("output/ski_areas.geojson")
-        .features.map(simplifiedSkiAreaFeature)
-        .sort(orderedByID)
-    ).toMatchInlineSnapshot(`
+  expect(
+    TestHelpers.fileContents(paths.output.skiAreas)
+      .features.map(simplifiedSkiAreaFeature)
+      .sort(orderedByID)
+  ).toMatchInlineSnapshot(`
       Array [
         Object {
           "activities": Array [
@@ -1820,12 +1690,10 @@ it("uses runs fully contained in the ski area polygon to determine activities wh
         },
       ]
     `);
-  } finally {
-    mockFS.restore();
-  }
 });
 
 it("removes an OpenStreetMap ski area that does not contain any runs/lifts as it might be representing something other than a ski area", async () => {
+  const paths = TestHelpers.getFilePaths();
   TestHelpers.mockFeatureFiles(
     [
       TestHelpers.mockSkiAreaFeature({
@@ -1861,25 +1729,21 @@ it("removes an OpenStreetMap ski area that does not contain any runs/lifts as it
           "Run outside the ski area should be associated with a separate, generated ski area",
         uses: [RunUse.Nordic],
       }),
-    ]
+    ],
+    paths.intermediate
   );
 
-  try {
-    await clusterSkiAreas(
-      "intermediate_ski_areas.geojson",
-      "output/ski_areas.geojson",
-      "intermediate_lifts.geojson",
-      "output/lifts.geojson",
-      "intermediate_runs.geojson",
-      "output/runs.geojson",
-      "http://localhost:" + container.getMappedPort(8529)
-    );
+  await clusterSkiAreas(
+    paths.intermediate,
+    paths.output,
+    "http://localhost:" + container.getMappedPort(8529)
+  );
 
-    expect(
-      TestHelpers.fileContents("output/ski_areas.geojson").features.map(
-        simplifiedSkiAreaFeature
-      )
-    ).toMatchInlineSnapshot(`
+  expect(
+    TestHelpers.fileContents(paths.output.skiAreas).features.map(
+      simplifiedSkiAreaFeature
+    )
+  ).toMatchInlineSnapshot(`
       Array [
         Object {
           "activities": Array [
@@ -1891,11 +1755,11 @@ it("removes an OpenStreetMap ski area that does not contain any runs/lifts as it
       ]
     `);
 
-    expect(
-      TestHelpers.fileContents("output/runs.geojson").features.map(
-        simplifiedRunFeature
-      )
-    ).toMatchInlineSnapshot(`
+  expect(
+    TestHelpers.fileContents(paths.output.runs).features.map(
+      simplifiedRunFeature
+    )
+  ).toMatchInlineSnapshot(`
       Array [
         Object {
           "id": "2",
@@ -1906,9 +1770,6 @@ it("removes an OpenStreetMap ski area that does not contain any runs/lifts as it
         },
       ]
     `);
-  } finally {
-    mockFS.restore();
-  }
 });
 
 function simplifiedLiftFeature(feature: LiftFeature) {
@@ -1953,21 +1814,6 @@ async function sleep(ms: number) {
   return new Promise((resolve) => {
     setTimeout(resolve, ms);
   });
-}
-
-let accumulatedLogs: any[] = [];
-let logMock: jest.SpyInstance;
-
-function mockConsoleLog() {
-  logMock = jest.spyOn(console, "log").mockImplementation((...args) => {
-    accumulatedLogs.push(args);
-  });
-}
-
-function restoreConsoleLog() {
-  logMock.mockRestore();
-  accumulatedLogs.map((el) => console.log(...el));
-  accumulatedLogs = [];
 }
 
 function orderedByID(left: { id: string }, right: { id: string }): number {

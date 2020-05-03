@@ -1,9 +1,10 @@
 import { aql, Database } from "arangojs";
 import { ArrayCursor } from "arangojs/lib/cjs/cursor";
+import { createWriteStream } from "fs";
 import { SkiAreaFeature } from "openskidata-format";
 import { Readable } from "stream";
 import streamToPromise from "stream-to-promise";
-import { writeGeoJSONFeatures } from "../io/GeoJSONWriter";
+import toFeatureCollection from "../transforms/FeatureCollection";
 import { map } from "../transforms/StreamTransforms";
 import { MapObjectType, SkiAreaObject } from "./MapObject";
 
@@ -30,7 +31,8 @@ export default async function exportSkiAreasGeoJSON(
           };
         })
       )
-      .pipe(writeGeoJSONFeatures(path))
+      .pipe(toFeatureCollection())
+      .pipe(createWriteStream(path))
   );
 }
 
