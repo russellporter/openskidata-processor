@@ -17,6 +17,7 @@ const config: Config = {
   arangoDBURLForClustering: null,
   elevationServerURL: "http://elevation.example.com",
   bbox: null,
+  geocodingServer: null,
 };
 // Work around https://github.com/tschaub/mock-fs/issues/234
 let logs: any[] = [];

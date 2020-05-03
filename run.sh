@@ -4,14 +4,14 @@ set -e
 MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 cd $MY_DIR
 
-rm -Rf data/*
+RUN_MODE=${1:-download-and-prepare}
 
 if [ -z "$CLUSTERING_ARANGODB_URL" ]; then
     docker-compose up -d
     CLUSTERING_ARANGODB_URL="http://$(docker-compose port arangodb 8529)"
 fi
 
-CLUSTERING_ARANGODB_URL=$CLUSTERING_ARANGODB_URL npm run download-and-prepare
+GEOCODING_SERVER_URL="http://photon.komoot.de/reverse" CLUSTERING_ARANGODB_URL=$CLUSTERING_ARANGODB_URL npm run "$RUN_MODE"
 
 docker-compose run tippecanoe \
   tippecanoe -o /data/planet_lifts.mbtiles \

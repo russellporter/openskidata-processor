@@ -16,10 +16,24 @@ const config: Config = {
   arangoDBURLForClustering: null,
   elevationServerURL: null,
   bbox: null,
+  geocodingServer: null,
 };
 
+// Work around https://github.com/tschaub/mock-fs/issues/234
+let logs: any[] = [];
+let logMock: jest.SpyInstance;
+
+beforeEach(() => {
+  logMock = jest.spyOn(console, "log").mockImplementation((...args) => {
+    logs.push(args);
+  });
+});
+
 afterEach(() => {
+  logMock.mockRestore();
   mockFS.restore();
+  logs.map((el) => console.log(...el));
+  logs = [];
 });
 
 it("produces empty output for empty input", async () => {

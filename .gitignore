@@ -2,3 +2,5 @@
 data/
 node_modules/
 dist/
+cache/
+output/

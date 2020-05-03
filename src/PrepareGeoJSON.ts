@@ -1,5 +1,6 @@
+import centroid from "@turf/centroid";
 import merge from "merge2";
-import { FeatureType, SourceType } from "openskidata-format";
+import { FeatureType, SkiAreaFeature, SourceType } from "openskidata-format";
 import StreamToPromise from "stream-to-promise";
 import clusterSkiAreas from "./clustering/ClusterSkiAreas";
 import { Config } from "./Config";
@@ -13,6 +14,7 @@ import { readGeoJSONFeatures } from "./io/GeoJSONReader";
 import { writeGeoJSONFeatures } from "./io/GeoJSONWriter";
 import { RunNormalizerAccumulator } from "./transforms/accumulator/RunNormalizerAccumulator";
 import addElevation from "./transforms/Elevation";
+import Geocoder from "./transforms/Geocoder";
 import { formatLift } from "./transforms/LiftFormatter";
 import * as MapboxGLFormatter from "./transforms/MapboxGLFormatter";
 import { formatRun } from "./transforms/RunFormatter";
@@ -30,6 +32,10 @@ export default async function prepare(
   outputPaths: GeoJSONOutputPaths,
   config: Config
 ) {
+  const geocoder =
+    config.geocodingServer !== null
+      ? new Geocoder(config.geocodingServer)
+      : null;
   await Promise.all(
     [
       merge([
@@ -39,13 +45,23 @@ export default async function prepare(
         readGeoJSONFeatures(inputPaths.skiMapSkiAreas).pipe(
           flatMap(formatSkiArea(SourceType.SKIMAP_ORG))
         ),
-      ]).pipe(
-        writeGeoJSONFeatures(
-          config.arangoDBURLForClustering
-            ? intermediatePaths.skiAreas
-            : outputPaths.skiAreas
+      ])
+        .pipe(
+          mapAsync(async (feature: SkiAreaFeature) => {
+            const result = await geocoder?.geocode(
+              centroid(feature).geometry.coordinates
+            );
+            console.log(result);
+            return feature;
+          })
         )
-      ),
+        .pipe(
+          writeGeoJSONFeatures(
+            config.arangoDBURLForClustering
+              ? intermediatePaths.skiAreas
+              : outputPaths.skiAreas
+          )
+        ),
 
       readGeoJSONFeatures(inputPaths.runs)
         .pipe(flatMap(formatRun))
