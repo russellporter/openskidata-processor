@@ -21,6 +21,7 @@
     "arangojs": "^6.10.0",
     "cacache": "^15.0.3",
     "dataloader": "^2.0.0",
+    "iso3166-2-db": "^2.3.6",
     "lodash": "^4.17.13",
     "lru_map": "^0.3.3",
     "martinez-polygon-clipping": "^0.7.0",
