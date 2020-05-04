@@ -609,7 +609,7 @@ export default async function clusterArangoGraph(
     return await cursor.all();
   }
 
-  // TODO: Also augment ski ara geometry based on runs & lifts
+  // TODO: Also augment ski area geometry based on runs & lifts
   async function augmentSkiAreasBasedOnAssignedLiftsAndRuns(): Promise<void> {
     const skiAreasCursor = await getSkiAreas({});
     let skiAreas: SkiAreaObject[];

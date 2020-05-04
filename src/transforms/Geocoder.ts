@@ -8,7 +8,7 @@ import * as Config from "../Config";
 
 type GeocodedPosition = any;
 
-// Precision of +-0.61k
+// Precision of +-0.61km
 const geocodePrecision = 6;
 
 export default class Geocoder {
