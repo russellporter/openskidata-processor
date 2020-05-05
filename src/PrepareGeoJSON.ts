@@ -1,7 +1,6 @@
-import centroid from "@turf/centroid";
 import { createWriteStream } from "fs";
 import merge from "merge2";
-import { FeatureType, SkiAreaFeature, SourceType } from "openskidata-format";
+import { FeatureType, SourceType } from "openskidata-format";
 import StreamToPromise from "stream-to-promise";
 import clusterSkiAreas from "./clustering/ClusterSkiAreas";
 import { Config } from "./Config";
@@ -10,7 +9,6 @@ import { readGeoJSONFeatures } from "./io/GeoJSONReader";
 import { RunNormalizerAccumulator } from "./transforms/accumulator/RunNormalizerAccumulator";
 import addElevation from "./transforms/Elevation";
 import toFeatureCollection from "./transforms/FeatureCollection";
-import Geocoder from "./transforms/Geocoder";
 import { formatLift } from "./transforms/LiftFormatter";
 import * as MapboxGLFormatter from "./transforms/MapboxGLFormatter";
 import { formatRun } from "./transforms/RunFormatter";
@@ -23,10 +21,6 @@ import {
 } from "./transforms/StreamTransforms";
 
 export default async function prepare(paths: GeoJSONPaths, config: Config) {
-  const geocoder =
-    config.geocodingServer !== null
-      ? new Geocoder(config.geocodingServer)
-      : null;
   await Promise.all(
     [
       merge([
@@ -37,15 +31,6 @@ export default async function prepare(paths: GeoJSONPaths, config: Config) {
           flatMap(formatSkiArea(SourceType.SKIMAP_ORG))
         ),
       ])
-        .pipe(
-          mapAsync(async (feature: SkiAreaFeature) => {
-            const result = await geocoder?.geocode(
-              centroid(feature).geometry.coordinates
-            );
-            console.log(result);
-            return feature;
-          })
-        )
         .pipe(toFeatureCollection())
         .pipe(
           createWriteStream(
@@ -102,7 +87,8 @@ export default async function prepare(paths: GeoJSONPaths, config: Config) {
     await clusterSkiAreas(
       paths.intermediate,
       paths.output,
-      config.arangoDBURLForClustering
+      config.arangoDBURLForClustering,
+      config.geocodingServer
     );
   }
 

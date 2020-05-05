@@ -88,6 +88,7 @@ export function mergedProperties(
     sources: uniquedSources(
       allProperties.flatMap((properties) => properties.sources)
     ),
+    location: null,
   };
 }
 

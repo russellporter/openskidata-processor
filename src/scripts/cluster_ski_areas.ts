@@ -5,7 +5,8 @@ import {
   GeoJSONOutputPaths,
 } from "../io/GeoJSONFiles";
 
-const arangoDBURL = configFromEnvironment().arangoDBURLForClustering;
+const config = configFromEnvironment();
+const arangoDBURL = config.arangoDBURLForClustering;
 if (!arangoDBURL) {
   throw "Need an ArangoDB endpoint to perform clustering";
 }
@@ -13,5 +14,6 @@ if (!arangoDBURL) {
 clusterSkiAreas(
   new GeoJSONIntermediatePaths("data"),
   new GeoJSONOutputPaths("data"),
-  arangoDBURL
+  arangoDBURL,
+  config.geocodingServer
 );

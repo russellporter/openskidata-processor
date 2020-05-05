@@ -68,6 +68,7 @@ export function formatRun(
     skiAreas: [],
     status: status,
     sources: [{ type: SourceType.OPENSTREETMAP, id: inputProperties["id"] }],
+    location: null,
   };
 
   return buildFeature(feature.geometry, properties);

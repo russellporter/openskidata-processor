@@ -170,6 +170,7 @@ export function mockRunFeature<G extends InputRunGeometry>(options: {
       elevationProfile: null,
       status: options.status || Status.Operating,
       sources: options.sources || [],
+      location: null,
     },
     geometry: options.geometry,
   };
@@ -203,6 +204,7 @@ export function mockLiftFeature<G extends LiftGeometry>(options: {
       heating: null,
       skiAreas: [],
       sources: options.sources || [],
+      location: null,
     },
     geometry: options.geometry,
   };
@@ -236,6 +238,7 @@ export function mockSkiAreaFeature<G extends SkiAreaGeometry>(options: {
       runConvention: RunConvention.EUROPE,
       statistics: options.statistics,
       website: null,
+      location: null,
     },
     geometry: options.geometry,
   };

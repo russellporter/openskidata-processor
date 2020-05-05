@@ -1,8 +1,10 @@
 import * as arangojs from "arangojs";
+import { GeocodingServerConfig } from "../Config";
 import {
   GeoJSONIntermediatePaths,
   GeoJSONOutputPaths,
 } from "../io/GeoJSONFiles";
+import Geocoder from "../transforms/Geocoder";
 import clusterArangoGraph from "./ArangoGraphClusterer";
 import loadArangoGraph from "./ArangoGraphLoader";
 import augmentGeoJSONWithSkiAreas from "./ArangoGraphSkiAreaAugmenter";
@@ -11,7 +13,8 @@ import exportSkiAreasGeoJSON from "./ArangoSkiAreasExporter";
 export default async function clusterSkiAreas(
   intermediatePaths: GeoJSONIntermediatePaths,
   outputPaths: GeoJSONOutputPaths,
-  arangoDBURL: string
+  arangoDBURL: string,
+  geocoderConfig: GeocodingServerConfig | null
 ): Promise<void> {
   const client = new arangojs.Database(arangoDBURL);
 
@@ -31,7 +34,10 @@ export default async function clusterSkiAreas(
   );
 
   console.log("Clustering ski areas");
-  await clusterArangoGraph(client);
+  await clusterArangoGraph(
+    client,
+    geocoderConfig ? new Geocoder(geocoderConfig) : null
+  );
 
   console.log("Augmenting runs");
   await augmentGeoJSONWithSkiAreas(

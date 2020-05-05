@@ -70,6 +70,7 @@ function propertiesForOpenStreetMapSkiArea(
     ).status,
     website: feature.properties.website || null,
     runConvention: getRunConvention(feature),
+    location: null,
   };
 }
 
@@ -91,5 +92,6 @@ function propertiesForSkiMapOrgSkiArea(
     status: feature.properties.status,
     runConvention: getRunConvention(feature),
     website: feature.properties.official_website,
+    location: null,
   };
 }

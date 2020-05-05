@@ -33,6 +33,7 @@ describe("RunFormatter", () => {
         "grooming": null,
         "id": "64e1be16905be0666594b5c433d4aa1aa1a64e5f",
         "lit": null,
+        "location": null,
         "name": null,
         "oneway": true,
         "patrolled": null,

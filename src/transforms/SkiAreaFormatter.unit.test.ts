@@ -58,6 +58,7 @@ describe("SkiAreaFormatter", () => {
           "activities": Array [],
           "generated": false,
           "id": "c638251d70817a3d3ad227cce5d353d3abff6abb",
+          "location": null,
           "name": "Ski Area",
           "runConvention": "europe",
           "sources": Array [
@@ -159,6 +160,7 @@ describe("SkiAreaFormatter", () => {
           ],
           "generated": false,
           "id": "fde59eba834efdc0f8859c40c4211027d9b6e3e9",
+          "location": null,
           "name": "Ski Area",
           "runConvention": "europe",
           "sources": Array [

@@ -59,6 +59,7 @@ export function formatLift(feature: InputLiftFeature): LiftFeature | null {
     color: getColor(status),
     skiAreas: [],
     sources: [{ type: SourceType.OPENSTREETMAP, id: inputProperties["id"] }],
+    location: null,
   };
 
   return buildFeature(feature.geometry, properties);

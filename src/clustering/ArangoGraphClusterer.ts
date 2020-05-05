@@ -7,6 +7,7 @@ import * as GeoJSON from "geojson";
 import { Activity, FeatureType, SourceType, Status } from "openskidata-format";
 import uuid from "uuid/v4";
 import { skiAreaStatistics } from "../statistics/SkiAreaStatistics";
+import Geocoder from "../transforms/Geocoder";
 import { bufferGeometry } from "../transforms/GeoTransforms";
 import { getRunConvention } from "../transforms/RunFormatter";
 import {
@@ -43,7 +44,8 @@ export const allSkiAreaActivities = new Set([
  * this is not perfect. There are a number of stages to handle some well known edge cases, like adjacent ski areas.
  */
 export default async function clusterArangoGraph(
-  database: Database
+  database: Database,
+  geocoder: Geocoder | null
 ): Promise<void> {
   const objectsCollection = database.collection("objects");
 
@@ -78,7 +80,7 @@ export default async function clusterArangoGraph(
   // For each remaining unclaimed run, generate a ski area for it, associating nearby unclaimed runs & lifts.
   await generateSkiAreasForUnassignedObjects();
 
-  await augmentSkiAreasBasedOnAssignedLiftsAndRuns();
+  await augmentSkiAreasBasedOnAssignedLiftsAndRuns(geocoder);
 
   /**
    * Remove OpenStreetMap ski areas that contain multiple Skimap.org ski areas in their geometry.
@@ -584,6 +586,7 @@ export default async function clusterArangoGraph(
         sources: [],
         runConvention: getRunConvention(geometry),
         website: null,
+        location: null,
       },
     };
 
@@ -610,14 +613,20 @@ export default async function clusterArangoGraph(
   }
 
   // TODO: Also augment ski area geometry based on runs & lifts
-  async function augmentSkiAreasBasedOnAssignedLiftsAndRuns(): Promise<void> {
+  async function augmentSkiAreasBasedOnAssignedLiftsAndRuns(
+    geocoder: Geocoder | null
+  ): Promise<void> {
     const skiAreasCursor = await getSkiAreas({});
     let skiAreas: SkiAreaObject[];
     while ((skiAreas = (await skiAreasCursor.nextBatch()) as SkiAreaObject[])) {
       await Promise.all(
         skiAreas.map(async (skiArea) => {
           const mapObjects = await getObjects(skiArea.id);
-          await augmentSkiAreaBasedOnAssignedLiftsAndRuns(skiArea, mapObjects);
+          await augmentSkiAreaBasedOnAssignedLiftsAndRuns(
+            skiArea,
+            mapObjects,
+            geocoder
+          );
         })
       );
     }
@@ -625,7 +634,8 @@ export default async function clusterArangoGraph(
 
   async function augmentSkiAreaBasedOnAssignedLiftsAndRuns(
     skiArea: SkiAreaObject,
-    memberObjects: MapObject[]
+    memberObjects: MapObject[],
+    geocoder: Geocoder | null
   ): Promise<void> {
     const noSkimapOrgSource = !skiArea.properties.sources.some(
       (source) => source.type == SourceType.SKIMAP_ORG
@@ -637,7 +647,6 @@ export default async function clusterArangoGraph(
       console.log(
         "Removing OpenStreetMap ski area without associated runs/lifts."
       );
-      console.log(JSON.stringify(skiArea));
 
       await objectsCollection.remove({ _key: skiArea._key });
       return;
@@ -645,7 +654,15 @@ export default async function clusterArangoGraph(
 
     skiArea.properties.statistics = skiAreaStatistics(memberObjects);
 
-    await objectsCollection.update(skiArea.id, skiArea);
+    if (geocoder) {
+      try {
+        skiArea.properties.location = await geocoder.geocode(
+          centroid(skiArea.geometry).geometry.coordinates
+        );
+      } catch {}
+    }
+
+    await await objectsCollection.update(skiArea.id, skiArea);
   }
 
   function arangoGeometry(

@@ -72,7 +72,8 @@ it("skips generating ski areas for runs with unsupported activity", async () => 
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529)
+    "http://localhost:" + container.getMappedPort(8529),
+    null
   );
 
   expect(TestHelpers.fileContents(paths.output.skiAreas))
@@ -144,7 +145,8 @@ it("generates ski areas for runs without them", async () => {
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529)
+    "http://localhost:" + container.getMappedPort(8529),
+    null
   );
 
   expect(
@@ -233,7 +235,8 @@ it("does not generate ski area for lone downhill run without lift", async () => 
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529)
+    "http://localhost:" + container.getMappedPort(8529),
+    null
   );
 
   expect(
@@ -321,7 +324,8 @@ it("generates ski areas by activity", async () => {
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529)
+    "http://localhost:" + container.getMappedPort(8529),
+    null
   );
 
   const skiAreas: SkiAreaFeature[] = TestHelpers.fileContents(
@@ -423,7 +427,8 @@ it("clusters ski areas", async () => {
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529)
+    "http://localhost:" + container.getMappedPort(8529),
+    null
   );
 
   expect(
@@ -533,7 +538,8 @@ it("clusters ski area activities independently", async () => {
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529)
+    "http://localhost:" + container.getMappedPort(8529),
+    null
   );
 
   expect(
@@ -618,7 +624,8 @@ it("generates a downhill ski area but does not include backcountry runs when clu
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529)
+    "http://localhost:" + container.getMappedPort(8529),
+    null
   );
 
   expect(
@@ -682,7 +689,8 @@ it("generates elevation statistics for run & lift based on lift served skiable v
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529)
+    "http://localhost:" + container.getMappedPort(8529),
+    null
   );
 
   expect(
@@ -777,7 +785,8 @@ it("allows point & multilinestring lifts to be processed", async () => {
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529)
+    "http://localhost:" + container.getMappedPort(8529),
+    null
   );
 
   expect(
@@ -830,7 +839,8 @@ it("does not generate ski area for lone snow park", async () => {
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529)
+    "http://localhost:" + container.getMappedPort(8529),
+    null
   );
 
   expect(TestHelpers.fileContents(paths.output.skiAreas))
@@ -898,7 +908,8 @@ it("generates ski area which includes the snow park", async () => {
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529)
+    "http://localhost:" + container.getMappedPort(8529),
+    null
   );
 
   expect(
@@ -969,7 +980,8 @@ it("generates ski area which includes the patrolled ungroomed run", async () => 
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529)
+    "http://localhost:" + container.getMappedPort(8529),
+    null
   );
 
   expect(
@@ -1019,7 +1031,8 @@ it("does not generate ski area for ungroomed run", async () => {
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529)
+    "http://localhost:" + container.getMappedPort(8529),
+    null
   );
 
   expect(TestHelpers.fileContents(paths.output.skiAreas))
@@ -1093,7 +1106,8 @@ it("associates lifts and runs with polygon openstreetmap ski area", async () => 
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529)
+    "http://localhost:" + container.getMappedPort(8529),
+    null
   );
 
   expect(
@@ -1200,7 +1214,8 @@ it("associates lifts and runs adjacent to polygon openstreetmap ski area when no
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529)
+    "http://localhost:" + container.getMappedPort(8529),
+    null
   );
 
   expect(
@@ -1315,7 +1330,8 @@ it("associates lifts correctly to adjacent ski areas based on their polygons", a
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529)
+    "http://localhost:" + container.getMappedPort(8529),
+    null
   );
 
   expect(
@@ -1386,7 +1402,8 @@ it("merges Skimap.org ski area with OpenStreetMap ski area", async () => {
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529)
+    "http://localhost:" + container.getMappedPort(8529),
+    null
   );
 
   expect(
@@ -1480,7 +1497,8 @@ it("removes OpenStreetMap ski areas that span across multiple Skimap.org ski are
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529)
+    "http://localhost:" + container.getMappedPort(8529),
+    null
   );
 
   expect(
@@ -1550,7 +1568,8 @@ it("adds activities to OpenStreetMap ski areas based on the associated runs", as
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529)
+    "http://localhost:" + container.getMappedPort(8529),
+    null
   );
 
   expect(
@@ -1600,7 +1619,8 @@ it("removes OpenStreetMap ski area without nearby runs/lifts", async () => {
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529)
+    "http://localhost:" + container.getMappedPort(8529),
+    null
   );
 
   expect(
@@ -1665,7 +1685,8 @@ it("uses runs fully contained in the ski area polygon to determine activities wh
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529)
+    "http://localhost:" + container.getMappedPort(8529),
+    null
   );
 
   expect(
@@ -1736,7 +1757,8 @@ it("removes an OpenStreetMap ski area that does not contain any runs/lifts as it
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529)
+    "http://localhost:" + container.getMappedPort(8529),
+    null
   );
 
   expect(

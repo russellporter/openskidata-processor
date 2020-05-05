@@ -152,6 +152,7 @@ it("produces output for simple input", async () => {
               "heating": null,
               "id": "4d07b91974c5a5b3a0ad9e1928c0a6d433c5093b",
               "liftType": "t-bar",
+              "location": null,
               "name": "Skilift Oberau",
               "occupancy": null,
               "oneway": null,
@@ -302,6 +303,7 @@ it("produces output for simple input", async () => {
               "grooming": null,
               "id": "6e08a9b5ca97fc7d1fff89f008c987280b3b6b20",
               "lit": null,
+              "location": null,
               "name": "Oberauer Skiabfahrt",
               "oneway": true,
               "patrolled": null,
@@ -340,6 +342,7 @@ it("produces output for simple input", async () => {
               ],
               "generated": false,
               "id": "02911313f405ef0415188ceb357b415f02af5d64",
+              "location": null,
               "name": "Rabenkopflift Oberau",
               "runConvention": "europe",
               "sources": Array [
@@ -467,6 +470,7 @@ it("processes OpenStreetMap ski areas", async () => {
             "activities": Array [],
             "generated": false,
             "id": "c638251d70817a3d3ad227cce5d353d3abff6abb",
+            "location": null,
             "name": null,
             "runConvention": "europe",
             "sources": Array [
