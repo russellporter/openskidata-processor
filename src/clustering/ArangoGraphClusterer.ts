@@ -655,11 +655,13 @@ export default async function clusterArangoGraph(
     skiArea.properties.statistics = skiAreaStatistics(memberObjects);
 
     if (geocoder) {
+      const coordinates = centroid(skiArea.geometry).geometry.coordinates;
       try {
-        skiArea.properties.location = await geocoder.geocode(
-          centroid(skiArea.geometry).geometry.coordinates
-        );
-      } catch {}
+        skiArea.properties.location = await geocoder.geocode(coordinates);
+      } catch (error) {
+        console.log(`Failed geocoding ${JSON.stringify(coordinates)}`);
+        console.log(error);
+      }
     }
 
     await await objectsCollection.update(skiArea.id, skiArea);
