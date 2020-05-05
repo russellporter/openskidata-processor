@@ -59,6 +59,7 @@ function mergeSkiAreaProperties(
     type: primarySkiArea.type,
     website: primarySkiArea.website || otherSkiArea.website,
     statistics: primarySkiArea.statistics,
+    location: null,
   };
 }
 
