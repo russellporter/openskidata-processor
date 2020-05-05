@@ -105,11 +105,11 @@ export default class Geocoder {
     }
 
     const properties = rawGeocode.features[0].properties;
-    const countryName = properties.country;
-    if (countryName === undefined) {
+    if (properties.country === undefined) {
       return null;
     }
 
+    const countryName = normalizedCountryName(properties.country);
     const country = iso3166_2.findCountryByName(countryName);
     if (country === null) {
       console.log(`Could not find country info for ${countryName}`);
@@ -132,13 +132,22 @@ export default class Geocoder {
       iso3166_2: region ? country.iso + "-" + region.iso : null,
       localized: {
         en: {
-          country: countryName,
+          country: country.names.en,
           region: region?.name || null,
           locality: properties.city || null,
         },
       },
     };
   };
+}
+
+function normalizedCountryName(countryName: string): string {
+  switch (countryName) {
+    case "United States of America":
+      return "United States";
+    default:
+      return countryName;
+  }
 }
 
 function cacheKey(geohash: string) {

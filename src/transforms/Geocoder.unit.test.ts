@@ -127,6 +127,32 @@ describe("Geocoder", () => {
     `);
   });
 
+  it("can enhance a US geocode", async () => {
+    mockHTTPResponse(
+      mockPhotonGeocode(
+        "United States of America",
+        "California",
+        "Alpine Meadows"
+      )
+    );
+
+    const result = await defaultGeocoder().geocode([0, 0]);
+
+    expect(result).toMatchInlineSnapshot(`
+      Object {
+        "iso3166_1Alpha2": "US",
+        "iso3166_2": "US-CA",
+        "localized": Object {
+          "en": Object {
+            "country": "United States",
+            "locality": "Alpine Meadows",
+            "region": "California",
+          },
+        },
+      }
+    `);
+  });
+
   it("does not geocode invalid country", async () => {
     mockHTTPResponse(mockPhotonGeocode("German", undefined, undefined));
 
