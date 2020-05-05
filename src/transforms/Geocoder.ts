@@ -122,9 +122,6 @@ export default class Geocoder {
       region =
         country.regions.find((region) => region.name === properties.state) ||
         null;
-      if (region === null) {
-        console.log(`Could not find region info for ${properties.state}`);
-      }
     }
 
     return {
