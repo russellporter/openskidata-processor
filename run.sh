@@ -11,7 +11,7 @@ if [ -z "$CLUSTERING_ARANGODB_URL" ]; then
     CLUSTERING_ARANGODB_URL="http://$(docker-compose port arangodb 8529)"
 fi
 
-GEOCODING_SERVER_URL="https://photon.komoot.de/reverse" CLUSTERING_ARANGODB_URL=$CLUSTERING_ARANGODB_URL npm run "$RUN_MODE"
+GEOCODING_SERVER_URL="https://photon.komoot.io/reverse" CLUSTERING_ARANGODB_URL=$CLUSTERING_ARANGODB_URL npm run "$RUN_MODE"
 
 docker-compose run tippecanoe \
   tippecanoe -o /data/planet_lifts.mbtiles \
