@@ -142,6 +142,10 @@ function normalizedCountryName(countryName: string): string {
   switch (countryName) {
     case "United States of America":
       return "United States";
+    case "The Netherlands":
+      return "Netherlands";
+    case "Macedonia":
+      return "Republic of Macedonia";
     default:
       return countryName;
   }
