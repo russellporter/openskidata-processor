@@ -328,22 +328,16 @@ it("generates ski areas by activity", async () => {
     null
   );
 
-  const skiAreas: SkiAreaFeature[] = TestHelpers.fileContents(
-    paths.output.skiAreas
-  ).features;
-
   const runs: RunFeature[] = TestHelpers.fileContents(paths.output.runs)
     .features;
   expect(
-    runs.map(simplifiedRunFeature).map((feature) => {
+    runs.map((feature) => {
       return {
-        ...feature,
+        ...simplifiedRunFeature(feature),
         // Inline only the ski area activities to avoid flaky test failures due to mismatched ski area IDs
         //  when one ski area is generated before the other.
-        skiAreas: feature.skiAreas.map(
-          (id) =>
-            skiAreas.find((skiArea) => skiArea.properties.id == id)?.properties
-              .activities
+        skiAreas: feature.properties.skiAreas.map(
+          (skiArea) => skiArea.properties.activities
         ),
       };
     })
@@ -1798,7 +1792,9 @@ function simplifiedLiftFeature(feature: LiftFeature) {
   return {
     id: feature.properties.id,
     name: feature.properties.name,
-    skiAreas: feature.properties.skiAreas,
+    skiAreas: feature.properties.skiAreas.map(
+      (skiArea) => skiArea.properties.id
+    ),
   };
 }
 
@@ -1806,7 +1802,9 @@ function simplifiedRunFeature(feature: RunFeature) {
   return {
     id: feature.properties.id,
     name: feature.properties.name,
-    skiAreas: feature.properties.skiAreas,
+    skiAreas: feature.properties.skiAreas.map(
+      (skiArea) => skiArea.properties.id
+    ),
   };
 }
 

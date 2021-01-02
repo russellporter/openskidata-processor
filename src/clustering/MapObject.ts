@@ -3,6 +3,7 @@ import {
   LiftGeometry,
   LiftType,
   RunDifficulty,
+  SkiAreaFeature,
   SkiAreaProperties,
   SourceType,
 } from "openskidata-format";
@@ -88,7 +89,7 @@ export type MapFeature<
 > = GeoJSON.Feature<Geometry, MapFeatureProperties>;
 
 interface AugmentedMapFeatureProperties extends MapFeatureProperties {
-  skiAreas: string[];
+  skiAreas: SkiAreaFeature[];
 }
 
 export type AugmentedMapFeature = GeoJSON.Feature<

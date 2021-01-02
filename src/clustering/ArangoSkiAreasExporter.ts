@@ -7,6 +7,7 @@ import streamToPromise from "stream-to-promise";
 import toFeatureCollection from "../transforms/FeatureCollection";
 import { map } from "../transforms/StreamTransforms";
 import { MapObjectType, SkiAreaObject } from "./MapObject";
+import objectToFeature from "./ObjectToFeature";
 
 export default async function exportSkiAreasGeoJSON(
   path: string,
@@ -22,15 +23,7 @@ export default async function exportSkiAreasGeoJSON(
   );
   await streamToPromise(
     arangoQueryStream(cursor, client)
-      .pipe(
-        map<SkiAreaObject, SkiAreaFeature>((skiArea) => {
-          return {
-            properties: skiArea.properties,
-            type: "Feature",
-            geometry: skiArea.geometry,
-          };
-        })
-      )
+      .pipe(map<SkiAreaObject, SkiAreaFeature>(objectToFeature))
       .pipe(toFeatureCollection())
       .pipe(createWriteStream(path))
   );

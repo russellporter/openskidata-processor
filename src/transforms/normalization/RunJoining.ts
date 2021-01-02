@@ -83,7 +83,7 @@ export function mergedProperties(
     grooming: allProperties.map((p) => p.grooming).reduce(groomingReducer),
     color: difficultyAndColor.color,
     colorName: difficultyAndColor.colorName,
-    skiAreas: Array.from(new Set(allProperties.flatMap((p) => p.skiAreas))),
+    skiAreas: uniquedByID(allProperties.flatMap((p) => p.skiAreas)),
     elevationProfile: allProperties[0].elevationProfile,
     sources: uniquedSources(
       allProperties.flatMap((properties) => properties.sources)
@@ -203,3 +203,19 @@ const gladedReducer = priorityReducer([true, false, null]);
 const patrolledReducer = priorityReducer([true, false, null]);
 
 const litReducer = priorityReducer([true, false, null]);
+
+function uniquedByID<Feature extends { properties: { id: string } }>(
+  features: Feature[]
+): Feature[] {
+  let ids = new Set();
+
+  return features.filter((feature) => {
+    if (ids.has(feature.properties.id)) {
+      return false;
+    }
+
+    ids.add(feature.properties.id);
+
+    return true;
+  });
+}

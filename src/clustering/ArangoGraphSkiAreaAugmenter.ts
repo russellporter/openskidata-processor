@@ -4,7 +4,8 @@ import streamToPromise from "stream-to-promise";
 import { readGeoJSONFeatures } from "../io/GeoJSONReader";
 import toFeatureCollection from "../transforms/FeatureCollection";
 import { mapAsync } from "../transforms/StreamTransforms";
-import { AugmentedMapFeature, MapFeature } from "./MapObject";
+import { AugmentedMapFeature, MapFeature, SkiAreaObject } from "./MapObject";
+import objectToFeature from "./ObjectToFeature";
 
 export default async function augmentGeoJSONWithSkiAreas(
   inputPath: string,
@@ -17,7 +18,7 @@ export default async function augmentGeoJSONWithSkiAreas(
         mapAsync(async (feature: AugmentedMapFeature) => {
           let skiAreas = await getSkiAreas(feature, client);
 
-          feature.properties.skiAreas = skiAreas;
+          feature.properties.skiAreas = skiAreas.map(objectToFeature);
           return feature;
         }, 10)
       )
@@ -29,13 +30,16 @@ export default async function augmentGeoJSONWithSkiAreas(
 async function getSkiAreas(
   feature: MapFeature,
   client: Database
-): Promise<string[]> {
+): Promise<SkiAreaObject[]> {
   const query = aql`
   FOR object in ${client.collection("objects")}
   FILTER object._key == ${feature.properties.id}
-  RETURN object.skiAreas
+  FOR skiAreaID in object.skiAreas
+  FOR skiAreaObject in ${client.collection("objects")}
+  FILTER skiAreaObject._key == skiAreaID
+  RETURN skiAreaObject
 `;
 
   const cursor = await client.query(query);
-  return await cursor.next();
+  return await cursor.all();
 }
