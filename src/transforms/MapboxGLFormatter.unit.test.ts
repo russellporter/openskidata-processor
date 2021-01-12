@@ -128,6 +128,30 @@ describe("MapboxGLFormatter", () => {
     expect(mapboxGLFeature.properties.name_and_type).toBe("Lift (Chairlift)");
   });
 
+  it("should export lift with associated ski areas", () => {
+    const feature = TestHelpers.mockLiftFeature({
+      geometry: {
+        type: "LineString",
+        coordinates: [
+          [0, 0],
+          [1, 1],
+        ],
+      },
+      id: "1",
+      name: "Lift",
+      liftType: LiftType.CableCar,
+      skiAreas: [
+        TestHelpers.mockSkiAreaFeature({
+          id: "2",
+          geometry: { type: "Point", coordinates: [0, 0] },
+        }),
+      ],
+    });
+    const mapboxGLFeature = formatter(FeatureType.Lift)(feature);
+
+    expect(mapboxGLFeature.properties["skiArea-2"]).toBe(true);
+  });
+
   it("should export polygon ski area as point geometry", () => {
     const feature = TestHelpers.mockSkiAreaFeature({
       geometry: {
@@ -196,5 +220,27 @@ describe("MapboxGLFormatter", () => {
     expect(mapboxGLFeature.properties.downhill).toBe(-0.5);
     expect(mapboxGLFeature.properties.nordic).toBe(undefined);
     expect(mapboxGLFeature.properties.other).toBe(0.5);
+  });
+
+  it("should export ski run with associated ski areas", () => {
+    const feature = TestHelpers.mockRunFeature({
+      id: "1",
+      geometry: {
+        type: "LineString",
+        coordinates: [
+          [0, 0],
+          [1, 1],
+        ],
+      },
+      skiAreas: [
+        TestHelpers.mockSkiAreaFeature({
+          id: "2",
+          geometry: { type: "Point", coordinates: [0, 0] },
+        }),
+      ],
+    });
+    const mapboxGLFeature = formatter(FeatureType.Run)(feature);
+
+    expect(mapboxGLFeature.properties["skiArea-2"]).toBe(true);
   });
 });

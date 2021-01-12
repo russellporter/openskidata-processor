@@ -88,8 +88,8 @@ export function formatter(
     });
 
     if (skiAreaAttributes) {
-      for (let skiAreaID of properties.skiAreas) {
-        mapboxGLProperties["skiArea-" + skiAreaID] = true;
+      for (let skiArea of properties.skiAreas) {
+        mapboxGLProperties["skiArea-" + skiArea.properties.id] = true;
       }
     }
 
@@ -114,8 +114,8 @@ export function formatter(
     };
 
     if (skiAreaAttributes) {
-      for (let skiAreaID of properties.skiAreas) {
-        mapboxGLProperties["skiArea-" + skiAreaID] = true;
+      for (let skiArea of properties.skiAreas) {
+        mapboxGLProperties["skiArea-" + skiArea.properties.id] = true;
       }
     }
 
