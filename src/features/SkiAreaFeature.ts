@@ -11,10 +11,8 @@ export interface InputSkiMapOrgSkiAreaProperties {
 }
 
 // A ski area from OpenStreetMap
-export interface InputOpenStreetMapSkiAreaProperties {
+export interface OSMSkiAreaTags {
   [key: string]: string | undefined;
-
-  id: string;
 
   name?: string;
   website?: string;
@@ -48,7 +46,7 @@ export type InputSkiMapOrgSkiAreaFeature = GeoJSON.Feature<
 
 export type InputOpenStreetMapSkiAreaFeature = GeoJSON.Feature<
   GeoJSON.Point | GeoJSON.Polygon | GeoJSON.MultiPolygon,
-  InputOpenStreetMapSkiAreaProperties
+  OSMGeoJSONProperties<OSMSkiAreaTags>
 >;
 
 export type MapboxGLSkiAreaFeature = GeoJSON.Feature<

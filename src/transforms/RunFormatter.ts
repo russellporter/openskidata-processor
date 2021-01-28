@@ -13,7 +13,8 @@ import {
   SourceType,
   Status,
 } from "openskidata-format";
-import { InputRunFeature, InputRunProperties } from "../features/RunFeature";
+import { osmID } from "../features/OSMGeoJSONProperties";
+import { InputRunFeature, OSMRunTags } from "../features/RunFeature";
 import buildFeature from "./FeatureBuilder";
 import {
   FormattedInputRunFeature,
@@ -30,9 +31,9 @@ export function formatRun(
     return null;
   }
 
-  const inputProperties = feature.properties;
+  const tags = feature.properties.tags;
 
-  const { status, uses } = getStatusAndUses(inputProperties);
+  const { status, uses } = getStatusAndUses(tags);
   if (uses.length === 0) {
     return null;
   }
@@ -42,46 +43,46 @@ export function formatRun(
     return null;
   }
 
-  const difficulty = getDifficulty(inputProperties);
+  const difficulty = getDifficulty(tags);
   const convention = getRunConvention(feature);
   const color = getRunColor(convention, difficulty);
 
   const properties: Omit<FormattedInputRunProperties, "id"> = {
     type: FeatureType.Run,
     uses: uses,
-    name: getOSMName(inputProperties, "piste:name", "name"),
-    ref: mapOSMString(getOrElse(inputProperties, "piste:ref", "ref")),
+    name: getOSMName(tags, "piste:name", "name"),
+    ref: mapOSMString(getOrElse(tags, "piste:ref", "ref")),
     description: mapOSMString(
-      getOrElse(inputProperties, "piste:description", "description")
+      getOrElse(tags, "piste:description", "description")
     ),
     difficulty: difficulty,
     convention: convention,
-    oneway: getOneway(inputProperties, uses),
-    gladed: mapOSMBoolean(getOrElse(inputProperties, "piste:gladed", "gladed")),
-    patrolled: mapOSMBoolean(
-      getOrElse(inputProperties, "piste:patrolled", "patrolled")
-    ),
-    lit: mapOSMBoolean(getOrElse(inputProperties, "piste:lit", "lit")),
+    oneway: getOneway(tags, uses),
+    gladed: mapOSMBoolean(getOrElse(tags, "piste:gladed", "gladed")),
+    patrolled: mapOSMBoolean(getOrElse(tags, "piste:patrolled", "patrolled")),
+    lit: mapOSMBoolean(getOrElse(tags, "piste:lit", "lit")),
     color: color,
     colorName: getColorName(color),
-    grooming: getGrooming(inputProperties),
+    grooming: getGrooming(tags),
     skiAreas: [],
     status: status,
-    sources: [{ type: SourceType.OPENSTREETMAP, id: inputProperties["id"] }],
+    sources: [
+      { type: SourceType.OPENSTREETMAP, id: osmID(feature.properties) },
+    ],
     location: null,
   };
 
   return buildFeature(feature.geometry, properties);
 }
 
-function getStatusAndUses(properties: InputRunProperties) {
+function getStatusAndUses(tags: OSMRunTags) {
   let { status, value: pisteType } = getStatusAndValue(
     "piste:type",
-    properties as { [key: string]: string }
+    tags as { [key: string]: string }
   );
 
   // Special case status check for runs: https://wiki.openstreetmap.org/wiki/Piste_Maps
-  if (properties["piste:abandoned"] === "yes") {
+  if (tags["piste:abandoned"] === "yes") {
     status = Status.Abandoned;
   }
 
@@ -98,11 +99,8 @@ function getUses(type: string): RunUse[] {
     );
 }
 
-function getOneway(
-  properties: InputRunProperties,
-  uses: RunUse[]
-): boolean | null {
-  const value = mapOSMBoolean(getOrElse(properties, "piste:oneway", "oneway"));
+function getOneway(tags: OSMRunTags, uses: RunUse[]): boolean | null {
+  const value = mapOSMBoolean(getOrElse(tags, "piste:oneway", "oneway"));
   if (value !== null) {
     return value;
   }
@@ -132,17 +130,17 @@ function getOrElse<P extends { [key: string]: string | undefined }>(
   return undefined;
 }
 
-function getGrooming(properties: InputRunProperties): RunGrooming | null {
-  const value = properties["piste:grooming"];
+function getGrooming(tags: OSMRunTags): RunGrooming | null {
+  const value = tags["piste:grooming"];
   if (Object.values(RunGrooming).includes(value as RunGrooming)) {
     return value as RunGrooming;
   }
 
   // Default to piste:grooming = backcountry for the most difficult runs
   if (
-    properties["piste:difficulty"] === "expert" ||
-    properties["piste:difficulty"] === "freeride" ||
-    properties["piste:difficulty"] === "extreme"
+    tags["piste:difficulty"] === "expert" ||
+    tags["piste:difficulty"] === "freeride" ||
+    tags["piste:difficulty"] === "extreme"
   ) {
     return RunGrooming.Backcountry;
   }
@@ -150,8 +148,8 @@ function getGrooming(properties: InputRunProperties): RunGrooming | null {
   return null;
 }
 
-function getDifficulty(properties: InputRunProperties): RunDifficulty | null {
-  const value = properties["piste:difficulty"];
+function getDifficulty(tags: OSMRunTags): RunDifficulty | null {
+  const value = tags["piste:difficulty"];
   return value && Object.values(RunDifficulty).includes(value as RunDifficulty)
     ? (value as RunDifficulty)
     : null;

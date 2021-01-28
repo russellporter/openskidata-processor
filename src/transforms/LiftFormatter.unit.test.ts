@@ -1,15 +1,18 @@
 import { LiftType } from "openskidata-format";
-import { InputLiftFeature, InputLiftProperties } from "../features/LiftFeature";
+import { InputLiftFeature, OSMLiftTags } from "../features/LiftFeature";
 import { formatLift } from "./LiftFormatter";
 
 describe("LiftFormatter", () => {
   it("formats funicular", () => {
     const feature = formatLift(
       inputLift({
-        id: "way/1",
-        railway: "funicular",
-        name: "🇫🇷 Nom de la téléski",
-        "name:en": "Lift name",
+        type: "way",
+        id: 1,
+        tags: {
+          railway: "funicular",
+          name: "🇫🇷 Nom de la téléski",
+          "name:en": "Lift name",
+        },
       })
     );
     expect(feature!.properties.liftType).toBe(LiftType.Funicular);
@@ -18,10 +21,13 @@ describe("LiftFormatter", () => {
   it("formats rack railway", () => {
     const feature = formatLift(
       inputLift({
-        id: "way/1",
-        rack: "riggenbach",
-        railway: "narrow_gauge",
-        "railway:traffic_mode": "passenger",
+        type: "way",
+        id: 1,
+        tags: {
+          rack: "riggenbach",
+          railway: "narrow_gauge",
+          "railway:traffic_mode": "passenger",
+        },
       })
     );
     expect(feature!.properties.liftType).toBe(LiftType.RackRailway);
@@ -30,10 +36,13 @@ describe("LiftFormatter", () => {
   it("includes localized names", () => {
     const feature = formatLift(
       inputLift({
-        id: "way/1",
-        aerialway: "chair_lift",
-        name: "🇫🇷 Nom de la téléski",
-        "name:en": "Lift name",
+        type: "way",
+        id: 1,
+        tags: {
+          aerialway: "chair_lift",
+          name: "🇫🇷 Nom de la téléski",
+          "name:en": "Lift name",
+        },
       })
     );
     expect(feature!.properties.name).toMatchInlineSnapshot(
@@ -45,8 +54,11 @@ describe("LiftFormatter", () => {
     expect(
       formatLift(
         inputLift({
-          id: "way/1",
-          aerialway: "zip_line",
+          type: "way",
+          id: 1,
+          tags: {
+            aerialway: "zip_line",
+          },
         })
       )
     ).toBeNull();
@@ -54,8 +66,11 @@ describe("LiftFormatter", () => {
     expect(
       formatLift(
         inputLift({
-          id: "way/1",
-          aerialway: "goods",
+          type: "way",
+          id: 1,
+          tags: {
+            aerialway: "goods",
+          },
         })
       )
     ).toBeNull();
@@ -65,9 +80,12 @@ describe("LiftFormatter", () => {
     expect(
       formatLift(
         inputLift({
-          id: "way/1",
-          aerialway: "chair_lift",
-          access: "private",
+          type: "way",
+          id: 1,
+          tags: {
+            aerialway: "chair_lift",
+            access: "private",
+          },
         })
       )
     ).toBeNull();
@@ -75,9 +93,12 @@ describe("LiftFormatter", () => {
     expect(
       formatLift(
         inputLift({
-          id: "way/1",
-          aerialway: "chair_lift",
-          foot: "no",
+          type: "way",
+          id: 1,
+          tags: {
+            aerialway: "chair_lift",
+            foot: "no",
+          },
         })
       )
     ).toBeNull();
@@ -85,17 +106,22 @@ describe("LiftFormatter", () => {
     expect(
       formatLift(
         inputLift({
-          id: "way/1",
-          rack: "riggenbach",
-          railway: "narrow_gauge",
-          "railway:traffic_mode": "freight",
+          type: "way",
+          id: 1,
+          tags: {
+            rack: "riggenbach",
+            railway: "narrow_gauge",
+            "railway:traffic_mode": "freight",
+          },
         })
       )
     ).toBeNull();
   });
 });
 
-function inputLift(properties: InputLiftProperties): InputLiftFeature {
+function inputLift(
+  properties: OSMGeoJSONProperties<OSMLiftTags>
+): InputLiftFeature {
   return {
     type: "Feature",
     geometry: {

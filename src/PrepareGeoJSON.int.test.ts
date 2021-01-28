@@ -83,9 +83,12 @@ it("produces output for simple input", async () => {
           type: "Feature",
           id: "way/227407273",
           properties: {
-            aerialway: "t-bar",
-            name: "Skilift Oberau",
-            id: "way/227407273",
+            type: "way",
+            id: 227407273,
+            tags: {
+              aerialway: "t-bar",
+              name: "Skilift Oberau",
+            },
           },
           geometry: {
             type: "LineString",
@@ -101,11 +104,14 @@ it("produces output for simple input", async () => {
           type: "Feature",
           id: "way/227407268",
           properties: {
-            name: "Oberauer Skiabfahrt",
-            "piste:difficulty": "easy",
-            "piste:type": "downhill",
-            sport: "skiing",
-            id: "way/227407268",
+            type: "way",
+            id: 227407268,
+            tags: {
+              name: "Oberauer Skiabfahrt",
+              "piste:difficulty": "easy",
+              "piste:type": "downhill",
+              sport: "skiing",
+            },
           },
           geometry: {
             type: "Polygon",
@@ -414,8 +420,11 @@ it("processes OpenStreetMap ski areas", async () => {
         {
           type: "Feature",
           properties: {
-            id: "13666",
-            landuse: "winter_sports",
+            type: "way",
+            id: 13666,
+            tags: {
+              landuse: "winter_sports",
+            },
           },
           geometry: {
             type: "Polygon",
@@ -475,7 +484,7 @@ it("processes OpenStreetMap ski areas", async () => {
             "runConvention": "europe",
             "sources": Array [
               Object {
-                "id": "13666",
+                "id": "way/13666",
                 "type": "openstreetmap",
               },
             ],

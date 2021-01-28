@@ -159,9 +159,14 @@ describe("OSMToGeoJSONConverter", () => {
             },
             "id": "relation/10001",
             "properties": Object {
-              "id": "relation/10001",
-              "landuse": "winter_sports",
-              "type": "multipolygon",
+              "id": 10001,
+              "meta": Object {},
+              "relations": Array [],
+              "tags": Object {
+                "landuse": "winter_sports",
+                "type": "multipolygon",
+              },
+              "type": "relation",
             },
             "type": "Feature",
           },
@@ -191,11 +196,25 @@ describe("OSMToGeoJSONConverter", () => {
             },
             "id": "way/1003",
             "properties": Object {
-              "id": "way/1003",
-              "landuse": "winter_sports",
-              "natural": "wood",
-              "source": "Kartverket N50",
-              "source:date": "1989-07-01",
+              "id": 1003,
+              "meta": Object {},
+              "relations": Array [
+                Object {
+                  "rel": 10001,
+                  "reltags": Object {
+                    "landuse": "winter_sports",
+                    "type": "multipolygon",
+                  },
+                  "role": "outer",
+                },
+              ],
+              "tags": Object {
+                "landuse": "winter_sports",
+                "natural": "wood",
+                "source": "Kartverket N50",
+                "source:date": "1989-07-01",
+              },
+              "type": "way",
             },
             "type": "Feature",
           },

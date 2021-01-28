@@ -6,11 +6,8 @@ import {
   RunProperties,
 } from "openskidata-format";
 
-export type InputRunProperties = {
+export type OSMRunTags = {
   [key: string]: string | undefined;
-
-  // OpenStreetMap ID
-  id: string;
 
   "piste:type"?: string;
   "piste:difficulty"?: string;
@@ -47,7 +44,7 @@ export type InputRunGeometry =
 
 export type InputRunFeature = GeoJSON.Feature<
   InputRunGeometry,
-  InputRunProperties
+  OSMGeoJSONProperties<OSMRunTags>
 >;
 
 export type MapboxGLRunProperties = {

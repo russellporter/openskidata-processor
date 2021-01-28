@@ -6,7 +6,8 @@ import {
   SourceType,
   Status,
 } from "openskidata-format";
-import { InputLiftFeature, InputLiftProperties } from "../features/LiftFeature";
+import { InputLiftFeature, OSMLiftTags } from "../features/LiftFeature";
+import { osmID } from "../features/OSMGeoJSONProperties";
 import buildFeature from "./FeatureBuilder";
 import {
   getOSMName,
@@ -21,23 +22,23 @@ type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 type LiftPropertiesWithoutID = Omit<LiftProperties, "id">;
 
 export function formatLift(feature: InputLiftFeature): LiftFeature | null {
-  const inputProperties = feature.properties || {};
+  const tags = feature.properties.tags || {};
 
   if (
-    inputProperties["passenger"] == "no" ||
-    inputProperties["access"] == "private" ||
-    inputProperties["access"] == "forestry" ||
-    inputProperties["access"] == "no" ||
-    inputProperties["foot"] == "no" ||
-    inputProperties["foot"] == "private" ||
-    inputProperties["usage"] == "freight" ||
-    inputProperties["usage"] == "industrial" ||
-    inputProperties["railway:traffic_mode"] == "freight"
+    tags["passenger"] == "no" ||
+    tags["access"] == "private" ||
+    tags["access"] == "forestry" ||
+    tags["access"] == "no" ||
+    tags["foot"] == "no" ||
+    tags["foot"] == "private" ||
+    tags["usage"] == "freight" ||
+    tags["usage"] == "industrial" ||
+    tags["railway:traffic_mode"] == "freight"
   ) {
     return null;
   }
 
-  const { status, liftType } = getStatusAndLiftType(inputProperties);
+  const { status, liftType } = getStatusAndLiftType(tags);
 
   if (liftType === null) {
     return null;
@@ -47,28 +48,30 @@ export function formatLift(feature: InputLiftFeature): LiftFeature | null {
     type: FeatureType.Lift,
     liftType: liftType,
     status: status,
-    name: getOSMName(inputProperties, "name"),
-    oneway: mapOSMBoolean(inputProperties.oneway),
-    ref: mapOSMString(inputProperties.ref),
-    description: inputProperties.description || null,
-    occupancy: mapOSMNumber(inputProperties["aerialway:occupancy"]),
-    capacity: mapOSMNumber(inputProperties["aerialway:capacity"]),
-    duration: mapDuration(inputProperties["aerialway:duration"]),
-    bubble: mapOSMBoolean(inputProperties["aerialway:bubble"]),
-    heating: mapOSMBoolean(inputProperties["aerialway:heating"]),
+    name: getOSMName(tags, "name"),
+    oneway: mapOSMBoolean(tags.oneway),
+    ref: mapOSMString(tags.ref),
+    description: tags.description || null,
+    occupancy: mapOSMNumber(tags["aerialway:occupancy"]),
+    capacity: mapOSMNumber(tags["aerialway:capacity"]),
+    duration: mapDuration(tags["aerialway:duration"]),
+    bubble: mapOSMBoolean(tags["aerialway:bubble"]),
+    heating: mapOSMBoolean(tags["aerialway:heating"]),
     color: getColor(status),
     skiAreas: [],
-    sources: [{ type: SourceType.OPENSTREETMAP, id: inputProperties["id"] }],
+    sources: [
+      { type: SourceType.OPENSTREETMAP, id: osmID(feature.properties) },
+    ],
     location: null,
   };
 
   return buildFeature(feature.geometry, properties);
 }
 
-function getStatusAndLiftType(properties: InputLiftProperties) {
+function getStatusAndLiftType(tags: OSMLiftTags) {
   let { status, value } = getStatusAndValue(
     "aerialway",
-    properties as {
+    tags as {
       [key: string]: string;
     }
   );
@@ -76,15 +79,15 @@ function getStatusAndLiftType(properties: InputLiftProperties) {
   if (value === null) {
     ({ status, value } = getStatusAndValue(
       "railway",
-      properties as {
+      tags as {
         [key: string]: string;
       }
     ));
 
     if (
       value !== "funicular" &&
-      properties.rack !== undefined &&
-      properties.rack !== "no"
+      tags.rack !== undefined &&
+      tags.rack !== "no"
     ) {
       value = LiftType.RackRailway;
     }

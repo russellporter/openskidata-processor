@@ -108,7 +108,7 @@ export function convertOSMToGeoJSON(
   return osmtogeojson(osmJSON, {
     verbose: false,
     polygonFeatures: polygonFeatures,
-    flatProperties: true,
+    flatProperties: false,
     uninterestingTags: (
       tags: { [key: string]: string } | null | undefined,
       // Normally with osmtogeojson, one would not include a feature if the interesting tag is an ignored tag.

@@ -36,9 +36,12 @@ it("adds elevations to lift geometry", async () => {
           type: "Feature",
           id: "way/227407273",
           properties: {
-            aerialway: "t-bar",
-            name: "Skilift Oberau",
-            id: "way/227407273",
+            type: "way",
+            id: 227407273,
+            tags: {
+              aerialway: "t-bar",
+              name: "Skilift Oberau",
+            },
           },
           geometry: {
             type: "LineString",
@@ -121,11 +124,14 @@ it("adds elevations to run geometry & elevation profile", async () => {
           type: "Feature",
           id: "way/227407268",
           properties: {
-            name: "Oberauer Skiabfahrt",
-            "piste:difficulty": "easy",
-            "piste:type": "downhill",
-            sport: "skiing",
-            id: "way/227407268",
+            type: "way",
+            id: 227407268,
+            tags: {
+              name: "Oberauer Skiabfahrt",
+              "piste:difficulty": "easy",
+              "piste:type": "downhill",
+              sport: "skiing",
+            },
           },
           geometry: {
             type: "LineString",
@@ -202,9 +208,12 @@ it("completes without adding elevations when elevation server fails", async () =
           type: "Feature",
           id: "way/227407273",
           properties: {
-            aerialway: "t-bar",
-            name: "Skilift Oberau",
-            id: "way/227407273",
+            type: "way",
+            id: 227407273,
+            tags: {
+              aerialway: "t-bar",
+              name: "Skilift Oberau",
+            },
           },
           geometry: {
             type: "LineString",
@@ -285,11 +294,14 @@ it("adds elevations to run polygons", async () => {
           type: "Feature",
           id: "way/227407273",
           properties: {
-            name: "Oberauer Skiabfahrt",
-            "piste:difficulty": "easy",
-            "piste:type": "downhill",
-            sport: "skiing",
-            id: "way/227407268",
+            type: "way",
+            id: 227407268,
+            tags: {
+              name: "Oberauer Skiabfahrt",
+              "piste:difficulty": "easy",
+              "piste:type": "downhill",
+              sport: "skiing",
+            },
           },
           geometry: {
             type: "Polygon",

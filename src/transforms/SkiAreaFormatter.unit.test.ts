@@ -21,10 +21,13 @@ describe("SkiAreaFormatter", () => {
         ],
       },
       properties: {
-        id: "1",
-        landuse: "winter_sports",
-        name: "Ski Area",
-        website: "http://example.com",
+        type: "way",
+        id: 1,
+        tags: {
+          landuse: "winter_sports",
+          name: "Ski Area",
+          website: "http://example.com",
+        },
       },
     };
 
@@ -63,7 +66,7 @@ describe("SkiAreaFormatter", () => {
           "runConvention": "europe",
           "sources": Array [
             Object {
-              "id": "1",
+              "id": "way/1",
               "type": "openstreetmap",
             },
           ],
@@ -91,8 +94,11 @@ describe("SkiAreaFormatter", () => {
         ],
       },
       properties: {
-        id: "1",
-        "abandoned:landuse": "winter_sports",
+        type: "way",
+        id: 1,
+        tags: {
+          "abandoned:landuse": "winter_sports",
+        },
       },
     };
 
@@ -116,9 +122,12 @@ describe("SkiAreaFormatter", () => {
         ],
       },
       properties: {
-        id: "1",
-        landuse: "winter_sports",
-        abandoned: "yes",
+        type: "way",
+        id: 1,
+        tags: {
+          landuse: "winter_sports",
+          abandoned: "yes",
+        },
       },
     };
 

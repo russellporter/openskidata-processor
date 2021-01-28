@@ -1,10 +1,7 @@
 import { LiftGeometry, Status } from "openskidata-format";
 
-export type InputLiftProperties = {
+export type OSMLiftTags = {
   [key: string]: string | undefined;
-
-  // OpenStreetMap ID
-  id: string;
 
   aerialway?: string;
   "disused:aerialway"?: string;
@@ -55,7 +52,7 @@ export type MapboxGLLiftProperties = {
 
 export type InputLiftFeature = GeoJSON.Feature<
   LiftGeometry,
-  InputLiftProperties
+  OSMGeoJSONProperties<OSMLiftTags>
 >;
 export type MapboxGLLiftFeature = GeoJSON.Feature<
   LiftGeometry,

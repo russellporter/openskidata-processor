@@ -4,6 +4,7 @@ import {
   SkiAreaProperties,
   SourceType,
 } from "openskidata-format";
+import { osmID } from "../features/OSMGeoJSONProperties";
 import {
   InputOpenStreetMapSkiAreaFeature,
   InputSkiMapOrgSkiAreaFeature,
@@ -23,9 +24,9 @@ export function formatSkiArea(
       case SourceType.OPENSTREETMAP:
         const osmFeature = feature as InputOpenStreetMapSkiAreaFeature;
         if (
-          osmFeature.properties["sport"] !== undefined &&
-          osmFeature.properties["sport"] !== "skiing" &&
-          osmFeature.properties["sport"] !== "ski"
+          osmFeature.properties.tags["sport"] !== undefined &&
+          osmFeature.properties.tags["sport"] !== "skiing" &&
+          osmFeature.properties.tags["sport"] !== "ski"
         ) {
           return null;
         }
@@ -54,11 +55,11 @@ function propertiesForOpenStreetMapSkiArea(
 ): Omit<SkiAreaProperties, "id"> {
   return {
     type: FeatureType.SkiArea,
-    name: feature.properties.name || null,
+    name: feature.properties.tags.name || null,
     sources: [
       {
         type: SourceType.OPENSTREETMAP,
-        id: feature.properties.id,
+        id: osmID(feature.properties),
       },
     ],
     activities: [],
@@ -66,9 +67,9 @@ function propertiesForOpenStreetMapSkiArea(
     // We don't care about the value here, just get the status. The value is always "winter_sports".
     status: getStatusAndValue(
       "landuse",
-      feature.properties as { [key: string]: string }
+      feature.properties.tags as { [key: string]: string }
     ).status,
-    website: feature.properties.website || null,
+    website: feature.properties.tags.website || null,
     runConvention: getRunConvention(feature),
     location: null,
   };

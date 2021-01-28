@@ -1,13 +1,16 @@
-import { InputRunFeature, InputRunProperties } from "../features/RunFeature";
+import { InputRunFeature, OSMRunTags } from "../features/RunFeature";
 import { formatRun } from "./RunFormatter";
 
 describe("RunFormatter", () => {
   it("filters out runs with 'piste:abandoned' tag", () => {
     const run = formatRun(
       inputRun({
-        id: "way/1",
-        "piste:type": "downhill",
-        "piste:abandoned": "yes",
+        type: "way",
+        id: 1,
+        tags: {
+          "piste:type": "downhill",
+          "piste:abandoned": "yes",
+        },
       })
     );
     expect(run).toBeNull();
@@ -15,13 +18,19 @@ describe("RunFormatter", () => {
 
   it("filters out runs with lifecycle prefix", () => {
     const run = formatRun(
-      inputRun({ id: "way/1", "proposed:piste:type": "downhill" })
+      inputRun({
+        type: "way",
+        id: 1,
+        tags: { "proposed:piste:type": "downhill" },
+      })
     );
     expect(run).toBeNull();
   });
 
   it("formats simple run", () => {
-    const run = formatRun(inputRun({ id: "way/1", "piste:type": "downhill" }));
+    const run = formatRun(
+      inputRun({ type: "way", id: 1, tags: { "piste:type": "downhill" } })
+    );
     expect(run!.properties).toMatchInlineSnapshot(`
       Object {
         "color": "hsl(0, 0%, 35%)",
@@ -57,11 +66,14 @@ describe("RunFormatter", () => {
   it("uses piste name instead of other name", () => {
     const run = formatRun(
       inputRun({
-        id: "way/1",
-        "piste:type": "downhill",
-        "piste:name": "🇫🇷 Nom de la piste",
-        "piste:name:en": "Run name",
-        name: "Name that shouldn't be shown",
+        type: "way",
+        id: 1,
+        tags: {
+          "piste:type": "downhill",
+          "piste:name": "🇫🇷 Nom de la piste",
+          "piste:name:en": "Run name",
+          name: "Name that shouldn't be shown",
+        },
       })
     );
     expect(run!.properties.name).toMatchInlineSnapshot(
@@ -72,8 +84,11 @@ describe("RunFormatter", () => {
   it("adds oneway to downhill run if not specified", () => {
     const run = formatRun(
       inputRun({
-        id: "way/1",
-        "piste:type": "downhill",
+        type: "way",
+        id: 1,
+        tags: {
+          "piste:type": "downhill",
+        },
       })
     );
     expect(run!.properties.oneway).toBe(true);
@@ -82,16 +97,21 @@ describe("RunFormatter", () => {
   it("preserves oneway value of bidirectional downhill run", () => {
     const run = formatRun(
       inputRun({
-        id: "way/1",
-        "piste:type": "downhill",
-        oneway: "no",
+        type: "way",
+        id: 1,
+        tags: {
+          "piste:type": "downhill",
+          oneway: "no",
+        },
       })
     );
     expect(run!.properties.oneway).toBe(false);
   });
 });
 
-function inputRun(properties: InputRunProperties): InputRunFeature {
+function inputRun(
+  properties: OSMGeoJSONProperties<OSMRunTags>
+): InputRunFeature {
   return {
     type: "Feature",
     geometry: {
