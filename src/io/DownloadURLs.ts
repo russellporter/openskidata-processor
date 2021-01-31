@@ -8,10 +8,8 @@ export interface OSMDownloadConfig {
 
 export const runsDownloadConfig: OSMDownloadConfig = {
   query: (bbox) => `
-    [out:json][timeout:1800]${bboxQuery(bbox)};(
-      way["piste:type"];
-      rel["piste:type"];
-    );
+    [out:json][timeout:1800]${bboxQuery(bbox)};
+    wr["piste:type"];
     (._; >;);
     out;
     `,
@@ -37,10 +35,8 @@ export const liftsDownloadConfig: OSMDownloadConfig = {
 
 export const skiAreasDownloadConfig: OSMDownloadConfig = {
   query: (bbox) => `
-    [out:json][timeout:1800]${bboxQuery(bbox)};(
-      way[~"^([A-Za-z]+:)?landuse$"~"^winter_sports$"];
-      rel[~"^([A-Za-z]+:)?landuse$"~"^winter_sports$"];
-    );
+    [out:json][timeout:1800]${bboxQuery(bbox)};
+    wr[~"^([A-Za-z]+:)?landuse$"~"^winter_sports$"];
     (._; >;);
     out;
     `,
