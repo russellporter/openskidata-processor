@@ -5,6 +5,7 @@ import {
   RunGrooming,
   RunProperties,
 } from "openskidata-format";
+import OSMGeoJSONProperties from "./OSMGeoJSONProperties";
 
 export type OSMRunTags = {
   [key: string]: string | undefined;

@@ -7,6 +7,7 @@ import {
   OSMDownloadConfig,
   runsDownloadConfig,
   skiAreasDownloadConfig,
+  skiAreaSitesDownloadConfig,
   skiMapSkiAreasURL,
 } from "./DownloadURLs";
 import { GeoJSONInputPaths } from "./GeoJSONFiles";
@@ -39,6 +40,13 @@ export default async function downloadAndConvertToGeoJSON(
         paths.skiAreas,
         bbox
       );
+      // As sites are just relations, they are not representable in GeoJSON.
+      await downloadOSMJSON(
+        OSMEndpoint.LZ4,
+        skiAreaSitesDownloadConfig,
+        paths.skiAreaSites,
+        bbox
+      );
     })(),
     downloadToFile(skiMapSkiAreasURL, paths.skiMapSkiAreas),
   ]);
@@ -58,18 +66,8 @@ async function downloadAndConvertOSMToGeoJSON(
   bbox: GeoJSON.BBox | null
 ): Promise<void> {
   const tempOSMPath = tmp.fileSync().name;
-  const url = overpassURLForQuery(endpoint, config.query(bbox));
-  try {
-    await downloadToFile(url, tempOSMPath);
-  } catch (error) {
-    console.log(
-      "Download failed due to " + error + ". Will wait a minute and try again."
-    );
-    // Wait a bit in case we are rate limited by the server.
-    await sleep(60000);
 
-    await downloadToFile(url, tempOSMPath);
-  }
+  await downloadOSMJSON(endpoint, config, tempOSMPath, bbox);
 
   convertOSMFileToGeoJSON(
     tempOSMPath,
@@ -78,7 +76,40 @@ async function downloadAndConvertOSMToGeoJSON(
   );
 }
 
+async function downloadOSMJSON(
+  endpoint: OSMEndpoint,
+  config: OSMDownloadConfig,
+  targetPath: string,
+  bbox: GeoJSON.BBox | null
+) {
+  const url = overpassURLForQuery(endpoint, config.query(bbox));
+  await downloadToFile(url, targetPath);
+}
+
 async function downloadToFile(
+  sourceURL: string,
+  targetPath: string,
+  retries: number = 1
+): Promise<void> {
+  try {
+    await _downloadToFile(sourceURL, targetPath);
+  } catch (e) {
+    if (retries <= 0) {
+      throw e;
+    }
+
+    console.log(
+      "Download failed due to " + e + ". Will wait a minute and try again."
+    );
+
+    // Wait a bit in case we are rate limited by the server.
+    await sleep(60000);
+
+    downloadToFile(sourceURL, targetPath, retries - 1);
+  }
+}
+
+async function _downloadToFile(
   sourceURL: string,
   targetPath: string
 ): Promise<void> {

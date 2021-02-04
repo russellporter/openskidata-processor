@@ -1,3 +1,4 @@
+import OSMGeoJSONProperties from "../features/OSMGeoJSONProperties";
 import { InputRunFeature, OSMRunTags } from "../features/RunFeature";
 import { formatRun } from "./RunFormatter";
 

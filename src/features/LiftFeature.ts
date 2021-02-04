@@ -1,4 +1,5 @@
 import { LiftGeometry, Status } from "openskidata-format";
+import OSMGeoJSONProperties from "./OSMGeoJSONProperties";
 
 export type OSMLiftTags = {
   [key: string]: string | undefined;

@@ -1,6 +1,5 @@
 import {
   Activity,
-  LiftFeature,
   LiftType,
   RunDifficulty,
   RunFeature,
@@ -13,6 +12,13 @@ import {
 import { GenericContainer } from "testcontainers";
 import { StartedTestContainer } from "testcontainers/dist/test-container";
 import * as TestHelpers from "../TestHelpers";
+import {
+  simplifiedLiftFeature,
+  simplifiedRunFeature,
+  simplifiedSkiAreaFeature,
+  simplifiedSkiAreaFeatureWithSources,
+  simplifiedSkiAreaFeatureWithStatistics,
+} from "../TestHelpers";
 import clusterSkiAreas from "./ClusterSkiAreas";
 
 let mockUuidCount = 0;
@@ -1788,47 +1794,321 @@ it("removes an OpenStreetMap ski area that does not contain any runs/lifts as it
     `);
 });
 
-function simplifiedLiftFeature(feature: LiftFeature) {
-  return {
-    id: feature.properties.id,
-    name: feature.properties.name,
-    skiAreas: feature.properties.skiAreas.map(
-      (skiArea) => skiArea.properties.id
-    ),
-  };
-}
+it("updates geometry & run convention for a site based ski area", async () => {
+  const paths = TestHelpers.getFilePaths();
+  const siteSkiArea = TestHelpers.mockSkiAreaFeature({
+    id: "1",
+    activities: [],
+    sources: [{ type: SourceType.OPENSTREETMAP, id: "1" }],
+    geometry: {
+      type: "Point",
+      coordinates: [360, 360, 1],
+    },
+  });
+  TestHelpers.mockFeatureFiles(
+    [siteSkiArea],
+    [],
+    [
+      TestHelpers.mockRunFeature({
+        id: "2",
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [1.0001, 1.0001],
+            [1.5, 1.5],
+          ],
+        },
+        name: "Run",
+        uses: [RunUse.Nordic],
+        skiAreas: [siteSkiArea],
+      }),
+    ],
+    paths.intermediate
+  );
 
-function simplifiedRunFeature(feature: RunFeature) {
-  return {
-    id: feature.properties.id,
-    name: feature.properties.name,
-    skiAreas: feature.properties.skiAreas.map(
-      (skiArea) => skiArea.properties.id
-    ),
-  };
-}
+  await clusterSkiAreas(
+    paths.intermediate,
+    paths.output,
+    "http://localhost:" + container.getMappedPort(8529),
+    null
+  );
 
-function simplifiedSkiAreaFeature(feature: SkiAreaFeature) {
-  return {
-    id: feature.properties.id,
-    name: feature.properties.name,
-    activities: feature.properties.activities,
-  };
-}
+  const skiAreaFeatures: [SkiAreaFeature] = TestHelpers.fileContents(
+    paths.output.skiAreas
+  ).features;
 
-function simplifiedSkiAreaFeatureWithStatistics(feature: SkiAreaFeature) {
-  return {
-    ...simplifiedSkiAreaFeature(feature),
-    statistics: feature.properties.statistics,
-  };
-}
+  expect(skiAreaFeatures.length).toBe(1);
 
-function simplifiedSkiAreaFeatureWithSources(feature: SkiAreaFeature) {
-  return {
-    ...simplifiedSkiAreaFeature(feature),
-    sources: feature.properties.sources,
-  };
-}
+  const skiAreaFeature = skiAreaFeatures[0];
+  expect(skiAreaFeature.geometry).toMatchInlineSnapshot(`
+    Object {
+      "coordinates": Array [
+        1.2500499999999999,
+        1.2500499999999999,
+      ],
+      "type": "Point",
+    }
+  `);
+  expect(skiAreaFeature.properties.runConvention).toMatchInlineSnapshot(
+    `"europe"`
+  );
+  expect(skiAreaFeature.properties.sources).toMatchInlineSnapshot(`
+    Array [
+      Object {
+        "id": "1",
+        "type": "openstreetmap",
+      },
+    ]
+  `);
+
+  expect(
+    TestHelpers.fileContents(paths.output.runs).features[0].properties.skiAreas
+  ).toMatchObject([skiAreaFeature]);
+});
+
+it("removes landuse based ski area when there is a site with sufficient overlap", async () => {
+  const paths = TestHelpers.getFilePaths();
+  const siteSkiArea = TestHelpers.mockSkiAreaFeature({
+    id: "1",
+    activities: [],
+    sources: [{ type: SourceType.OPENSTREETMAP, id: "1" }],
+    geometry: {
+      type: "Point",
+      coordinates: [360, 360, 1],
+    },
+  });
+  const landuseSkiArea = TestHelpers.mockSkiAreaFeature({
+    sources: [{ type: SourceType.OPENSTREETMAP, id: "2" }],
+    geometry: {
+      type: "Polygon",
+      coordinates: [
+        [
+          [0, 0],
+          [1, 0],
+          [1, 1],
+          [0, 1],
+          [0, 0],
+        ],
+      ],
+    },
+  });
+  TestHelpers.mockFeatureFiles(
+    [siteSkiArea, landuseSkiArea],
+    [],
+    [
+      TestHelpers.mockRunFeature({
+        id: "2",
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [0, 0],
+            [1, 1],
+          ],
+        },
+        name: "Run",
+        skiAreas: [siteSkiArea],
+      }),
+      TestHelpers.mockRunFeature({
+        id: "3",
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [1, 0],
+            [1, 1],
+          ],
+        },
+        name: "Run",
+        skiAreas: [siteSkiArea],
+      }),
+      TestHelpers.mockRunFeature({
+        id: "4",
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [1, 0],
+            [1, 1],
+          ],
+        },
+        name: "Run",
+        // This run is not assigned to the site, but given there are enough nearby ski runs in the site,
+        // the landuse based ski area should be removed.
+        skiAreas: [],
+      }),
+    ],
+    paths.intermediate
+  );
+
+  await clusterSkiAreas(
+    paths.intermediate,
+    paths.output,
+    "http://localhost:" + container.getMappedPort(8529),
+    null
+  );
+
+  const skiAreaFeatures: [SkiAreaFeature] = TestHelpers.fileContents(
+    paths.output.skiAreas
+  ).features;
+
+  expect(skiAreaFeatures.length).toBe(1);
+
+  const skiAreaFeature = skiAreaFeatures[0];
+  expect(skiAreaFeature.geometry).toMatchInlineSnapshot(`
+    Object {
+      "coordinates": Array [
+        0.75,
+        0.5,
+      ],
+      "type": "Point",
+    }
+  `);
+  expect(skiAreaFeature.properties.sources).toMatchInlineSnapshot(`
+    Array [
+      Object {
+        "id": "1",
+        "type": "openstreetmap",
+      },
+    ]
+  `);
+
+  expect(
+    TestHelpers.fileContents(paths.output.runs).features[0].properties.skiAreas
+  ).toMatchObject([skiAreaFeature]);
+});
+
+it("keeps landuse based ski area when there is a site with insufficient overlap", async () => {
+  const paths = TestHelpers.getFilePaths();
+  const siteSkiArea = TestHelpers.mockSkiAreaFeature({
+    id: "1",
+    activities: [],
+    sources: [{ type: SourceType.OPENSTREETMAP, id: "1" }],
+    geometry: {
+      type: "Point",
+      coordinates: [360, 360, 1],
+    },
+  });
+  const landuseSkiArea = TestHelpers.mockSkiAreaFeature({
+    sources: [{ type: SourceType.OPENSTREETMAP, id: "2" }],
+    geometry: {
+      type: "Polygon",
+      coordinates: [
+        [
+          [0, 0],
+          [1, 0],
+          [1, 1],
+          [0, 1],
+          [0, 0],
+        ],
+      ],
+    },
+  });
+  TestHelpers.mockFeatureFiles(
+    [siteSkiArea, landuseSkiArea],
+    [],
+    [
+      TestHelpers.mockRunFeature({
+        id: "2",
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [0, 0],
+            [1, 1],
+          ],
+        },
+        name: "Run",
+        skiAreas: [siteSkiArea],
+      }),
+      TestHelpers.mockRunFeature({
+        id: "3",
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [1, 0],
+            [1, 1],
+          ],
+        },
+        name: "Run",
+        skiAreas: [siteSkiArea],
+      }),
+      TestHelpers.mockRunFeature({
+        id: "4",
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [1, 0],
+            [1, 1],
+          ],
+        },
+        name: "Run",
+        skiAreas: [],
+      }),
+      TestHelpers.mockRunFeature({
+        id: "5",
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [1, 0],
+            [1, 1],
+          ],
+        },
+        name: "Run",
+        skiAreas: [],
+      }),
+    ],
+    paths.intermediate
+  );
+
+  await clusterSkiAreas(
+    paths.intermediate,
+    paths.output,
+    "http://localhost:" + container.getMappedPort(8529),
+    null
+  );
+
+  const skiAreaFeatures: [SkiAreaFeature] = TestHelpers.fileContents(
+    paths.output.skiAreas
+  ).features;
+
+  expect(skiAreaFeatures.length).toBe(2);
+
+  const runFeatures: [RunFeature] = TestHelpers.fileContents(
+    paths.output.runs
+  ).features.map(simplifiedRunFeature);
+
+  expect(runFeatures).toMatchInlineSnapshot(`
+    Array [
+      Object {
+        "id": "2",
+        "name": "Run",
+        "skiAreas": Array [
+          "1",
+          "ID",
+        ],
+      },
+      Object {
+        "id": "3",
+        "name": "Run",
+        "skiAreas": Array [
+          "1",
+          "ID",
+        ],
+      },
+      Object {
+        "id": "4",
+        "name": "Run",
+        "skiAreas": Array [
+          "ID",
+        ],
+      },
+      Object {
+        "id": "5",
+        "name": "Run",
+        "skiAreas": Array [
+          "ID",
+        ],
+      },
+    ]
+  `);
+});
 
 async function sleep(ms: number) {
   return new Promise((resolve) => {

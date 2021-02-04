@@ -11,6 +11,7 @@ interface CommonGeoJSONPaths {
 export class GeoJSONInputPaths {
   readonly skiMapSkiAreas: string;
   readonly skiAreas: string;
+  readonly skiAreaSites: string; // note: sites are represented with OSM JSON.
   readonly runs: string;
   readonly lifts: string;
 
@@ -20,6 +21,7 @@ export class GeoJSONInputPaths {
     }
     this.skiMapSkiAreas = join(folder, "input_skimap_ski_areas.geojson");
     this.skiAreas = join(folder, "input_openstreetmap_ski_areas.geojson");
+    this.skiAreaSites = join(folder, "input_openstreetmap_ski_area_sites.json");
     this.runs = join(folder, "input_runs.geojson");
     this.lifts = join(folder, "input_lifts.geojson");
   }

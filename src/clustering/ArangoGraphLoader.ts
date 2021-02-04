@@ -95,9 +95,13 @@ export default async function loadArangoGraph(
       geometryWithElevations: feature.geometry,
       activities:
         properties["status"] === Status.Operating ? [Activity.Downhill] : [],
-      skiAreas: [],
-      liftType: properties.liftType,
+      skiAreas: feature.properties.skiAreas.map(
+        (skiArea) => skiArea.properties.id
+      ),
       isInSkiAreaPolygon: false,
+      // all ski areas associated with the feature at this point are site=piste relations.
+      isInSkiAreaSite: feature.properties.skiAreas.length > 0,
+      liftType: properties.liftType,
     };
   }
 
@@ -137,11 +141,16 @@ export default async function loadArangoGraph(
         // So only start generating a new ski area from a run if the use was explicitly downhill or nordic.
         (properties.uses.includes(RunUse.Downhill) ||
           properties.uses.includes(RunUse.Nordic)) &&
-        activities.some((activity) => allSkiAreaActivities.has(activity)),
-      skiAreas: [],
+        activities.some((activity) => allSkiAreaActivities.has(activity)) &&
+        feature.properties.skiAreas.length == 0,
+      skiAreas: feature.properties.skiAreas.map(
+        (skiArea) => skiArea.properties.id
+      ),
+      isInSkiAreaPolygon: false,
+      // all ski areas associated with the feature at this point are site=piste relations.
+      isInSkiAreaSite: feature.properties.skiAreas.length > 0,
       activities: activities,
       difficulty: feature.properties.difficulty,
-      isInSkiAreaPolygon: false,
     };
   }
 }

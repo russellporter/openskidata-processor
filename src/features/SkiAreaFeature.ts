@@ -1,4 +1,5 @@
 import { Activity, Status } from "openskidata-format";
+import OSMGeoJSONProperties from "./OSMGeoJSONProperties";
 
 // A ski area from Skimap.org
 export interface InputSkiMapOrgSkiAreaProperties {
@@ -53,3 +54,18 @@ export type MapboxGLSkiAreaFeature = GeoJSON.Feature<
   GeoJSON.Point | GeoJSON.MultiPoint,
   MapboxGLSkiAreaProperties
 >;
+
+export type OSMRelationMember = {
+  type: string;
+  ref: number;
+  role: string;
+};
+
+export type OSMSkiAreaSite = {
+  type: string;
+  id: number;
+  members: OSMRelationMember[];
+  tags: OSMSkiAreaSiteTags;
+};
+
+export type OSMSkiAreaSiteTags = OSMSkiAreaTags;

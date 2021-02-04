@@ -1,6 +1,7 @@
 import { createWriteStream } from "fs";
 import merge from "merge2";
-import { FeatureType, SourceType } from "openskidata-format";
+import { FeatureType } from "openskidata-format";
+import { Readable } from "stream";
 import StreamToPromise from "stream-to-promise";
 import clusterSkiAreas from "./clustering/ClusterSkiAreas";
 import { Config } from "./Config";
@@ -12,7 +13,11 @@ import toFeatureCollection from "./transforms/FeatureCollection";
 import { formatLift } from "./transforms/LiftFormatter";
 import * as MapboxGLFormatter from "./transforms/MapboxGLFormatter";
 import { formatRun } from "./transforms/RunFormatter";
-import { formatSkiArea } from "./transforms/SkiAreaFormatter";
+import { formatSkiArea, InputSkiAreaType } from "./transforms/SkiAreaFormatter";
+import {
+  addSkiAreaSites,
+  SkiAreaSiteProvider,
+} from "./transforms/SkiAreaSiteProvider";
 import {
   accumulate,
   flatMap,
@@ -21,14 +26,18 @@ import {
 } from "./transforms/StreamTransforms";
 
 export default async function prepare(paths: GeoJSONPaths, config: Config) {
+  const siteProvider = new SkiAreaSiteProvider();
+  siteProvider.loadSites(paths.input.skiAreaSites);
+
   await Promise.all(
     [
       merge([
         readGeoJSONFeatures(paths.input.skiAreas).pipe(
-          flatMap(formatSkiArea(SourceType.OPENSTREETMAP))
+          flatMap(formatSkiArea(InputSkiAreaType.OPENSTREETMAP_LANDUSE))
         ),
+        Readable.from(siteProvider.getGeoJSONSites()),
         readGeoJSONFeatures(paths.input.skiMapSkiAreas).pipe(
-          flatMap(formatSkiArea(SourceType.SKIMAP_ORG))
+          flatMap(formatSkiArea(InputSkiAreaType.SKIMAP_ORG))
         ),
       ])
         .pipe(toFeatureCollection())
@@ -42,6 +51,7 @@ export default async function prepare(paths: GeoJSONPaths, config: Config) {
 
       readGeoJSONFeatures(paths.input.runs)
         .pipe(flatMap(formatRun))
+        .pipe(map(addSkiAreaSites(siteProvider)))
         .pipe(accumulate(new RunNormalizerAccumulator()))
         .pipe(
           mapAsync(
@@ -62,6 +72,7 @@ export default async function prepare(paths: GeoJSONPaths, config: Config) {
 
       readGeoJSONFeatures(paths.input.lifts)
         .pipe(flatMap(formatLift))
+        .pipe(map(addSkiAreaSites(siteProvider)))
         .pipe(
           mapAsync(
             config.elevationServerURL

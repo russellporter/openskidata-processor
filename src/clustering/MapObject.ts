@@ -8,7 +8,7 @@ import {
   SourceType,
 } from "openskidata-format";
 
-export type MapObject = DraftMapObject & { _id: string };
+export type MapObject = RunObject | LiftObject | SkiAreaObject;
 export type RunObject = DraftRun & { _id: string };
 export type LiftObject = DraftLift & { _id: string };
 export type SkiAreaObject = DraftSkiArea & { _id: string };
@@ -21,6 +21,7 @@ export interface DraftRun extends BaseDraftMapObject {
   geometryWithElevations: RunGeometry;
   isBasisForNewSkiArea: boolean;
   isInSkiAreaPolygon: boolean;
+  isInSkiAreaSite: boolean;
   difficulty: RunDifficulty | null;
 }
 
@@ -35,6 +36,7 @@ export interface DraftLift extends BaseDraftMapObject {
   geometryWithElevations: LiftGeometry;
   liftType: LiftType;
   isInSkiAreaPolygon: boolean;
+  isInSkiAreaSite: boolean;
 }
 
 export interface DraftSkiArea extends BaseDraftMapObject {

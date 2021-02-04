@@ -1,5 +1,6 @@
 import { LiftType } from "openskidata-format";
 import { InputLiftFeature, OSMLiftTags } from "../features/LiftFeature";
+import OSMGeoJSONProperties from "../features/OSMGeoJSONProperties";
 import { formatLift } from "./LiftFormatter";
 
 describe("LiftFormatter", () => {

@@ -45,6 +45,28 @@ export const skiAreasDownloadConfig: OSMDownloadConfig = {
       tags[prefix + "landuse"] === "winter_sports";
     }),
 };
+
+export const skiAreaSitesDownloadConfig: OSMDownloadConfig = {
+  query: (bbox) => `
+  [out:json][timeout:1800]${bboxQuery(bbox)};
+  rel[site=piste];
+  out;
+  `,
+  shouldIncludeFeature: (tags) => true,
+};
+
+export const pointsOfInterestDownloadConfig: OSMDownloadConfig = {
+  query: (bbox) => `
+  [out:json][timeout:1800]${bboxQuery(bbox)};
+  rel[site=piste]->.sites;
+  (way(r.sites)[!"piste:type"][!"aerialway"][!"railway"];
+  node(r.sites);)->.pois;
+  (.pois; .pois>;);
+  out;
+  `,
+  shouldIncludeFeature: (tags) => true,
+};
+
 export const skiMapSkiAreasURL = "https://skimap.org/SkiAreas/index.geojson";
 
 const lifecyclePrefixes = (() => {

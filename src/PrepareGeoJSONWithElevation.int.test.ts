@@ -31,6 +31,7 @@ it("adds elevations to lift geometry", async () => {
     {
       skiMapSkiAreas: [],
       openStreetMapSkiAreas: [],
+      openStreetMapSkiAreaSites: [],
       lifts: [
         {
           type: "Feature",
@@ -118,6 +119,7 @@ it("adds elevations to run geometry & elevation profile", async () => {
     {
       skiMapSkiAreas: [],
       openStreetMapSkiAreas: [],
+      openStreetMapSkiAreaSites: [],
       lifts: [],
       runs: [
         {
@@ -203,6 +205,7 @@ it("completes without adding elevations when elevation server fails", async () =
     {
       skiMapSkiAreas: [],
       openStreetMapSkiAreas: [],
+      openStreetMapSkiAreaSites: [],
       lifts: [
         {
           type: "Feature",
@@ -288,6 +291,7 @@ it("adds elevations to run polygons", async () => {
     {
       skiMapSkiAreas: [],
       openStreetMapSkiAreas: [],
+      openStreetMapSkiAreaSites: [],
       lifts: [],
       runs: [
         {

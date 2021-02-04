@@ -1,9 +1,10 @@
-import { Activity, SourceType, Status } from "openskidata-format";
+import { Activity, Status } from "openskidata-format";
 import {
   InputOpenStreetMapSkiAreaFeature,
   InputSkiMapOrgSkiAreaFeature,
+  OSMSkiAreaSite,
 } from "../features/SkiAreaFeature";
-import { formatSkiArea } from "./SkiAreaFormatter";
+import { formatSkiArea, InputSkiAreaType } from "./SkiAreaFormatter";
 
 describe("SkiAreaFormatter", () => {
   it("formats OpenStreetMap ski area", () => {
@@ -31,7 +32,7 @@ describe("SkiAreaFormatter", () => {
       },
     };
 
-    expect(formatSkiArea(SourceType.OPENSTREETMAP)(feature))
+    expect(formatSkiArea(InputSkiAreaType.OPENSTREETMAP_LANDUSE)(feature))
       .toMatchInlineSnapshot(`
       Object {
         "geometry": Object {
@@ -103,7 +104,8 @@ describe("SkiAreaFormatter", () => {
     };
 
     expect(
-      formatSkiArea(SourceType.OPENSTREETMAP)(feature)?.properties.status
+      formatSkiArea(InputSkiAreaType.OPENSTREETMAP_LANDUSE)(feature)?.properties
+        .status
     ).toBe(Status.Abandoned);
   });
 
@@ -132,7 +134,8 @@ describe("SkiAreaFormatter", () => {
     };
 
     expect(
-      formatSkiArea(SourceType.OPENSTREETMAP)(feature)?.properties.status
+      formatSkiArea(InputSkiAreaType.OPENSTREETMAP_LANDUSE)(feature)?.properties
+        .status
     ).toBe(Status.Abandoned);
   });
 
@@ -153,7 +156,7 @@ describe("SkiAreaFormatter", () => {
       },
     };
 
-    expect(formatSkiArea(SourceType.SKIMAP_ORG)(feature))
+    expect(formatSkiArea(InputSkiAreaType.SKIMAP_ORG)(feature))
       .toMatchInlineSnapshot(`
       Object {
         "geometry": Object {
@@ -181,6 +184,49 @@ describe("SkiAreaFormatter", () => {
           "status": "operating",
           "type": "skiArea",
           "website": "http://example.com",
+        },
+        "type": "Feature",
+      }
+    `);
+  });
+
+  it("formats OpenStreetMap ski area site", () => {
+    const site: OSMSkiAreaSite = {
+      id: 1,
+      type: "relation",
+      members: [{ type: "way", ref: 1, role: "" }],
+      tags: {
+        name: "Wendelstein",
+      },
+    };
+
+    expect(formatSkiArea(InputSkiAreaType.OPENSTREETMAP_SITE)(site))
+      .toMatchInlineSnapshot(`
+      Object {
+        "geometry": Object {
+          "coordinates": Array [
+            360,
+            360,
+            1,
+          ],
+          "type": "Point",
+        },
+        "properties": Object {
+          "activities": Array [],
+          "generated": false,
+          "id": "2033ab9be8698fcd4794c24e42782bf33c124e8d",
+          "location": null,
+          "name": "Wendelstein",
+          "runConvention": "north_america",
+          "sources": Array [
+            Object {
+              "id": "relation/1",
+              "type": "openstreetmap",
+            },
+          ],
+          "status": "operating",
+          "type": "skiArea",
+          "website": null,
         },
         "type": "Feature",
       }

@@ -12,6 +12,7 @@ import { bufferGeometry } from "../transforms/GeoTransforms";
 import { getRunConvention } from "../transforms/RunFormatter";
 import {
   DraftSkiArea,
+  LiftObject,
   MapObject,
   MapObjectType,
   RunObject,
@@ -52,10 +53,12 @@ export default async function clusterArangoGraph(
   await removeAmbiguousDuplicateSkiAreas();
 
   // For all OpenStreetMap ski areas (polygons), associate runs & lifts within that polygon.
+  // Ski areas without any objects or with a significant number of objects assigned to a site=piste relation are removed.
   await assignObjectsToSkiAreas({
     skiArea: {
       onlySource: SourceType.OPENSTREETMAP,
       removeIfNoObjectsFound: true,
+      removeIfSubstantialNumberOfObjectsInSkiAreaSite: true,
     },
     objects: { onlyInPolygon: true },
   });
@@ -130,6 +133,7 @@ export default async function clusterArangoGraph(
       onlySource: SourceType;
       mergeWithOtherSourceIfNearby?: boolean;
       removeIfNoObjectsFound?: boolean;
+      removeIfSubstantialNumberOfObjectsInSkiAreaSite?: boolean;
     };
     objects: {
       onlyIfNotAlreadyAssignedToPolygon?: boolean;
@@ -192,24 +196,52 @@ export default async function clusterArangoGraph(
             },
             skiArea
           );
+          const removeDueToNoObjects =
+            options.skiArea.removeIfNoObjectsFound &&
+            !memberObjects.some(
+              (object) => object.type !== MapObjectType.SkiArea
+            );
+          if (removeDueToNoObjects) {
+            console.log(
+              `Removing ski area (${JSON.stringify(
+                skiArea.properties.sources
+              )}) as no objects were found.`
+            );
+            await objectsCollection.remove({ _key: skiArea._key });
+            return;
+          }
+
+          const liftsAndRuns = memberObjects.filter(
+            (object): object is LiftObject | RunObject =>
+              object.type === MapObjectType.Lift ||
+              object.type === MapObjectType.Run
+          );
+          const liftsAndRunsInSiteRelation = liftsAndRuns.filter(
+            (object) => object.isInSkiAreaSite
+          );
+          console.log(
+            `Lifts & runs in site: ${liftsAndRunsInSiteRelation.length} / ${liftsAndRuns.length}`
+          );
+          const removeDueToSignificantObjectsInSiteRelation =
+            options.skiArea.removeIfSubstantialNumberOfObjectsInSkiAreaSite &&
+            liftsAndRunsInSiteRelation.length / liftsAndRuns.length > 0.5;
+          if (removeDueToSignificantObjectsInSiteRelation) {
+            console.log(
+              `Removing ski area (${JSON.stringify(
+                skiArea.properties.sources
+              )}) as a substantial number of objects were in a site=piste relation (${
+                liftsAndRunsInSiteRelation.length
+              } / ${liftsAndRuns.length}).`
+            );
+            await objectsCollection.remove({ _key: skiArea._key });
+            return;
+          }
 
           await markSkiArea(
             id,
             options.objects.onlyInPolygon || false,
             memberObjects
           );
-
-          if (
-            options.skiArea.removeIfNoObjectsFound &&
-            !memberObjects.some(
-              (object) => object.type !== MapObjectType.SkiArea
-            )
-          ) {
-            console.log("Removing ski area as no objects were found.");
-            console.log(JSON.stringify(options));
-            await objectsCollection.remove({ _key: skiArea._key });
-            return;
-          }
 
           // Determine ski area activities based on the clustered objects.
           if (!hasKnownSkiAreaActivities) {
@@ -654,8 +686,20 @@ export default async function clusterArangoGraph(
 
     skiArea.properties.statistics = skiAreaStatistics(memberObjects);
 
+    const newGeometry =
+      memberObjects.length > 0
+        ? centroid({
+            type: "GeometryCollection",
+            geometries: memberObjects.map((object) => object.geometry),
+          }).geometry
+        : skiArea.geometry;
+
+    skiArea.geometry = newGeometry;
+    skiArea.isPolygon = false;
+    skiArea.properties.runConvention = getRunConvention(newGeometry);
+
     if (geocoder) {
-      const coordinates = centroid(skiArea.geometry).geometry.coordinates;
+      const coordinates = centroid(newGeometry).geometry.coordinates;
       try {
         skiArea.properties.location = await geocoder.geocode(coordinates);
       } catch (error) {

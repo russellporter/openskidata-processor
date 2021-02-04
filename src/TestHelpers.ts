@@ -27,6 +27,7 @@ import { InputRunFeature, InputRunGeometry } from "./features/RunFeature";
 import {
   InputOpenStreetMapSkiAreaFeature,
   InputSkiMapOrgSkiAreaFeature,
+  OSMSkiAreaSite,
 } from "./features/SkiAreaFeature";
 import {
   GeoJSONInputPaths,
@@ -50,6 +51,7 @@ export function mockInputFiles(
   input: {
     skiMapSkiAreas: InputSkiMapOrgSkiAreaFeature[];
     openStreetMapSkiAreas: InputOpenStreetMapSkiAreaFeature[];
+    openStreetMapSkiAreaSites: OSMSkiAreaSite[];
     lifts: InputLiftFeature[];
     runs: InputRunFeature[];
   },
@@ -67,6 +69,12 @@ export function mockInputFiles(
     JSON.stringify({
       type: "FeatureCollection",
       features: input.openStreetMapSkiAreas,
+    })
+  );
+  fs.writeFileSync(
+    inputPaths.skiAreaSites,
+    JSON.stringify({
+      elements: input.openStreetMapSkiAreaSites,
     })
   );
   fs.writeFileSync(
@@ -243,5 +251,49 @@ export function mockSkiAreaFeature<G extends SkiAreaGeometry>(options: {
       location: null,
     },
     geometry: options.geometry,
+  };
+}
+
+export function simplifiedLiftFeature(feature: LiftFeature) {
+  return {
+    id: feature.properties.id,
+    name: feature.properties.name,
+    skiAreas: feature.properties.skiAreas.map(
+      (skiArea) => skiArea.properties.id
+    ),
+  };
+}
+
+export function simplifiedRunFeature(feature: RunFeature) {
+  return {
+    id: feature.properties.id,
+    name: feature.properties.name,
+    skiAreas: feature.properties.skiAreas.map(
+      (skiArea) => skiArea.properties.id
+    ),
+  };
+}
+
+export function simplifiedSkiAreaFeature(feature: SkiAreaFeature) {
+  return {
+    id: feature.properties.id,
+    name: feature.properties.name,
+    activities: feature.properties.activities,
+  };
+}
+
+export function simplifiedSkiAreaFeatureWithStatistics(
+  feature: SkiAreaFeature
+) {
+  return {
+    ...simplifiedSkiAreaFeature(feature),
+    statistics: feature.properties.statistics,
+  };
+}
+
+export function simplifiedSkiAreaFeatureWithSources(feature: SkiAreaFeature) {
+  return {
+    ...simplifiedSkiAreaFeature(feature),
+    sources: feature.properties.sources,
   };
 }

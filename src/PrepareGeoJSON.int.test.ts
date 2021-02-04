@@ -2,6 +2,11 @@ import { Activity } from "openskidata-format";
 import { Config } from "./Config";
 import prepare from "./PrepareGeoJSON";
 import * as TestHelpers from "./TestHelpers";
+import {
+  simplifiedLiftFeature,
+  simplifiedRunFeature,
+  simplifiedSkiAreaFeature,
+} from "./TestHelpers";
 
 const config: Config = {
   arangoDBURLForClustering: null,
@@ -16,6 +21,7 @@ it("produces empty output for empty input", async () => {
     {
       skiMapSkiAreas: [],
       openStreetMapSkiAreas: [],
+      openStreetMapSkiAreaSites: [],
       lifts: [],
       runs: [],
     },
@@ -78,6 +84,7 @@ it("produces output for simple input", async () => {
         },
       ],
       openStreetMapSkiAreas: [],
+      openStreetMapSkiAreaSites: [],
       lifts: [
         {
           type: "Feature",
@@ -394,6 +401,7 @@ it("shortens ski area names for Mapbox GL output", async () => {
         },
       ],
       openStreetMapSkiAreas: [],
+      openStreetMapSkiAreaSites: [],
       lifts: [],
       runs: [],
     },
@@ -439,6 +447,7 @@ it("processes OpenStreetMap ski areas", async () => {
           },
         },
       ],
+      openStreetMapSkiAreaSites: [],
       lifts: [],
       runs: [],
     },
@@ -497,5 +506,111 @@ it("processes OpenStreetMap ski areas", async () => {
       ],
       "type": "FeatureCollection",
     }
+  `);
+});
+
+it("processes OpenStreetMap ski area sites", async () => {
+  const paths = TestHelpers.getFilePaths();
+  TestHelpers.mockInputFiles(
+    {
+      skiMapSkiAreas: [],
+      openStreetMapSkiAreas: [],
+      openStreetMapSkiAreaSites: [
+        {
+          id: 1,
+          type: "relation",
+          tags: {
+            name: "Wendelstein",
+          },
+          members: [
+            { type: "way", ref: 1, role: "" },
+            { type: "way", ref: 2, role: "" },
+          ],
+        },
+      ],
+      lifts: [
+        {
+          type: "Feature",
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [0, 0],
+              [1, 1],
+            ],
+          },
+          properties: {
+            id: 1,
+            type: "way",
+            tags: { name: "Wendelsteinbahn", aerialway: "cable_car" },
+          },
+        },
+      ],
+      runs: [
+        {
+          type: "Feature",
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [1, 1],
+              [0, 0],
+            ],
+          },
+          properties: {
+            id: 2,
+            type: "way",
+            tags: { name: "Westabfahrt", "piste:type": "downhill" },
+          },
+        },
+      ],
+    },
+    paths.input
+  );
+
+  await prepare(paths, config);
+
+  expect(
+    TestHelpers.fileContents(paths.output.skiAreas).features.map(
+      simplifiedSkiAreaFeature
+    )
+  ).toMatchInlineSnapshot(`
+    Array [
+      Object {
+        "activities": Array [],
+        "id": "2033ab9be8698fcd4794c24e42782bf33c124e8d",
+        "name": "Wendelstein",
+      },
+    ]
+  `);
+
+  expect(
+    TestHelpers.fileContents(paths.output.lifts).features.map(
+      simplifiedLiftFeature
+    )
+  ).toMatchInlineSnapshot(`
+    Array [
+      Object {
+        "id": "fa8b7321d15e0f111786a467e69c7b8e1d4f9431",
+        "name": "Wendelsteinbahn",
+        "skiAreas": Array [
+          "2033ab9be8698fcd4794c24e42782bf33c124e8d",
+        ],
+      },
+    ]
+  `);
+
+  expect(
+    TestHelpers.fileContents(paths.output.runs).features.map(
+      simplifiedRunFeature
+    )
+  ).toMatchInlineSnapshot(`
+    Array [
+      Object {
+        "id": "ab2c973773eabc9757213f2e917575286f7e6c7e",
+        "name": "Westabfahrt",
+        "skiAreas": Array [
+          "2033ab9be8698fcd4794c24e42782bf33c124e8d",
+        ],
+      },
+    ]
   `);
 });
