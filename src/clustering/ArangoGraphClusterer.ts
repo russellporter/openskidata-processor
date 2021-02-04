@@ -219,9 +219,6 @@ export default async function clusterArangoGraph(
           const liftsAndRunsInSiteRelation = liftsAndRuns.filter(
             (object) => object.isInSkiAreaSite
           );
-          console.log(
-            `Lifts & runs in site: ${liftsAndRunsInSiteRelation.length} / ${liftsAndRuns.length}`
-          );
           const removeDueToSignificantObjectsInSiteRelation =
             options.skiArea.removeIfSubstantialNumberOfObjectsInSkiAreaSite &&
             liftsAndRunsInSiteRelation.length / liftsAndRuns.length > 0.5;
