@@ -84,11 +84,7 @@ function getStatusAndLiftType(tags: OSMLiftTags) {
       }
     ));
 
-    if (
-      value !== "funicular" &&
-      tags.rack !== undefined &&
-      tags.rack !== "no"
-    ) {
+    if (value !== "funicular") {
       value = LiftType.RackRailway;
     }
   }

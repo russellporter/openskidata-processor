@@ -19,7 +19,6 @@ export type OSMLiftTags = {
   "construction:railway"?: string;
 
   "railway:traffic_mode"?: string;
-  rack?: string;
 
   name?: string;
   oneway?: string;

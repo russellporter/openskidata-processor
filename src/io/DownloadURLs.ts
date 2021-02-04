@@ -18,19 +18,19 @@ export const runsDownloadConfig: OSMDownloadConfig = {
 
 export const liftsDownloadConfig: OSMDownloadConfig = {
   query: (bbox) => `
-    [out:json][timeout:1800]${bboxQuery(bbox)};(
-      way[~"^([A-Za-z]+:)?aerialway$"~"^.*$"];
-      way[~"^([A-Za-z]+:)?railway$"~"^funicular$"];
-    );
-    (._; >;);
+    [out:json][timeout:1800]${bboxQuery(bbox)};
+    rel[site=piste];
+    >>;
+    way(r)[railway]->.siterailways;
+    way[railway=funicular]->.funiculars;
+    way[~"^([A-Za-z]+:)?aerialway$"~"^.*$"]->.aerialways;
+    ((.aerialways; .siterailways; .funiculars;); >;);
     out;
     `,
   shouldIncludeFeature: (tags) =>
     lifecyclePrefixes.some((prefix) => {
-      tags[prefix + "aerialway"] !== undefined ||
-        tags[prefix + "railway"] === "funicular";
-    }) ||
-    (tags.rack !== undefined && tags.rack !== "no"),
+      tags[prefix + "aerialway"] !== undefined;
+    }) || tags.railway !== undefined,
 };
 
 export const skiAreasDownloadConfig: OSMDownloadConfig = {
