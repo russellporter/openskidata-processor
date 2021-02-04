@@ -20,7 +20,7 @@ export class SkiAreaSiteProvider {
       const skiArea = this.format(site);
       if (skiArea) {
         this.all.push(skiArea);
-        site.members.forEach((member) => {
+        (site.members || []).forEach((member) => {
           const id = member.type + "/" + member.ref.toString();
           const memberSkiAreas = this.geoJSONByOSMID.get(id) || [];
           memberSkiAreas.push(skiArea);
