@@ -89,7 +89,7 @@ async function downloadOSMJSON(
 async function downloadToFile(
   sourceURL: string,
   targetPath: string,
-  retries: number = 1
+  retries: number = 10
 ): Promise<void> {
   try {
     await _downloadToFile(sourceURL, targetPath);
