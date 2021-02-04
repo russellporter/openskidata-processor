@@ -27,6 +27,7 @@ describe("SkiAreaStatistics", () => {
       skiAreas: [],
       isBasisForNewSkiArea: true,
       isInSkiAreaPolygon: false,
+      isInSkiAreaSite: false,
     };
 
     const statistics = skiAreaStatistics([run]);
@@ -75,6 +76,7 @@ describe("SkiAreaStatistics", () => {
       },
       skiAreas: [],
       isInSkiAreaPolygon: false,
+      isInSkiAreaSite: false,
     };
 
     const statistics = skiAreaStatistics([lift]);
@@ -128,6 +130,7 @@ describe("SkiAreaStatistics", () => {
       skiAreas: [],
       isBasisForNewSkiArea: true,
       isInSkiAreaPolygon: false,
+      isInSkiAreaSite: false,
     };
 
     const statistics = skiAreaStatistics([run]);
@@ -169,6 +172,7 @@ it("should not count backcountry activity in mixed use runs", () => {
     skiAreas: [],
     isBasisForNewSkiArea: true,
     isInSkiAreaPolygon: false,
+    isInSkiAreaSite: false,
   };
 
   const statistics = skiAreaStatistics([run]);
