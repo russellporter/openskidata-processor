@@ -105,7 +105,7 @@ async function downloadToFile(
     // Wait a bit in case we are rate limited by the server.
     await sleep(60000);
 
-    downloadToFile(sourceURL, targetPath, retries - 1);
+    await downloadToFile(sourceURL, targetPath, retries - 1);
   }
 }
 
@@ -115,12 +115,16 @@ async function _downloadToFile(
 ): Promise<void> {
   const outputStream = Fs.createWriteStream(targetPath);
   let statusCode: number | null = null;
+  let error: any = null;
   request(sourceURL, {
     timeout: 30 * 60 * 1000,
     headers: { Referer: "https://openskimap.org" },
   })
     .on("response", function (response) {
       statusCode = response.statusCode;
+    })
+    .on("error", function (err) {
+      error = err;
     })
     .pipe(outputStream);
   await streamToPromise(outputStream);
@@ -132,6 +136,9 @@ async function _downloadToFile(
       "): " +
       sourceURL
     );
+  } else if (error) {
+    console.error(error);
+    throw error;
   }
 }
 
