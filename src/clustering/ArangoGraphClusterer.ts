@@ -4,7 +4,13 @@ import { aql, Database } from "arangojs";
 import { AqlQuery } from "arangojs/lib/cjs/aql-query";
 import { AssertionError } from "assert";
 import * as GeoJSON from "geojson";
-import { Activity, FeatureType, SourceType, Status } from "openskidata-format";
+import {
+  Activity,
+  FeatureType,
+  SkiAreaGeometry,
+  SourceType,
+  Status,
+} from "openskidata-format";
 import uuid from "uuid/v4";
 import { skiAreaStatistics } from "../statistics/SkiAreaStatistics";
 import Geocoder from "../transforms/Geocoder";
@@ -577,15 +583,7 @@ export default async function clusterArangoGraph(
     activities: Activity[],
     memberObjects: MapObject[]
   ): Promise<void> {
-    const features = memberObjects.map<GeoJSON.Feature>((object) => {
-      return { type: "Feature", geometry: object.geometry, properties: {} };
-    });
-    const objects = turf.featureCollection(features);
-    const geometry = centroid(objects as turf.FeatureCollection<any, any>)
-      .geometry;
-    if (!geometry) {
-      throw "No centroid point could be found.";
-    }
+    const geometry = skiAreaGeometry(memberObjects);
 
     const draftSkiArea: DraftSkiArea = {
       _key: id,
@@ -683,13 +681,13 @@ export default async function clusterArangoGraph(
     skiArea.properties.activities = activities;
     skiArea.properties.statistics = skiAreaStatistics(memberObjects);
 
-    const newGeometry =
-      memberObjects.length > 0
-        ? centroid({
-            type: "GeometryCollection",
-            geometries: memberObjects.map((object) => object.geometry),
-          }).geometry
-        : skiArea.geometry;
+    let newGeometry: SkiAreaGeometry;
+    try {
+      newGeometry = skiAreaGeometry(memberObjects);
+    } catch {
+      // if there are no member objects, we can't compute a geometry, so use the original geometry.
+      newGeometry = skiArea.geometry;
+    }
 
     skiArea.geometry = newGeometry;
     skiArea.isPolygon = false;
@@ -706,6 +704,18 @@ export default async function clusterArangoGraph(
     }
 
     await await objectsCollection.update(skiArea.id, skiArea);
+  }
+
+  function skiAreaGeometry(memberObjects: MapObject[]): GeoJSON.Point {
+    if (memberObjects.length === 0) {
+      throw "No member objects to compute geometry from";
+    }
+    const point = centroid({
+      type: "GeometryCollection",
+      geometries: memberObjects.map((object) => object.geometry),
+    }).geometry;
+
+    return point;
   }
 
   function getActivitiesBasedOnRunsAndLifts(
