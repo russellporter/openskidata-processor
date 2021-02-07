@@ -240,18 +240,9 @@ export default async function clusterArangoGraph(
             memberObjects
           );
 
-          // Determine ski area activities based on the clustered objects.
+          // Update ski area activities based on the clustered objects.
           if (!hasKnownSkiAreaActivities) {
-            const activities = memberObjects
-              .filter((object) => object.type !== MapObjectType.SkiArea)
-              .reduce((accumulatedActivities, object) => {
-                object.activities.forEach((activity) => {
-                  if (allSkiAreaActivities.has(activity)) {
-                    accumulatedActivities.add(activity);
-                  }
-                });
-                return accumulatedActivities;
-              }, new Set(skiArea.properties.activities));
+            const activities = getActivitiesBasedOnRunsAndLifts(memberObjects);
 
             await objectsCollection.update(
               { _key: skiArea._key },
@@ -641,7 +632,6 @@ export default async function clusterArangoGraph(
     return await cursor.all();
   }
 
-  // TODO: Also augment ski area geometry based on runs & lifts
   async function augmentSkiAreasBasedOnAssignedLiftsAndRuns(
     geocoder: Geocoder | null
   ): Promise<void> {
@@ -681,6 +671,16 @@ export default async function clusterArangoGraph(
       return;
     }
 
+    // Determine ski area activities based on the clustered objects.
+    // For most ski areas, this will already have been computed in an earlier pass.
+    // For site=piste ski areas, this may not be computed until this point if all lifts & runs were pre-assigned.
+    const activities =
+      skiArea.activities.length > 0
+        ? skiArea.activities
+        : getActivitiesBasedOnRunsAndLifts(memberObjects);
+
+    skiArea.activities = activities;
+    skiArea.properties.activities = activities;
     skiArea.properties.statistics = skiAreaStatistics(memberObjects);
 
     const newGeometry =
@@ -706,6 +706,23 @@ export default async function clusterArangoGraph(
     }
 
     await await objectsCollection.update(skiArea.id, skiArea);
+  }
+
+  function getActivitiesBasedOnRunsAndLifts(
+    mapObjects: MapObject[]
+  ): Activity[] {
+    return Array.from(
+      mapObjects
+        .filter((object) => object.type !== MapObjectType.SkiArea)
+        .reduce((accumulatedActivities, object) => {
+          object.activities.forEach((activity) => {
+            if (allSkiAreaActivities.has(activity)) {
+              accumulatedActivities.add(activity);
+            }
+          });
+          return accumulatedActivities;
+        }, new Set<Activity>())
+    );
   }
 
   function arangoGeometry(

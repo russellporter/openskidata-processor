@@ -1794,7 +1794,7 @@ it("removes an OpenStreetMap ski area that does not contain any runs/lifts as it
     `);
 });
 
-it("updates geometry & run convention for a site based ski area", async () => {
+it("updates geometry, run convention, and activities for a site based ski area", async () => {
   const paths = TestHelpers.getFilePaths();
   const siteSkiArea = TestHelpers.mockSkiAreaFeature({
     id: "1",
@@ -1840,6 +1840,13 @@ it("updates geometry & run convention for a site based ski area", async () => {
   expect(skiAreaFeatures.length).toBe(1);
 
   const skiAreaFeature = skiAreaFeatures[0];
+
+  expect(skiAreaFeature.properties.activities).toMatchInlineSnapshot(`
+    Array [
+      "nordic",
+    ]
+  `);
+
   expect(skiAreaFeature.geometry).toMatchInlineSnapshot(`
     Object {
       "coordinates": Array [
