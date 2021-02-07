@@ -37,7 +37,7 @@ import { emptySkiAreasCursor, SkiAreasCursor } from "./SkiAreasCursor";
 interface VisitContext {
   id: string;
   activities: Activity[];
-  excludeObjectsAlreadyInSkiAreaPolygon?: boolean;
+  excludeObjectsAlreadyInSkiArea?: boolean;
   searchPolygon?: GeoJSON.Polygon | GeoJSON.MultiPolygon | null;
   alreadyVisited: string[];
 }
@@ -76,13 +76,13 @@ export default async function clusterArangoGraph(
     objects: { onlyInPolygon: true },
   });
 
-  // For all OpenStreetMap ski areas, in a second pass, associate nearby runs & lifts that are not already assigned to a ski area polygon.
+  // For all OpenStreetMap ski areas, in a second pass, associate nearby runs & lifts that are not already assigned to a ski area.
   await assignObjectsToSkiAreas({
     skiArea: { onlySource: SourceType.OPENSTREETMAP },
-    objects: { onlyIfNotAlreadyAssignedToPolygon: true },
+    objects: { onlyIfNotAlreadyAssigned: true },
   });
 
-  // For all Skimap.org ski areas, associate nearby runs & lifts that are not already assigned to a ski area area polygon.
+  // For all Skimap.org ski areas, associate nearby runs & lifts that are not already assigned to a ski area.
   // Merge ski areas from different sources: For all Skimap.org ski areas,
   // if an OpenStreetMap ski area is nearby or its geometry encloses the Skimap.org ski area, merge them.
   await assignObjectsToSkiAreas({
@@ -90,7 +90,7 @@ export default async function clusterArangoGraph(
       onlySource: SourceType.SKIMAP_ORG,
       mergeWithOtherSourceIfNearby: true,
     },
-    objects: { onlyIfNotAlreadyAssignedToPolygon: true },
+    objects: { onlyIfNotAlreadyAssigned: true },
   });
 
   // For each remaining unclaimed run, generate a ski area for it, associating nearby unclaimed runs & lifts.
@@ -149,7 +149,7 @@ export default async function clusterArangoGraph(
       removeIfSubstantialNumberOfObjectsInSkiAreaSite?: boolean;
     };
     objects: {
-      onlyIfNotAlreadyAssignedToPolygon?: boolean;
+      onlyIfNotAlreadyAssigned?: boolean;
       onlyInPolygon?: boolean;
     };
   }): Promise<void> {
@@ -204,8 +204,8 @@ export default async function clusterArangoGraph(
               activities: activitiesForClustering,
               searchPolygon: searchPolygon,
               alreadyVisited: [skiArea._key],
-              excludeObjectsAlreadyInSkiAreaPolygon:
-                options.objects.onlyIfNotAlreadyAssignedToPolygon || false,
+              excludeObjectsAlreadyInSkiArea:
+                options.objects.onlyIfNotAlreadyAssigned || false,
             },
             skiArea
           );
@@ -466,8 +466,8 @@ export default async function clusterArangoGraph(
             FILTER ${context.id} NOT IN object.skiAreas
             FILTER object._key NOT IN ${context.alreadyVisited}
             ${
-              context.excludeObjectsAlreadyInSkiAreaPolygon
-                ? aql`FILTER object.isInSkiAreaPolygon != true`
+              context.excludeObjectsAlreadyInSkiArea
+                ? aql`FILTER object.skiAreas == []`
                 : aql``
             }
             FILTER object.activities ANY IN ${context.activities}
