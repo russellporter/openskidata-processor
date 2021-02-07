@@ -1850,8 +1850,8 @@ it("updates geometry, run convention, and activities for a site based ski area",
   expect(skiAreaFeature.geometry).toMatchInlineSnapshot(`
     Object {
       "coordinates": Array [
-        1.2500499999999999,
-        1.2500499999999999,
+        1.4993639242219372,
+        1.4993640268530994,
       ],
       "type": "Point",
     }
@@ -1962,8 +1962,8 @@ it("removes landuse based ski area when there is a site with sufficient overlap"
   expect(skiAreaFeature.geometry).toMatchInlineSnapshot(`
     Object {
       "coordinates": Array [
-        0.75,
-        0.5,
+        0.9995977536044848,
+        0.9991956218569416,
       ],
       "type": "Point",
     }

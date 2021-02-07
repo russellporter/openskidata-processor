@@ -1,5 +1,8 @@
+import along from "@turf/along";
 import centroid from "@turf/centroid";
 import * as turf from "@turf/helpers";
+import length from "@turf/length";
+import nearestPoint from "@turf/nearest-point";
 import { aql, Database } from "arangojs";
 import { AqlQuery } from "arangojs/lib/cjs/aql-query";
 import { AssertionError } from "assert";
@@ -14,7 +17,11 @@ import {
 import uuid from "uuid/v4";
 import { skiAreaStatistics } from "../statistics/SkiAreaStatistics";
 import Geocoder from "../transforms/Geocoder";
-import { bufferGeometry } from "../transforms/GeoTransforms";
+import {
+  bufferGeometry,
+  getPoints,
+  getPositions,
+} from "../transforms/GeoTransforms";
 import { getRunConvention } from "../transforms/RunFormatter";
 import {
   DraftSkiArea,
@@ -710,12 +717,33 @@ export default async function clusterArangoGraph(
     if (memberObjects.length === 0) {
       throw "No member objects to compute geometry from";
     }
-    const point = centroid({
+    const centroidPoint = centroid({
       type: "GeometryCollection",
       geometries: memberObjects.map((object) => object.geometry),
     }).geometry;
 
-    return point;
+    // The centroid of a ski area can sometimes be a ways from the actual runs/lifts depending on the ski areas shape.
+    // So, we find the point in the ski area geometry closest to the centroid.
+    const nearestPointToCentroid = nearestPoint(
+      centroidPoint,
+      getPoints(
+        memberObjects.flatMap((object) => getPositions(object.geometry))
+      )
+    ).geometry;
+
+    const line = turf.lineString([
+      nearestPointToCentroid.coordinates,
+      centroidPoint.coordinates,
+    ]);
+
+    if (length(line) > 0.1) {
+      // Get a point close to the most central point in the member objects
+      // but not exactly on top of it, so the central point is not exactly on top of a lift/run feature.
+      return along(line, 0.1).geometry;
+    } else {
+      // Centroid point is < 100m from the nearest point in the member objects, so just use it.
+      return centroidPoint;
+    }
   }
 
   function getActivitiesBasedOnRunsAndLifts(

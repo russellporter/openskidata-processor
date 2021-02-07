@@ -1,7 +1,13 @@
 import booleanPointInPolygon from "@turf/boolean-point-in-polygon";
 import buffer from "@turf/buffer";
 import centroid from "@turf/centroid";
-import { lineString, multiPoint, polygon } from "@turf/helpers";
+import {
+  featureCollection,
+  lineString,
+  multiPoint,
+  point,
+  polygon,
+} from "@turf/helpers";
 import nearestPointOnLine, {
   NearestPointOnLine,
 } from "@turf/nearest-point-on-line";
@@ -151,5 +157,34 @@ export function centralPointsInFeature(
             (polygon) => centralPointsInFeature(polygon.geometry).coordinates
           )
       ).geometry;
+  }
+}
+
+export function getPoints(
+  positions: GeoJSON.Position[]
+): GeoJSON.FeatureCollection<GeoJSON.Point> {
+  return featureCollection(positions.map((position) => point(position)));
+}
+
+export function getPositions(
+  geojson:
+    | GeoJSON.Point
+    | GeoJSON.MultiPoint
+    | GeoJSON.LineString
+    | GeoJSON.MultiLineString
+    | GeoJSON.Polygon
+    | GeoJSON.MultiPolygon
+): GeoJSON.Position[] {
+  switch (geojson.type) {
+    case "Point":
+      return [geojson.coordinates];
+    case "MultiPoint":
+    case "LineString":
+      return geojson.coordinates;
+    case "MultiLineString":
+    case "Polygon":
+      return geojson.coordinates.flat();
+    case "MultiPolygon":
+      return geojson.coordinates.flat(2);
   }
 }
