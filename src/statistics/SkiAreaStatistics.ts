@@ -1,3 +1,4 @@
+import { feature } from "@turf/helpers";
 import turfLength from "@turf/length";
 import {
   LiftStatistics,
@@ -92,7 +93,7 @@ function runStatistics(runs: RunObject[]): RunStatistics {
         activities: run.activities.filter((activity) =>
           allSkiAreaActivities.has(activity)
         ),
-        distance: turfLength(run.geometryWithElevations),
+        distance: turfLength(feature(run.geometry)),
       };
     })
     .reduce(
@@ -127,7 +128,7 @@ function liftStatistics(lifts: LiftObject[]): LiftStatistics {
     .map((lift) => {
       return {
         ...elevationStatistics(lift.geometryWithElevations),
-        distance: turfLength(lift.geometryWithElevations),
+        distance: turfLength(feature(lift.geometryWithElevations)),
         type: lift.liftType,
       };
     })
