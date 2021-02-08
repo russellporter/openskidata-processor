@@ -3,6 +3,7 @@ import centroid from "@turf/centroid";
 import * as turf from "@turf/helpers";
 import length from "@turf/length";
 import nearestPoint from "@turf/nearest-point";
+import union from "@turf/union";
 import { aql, Database } from "arangojs";
 import { AqlQuery } from "arangojs/aql";
 import { AssertionError } from "assert";
@@ -23,6 +24,7 @@ import {
   getPositions,
 } from "../transforms/GeoTransforms";
 import { getRunConvention } from "../transforms/RunFormatter";
+import notEmpty from "../utils/notEmpty";
 import {
   DraftSkiArea,
   LiftObject,
@@ -34,11 +36,14 @@ import {
 import mergeSkiAreaObjects from "./MergeSkiAreaObjects";
 import { emptySkiAreasCursor, SkiAreasCursor } from "./SkiAreasCursor";
 
+type SearchType = "contains" | "intersects";
 interface VisitContext {
   id: string;
   activities: Activity[];
   excludeObjectsAlreadyInSkiArea?: boolean;
   searchPolygon?: GeoJSON.Polygon | GeoJSON.MultiPolygon | null;
+  searchType: SearchType;
+  isFixedSearchArea: boolean;
   alreadyVisited: string[];
 }
 
@@ -177,6 +182,8 @@ export default async function clusterArangoGraph(
             }
           }
 
+          let isFixedSearchArea: boolean;
+          let searchType: SearchType;
           let searchPolygon:
             | GeoJSON.Polygon
             | GeoJSON.MultiPolygon
@@ -187,10 +194,29 @@ export default async function clusterArangoGraph(
               skiArea.geometry.type === "MultiPolygon"
             ) {
               searchPolygon = skiArea.geometry;
+              searchType = "contains";
+              isFixedSearchArea = true;
             } else {
               throw new AssertionError({
                 message: "Ski area geometry must be a polygon.",
               });
+            }
+          } else {
+            searchType = "intersects";
+            isFixedSearchArea = false;
+            const liftAndRunObjects = await getObjects(skiArea.id);
+            const bufferedObjectGeometries = [...liftAndRunObjects, skiArea]
+              .map((object) =>
+                bufferGeometry(object.geometry, maxDistanceInKilometers)
+              )
+              .filter(notEmpty);
+
+            if (bufferedObjectGeometries.length > 0) {
+              searchPolygon = bufferedObjectGeometries.reduce(
+                (previous, current) => {
+                  return union(previous, current).geometry;
+                }
+              );
             }
           }
 
@@ -205,6 +231,8 @@ export default async function clusterArangoGraph(
               id: id,
               activities: activitiesForClustering,
               searchPolygon: searchPolygon,
+              searchType: searchType,
+              isFixedSearchArea: isFixedSearchArea,
               alreadyVisited: [skiArea._key],
               excludeObjectsAlreadyInSkiArea:
                 options.objects.onlyIfNotAlreadyAssigned || false,
@@ -295,6 +323,8 @@ export default async function clusterArangoGraph(
         id: newSkiAreaID,
         activities: activities,
         alreadyVisited: [unassignedRun._key],
+        searchType: "intersects",
+        isFixedSearchArea: false,
       },
       unassignedRun
     );
@@ -331,15 +361,10 @@ export default async function clusterArangoGraph(
     context: VisitContext,
     geometry: GeoJSON.Polygon
   ): Promise<MapObject[]> {
-    const isInSkiAreaPolygon = context.searchPolygon ? true : false;
-    const objects = await findNearbyObjects(
-      geometry,
-      isInSkiAreaPolygon ? "contains" : "intersects",
-      context
-    );
+    const objects = await findNearbyObjects(geometry, context);
 
     // Skip further traversal if we are searching a fixed polygon.
-    if (isInSkiAreaPolygon) {
+    if (context.isFixedSearchArea) {
       return objects;
     } else {
       let foundObjects: MapObject[] = [];
@@ -365,6 +390,7 @@ export default async function clusterArangoGraph(
     }
     const objectContext = {
       ...context,
+      searchPolygon: context.isFixedSearchArea ? context.searchPolygon : null,
       activities: context.activities.filter((activity) =>
         object.activities.includes(activity)
       ),
@@ -401,10 +427,12 @@ export default async function clusterArangoGraph(
       return [];
     }
 
-    const nearbyObjects = await findNearbyObjects(buffer, "intersects", {
+    const nearbyObjects = await findNearbyObjects(buffer, {
       id: skiArea.id,
       activities: skiArea.activities,
       alreadyVisited: [],
+      searchType: "intersects",
+      isFixedSearchArea: false,
     });
 
     const otherSkiAreaIDs = new Set(
@@ -457,13 +485,14 @@ export default async function clusterArangoGraph(
 
   async function findNearbyObjects(
     area: GeoJSON.Polygon | GeoJSON.MultiPolygon,
-    match: "intersects" | "contains",
     context: VisitContext
   ): Promise<MapObject[]> {
     const query = aql`
             FOR object in ${objectsCollection}
             FILTER ${
-              match === "intersects" ? aql`GEO_INTERSECTS` : aql`GEO_CONTAINS`
+              context.searchType == "intersects"
+                ? aql`GEO_INTERSECTS`
+                : aql`GEO_CONTAINS`
             }(${arangoGeometry(area)}, object.geometry)
             FILTER ${context.id} NOT IN object.skiAreas
             FILTER object._key NOT IN ${context.alreadyVisited}

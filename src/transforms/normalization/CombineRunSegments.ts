@@ -1,5 +1,6 @@
 import { RunGeometry, RunProperties } from "openskidata-format";
 import { RunLineFeature } from "../../features/RunFeature";
+import notEmpty from "../../utils/notEmpty";
 import PointGraph from "./PointGraph";
 
 export default function combineRunSegments(
@@ -26,8 +27,4 @@ export default function combineRunSegments(
 
   geojson.features = runs;
   return geojson;
-}
-
-function notEmpty<TValue>(value: TValue | null | undefined): value is TValue {
-  return value !== null && value !== undefined;
 }
