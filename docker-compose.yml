@@ -1,12 +1,13 @@
-version: "3.3"
+version: "3.8"
 services:
   arangodb:
-    image: arangodb:3.6.2
+    image: arangodb:3.7.6 # keep in sync with the version used in integration tests
     ports:
       - 0:8529
     environment:
       - ARANGO_NO_AUTH=1d
   tippecanoe:
-    image: klokantech/tippecanoe
+    build:
+      context: https://github.com/mapbox/tippecanoe.git
     volumes:
       - ./data:/data

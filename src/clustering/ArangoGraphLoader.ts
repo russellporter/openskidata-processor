@@ -40,10 +40,22 @@ export default async function loadArangoGraph(
     ].map<Promise<Buffer>>(StreamToPromise)
   );
 
-  await objectsCollection.createGeoIndex("geometry", { geoJson: true });
-  await objectsCollection.createSkipList(["type", "source", "isPolygon"]);
-  await objectsCollection.createSkipList("skiAreas");
-  await objectsCollection.createSkipList("isBasisForNewSkiArea", {
+  await objectsCollection.ensureIndex({
+    type: "geo",
+    geoJson: true,
+    fields: ["geometry"],
+  });
+  await objectsCollection.ensureIndex({
+    type: "skiplist",
+    fields: ["type", "source", "isPolygon"],
+  });
+  await objectsCollection.ensureIndex({
+    type: "skiplist",
+    fields: ["skiAreas"],
+  });
+  await objectsCollection.ensureIndex({
+    type: "skiplist",
+    fields: ["isBasisForNewSkiArea"],
     sparse: true,
   });
 

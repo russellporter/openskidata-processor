@@ -1,5 +1,5 @@
 import { aql, Database } from "arangojs";
-import { ArrayCursor } from "arangojs/lib/cjs/cursor";
+import { ArrayCursor } from "arangojs/cursor";
 import { createWriteStream } from "fs";
 import { SkiAreaFeature } from "openskidata-format";
 import { Readable } from "stream";
@@ -19,7 +19,7 @@ export default async function exportSkiAreasGeoJSON(
   FOR object IN ${objectsCollection}
   FILTER object.type == ${MapObjectType.SkiArea}
   RETURN object`,
-    { options: { stream: true } }
+    { stream: true }
   );
   await streamToPromise(
     arangoQueryStream(cursor, client)
@@ -39,11 +39,11 @@ function arangoQueryStream(
       const readable = this;
       streamingCursor
         .next()
-        .catch((_) => {
+        .catch((_: any) => {
           console.log("Failed querying ArangoDB, stopping.");
           readable.push(null);
         })
-        .then((value) => {
+        .then((value: any) => {
           readable.push(value || null);
         });
     },

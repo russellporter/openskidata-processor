@@ -22,8 +22,10 @@ import {
 import clusterSkiAreas from "./ClusterSkiAreas";
 
 let mockUuidCount = 0;
-jest.mock("uuid/v4", (): (() => string) => {
-  return () => "mock-UUID-" + mockUuidCount++;
+jest.mock("uuid", () => {
+  return {
+    v4: () => "mock-UUID-" + mockUuidCount++,
+  };
 });
 
 // Increase timeout to give time to set up the container
@@ -31,17 +33,20 @@ jest.setTimeout(60 * 1000);
 
 let container: StartedTestContainer;
 beforeAll(async () => {
-  container = await new GenericContainer("arangodb", "3.5.3")
+  console.log("establishing container");
+  // keep version in sync with that used in docker-compose.yml
+  container = await new GenericContainer("arangodb:3.7.6")
     .withExposedPorts(8529)
     .withEnv("ARANGO_NO_AUTH", "1d")
     .start();
 
+  console.log("done establishing container");
   // Delay a bit or the DB won't be ready.
   await sleep(5000);
 });
 
 afterAll(async () => {
-  await container.stop();
+  await container?.stop();
 });
 
 beforeEach(() => {

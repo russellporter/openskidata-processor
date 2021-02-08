@@ -4,7 +4,7 @@ import * as turf from "@turf/helpers";
 import length from "@turf/length";
 import nearestPoint from "@turf/nearest-point";
 import { aql, Database } from "arangojs";
-import { AqlQuery } from "arangojs/lib/cjs/aql-query";
+import { AqlQuery } from "arangojs/aql";
 import { AssertionError } from "assert";
 import * as GeoJSON from "geojson";
 import {
@@ -14,7 +14,7 @@ import {
   SourceType,
   Status,
 } from "openskidata-format";
-import uuid from "uuid/v4";
+import { v4 as uuid } from "uuid";
 import { skiAreaStatistics } from "../statistics/SkiAreaStatistics";
 import Geocoder from "../transforms/Geocoder";
 import {
@@ -110,7 +110,7 @@ export default async function clusterArangoGraph(
     });
 
     let skiAreas: SkiAreaObject[];
-    while ((skiAreas = (await cursor.nextBatch()) as SkiAreaObject[])) {
+    while ((skiAreas = (await cursor.batches?.next()) as SkiAreaObject[])) {
       await Promise.all(
         skiAreas.map(async (skiArea) => {
           if (
@@ -159,7 +159,9 @@ export default async function clusterArangoGraph(
     });
 
     let skiAreas: SkiAreaObject[];
-    while ((skiAreas = (await skiAreasCursor.nextBatch()) as SkiAreaObject[])) {
+    while (
+      (skiAreas = (await skiAreasCursor.batches?.next()) as SkiAreaObject[])
+    ) {
       await Promise.all(
         skiAreas.map(async (skiArea) => {
           const id = skiArea.properties.id;
@@ -642,7 +644,9 @@ export default async function clusterArangoGraph(
   ): Promise<void> {
     const skiAreasCursor = await getSkiAreas({});
     let skiAreas: SkiAreaObject[];
-    while ((skiAreas = (await skiAreasCursor.nextBatch()) as SkiAreaObject[])) {
+    while (
+      (skiAreas = (await skiAreasCursor.batches?.next()) as SkiAreaObject[])
+    ) {
       await Promise.all(
         skiAreas.map(async (skiArea) => {
           const mapObjects = await getObjects(skiArea.id);
