@@ -9,5 +9,6 @@ services:
   tippecanoe:
     build:
       context: https://github.com/mapbox/tippecanoe.git
+    command: echo "tippecanoe loaded" # override the default command which runs the tests
     volumes:
       - ./data:/data
