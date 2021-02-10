@@ -1878,7 +1878,7 @@ it("updates geometry, run convention, and activities for a site based ski area",
   ).toMatchObject([skiAreaFeature]);
 });
 
-it("adds nearby unassociated runs to site based ski area", async () => {
+it("adds nearby unassociated runs of same activity to site based ski area", async () => {
   const paths = TestHelpers.getFilePaths();
   const siteSkiArea = TestHelpers.mockSkiAreaFeature({
     id: "1",
@@ -1948,6 +1948,82 @@ it("adds nearby unassociated runs to site based ski area", async () => {
         "name": "Run",
         "skiAreas": Array [
           "1",
+        ],
+      },
+    ]
+  `);
+});
+
+it("does not add nearby unassociated runs of different activity to site based ski area", async () => {
+  const paths = TestHelpers.getFilePaths();
+  const siteSkiArea = TestHelpers.mockSkiAreaFeature({
+    id: "1",
+    activities: [],
+    sources: [{ type: SourceType.OPENSTREETMAP, id: "1" }],
+    geometry: {
+      type: "Point",
+      coordinates: [360, 360, 1],
+    },
+  });
+  TestHelpers.mockFeatureFiles(
+    [siteSkiArea],
+    [],
+    [
+      TestHelpers.mockRunFeature({
+        id: "2",
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [1.0001, 1.0001],
+            [1.5, 1.5],
+          ],
+        },
+        name: "Run",
+        uses: [RunUse.Downhill],
+        skiAreas: [siteSkiArea],
+      }),
+      TestHelpers.mockRunFeature({
+        id: "3",
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [2, 2],
+            [1.5, 1.5],
+          ],
+        },
+        name: "Run",
+        uses: [RunUse.Nordic],
+        skiAreas: [],
+      }),
+    ],
+    paths.intermediate
+  );
+
+  await clusterSkiAreas(
+    paths.intermediate,
+    paths.output,
+    "http://localhost:" + container.getMappedPort(8529),
+    null
+  );
+
+  expect(
+    TestHelpers.fileContents(paths.output.runs).features.map(
+      simplifiedRunFeature
+    )
+  ).toMatchInlineSnapshot(`
+    Array [
+      Object {
+        "id": "2",
+        "name": "Run",
+        "skiAreas": Array [
+          "1",
+        ],
+      },
+      Object {
+        "id": "3",
+        "name": "Run",
+        "skiAreas": Array [
+          "mock-UUID-0",
         ],
       },
     ]

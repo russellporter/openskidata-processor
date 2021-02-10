@@ -68,6 +68,8 @@ export default async function clusterArangoGraph(
 ): Promise<void> {
   const objectsCollection = database.collection("objects");
 
+  await assignSkiAreaActivitiesBasedOnMemberObjects();
+
   await removeAmbiguousDuplicateSkiAreas();
 
   // For all OpenStreetMap ski areas (polygons), associate runs & lifts within that polygon.
@@ -141,6 +143,40 @@ export default async function clusterArangoGraph(
 
             await objectsCollection.remove({ _key: skiArea._key });
           }
+        })
+      );
+    }
+  }
+
+  // Determine ski area activities based on the associated map objects.
+  // site=piste ski areas don't contain this information initially when they are loaded.
+  async function assignSkiAreaActivitiesBasedOnMemberObjects() {
+    const skiAreasCursor = await getSkiAreas({});
+
+    let skiAreas: SkiAreaObject[] | undefined;
+    while ((skiAreas = await skiAreasCursor.batches?.next())) {
+      await Promise.all(
+        skiAreas.map(async (skiArea) => {
+          if (skiArea.activities.length > 0) {
+            return;
+          }
+
+          const memberObjects = await getObjects(skiArea.id);
+          const activities = getActivitiesBasedOnRunsAndLifts(memberObjects);
+
+          if (activities.length == 0) {
+            return;
+          }
+
+          await objectsCollection.update(
+            { _key: skiArea._key },
+            {
+              activities: [...activities],
+              properties: {
+                activities: [...activities],
+              },
+            }
+          );
         })
       );
     }
@@ -709,16 +745,6 @@ export default async function clusterArangoGraph(
       return;
     }
 
-    // Determine ski area activities based on the clustered objects.
-    // For most ski areas, this will already have been computed in an earlier pass.
-    // For site=piste ski areas, this may not be computed until this point if all lifts & runs were pre-assigned.
-    const activities =
-      skiArea.activities.length > 0
-        ? skiArea.activities
-        : getActivitiesBasedOnRunsAndLifts(memberObjects);
-
-    skiArea.activities = activities;
-    skiArea.properties.activities = activities;
     skiArea.properties.statistics = skiAreaStatistics(memberObjects);
 
     let newGeometry: SkiAreaGeometry;
