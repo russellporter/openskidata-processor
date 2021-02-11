@@ -166,6 +166,20 @@ describe("RunFormatter", () => {
     );
     expect(run!.properties.gladed).toBe(false);
   });
+
+  it("normalizes piste:grooming=no to backcountry", () => {
+    const run = formatRun(
+      inputRun({
+        type: "way",
+        id: 1,
+        tags: {
+          "piste:type": "downhill",
+          "piste:grooming": "no",
+        },
+      })
+    );
+    expect(run!.properties.grooming).toBe(RunGrooming.Backcountry);
+  });
 });
 
 function inputRun(

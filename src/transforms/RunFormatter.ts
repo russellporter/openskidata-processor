@@ -158,6 +158,10 @@ function getGrooming(tags: OSMRunTags): RunGrooming | null {
     return RunGrooming.Backcountry;
   }
 
+  if (tags["piste:grooming"] === "no") {
+    return RunGrooming.Backcountry;
+  }
+
   return null;
 }
 
