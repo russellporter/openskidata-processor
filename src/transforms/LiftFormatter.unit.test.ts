@@ -118,6 +118,21 @@ describe("LiftFormatter", () => {
       )
     ).toBeNull();
   });
+
+  it("drops invalid tagging mixing lifecycle & proposed value tagging", () => {
+    expect(
+      formatLift(
+        inputLift({
+          type: "way",
+          id: 1,
+          tags: {
+            aerialway: "proposed",
+            "proposed:aerialway": "gondola",
+          },
+        })
+      )
+    ).toBeNull();
+  });
 });
 
 function inputLift(
