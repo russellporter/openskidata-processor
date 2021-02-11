@@ -1,3 +1,4 @@
+import { RunGrooming } from "openskidata-format";
 import OSMGeoJSONProperties from "../features/OSMGeoJSONProperties";
 import { InputRunFeature, OSMRunTags } from "../features/RunFeature";
 import { formatRun } from "./RunFormatter";
@@ -107,6 +108,63 @@ describe("RunFormatter", () => {
       })
     );
     expect(run!.properties.oneway).toBe(false);
+  });
+
+  it("distinguishes gladed run", () => {
+    const run = formatRun(
+      inputRun({
+        type: "way",
+        id: 1,
+        tags: {
+          "piste:type": "downhill",
+          gladed: "yes",
+        },
+      })
+    );
+    expect(run!.properties.gladed).toBe(true);
+  });
+
+  it("distinguishes forested run as gladed", () => {
+    const run = formatRun(
+      inputRun({
+        type: "way",
+        id: 1,
+        tags: {
+          "piste:type": "downhill",
+          landuse: "forest",
+        },
+      })
+    );
+    expect(run!.properties.gladed).toBe(true);
+  });
+
+  it("distinguishes wooded run as gladed", () => {
+    const run = formatRun(
+      inputRun({
+        type: "way",
+        id: 1,
+        tags: {
+          "piste:type": "downhill",
+          natural: "wood",
+        },
+      })
+    );
+    expect(run!.properties.gladed).toBe(true);
+  });
+
+  it("gives gladed tag precedence over woods tag", () => {
+    const run = formatRun(
+      inputRun({
+        type: "way",
+        id: 1,
+        tags: {
+          "piste:type": "downhill",
+          natural: "wood",
+          gladed: "no",
+        },
+      })
+    );
+    expect(run!.properties.gladed).toBe(false);
   });
 });
 

@@ -58,7 +58,7 @@ export function formatRun(
     difficulty: difficulty,
     convention: convention,
     oneway: getOneway(tags, uses),
-    gladed: mapOSMBoolean(getOrElse(tags, "piste:gladed", "gladed")),
+    gladed: getGladed(tags),
     patrolled: mapOSMBoolean(getOrElse(tags, "piste:patrolled", "patrolled")),
     lit: mapOSMBoolean(getOrElse(tags, "piste:lit", "lit")),
     color: color,
@@ -97,6 +97,19 @@ function getUses(type: string): RunUse[] {
     .flatMap((t) =>
       Object.values(RunUse).includes(t as RunUse) ? [t as RunUse] : []
     );
+}
+
+function getGladed(tags: OSMRunTags): boolean | null {
+  const gladedTag = mapOSMBoolean(getOrElse(tags, "piste:gladed", "gladed"));
+  if (gladedTag !== null) {
+    return gladedTag;
+  }
+
+  if (tags["natural"] === "wood" || tags["landuse"] === "forest") {
+    return true;
+  }
+
+  return null;
 }
 
 function getOneway(tags: OSMRunTags, uses: RunUse[]): boolean | null {
