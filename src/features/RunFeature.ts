@@ -55,6 +55,7 @@ export type MapboxGLRunProperties = {
   id: string;
   name: string | null;
   difficulty: RunDifficulty | null;
+  skiAreas: string[];
   oneway: boolean | null;
   lit: boolean | null;
   gladed: boolean | null;

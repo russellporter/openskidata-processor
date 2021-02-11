@@ -48,6 +48,7 @@ export type MapboxGLLiftProperties = {
   name_and_type: string | null;
   color: string;
   status: Status;
+  skiAreas: string[];
 };
 
 export type InputLiftFeature = GeoJSON.Feature<

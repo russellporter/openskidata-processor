@@ -66,6 +66,7 @@ export function formatter(
       color: properties.color,
       colorName: properties.colorName,
       grooming: properties.grooming,
+      skiAreas: properties.skiAreas.map((skiArea) => skiArea.properties.id),
     };
 
     const uses = unique(properties.uses.map(mapboxGLRunUse)).sort();
@@ -111,6 +112,7 @@ export function formatter(
       ),
       color: properties.color,
       status: properties.status,
+      skiAreas: properties.skiAreas.map((skiArea) => skiArea.properties.id),
     };
 
     if (skiAreaAttributes) {
