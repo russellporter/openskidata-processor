@@ -42,8 +42,7 @@ export function formatter(
 ) => MapboxGLSkiAreaFeature | MapboxGLLiftFeature | MapboxGLRunFeature;
 
 export function formatter(
-  type: FeatureType,
-  skiAreaAttributes: boolean = true
+  type: FeatureType
 ): (feature: GeoJSON.Feature<any, any>) => GeoJSON.Feature {
   switch (type) {
     case FeatureType.Lift:
@@ -88,12 +87,6 @@ export function formatter(
       }
     });
 
-    if (skiAreaAttributes) {
-      for (let skiArea of properties.skiAreas) {
-        mapboxGLProperties["skiArea-" + skiArea.properties.id] = true;
-      }
-    }
-
     return {
       type: feature.type,
       geometry: feature.geometry,
@@ -114,12 +107,6 @@ export function formatter(
       status: properties.status,
       skiAreas: properties.skiAreas.map((skiArea) => skiArea.properties.id),
     };
-
-    if (skiAreaAttributes) {
-      for (let skiArea of properties.skiAreas) {
-        mapboxGLProperties["skiArea-" + skiArea.properties.id] = true;
-      }
-    }
 
     return {
       type: feature.type,

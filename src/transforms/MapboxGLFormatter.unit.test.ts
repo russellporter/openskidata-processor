@@ -149,7 +149,6 @@ describe("MapboxGLFormatter", () => {
     });
     const mapboxGLFeature = formatter(FeatureType.Lift)(feature);
 
-    expect(mapboxGLFeature.properties["skiArea-2"]).toBe(true);
     expect(mapboxGLFeature.properties.skiAreas).toMatchInlineSnapshot(`
       Array [
         "2",
@@ -246,7 +245,6 @@ describe("MapboxGLFormatter", () => {
     });
     const mapboxGLFeature = formatter(FeatureType.Run)(feature);
 
-    expect(mapboxGLFeature.properties["skiArea-2"]).toBe(true);
     expect(mapboxGLFeature.properties.skiAreas).toMatchInlineSnapshot(`
       Array [
         "2",

@@ -41,9 +41,6 @@ export type OSMLiftTags = {
 };
 
 export type MapboxGLLiftProperties = {
-  // Contains a field per ski area - format: skiArea-{id}: true
-  [key: string]: any;
-
   id: string;
   name_and_type: string | null;
   color: string;

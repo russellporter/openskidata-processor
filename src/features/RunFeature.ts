@@ -49,9 +49,6 @@ export type InputRunFeature = GeoJSON.Feature<
 >;
 
 export type MapboxGLRunProperties = {
-  // Contains a field per ski area - format: skiArea-{id}: true
-  [key: string]: any;
-
   id: string;
   name: string | null;
   difficulty: RunDifficulty | null;
