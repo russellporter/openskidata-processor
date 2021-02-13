@@ -1,5 +1,6 @@
-import { Activity, SkiAreaProperties, SourceType } from "openskidata-format";
+import { SkiAreaProperties, SourceType } from "openskidata-format";
 import uniquedSources from "../transforms/UniqueSources";
+import mergedAndUniqued from "../utils/mergedAndUniqued";
 import { SkiAreaObject } from "./MapObject";
 
 export default function mergeSkiAreaObjects(
@@ -27,7 +28,7 @@ export default function mergeSkiAreaObjects(
       skiAreas: primarySkiArea.skiAreas,
       source: primarySkiArea.source,
       type: primarySkiArea.type,
-      activities: mergeActivities(
+      activities: mergedAndUniqued(
         primarySkiArea.activities,
         otherSkiArea.activities
       ),
@@ -46,7 +47,7 @@ function mergeSkiAreaProperties(
   return {
     id: primarySkiArea.id,
     name: primarySkiArea.name,
-    activities: mergeActivities(
+    activities: mergedAndUniqued(
       primarySkiArea.activities,
       otherSkiArea.activities
     ),
@@ -57,15 +58,8 @@ function mergeSkiAreaProperties(
     ),
     status: primarySkiArea.status || otherSkiArea.status,
     type: primarySkiArea.type,
-    website: primarySkiArea.website || otherSkiArea.website,
+    websites: mergedAndUniqued(primarySkiArea.websites, otherSkiArea.websites),
     statistics: primarySkiArea.statistics,
     location: null,
   };
-}
-
-function mergeActivities(
-  primaryActivities: Activity[],
-  otherActivities: Activity[]
-) {
-  return Array.from(new Set([...primaryActivities, ...otherActivities]));
 }

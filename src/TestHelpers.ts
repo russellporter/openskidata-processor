@@ -180,6 +180,7 @@ export function mockRunFeature<G extends InputRunGeometry>(options: {
       status: options.status || Status.Operating,
       sources: options.sources || [],
       location: null,
+      websites: [],
     },
     geometry: options.geometry,
   };
@@ -215,6 +216,7 @@ export function mockLiftFeature<G extends LiftGeometry>(options: {
       skiAreas: options.skiAreas || [],
       sources: options.sources || [],
       location: null,
+      websites: [],
     },
     geometry: options.geometry,
   };
@@ -247,7 +249,7 @@ export function mockSkiAreaFeature<G extends SkiAreaGeometry>(options: {
           : [{ id: "1", type: SourceType.SKIMAP_ORG }],
       runConvention: RunConvention.EUROPE,
       statistics: options.statistics,
-      website: null,
+      websites: [],
       location: null,
     },
     geometry: options.geometry,

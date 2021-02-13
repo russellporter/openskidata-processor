@@ -73,7 +73,9 @@ describe("SkiAreaFormatter", () => {
           ],
           "status": "operating",
           "type": "skiArea",
-          "website": "http://example.com",
+          "websites": Array [
+            "http://example.com",
+          ],
         },
         "type": "Feature",
       }
@@ -183,7 +185,9 @@ describe("SkiAreaFormatter", () => {
           ],
           "status": "operating",
           "type": "skiArea",
-          "website": "http://example.com",
+          "websites": Array [
+            "http://example.com",
+          ],
         },
         "type": "Feature",
       }
@@ -226,7 +230,7 @@ describe("SkiAreaFormatter", () => {
           ],
           "status": "operating",
           "type": "skiArea",
-          "website": null,
+          "websites": Array [],
         },
         "type": "Feature",
       }

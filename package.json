@@ -31,7 +31,7 @@
     "merge2": "^1",
     "ngeohash": "^0.6.3",
     "object-hash": "^2",
-    "openskidata-format": "^0.12.0",
+    "openskidata-format": "^0.13.1",
     "osmtogeojson": "3.0.0-beta.4",
     "parallel-transform": "^1",
     "request": "^2",

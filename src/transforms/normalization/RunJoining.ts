@@ -7,6 +7,7 @@ import {
   RunProperties,
   Status,
 } from "openskidata-format";
+import mergedAndUniqued from "../../utils/mergedAndUniqued";
 import uniquedSources from "../UniqueSources";
 
 const ignoredPropertiesForComparison: Set<string> = new Set<
@@ -89,6 +90,9 @@ export function mergedProperties(
       allProperties.flatMap((properties) => properties.sources)
     ),
     location: null,
+    websites: mergedAndUniqued(
+      ...allProperties.map((properties) => properties.websites)
+    ),
   };
 }
 

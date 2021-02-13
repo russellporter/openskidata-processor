@@ -677,7 +677,7 @@ export default async function clusterArangoGraph(
         status: Status.Operating,
         sources: [],
         runConvention: getRunConvention(geometry),
-        website: null,
+        websites: [],
         location: null,
       },
     };

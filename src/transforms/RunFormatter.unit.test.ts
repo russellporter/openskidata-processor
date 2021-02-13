@@ -1,4 +1,4 @@
-import { RunGrooming } from "openskidata-format";
+import { RunGrooming, RunUse } from "openskidata-format";
 import OSMGeoJSONProperties from "../features/OSMGeoJSONProperties";
 import { InputRunFeature, OSMRunTags } from "../features/RunFeature";
 import { formatRun } from "./RunFormatter";
@@ -61,6 +61,7 @@ describe("RunFormatter", () => {
         "uses": Array [
           "downhill",
         ],
+        "websites": Array [],
       }
     `);
   });
@@ -179,6 +180,19 @@ describe("RunFormatter", () => {
       })
     );
     expect(run!.properties.grooming).toBe(RunGrooming.Backcountry);
+  });
+
+  it("supports fatbike trails", () => {
+    const run = formatRun(
+      inputRun({
+        type: "way",
+        id: 1,
+        tags: {
+          "piste:type": "fatbike",
+        },
+      })
+    );
+    expect(run!.properties.uses).toEqual([RunUse.Fatbike]);
   });
 });
 

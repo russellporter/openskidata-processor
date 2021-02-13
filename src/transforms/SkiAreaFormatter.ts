@@ -12,6 +12,7 @@ import {
   OSMSkiAreaSite,
   OSMSkiAreaTags,
 } from "../features/SkiAreaFeature";
+import notEmpty from "../utils/notEmpty";
 import buildFeature from "./FeatureBuilder";
 import { Omit } from "./Omit";
 import { getRunConvention } from "./RunFormatter";
@@ -113,7 +114,7 @@ function propertiesForOpenStreetMapSkiArea(
     // We don't care about the value here, just get the status. The value is always "winter_sports".
     status: getStatusAndValue("landuse", tags as { [key: string]: string })
       .status,
-    website: tags.website || null,
+    websites: [tags.website].filter(notEmpty),
     runConvention: runConvention,
     location: null,
   };
@@ -136,7 +137,7 @@ function propertiesForSkiMapOrgSkiArea(
     generated: false,
     status: feature.properties.status,
     runConvention: getRunConvention(feature),
-    website: feature.properties.official_website,
+    websites: [feature.properties.official_website].filter(notEmpty),
     location: null,
   };
 }

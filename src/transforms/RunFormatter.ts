@@ -15,6 +15,7 @@ import {
 } from "openskidata-format";
 import { osmID } from "../features/OSMGeoJSONProperties";
 import { InputRunFeature, OSMRunTags } from "../features/RunFeature";
+import notEmpty from "../utils/notEmpty";
 import buildFeature from "./FeatureBuilder";
 import {
   FormattedInputRunFeature,
@@ -70,6 +71,7 @@ export function formatRun(
       { type: SourceType.OPENSTREETMAP, id: osmID(feature.properties) },
     ],
     location: null,
+    websites: [tags.website].filter(notEmpty),
   };
 
   return buildFeature(feature.geometry, properties);

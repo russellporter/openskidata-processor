@@ -34,6 +34,8 @@ export type OSMRunTags = {
 
   oneway?: string;
   "piste:oneway"?: string;
+
+  website?: string;
 };
 
 export type InputRunGeometry =
