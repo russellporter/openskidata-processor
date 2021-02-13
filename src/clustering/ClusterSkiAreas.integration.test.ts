@@ -1416,42 +1416,42 @@ it("merges Skimap.org ski area with OpenStreetMap ski area", async () => {
       simplifiedSkiAreaFeatureWithSources
     )
   ).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "activities": Array [
-            "downhill",
-          ],
-          "id": "2",
-          "name": "Name",
-          "sources": Array [
-            Object {
-              "id": "2",
-              "type": "skimap.org",
-            },
-            Object {
-              "id": "1",
-              "type": "openstreetmap",
-            },
-          ],
-        },
-      ]
-      `);
+    Array [
+      Object {
+        "activities": Array [
+          "downhill",
+        ],
+        "id": "1",
+        "name": "Name",
+        "sources": Array [
+          Object {
+            "id": "1",
+            "type": "openstreetmap",
+          },
+          Object {
+            "id": "2",
+            "type": "skimap.org",
+          },
+        ],
+      },
+    ]
+  `);
 
   expect(
     TestHelpers.fileContents(paths.output.lifts).features.map(
       simplifiedLiftFeature
     )
   ).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "id": "3",
-          "name": "Lift",
-          "skiAreas": Array [
-            "2",
-          ],
-        },
-      ]
-      `);
+    Array [
+      Object {
+        "id": "3",
+        "name": "Lift",
+        "skiAreas": Array [
+          "1",
+        ],
+      },
+    ]
+  `);
 });
 
 it("removes OpenStreetMap ski areas that span across multiple Skimap.org ski areas", async () => {

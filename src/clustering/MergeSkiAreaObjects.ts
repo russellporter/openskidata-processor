@@ -9,11 +9,11 @@ export default function mergeSkiAreaObjects(
     return null;
   }
 
-  const skimapOrgSkiAreaIndex = skiAreas.findIndex(
-    (skiArea) => skiArea.source === SourceType.SKIMAP_ORG
+  const openStreetMapSkiAreaIndex = skiAreas.findIndex(
+    (skiArea) => skiArea.source === SourceType.OPENSTREETMAP
   );
   const primarySkiAreaIndex =
-    skimapOrgSkiAreaIndex !== -1 ? skimapOrgSkiAreaIndex : 0;
+    openStreetMapSkiAreaIndex !== -1 ? openStreetMapSkiAreaIndex : 0;
   const primarySkiArea = skiAreas[primarySkiAreaIndex];
   delete skiAreas[primarySkiAreaIndex];
 
