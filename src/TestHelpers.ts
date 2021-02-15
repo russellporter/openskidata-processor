@@ -151,6 +151,7 @@ export function mockRunFeature<G extends InputRunGeometry>(options: {
   grooming?: RunGrooming | null;
   uses?: RunUse[];
   difficulty?: RunDifficulty;
+  websites?: string[];
   convention?: RunConvention;
   geometry: G;
   skiAreas?: SkiAreaFeature[];
@@ -180,7 +181,7 @@ export function mockRunFeature<G extends InputRunGeometry>(options: {
       status: options.status || Status.Operating,
       sources: options.sources || [],
       location: null,
-      websites: [],
+      websites: options.websites || [],
     },
     geometry: options.geometry,
   };
@@ -192,6 +193,7 @@ export function mockLiftFeature<G extends LiftGeometry>(options: {
   liftType: LiftType;
   status?: Status;
   ref?: string | null;
+  websites?: string[];
   geometry: G;
   skiAreas?: SkiAreaFeature[];
   sources?: Source[];
@@ -216,7 +218,7 @@ export function mockLiftFeature<G extends LiftGeometry>(options: {
       skiAreas: options.skiAreas || [],
       sources: options.sources || [],
       location: null,
-      websites: [],
+      websites: options.websites || [],
     },
     geometry: options.geometry,
   };
@@ -229,6 +231,7 @@ export function mockSkiAreaFeature<G extends SkiAreaGeometry>(options: {
   status?: Status;
   sources?: Source[];
   statistics?: SkiAreaStatistics;
+  websites?: string[];
   geometry: G;
 }): GeoJSON.Feature<G, SkiAreaProperties> {
   return {
@@ -249,7 +252,7 @@ export function mockSkiAreaFeature<G extends SkiAreaGeometry>(options: {
           : [{ id: "1", type: SourceType.SKIMAP_ORG }],
       runConvention: RunConvention.EUROPE,
       statistics: options.statistics,
-      websites: [],
+      websites: options.websites || [],
       location: null,
     },
     geometry: options.geometry,

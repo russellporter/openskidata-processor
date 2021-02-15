@@ -58,8 +58,27 @@ function mergeSkiAreaProperties(
     ),
     status: primarySkiArea.status || otherSkiArea.status,
     type: primarySkiArea.type,
-    websites: mergedAndUniqued(primarySkiArea.websites, otherSkiArea.websites),
+    websites: mergedWebsites(primarySkiArea, otherSkiArea),
     statistics: primarySkiArea.statistics,
     location: null,
   };
+}
+
+function mergedWebsites(...skiAreas: SkiAreaProperties[]): string[] {
+  // Both Skimap.org & OpenStreetMap sourced ski areas often have websites associated with them
+  // In order to avoid duplicate links when merging Skimap.org & OpenStreetMap ski areas, prefer the OpenStreetMap sourced data.
+  // Often the URLs are just slightly different, so can't be easily de-duped.
+  const openStreetMapSkiAreasWithWebsites = skiAreas.filter(
+    (skiArea) =>
+      skiArea.sources.every(
+        (source) => source.type == SourceType.OPENSTREETMAP
+      ) && skiArea.websites.length > 0
+  );
+  if (openStreetMapSkiAreasWithWebsites.length > 0) {
+    return mergedAndUniqued(
+      openStreetMapSkiAreasWithWebsites.flatMap((skiArea) => skiArea.websites)
+    );
+  } else {
+    return mergedAndUniqued(skiAreas.flatMap((skiArea) => skiArea.websites));
+  }
 }

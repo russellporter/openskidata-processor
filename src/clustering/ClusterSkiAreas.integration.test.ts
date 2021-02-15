@@ -1454,6 +1454,56 @@ it("merges Skimap.org ski area with OpenStreetMap ski area", async () => {
   `);
 });
 
+it("prefers OSM sourced websites when merging Skimap.org ski area with OpenStreetMap ski area", async () => {
+  const paths = TestHelpers.getFilePaths();
+  TestHelpers.mockFeatureFiles(
+    [
+      TestHelpers.mockSkiAreaFeature({
+        id: "1",
+        activities: [Activity.Downhill],
+        sources: [{ type: SourceType.OPENSTREETMAP, id: "1" }],
+        websites: ["https://openstreetmap.org"],
+        geometry: {
+          type: "Point",
+          coordinates: [0, 0],
+        },
+      }),
+      TestHelpers.mockSkiAreaFeature({
+        id: "2",
+        activities: [Activity.Downhill],
+        sources: [{ type: SourceType.SKIMAP_ORG, id: "2" }],
+        websites: ["https://skimap.org"],
+        geometry: {
+          type: "Point",
+          coordinates: [0, 0],
+        },
+      }),
+    ],
+    [],
+    [],
+    paths.intermediate
+  );
+
+  await clusterSkiAreas(
+    paths.intermediate,
+    paths.output,
+    "http://localhost:" + container.getMappedPort(8529),
+    null
+  );
+
+  expect(
+    TestHelpers.fileContents(paths.output.skiAreas).features.map(
+      (feature: SkiAreaFeature) => feature.properties.websites
+    )
+  ).toMatchInlineSnapshot(`
+    Array [
+      Array [
+        "https://openstreetmap.org",
+      ],
+    ]
+  `);
+});
+
 it("removes OpenStreetMap ski areas that span across multiple Skimap.org ski areas", async () => {
   const paths = TestHelpers.getFilePaths();
   TestHelpers.mockFeatureFiles(
