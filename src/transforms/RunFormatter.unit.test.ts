@@ -194,6 +194,34 @@ describe("RunFormatter", () => {
     );
     expect(run!.properties.uses).toEqual([RunUse.Fatbike]);
   });
+
+  it("drops run with unsupported status", () => {
+    expect(
+      formatRun(
+        inputRun({
+          type: "way",
+          id: 1,
+          tags: {
+            "piste:type": "downhill",
+            demolished: "yes",
+          },
+        })
+      )
+    ).toBeNull();
+
+    expect(
+      formatRun(
+        inputRun({
+          type: "way",
+          id: 1,
+          tags: {
+            "piste:type": "demolished",
+            demolished: "downhill",
+          },
+        })
+      )
+    ).toBeNull();
+  });
 });
 
 function inputRun(

@@ -4,6 +4,7 @@ import {
   SkiAreaFeature,
   SkiAreaProperties,
   SourceType,
+  Status,
 } from "openskidata-format";
 import { osmID } from "../features/OSMGeoJSONProperties";
 import {
@@ -47,57 +48,93 @@ export function formatSkiArea(
   return (feature) => {
     switch (type) {
       case InputSkiAreaType.OPENSTREETMAP_LANDUSE:
-        const osmFeature = feature as InputOpenStreetMapSkiAreaFeature;
-        if (
-          osmFeature.properties.tags["sport"] !== undefined &&
-          osmFeature.properties.tags["sport"] !== "skiing" &&
-          osmFeature.properties.tags["sport"] !== "ski"
-        ) {
-          return null;
-        }
-        if (
-          osmFeature.geometry.type !== "Polygon" &&
-          osmFeature.geometry.type !== "MultiPolygon"
-        ) {
-          return null;
-        }
-
-        return buildFeature(
-          osmFeature.geometry,
-          propertiesForOpenStreetMapSkiArea(
-            osmID(osmFeature.properties),
-            osmFeature.properties.tags,
-            getRunConvention(osmFeature)
-          )
+        return formatOpenStreetMapLanduse(
+          feature as InputOpenStreetMapSkiAreaFeature
         );
       case InputSkiAreaType.OPENSTREETMAP_SITE:
-        const osmSiteObject = feature as OSMSkiAreaSite;
-        return buildFeature(
-          // super hacky thing, we don't know the coordinates of the site at this point.
-          // later on the correct geometry will be set when doing clustering.
-          // to get a stable identifier for the site, build a geometry based on its ID (which is then hashed by `buildFeature`)
-          { type: "Point", coordinates: [360, 360, osmSiteObject.id] },
-          propertiesForOpenStreetMapSkiArea(
-            osmID(osmSiteObject),
-            osmSiteObject.tags,
-            RunConvention.NORTH_AMERICA // also bogus, will be updated later when we know the real geometry
-          )
-        );
+        return formatOpenStreetMapSite(feature as OSMSkiAreaSite);
       case InputSkiAreaType.SKIMAP_ORG:
-        const skiMapFeature = feature as InputSkiMapOrgSkiAreaFeature;
-        return buildFeature(
-          skiMapFeature.geometry,
-          propertiesForSkiMapOrgSkiArea(
-            skiMapFeature as InputSkiMapOrgSkiAreaFeature
-          )
-        );
+        return formatSkiMapOrg(feature as InputSkiMapOrgSkiAreaFeature);
     }
   };
+}
+
+function formatOpenStreetMapLanduse(
+  feature: InputOpenStreetMapSkiAreaFeature
+): SkiAreaFeature | null {
+  const osmFeature = feature as InputOpenStreetMapSkiAreaFeature;
+  const tags = osmFeature.properties.tags;
+  if (
+    tags["sport"] !== undefined &&
+    tags["sport"] !== "skiing" &&
+    tags["sport"] !== "ski"
+  ) {
+    return null;
+  }
+  if (
+    osmFeature.geometry.type !== "Polygon" &&
+    osmFeature.geometry.type !== "MultiPolygon"
+  ) {
+    return null;
+  }
+
+  // We don't care about the value here, just get the status. The value is always "winter_sports".
+  const status = getStatusAndValue("landuse", tags as { [key: string]: string })
+    .status;
+
+  if (status === null) {
+    return null;
+  }
+
+  return buildFeature(
+    osmFeature.geometry,
+    propertiesForOpenStreetMapSkiArea(
+      osmID(osmFeature.properties),
+      osmFeature.properties.tags,
+      status,
+      getRunConvention(osmFeature)
+    )
+  );
+}
+
+function formatOpenStreetMapSite(site: OSMSkiAreaSite): SkiAreaFeature | null {
+  // We don't care about the value here, just get the status. The value is always "piste".
+  const status = getStatusAndValue(
+    "site",
+    site.tags as { [key: string]: string }
+  ).status;
+
+  if (status === null) {
+    return null;
+  }
+
+  return buildFeature(
+    // super hacky thing, we don't know the coordinates of the site at this point.
+    // later on the correct geometry will be set when doing clustering.
+    // to get a stable identifier for the site, build a geometry based on its ID (which is then hashed by `buildFeature`)
+    { type: "Point", coordinates: [360, 360, site.id] },
+    propertiesForOpenStreetMapSkiArea(
+      osmID(site),
+      site.tags,
+      status,
+      RunConvention.NORTH_AMERICA // also bogus, will be updated later when we know the real geometry
+    )
+  );
+}
+
+function formatSkiMapOrg(
+  feature: InputSkiMapOrgSkiAreaFeature
+): SkiAreaFeature | null {
+  return buildFeature(
+    feature.geometry,
+    propertiesForSkiMapOrgSkiArea(feature as InputSkiMapOrgSkiAreaFeature)
+  );
 }
 
 function propertiesForOpenStreetMapSkiArea(
   osmID: string,
   tags: OSMSkiAreaTags,
+  status: Status,
   runConvention: RunConvention
 ): Omit<SkiAreaProperties, "id"> {
   return {
@@ -111,9 +148,7 @@ function propertiesForOpenStreetMapSkiArea(
     ],
     activities: [],
     generated: false,
-    // We don't care about the value here, just get the status. The value is always "winter_sports".
-    status: getStatusAndValue("landuse", tags as { [key: string]: string })
-      .status,
+    status: status,
     websites: [tags.website].filter(notEmpty),
     runConvention: runConvention,
     location: null,

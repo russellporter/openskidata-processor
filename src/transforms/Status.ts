@@ -9,7 +9,10 @@ import { Status } from "openskidata-format";
 export default function getStatusAndValue(
   key: string,
   properties: { [key: string]: string }
-): { status: Status; value: string | null } {
+): { status: Status | null; value: string | null } {
+  if (isUnsupportedStatus(key, properties)) {
+    return { status: null, value: null };
+  }
   if (properties.hasOwnProperty(key)) {
     const valueOrStatus = properties[key];
     if (lifecycleStates.has(valueOrStatus as any)) {
@@ -43,6 +46,18 @@ export default function getStatusAndValue(
     value: properties[key] || null,
   };
 }
+
+function isUnsupportedStatus(
+  key: string,
+  properties: { [key: string]: string }
+): boolean {
+  return (
+    unsupportedStates.has(properties[key]) ||
+    [...unsupportedStates].some((state) => properties[state] === "yes")
+  );
+}
+
+export const unsupportedStates = new Set(["demolished", "removed", "razed"]);
 
 export const lifecycleStates = new Set([
   Status.Disused,

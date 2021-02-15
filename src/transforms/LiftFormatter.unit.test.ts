@@ -133,6 +133,34 @@ describe("LiftFormatter", () => {
       )
     ).toBeNull();
   });
+
+  it("drops lift with unsupported status", () => {
+    expect(
+      formatLift(
+        inputLift({
+          type: "way",
+          id: 1,
+          tags: {
+            aerialway: "gondola",
+            demolished: "yes",
+          },
+        })
+      )
+    ).toBeNull();
+
+    expect(
+      formatLift(
+        inputLift({
+          type: "way",
+          id: 1,
+          tags: {
+            aerialway: "demolished",
+            demolished: "gondola",
+          },
+        })
+      )
+    ).toBeNull();
+  });
 });
 
 function inputLift(

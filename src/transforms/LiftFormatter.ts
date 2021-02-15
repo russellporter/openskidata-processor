@@ -41,7 +41,7 @@ export function formatLift(feature: InputLiftFeature): LiftFeature | null {
 
   const { status, liftType } = getStatusAndLiftType(tags);
 
-  if (liftType === null) {
+  if (status === null || liftType === null) {
     return null;
   }
 
