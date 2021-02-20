@@ -1,7 +1,11 @@
+import bboxPolygon from "@turf/bbox-polygon";
+import booleanContains from "@turf/boolean-contains";
 import * as Fs from "fs";
+import { readFile, writeFile } from "fs/promises";
 import request from "request";
 import streamToPromise from "stream-to-promise";
 import * as tmp from "tmp";
+import { InputSkiMapOrgSkiAreaFeature } from "../features/SkiAreaFeature";
 import {
   liftsDownloadConfig,
   OSMDownloadConfig,
@@ -48,7 +52,7 @@ export default async function downloadAndConvertToGeoJSON(
         bbox
       );
     })(),
-    downloadToFile(skiMapSkiAreasURL, paths.skiMapSkiAreas),
+    downloadSkiMapOrgSkiAreas(paths.skiMapSkiAreas, bbox),
   ]);
 
   return paths;
@@ -84,6 +88,27 @@ async function downloadOSMJSON(
 ) {
   const url = overpassURLForQuery(endpoint, config.query(bbox));
   await downloadToFile(url, targetPath);
+}
+
+async function downloadSkiMapOrgSkiAreas(
+  targetPath: string,
+  bbox: GeoJSON.BBox | null
+) {
+  await downloadToFile(skiMapSkiAreasURL, targetPath);
+
+  if (!bbox) {
+    return;
+  }
+
+  // For consistency with the OSM data (which has the bounding box applied on Overpass API), apply bbox filtering on the downloaded GeoJSON.
+  const bboxGeometry = bboxPolygon(bbox);
+  const contents = await readFile(targetPath);
+  const json: GeoJSON.FeatureCollection = JSON.parse(contents.toString());
+  json.features = (json.features as InputSkiMapOrgSkiAreaFeature[]).filter(
+    (feature) => booleanContains(bboxGeometry, feature)
+  );
+
+  await writeFile(targetPath, JSON.stringify(json));
 }
 
 async function downloadToFile(
