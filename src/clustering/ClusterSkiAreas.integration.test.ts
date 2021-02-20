@@ -1454,6 +1454,81 @@ it("merges Skimap.org ski area with OpenStreetMap ski area", async () => {
   `);
 });
 
+it("merges Skimap.org ski area without activities with OpenStreetMap ski area", async () => {
+  const paths = TestHelpers.getFilePaths();
+  TestHelpers.mockFeatureFiles(
+    [
+      TestHelpers.mockSkiAreaFeature({
+        id: "1",
+        activities: [],
+        sources: [{ type: SourceType.OPENSTREETMAP, id: "1" }],
+        geometry: {
+          type: "Point",
+          coordinates: [0, 0],
+        },
+      }),
+      TestHelpers.mockSkiAreaFeature({
+        id: "2",
+        activities: [],
+        sources: [{ type: SourceType.SKIMAP_ORG, id: "2" }],
+        geometry: {
+          type: "Point",
+          coordinates: [1, 0],
+        },
+      }),
+    ],
+    [
+      TestHelpers.mockLiftFeature({
+        id: "3",
+        name: "Lift",
+        liftType: LiftType.TBar,
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [0, 0],
+            [1, 0],
+          ],
+        },
+      }),
+    ],
+    [],
+    paths.intermediate
+  );
+
+  await clusterSkiAreas(
+    paths.intermediate,
+    paths.output,
+    "http://localhost:" + container.getMappedPort(8529),
+    null
+  );
+
+  expect(
+    TestHelpers.fileContents(paths.output.skiAreas).features.map(
+      simplifiedSkiAreaFeatureWithSources
+    )
+  ).toMatchInlineSnapshot(`
+    Array [
+      Object {
+        "activities": Array [
+          "downhill",
+        ],
+        "id": "1",
+        "name": "Name",
+        "sources": Array [
+          Object {
+            "id": "1",
+            "type": "openstreetmap",
+          },
+          Object {
+            "id": "2",
+            "type": "skimap.org",
+          },
+        ],
+      },
+    ]
+  `);
+});
+
 it("prefers OSM sourced websites when merging Skimap.org ski area with OpenStreetMap ski area", async () => {
   const paths = TestHelpers.getFilePaths();
   TestHelpers.mockFeatureFiles(

@@ -210,6 +210,12 @@ export default async function clusterArangoGraph(
             throw "No ID for ski area starting object";
           }
 
+          const hasKnownSkiAreaActivities = skiArea.activities.length > 0;
+          const activitiesForClustering = hasKnownSkiAreaActivities
+            ? skiArea.activities
+            : [...allSkiAreaActivities];
+          skiArea.activities = activitiesForClustering;
+
           if (options.skiArea.mergeWithOtherSourceIfNearby) {
             const skiAreasToMerge = await getSkiAreasToMerge(skiArea);
             if (skiAreasToMerge.length > 0) {
@@ -255,12 +261,6 @@ export default async function clusterArangoGraph(
               );
             }
           }
-
-          const hasKnownSkiAreaActivities = skiArea.activities.length > 0;
-          const activitiesForClustering = hasKnownSkiAreaActivities
-            ? skiArea.activities
-            : [...allSkiAreaActivities];
-          skiArea.activities = activitiesForClustering;
 
           const memberObjects = await visitObject(
             {
