@@ -46,7 +46,7 @@ function mergeSkiAreaProperties(
 ): SkiAreaProperties {
   return {
     id: primarySkiArea.id,
-    name: primarySkiArea.name,
+    name: primarySkiArea.name || otherSkiArea.name,
     activities: mergedAndUniqued(
       primarySkiArea.activities,
       otherSkiArea.activities
