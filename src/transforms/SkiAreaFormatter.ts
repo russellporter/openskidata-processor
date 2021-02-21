@@ -14,6 +14,7 @@ import {
   OSMSkiAreaTags,
 } from "../features/SkiAreaFeature";
 import notEmpty from "../utils/notEmpty";
+import placeholderSiteGeometry from "../utils/PlaceholderSiteGeometry";
 import buildFeature from "./FeatureBuilder";
 import { Omit } from "./Omit";
 import { getRunConvention } from "./RunFormatter";
@@ -112,7 +113,7 @@ function formatOpenStreetMapSite(site: OSMSkiAreaSite): SkiAreaFeature | null {
     // super hacky thing, we don't know the coordinates of the site at this point.
     // later on the correct geometry will be set when doing clustering.
     // to get a stable identifier for the site, build a geometry based on its ID (which is then hashed by `buildFeature`)
-    { type: "Point", coordinates: [360, 360, site.id] },
+    placeholderSiteGeometry(site),
     propertiesForOpenStreetMapSkiArea(
       osmID(site),
       site.tags,
