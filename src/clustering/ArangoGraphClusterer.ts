@@ -89,13 +89,13 @@ export default async function clusterArangoGraph(
     objects: { onlyIfNotAlreadyAssigned: true },
   });
 
+  // Merge ski areas from different sources: For all Skimap.org ski areas, if an OpenStreetMap ski area is nearby, merge them
+  await mergeSkimapOrgWithOpenStreetMapSkiAreas();
+
   // For all Skimap.org ski areas, associate nearby runs & lifts that are not already assigned to a ski area.
-  // Merge ski areas from different sources: For all Skimap.org ski areas,
-  // if an OpenStreetMap ski area is nearby or its geometry encloses the Skimap.org ski area, merge them.
   await assignObjectsToSkiAreas({
     skiArea: {
       onlySource: SourceType.SKIMAP_ORG,
-      mergeWithOtherSourceIfNearby: true,
     },
     objects: { onlyIfNotAlreadyAssigned: true },
   });
@@ -185,7 +185,6 @@ export default async function clusterArangoGraph(
   async function assignObjectsToSkiAreas(options: {
     skiArea: {
       onlySource: SourceType;
-      mergeWithOtherSourceIfNearby?: boolean;
       removeIfNoObjectsFound?: boolean;
       removeIfSubstantialNumberOfObjectsInSkiAreaSite?: boolean;
     };
@@ -206,23 +205,12 @@ export default async function clusterArangoGraph(
       await Promise.all(
         skiAreas.map(async (skiArea) => {
           const id = skiArea.properties.id;
-          if (!id) {
-            throw "No ID for ski area starting object";
-          }
 
           const hasKnownSkiAreaActivities = skiArea.activities.length > 0;
           const activitiesForClustering = hasKnownSkiAreaActivities
             ? skiArea.activities
             : [...allSkiAreaActivities];
           skiArea.activities = activitiesForClustering;
-
-          if (options.skiArea.mergeWithOtherSourceIfNearby) {
-            const skiAreasToMerge = await getSkiAreasToMerge(skiArea);
-            if (skiAreasToMerge.length > 0) {
-              await mergeSkiAreas([skiArea, ...skiAreasToMerge]);
-              return;
-            }
-          }
 
           let isFixedSearchArea: boolean;
           let searchType: SearchType;
@@ -335,6 +323,28 @@ export default async function clusterArangoGraph(
           }
         })
       );
+    }
+  }
+
+  async function mergeSkimapOrgWithOpenStreetMapSkiAreas(): Promise<void> {
+    const skiAreasCursor = await getSkiAreas({
+      onlySource: SourceType.SKIMAP_ORG,
+    });
+
+    let skiArea: SkiAreaObject | undefined;
+    // Merging is not batching-safe, so only process one ski area at a time.
+    while ((skiArea = await skiAreasCursor.next())) {
+      const hasKnownSkiAreaActivities = skiArea.activities.length > 0;
+      const activitiesForClustering = hasKnownSkiAreaActivities
+        ? skiArea.activities
+        : [...allSkiAreaActivities];
+      skiArea.activities = activitiesForClustering;
+
+      const skiAreasToMerge = await getSkiAreasToMerge(skiArea);
+      if (skiAreasToMerge.length > 0) {
+        await mergeSkiAreas([skiArea, ...skiAreasToMerge]);
+        return;
+      }
     }
   }
 
@@ -479,8 +489,10 @@ export default async function clusterArangoGraph(
     );
     const otherSkiAreas: SkiAreaObject[] = await otherSkiAreasCursor.all();
 
-    return otherSkiAreas.filter(
-      (otherSkiArea) => otherSkiArea.source != skiArea.source
+    return otherSkiAreas.filter((otherSkiArea) =>
+      otherSkiArea.properties.sources.every(
+        (source) => source.type != skiArea.source
+      )
     );
   }
 
