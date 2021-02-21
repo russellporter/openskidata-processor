@@ -1549,11 +1549,11 @@ it("merges Skimap.org ski area into adjacent OpenStreetMap ski areas", async () 
         "activities": Array [
           "downhill",
         ],
-        "id": "1",
+        "id": "2",
         "name": "Name",
         "sources": Array [
           Object {
-            "id": "1",
+            "id": "2",
             "type": "openstreetmap",
           },
           Object {
@@ -1566,11 +1566,11 @@ it("merges Skimap.org ski area into adjacent OpenStreetMap ski areas", async () 
         "activities": Array [
           "downhill",
         ],
-        "id": "2",
+        "id": "1",
         "name": "Name",
         "sources": Array [
           Object {
-            "id": "2",
+            "id": "1",
             "type": "openstreetmap",
           },
           Object {
@@ -2373,8 +2373,8 @@ it("removes landuse based ski area when there is a site with sufficient overlap"
   expect(skiAreaFeature.geometry).toMatchInlineSnapshot(`
     Object {
       "coordinates": Array [
-        0.9997155713771949,
-        0.9991468282147999,
+        0.9995977536044848,
+        0.9991956218569416,
       ],
       "type": "Point",
     }

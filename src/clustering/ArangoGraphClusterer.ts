@@ -8,13 +8,7 @@ import { aql, Database } from "arangojs";
 import { AqlQuery } from "arangojs/aql";
 import { AssertionError } from "assert";
 import * as GeoJSON from "geojson";
-import {
-  Activity,
-  FeatureType,
-  SkiAreaGeometry,
-  SourceType,
-  Status,
-} from "openskidata-format";
+import { Activity, FeatureType, SourceType, Status } from "openskidata-format";
 import { v4 as uuid } from "uuid";
 import { skiAreaStatistics } from "../statistics/SkiAreaStatistics";
 import Geocoder from "../transforms/Geocoder";
@@ -68,7 +62,7 @@ export default async function clusterArangoGraph(
 ): Promise<void> {
   const objectsCollection = database.collection("objects");
 
-  await assignSkiAreaActivitiesBasedOnMemberObjects();
+  await assignSkiAreaActivitiesAndGeometryBasedOnMemberObjects();
 
   await removeAmbiguousDuplicateSkiAreas();
 
@@ -150,7 +144,7 @@ export default async function clusterArangoGraph(
 
   // Determine ski area activities based on the associated map objects.
   // site=piste ski areas don't contain this information initially when they are loaded.
-  async function assignSkiAreaActivitiesBasedOnMemberObjects() {
+  async function assignSkiAreaActivitiesAndGeometryBasedOnMemberObjects() {
     const skiAreasCursor = await getSkiAreas({});
 
     let skiAreas: SkiAreaObject[] | undefined;
@@ -172,6 +166,7 @@ export default async function clusterArangoGraph(
             { _key: skiArea._key },
             {
               activities: [...activities],
+              geometry: skiAreaGeometry(memberObjects),
               properties: {
                 activities: [...activities],
               },
@@ -748,21 +743,10 @@ export default async function clusterArangoGraph(
     }
 
     skiArea.properties.statistics = skiAreaStatistics(memberObjects);
-
-    let newGeometry: SkiAreaGeometry;
-    try {
-      newGeometry = skiAreaGeometry(memberObjects);
-    } catch {
-      // if there are no member objects, we can't compute a geometry, so use the original geometry.
-      newGeometry = skiArea.geometry;
-    }
-
-    skiArea.geometry = newGeometry;
-    skiArea.isPolygon = false;
-    skiArea.properties.runConvention = getRunConvention(newGeometry);
+    skiArea.properties.runConvention = getRunConvention(skiArea.geometry);
 
     if (geocoder) {
-      const coordinates = centroid(newGeometry).geometry.coordinates;
+      const coordinates = centroid(skiArea.geometry).geometry.coordinates;
       try {
         skiArea.properties.location = await geocoder.geocode(coordinates);
       } catch (error) {
