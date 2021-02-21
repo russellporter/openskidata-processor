@@ -52,8 +52,8 @@ describe("MapboxGLFormatter", () => {
       },
     });
     const mapboxGLFeature = formatter(FeatureType.SkiArea)(feature);
-    expect(mapboxGLFeature.properties.downhillDistance).toBe(16);
-    expect(mapboxGLFeature.properties.nordicDistance).toBe(1);
+    expect(mapboxGLFeature?.properties.downhillDistance).toBe(16);
+    expect(mapboxGLFeature?.properties.nordicDistance).toBe(1);
   });
 
   it("should export ski area with elevation data", () => {
@@ -70,8 +70,8 @@ describe("MapboxGLFormatter", () => {
     });
     const mapboxGLFeature = formatter(FeatureType.SkiArea)(feature);
 
-    expect(mapboxGLFeature.properties.vertical).toBe(922);
-    expect(mapboxGLFeature.properties.maxElevation).toBe(1023);
+    expect(mapboxGLFeature?.properties.vertical).toBe(922);
+    expect(mapboxGLFeature?.properties.maxElevation).toBe(1023);
   });
 
   it("should export run with ref", () => {
@@ -84,7 +84,7 @@ describe("MapboxGLFormatter", () => {
     });
     const mapboxGLFeature = formatter(FeatureType.Run)(feature);
 
-    expect(mapboxGLFeature.properties.name).toBe("99 - Run");
+    expect(mapboxGLFeature?.properties.name).toBe("99 - Run");
   });
 
   it("should export run without ref", () => {
@@ -97,7 +97,7 @@ describe("MapboxGLFormatter", () => {
     });
     const mapboxGLFeature = formatter(FeatureType.Run)(feature);
 
-    expect(mapboxGLFeature.properties.name).toBe("Run");
+    expect(mapboxGLFeature?.properties.name).toBe("Run");
   });
 
   it("should export lift with ref", () => {
@@ -110,7 +110,7 @@ describe("MapboxGLFormatter", () => {
     });
     const mapboxGLFeature = formatter(FeatureType.Lift)(feature);
 
-    expect(mapboxGLFeature.properties.name_and_type).toBe(
+    expect(mapboxGLFeature?.properties.name_and_type).toBe(
       "99 - Lift (Chairlift)"
     );
   });
@@ -125,7 +125,7 @@ describe("MapboxGLFormatter", () => {
     });
     const mapboxGLFeature = formatter(FeatureType.Lift)(feature);
 
-    expect(mapboxGLFeature.properties.name_and_type).toBe("Lift (Chairlift)");
+    expect(mapboxGLFeature?.properties.name_and_type).toBe("Lift (Chairlift)");
   });
 
   it("should export lift with associated ski areas", () => {
@@ -149,7 +149,7 @@ describe("MapboxGLFormatter", () => {
     });
     const mapboxGLFeature = formatter(FeatureType.Lift)(feature);
 
-    expect(mapboxGLFeature.properties.skiAreas).toMatchInlineSnapshot(`
+    expect(mapboxGLFeature?.properties.skiAreas).toMatchInlineSnapshot(`
       Array [
         "2",
       ]
@@ -173,7 +173,7 @@ describe("MapboxGLFormatter", () => {
     });
     const mapboxGLFeature = formatter(FeatureType.SkiArea)(feature);
 
-    expect(mapboxGLFeature.geometry.type).toBe("Point");
+    expect(mapboxGLFeature?.geometry.type).toBe("Point");
   });
 
   it("should export multipolygon ski area as multipoint geometry", () => {
@@ -203,7 +203,7 @@ describe("MapboxGLFormatter", () => {
     });
     const mapboxGLFeature = formatter(FeatureType.SkiArea)(feature);
 
-    expect(mapboxGLFeature.geometry.type).toBe("MultiPoint");
+    expect(mapboxGLFeature?.geometry.type).toBe("MultiPoint");
   });
 
   it("should export ski run with multiple uses", () => {
@@ -221,9 +221,9 @@ describe("MapboxGLFormatter", () => {
     });
     const mapboxGLFeature = formatter(FeatureType.Run)(feature);
 
-    expect(mapboxGLFeature.properties.downhill).toBe(-0.5);
-    expect(mapboxGLFeature.properties.nordic).toBe(undefined);
-    expect(mapboxGLFeature.properties.other).toBe(0.5);
+    expect(mapboxGLFeature?.properties.downhill).toBe(-0.5);
+    expect(mapboxGLFeature?.properties.nordic).toBe(undefined);
+    expect(mapboxGLFeature?.properties.other).toBe(0.5);
   });
 
   it("should export ski run with associated ski areas", () => {
@@ -245,7 +245,7 @@ describe("MapboxGLFormatter", () => {
     });
     const mapboxGLFeature = formatter(FeatureType.Run)(feature);
 
-    expect(mapboxGLFeature.properties.skiAreas).toMatchInlineSnapshot(`
+    expect(mapboxGLFeature?.properties.skiAreas).toMatchInlineSnapshot(`
       Array [
         "2",
       ]

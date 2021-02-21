@@ -107,7 +107,7 @@ export default async function prepare(paths: GeoJSONPaths, config: Config) {
     [FeatureType.SkiArea, FeatureType.Lift, FeatureType.Run].map((type) => {
       return StreamToPromise(
         readGeoJSONFeatures(getPath(paths.output, type))
-          .pipe(map(MapboxGLFormatter.formatter(type)))
+          .pipe(flatMap(MapboxGLFormatter.formatter(type)))
           .pipe(toFeatureCollection())
           .pipe(createWriteStream(getPath(paths.output.mapboxGL, type)))
       );

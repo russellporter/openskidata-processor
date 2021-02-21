@@ -27,23 +27,23 @@ import { centralPointsInFeature } from "./GeoTransforms";
 
 export function formatter(
   type: FeatureType.SkiArea
-): (feature: SkiAreaFeature) => MapboxGLSkiAreaFeature;
+): (feature: SkiAreaFeature) => MapboxGLSkiAreaFeature | null;
 export function formatter(
   type: FeatureType.Lift
-): (feature: LiftFeature) => MapboxGLLiftFeature;
+): (feature: LiftFeature) => MapboxGLLiftFeature | null;
 export function formatter(
   type: FeatureType.Run
-): (feature: RunFeature) => MapboxGLRunFeature;
+): (feature: RunFeature) => MapboxGLRunFeature | null;
 
 export function formatter(
   type: FeatureType
 ): (
   feature: SkiAreaFeature | LiftFeature | RunFeature
-) => MapboxGLSkiAreaFeature | MapboxGLLiftFeature | MapboxGLRunFeature;
+) => MapboxGLSkiAreaFeature | MapboxGLLiftFeature | MapboxGLRunFeature | null;
 
 export function formatter(
   type: FeatureType
-): (feature: GeoJSON.Feature<any, any>) => GeoJSON.Feature {
+): (feature: GeoJSON.Feature<any, any>) => GeoJSON.Feature | null {
   switch (type) {
     case FeatureType.Lift:
       return formatLift;
@@ -53,7 +53,10 @@ export function formatter(
       return formatSkiArea;
   }
 
-  function formatRun(feature: RunFeature): MapboxGLRunFeature {
+  function formatRun(feature: RunFeature): MapboxGLRunFeature | null {
+    if (feature.properties.uses.every((use) => use === RunUse.Connection)) {
+      return null;
+    }
     const properties = feature.properties;
     const mapboxGLProperties: MapboxGLRunProperties = {
       id: properties.id,
