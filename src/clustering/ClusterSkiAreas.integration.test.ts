@@ -1540,20 +1540,20 @@ it("merges Skimap.org ski area into adjacent OpenStreetMap ski areas", async () 
   );
 
   expect(
-    TestHelpers.fileContents(paths.output.skiAreas).features.map(
-      simplifiedSkiAreaFeatureWithSources
-    )
+    TestHelpers.fileContents(paths.output.skiAreas)
+      .features.map(simplifiedSkiAreaFeatureWithSources)
+      .sort(orderedByID)
   ).toMatchInlineSnapshot(`
     Array [
       Object {
         "activities": Array [
           "downhill",
         ],
-        "id": "2",
+        "id": "1",
         "name": "Name",
         "sources": Array [
           Object {
-            "id": "2",
+            "id": "1",
             "type": "openstreetmap",
           },
           Object {
@@ -1566,11 +1566,11 @@ it("merges Skimap.org ski area into adjacent OpenStreetMap ski areas", async () 
         "activities": Array [
           "downhill",
         ],
-        "id": "1",
+        "id": "2",
         "name": "Name",
         "sources": Array [
           Object {
-            "id": "1",
+            "id": "2",
             "type": "openstreetmap",
           },
           Object {
