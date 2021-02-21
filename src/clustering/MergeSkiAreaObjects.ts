@@ -4,21 +4,14 @@ import mergedAndUniqued from "../utils/mergedAndUniqued";
 import { SkiAreaObject } from "./MapObject";
 
 export default function mergeSkiAreaObjects(
-  skiAreas: SkiAreaObject[]
-): SkiAreaObject | null {
-  if (skiAreas.length === 0) {
-    return null;
+  primarySkiArea: SkiAreaObject,
+  otherSkiAreas: SkiAreaObject[]
+): SkiAreaObject {
+  if (otherSkiAreas.length === 0) {
+    return primarySkiArea;
   }
 
-  const openStreetMapSkiAreaIndex = skiAreas.findIndex(
-    (skiArea) => skiArea.source === SourceType.OPENSTREETMAP
-  );
-  const primarySkiAreaIndex =
-    openStreetMapSkiAreaIndex !== -1 ? openStreetMapSkiAreaIndex : 0;
-  const primarySkiArea = skiAreas[primarySkiAreaIndex];
-  delete skiAreas[primarySkiAreaIndex];
-
-  return skiAreas.reduce((primarySkiArea, otherSkiArea) => {
+  return otherSkiAreas.reduce((primarySkiArea, otherSkiArea) => {
     return {
       _id: primarySkiArea._id,
       _key: primarySkiArea._key,

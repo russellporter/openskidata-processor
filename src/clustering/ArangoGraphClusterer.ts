@@ -340,10 +340,9 @@ export default async function clusterArangoGraph(
         : [...allSkiAreaActivities];
       skiArea.activities = activitiesForClustering;
 
-      const skiAreasToMerge = await getSkiAreasToMerge(skiArea);
+      const skiAreasToMerge = await getSkiAreasToMergeInto(skiArea);
       if (skiAreasToMerge.length > 0) {
-        await mergeSkiAreas([skiArea, ...skiAreasToMerge]);
-        return;
+        await mergeIntoSkiAreas(skiArea, skiAreasToMerge);
       }
     }
   }
@@ -461,7 +460,7 @@ export default async function clusterArangoGraph(
     }
   }
 
-  async function getSkiAreasToMerge(
+  async function getSkiAreasToMergeInto(
     skiArea: SkiAreaObject
   ): Promise<SkiAreaObject[]> {
     const maxMergeDistanceInKilometers = 0.25;
@@ -481,54 +480,45 @@ export default async function clusterArangoGraph(
       isFixedSearchArea: true,
     });
 
+    console.log(`ski area: ${skiArea.properties.id}`);
+    console.log(JSON.stringify(nearbyObjects));
+
     const otherSkiAreaIDs = new Set(
       nearbyObjects.flatMap((object) => object.skiAreas)
     );
+
     const otherSkiAreasCursor = await getSkiAreasByID(
       Array.from(otherSkiAreaIDs)
     );
     const otherSkiAreas: SkiAreaObject[] = await otherSkiAreasCursor.all();
 
-    return otherSkiAreas.filter((otherSkiArea) =>
-      otherSkiArea.properties.sources.every(
-        (source) => source.type != skiArea.source
-      )
+    return otherSkiAreas.filter(
+      (otherSkiArea) => otherSkiArea.source != skiArea.source
     );
   }
 
-  async function mergeSkiAreas(skiAreas: SkiAreaObject[]): Promise<void> {
+  async function mergeIntoSkiAreas(
+    skimapOrgSkiArea: SkiAreaObject,
+    skiAreas: SkiAreaObject[]
+  ): Promise<void> {
     console.log(
-      "Merging ski areas: " +
-        skiAreas.map((object) => JSON.stringify(object.properties)).join(", ")
+      `Merging ${JSON.stringify(
+        skimapOrgSkiArea.properties
+      )} into: ${skiAreas
+        .map((object) => JSON.stringify(object.properties))
+        .join(", ")}`
     );
 
-    const ids = new Set(skiAreas.map((skiArea) => skiArea._key));
-    const skiArea = mergeSkiAreaObjects(skiAreas);
-    if (skiArea === null) {
-      return;
-    }
+    const skiAreasToUpdate = skiAreas.map((skiArea) =>
+      mergeSkiAreaObjects(skiArea, [skimapOrgSkiArea])
+    );
 
-    // Update merged ski area
-    await objectsCollection.update(skiArea._id, skiArea);
-
-    ids.delete(skiArea._key);
-
-    // Update references to merged ski areas
-    await database.query(aql`
-    FOR object in ${objectsCollection}
-    FILTER ${[...ids]} ANY IN object.skiAreas
-    UPDATE {
-      _key: object._key,
-      skiAreas: APPEND(
-        REMOVE_VALUES(object.skiAreas, ${[...ids]}),
-        [${skiArea._key}],
-        true)
-    } IN ${objectsCollection}
-    OPTIONS { exclusive: true }
-    `);
-
-    // Remove other ski areas
-    await objectsCollection.removeByKeys([...ids], {});
+    await Promise.all([
+      // Update OpenStreetMap ski areas with skimap.org ski area data
+      objectsCollection.updateAll(skiAreasToUpdate),
+      // Remove skimap.org ski area, as it's now merged into each nearby OpenStreetMap ski area
+      objectsCollection.remove(skimapOrgSkiArea._key),
+    ]);
   }
 
   async function findNearbyObjects(

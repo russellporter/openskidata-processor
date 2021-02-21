@@ -1454,6 +1454,135 @@ it("merges Skimap.org ski area with OpenStreetMap ski area", async () => {
   `);
 });
 
+it("merges Skimap.org ski area into adjacent OpenStreetMap ski areas", async () => {
+  const paths = TestHelpers.getFilePaths();
+  TestHelpers.mockFeatureFiles(
+    [
+      TestHelpers.mockSkiAreaFeature({
+        id: "1",
+        activities: [Activity.Downhill],
+        sources: [{ type: SourceType.OPENSTREETMAP, id: "1" }],
+        geometry: {
+          type: "Polygon",
+          coordinates: [
+            [
+              [0, 0],
+              [1, 0],
+              [1, 1],
+              [0, 1],
+              [0, 0],
+            ],
+          ],
+        },
+      }),
+      TestHelpers.mockSkiAreaFeature({
+        id: "2",
+        activities: [Activity.Downhill],
+        sources: [{ type: SourceType.OPENSTREETMAP, id: "2" }],
+        geometry: {
+          type: "Polygon",
+          coordinates: [
+            [
+              [1, 1],
+              [2, 1],
+              [2, 2],
+              [1, 2],
+              [1, 1],
+            ],
+          ],
+        },
+      }),
+      TestHelpers.mockSkiAreaFeature({
+        id: "3",
+        activities: [Activity.Downhill],
+        sources: [{ type: SourceType.SKIMAP_ORG, id: "3" }],
+        geometry: {
+          type: "Point",
+          coordinates: [1, 1],
+        },
+      }),
+    ],
+    [
+      TestHelpers.mockLiftFeature({
+        id: "5",
+        name: "Lift",
+        liftType: LiftType.TBar,
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [0, 0],
+            [1, 0.99999],
+          ],
+        },
+      }),
+      TestHelpers.mockLiftFeature({
+        id: "6",
+        name: "Lift",
+        liftType: LiftType.TBar,
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [1, 1.00001],
+            [2, 1],
+          ],
+        },
+      }),
+    ],
+    [],
+    paths.intermediate
+  );
+
+  await clusterSkiAreas(
+    paths.intermediate,
+    paths.output,
+    "http://localhost:" + container.getMappedPort(8529),
+    null
+  );
+
+  expect(
+    TestHelpers.fileContents(paths.output.skiAreas).features.map(
+      simplifiedSkiAreaFeatureWithSources
+    )
+  ).toMatchInlineSnapshot(`
+    Array [
+      Object {
+        "activities": Array [
+          "downhill",
+        ],
+        "id": "1",
+        "name": "Name",
+        "sources": Array [
+          Object {
+            "id": "1",
+            "type": "openstreetmap",
+          },
+          Object {
+            "id": "3",
+            "type": "skimap.org",
+          },
+        ],
+      },
+      Object {
+        "activities": Array [
+          "downhill",
+        ],
+        "id": "2",
+        "name": "Name",
+        "sources": Array [
+          Object {
+            "id": "2",
+            "type": "openstreetmap",
+          },
+          Object {
+            "id": "3",
+            "type": "skimap.org",
+          },
+        ],
+      },
+    ]
+  `);
+});
+
 it("merges Skimap.org ski area without activities with OpenStreetMap ski area", async () => {
   const paths = TestHelpers.getFilePaths();
   TestHelpers.mockFeatureFiles(
