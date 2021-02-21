@@ -468,7 +468,7 @@ export default async function clusterArangoGraph(
       activities: skiArea.activities,
       alreadyVisited: [],
       searchType: "intersects",
-      isFixedSearchArea: false,
+      isFixedSearchArea: true,
     });
 
     const otherSkiAreaIDs = new Set(
