@@ -19,6 +19,7 @@ import {
 } from "../transforms/GeoTransforms";
 import { getRunConvention } from "../transforms/RunFormatter";
 import notEmpty from "../utils/notEmpty";
+import { isPlaceholderGeometry } from "../utils/PlaceholderSiteGeometry";
 import {
   DraftSkiArea,
   LiftObject,
@@ -99,6 +100,8 @@ export default async function clusterArangoGraph(
 
   await augmentSkiAreasBasedOnAssignedLiftsAndRuns(geocoder);
 
+  await removeSkiAreasWithoutGeometry();
+
   /**
    * Remove OpenStreetMap ski areas that contain multiple Skimap.org ski areas in their geometry.
    * This step removes relations that span across a group of separate ski resorts that have a shared ticketing system,
@@ -134,6 +137,30 @@ export default async function clusterArangoGraph(
               "Removing OpenStreetMap ski area as it contains multiple Skimap.org ski areas and can't be merged correctly."
             );
             console.log(JSON.stringify(skiArea));
+
+            await objectsCollection.remove({ _key: skiArea._key });
+          }
+        })
+      );
+    }
+  }
+
+  async function removeSkiAreasWithoutGeometry() {
+    const cursor = await getSkiAreas({
+      onlySource: SourceType.OPENSTREETMAP,
+    });
+
+    let skiAreas: SkiAreaObject[];
+    while ((skiAreas = (await cursor.batches?.next()) as SkiAreaObject[])) {
+      await Promise.all(
+        skiAreas.map(async (skiArea) => {
+          if (
+            skiArea.geometry.type === "Point" &&
+            isPlaceholderGeometry(skiArea.geometry)
+          ) {
+            console.log(
+              "Removing OpenStreetMap ski area as it doesn't have a geometry. This can happen if a site=piste relation doesn't contain any clustered lifts/runs inside it."
+            );
 
             await objectsCollection.remove({ _key: skiArea._key });
           }

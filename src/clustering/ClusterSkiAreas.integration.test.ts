@@ -2284,6 +2284,33 @@ it("does not add nearby unassociated runs of different activity to site based sk
   `);
 });
 
+it("removes site based ski area that doesn't have associated lifts and runs", async () => {
+  const paths = TestHelpers.getFilePaths();
+  const siteSkiArea = TestHelpers.mockSkiAreaFeature({
+    id: "1",
+    activities: [],
+    sources: [{ type: SourceType.OPENSTREETMAP, id: "1" }],
+    geometry: {
+      type: "Point",
+      coordinates: [360, 360, 1],
+    },
+  });
+  TestHelpers.mockFeatureFiles([siteSkiArea], [], [], paths.intermediate);
+
+  await clusterSkiAreas(
+    paths.intermediate,
+    paths.output,
+    "http://localhost:" + container.getMappedPort(8529),
+    null
+  );
+
+  expect(
+    TestHelpers.fileContents(paths.output.runs).features.map(
+      simplifiedRunFeature
+    )
+  ).toMatchInlineSnapshot(`Array []`);
+});
+
 it("removes landuse based ski area when there is a site with sufficient overlap", async () => {
   const paths = TestHelpers.getFilePaths();
   const siteSkiArea = TestHelpers.mockSkiAreaFeature({
