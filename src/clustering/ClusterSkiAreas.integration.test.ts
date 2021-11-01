@@ -29,7 +29,7 @@ jest.mock("uuid", () => {
 });
 
 // Increase timeout to give time to set up the container
-jest.setTimeout(60 * 1000);
+jest.setTimeout(360 * 1000);
 
 let container: StartedTestContainer;
 beforeAll(async () => {
