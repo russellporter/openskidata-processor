@@ -4,34 +4,22 @@ This is a data pipeline that consumes OpenStreetMap & Skimap.org data and produc
 
 ## Installation
 
-Install Docker
-
-`npm install`
+1) Install Docker
+2) `npm install`
 
 ## Usage
 
-### Produce GeoJSON files
-
-`npm run download-and-prepare`
-
-To download only a specific area, specify a GeoJSON format bounding box in an environment variable: `BBOX="[8.593668937683105, 46.63066709037708, 8.61976146697998, 46.64740340708274]"`
-
-If you want to use already downloaded input data:
-`npm run prepare-geojson`
-
-### Produce Mapbox Tiles & GeoJSON files
-
 `./run.sh`
 
-This uses Docker to provide ski area assignment & statistics as well.
+To download data for only a specific area, specify a GeoJSON format bounding box in an environment variable: `BBOX="[8.593668937683105, 46.63066709037708, 8.61976146697998, 46.64740340708274]"`
+
+The output is placed in several `geojson` and `mbtiles` files within the `data` folder.
+
+### Advanced
+
+For quick development iterations, `./run.sh prepare-geojson` uses the previously downloaded data.
 
 ## Optional Features
-
-### Ski area assignment & statistics
-
-Lifts & runs will be assigned to Skimap.org ski areas, or a new ski area will be generated if nothing exists on Skimap.org
-
-Requires ArangoDB instance, the endpoint can be configured by setting `CLUSTERING_ARANGODB_URL`.
 
 ### Elevation data
 
@@ -39,3 +27,11 @@ Lifts & runs will be augmented with elevation data.
 
 `ELEVATION_SERVER_URL` must be set to an endpoint that can receive POST requests in the format of https://github.com/racemap/elevation-service
 You should use a local instance of the elevation server because a large number of requests will be performed.
+
+## Troubleshooting
+
+### Apple Silicon
+
+On Apple Silicon, Docker tries to pull images for the arm64 architecture, but this will fail if no image is available for that arch. This is the case for `arangodb`.
+
+A workaround is to pull the image manually, for example: `docker pull --platform=linux/amd64 arangodb:3.8.4`. Then docker will use it, with virtualization.
