@@ -106,9 +106,7 @@ describe("OSMToGeoJSONConverter", () => {
       ],
     };
 
-    expect(
-      convertOSMToGeoJSON(input, (tags) => tags["landuse"] === "winter_sports")
-    ).toMatchInlineSnapshot(`
+    expect(convertOSMToGeoJSON(input)).toMatchInlineSnapshot(`
       Object {
         "features": Array [
           Object {
@@ -210,6 +208,84 @@ describe("OSMToGeoJSONConverter", () => {
               ],
               "tags": Object {
                 "landuse": "winter_sports",
+                "natural": "wood",
+                "source": "Kartverket N50",
+                "source:date": "1989-07-01",
+              },
+              "type": "way",
+            },
+            "type": "Feature",
+          },
+          Object {
+            "geometry": Object {
+              "coordinates": Array [
+                Array [
+                  0,
+                  0,
+                ],
+                Array [
+                  0,
+                  1,
+                ],
+              ],
+              "type": "LineString",
+            },
+            "id": "way/1001",
+            "properties": Object {
+              "id": 1001,
+              "meta": Object {},
+              "relations": Array [
+                Object {
+                  "rel": 10001,
+                  "reltags": Object {
+                    "landuse": "winter_sports",
+                    "type": "multipolygon",
+                  },
+                  "role": "outer",
+                },
+              ],
+              "tags": Object {
+                "natural": "wood",
+                "source": "Kartverket N50",
+                "source:date": "1989-07-01",
+              },
+              "type": "way",
+            },
+            "type": "Feature",
+          },
+          Object {
+            "geometry": Object {
+              "coordinates": Array [
+                Array [
+                  0,
+                  1,
+                ],
+                Array [
+                  1,
+                  1,
+                ],
+                Array [
+                  0,
+                  0,
+                ],
+              ],
+              "type": "LineString",
+            },
+            "id": "way/1002",
+            "properties": Object {
+              "id": 1002,
+              "meta": Object {},
+              "relations": Array [
+                Object {
+                  "rel": 10001,
+                  "reltags": Object {
+                    "landuse": "winter_sports",
+                    "type": "multipolygon",
+                  },
+                  "role": "outer",
+                },
+              ],
+              "tags": Object {
                 "natural": "wood",
                 "source": "Kartverket N50",
                 "source:date": "1989-07-01",

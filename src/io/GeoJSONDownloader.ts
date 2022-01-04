@@ -12,7 +12,7 @@ import {
   runsDownloadConfig,
   skiAreasDownloadConfig,
   skiAreaSitesDownloadConfig,
-  skiMapSkiAreasURL,
+  skiMapSkiAreasURL
 } from "./DownloadURLs";
 import { GeoJSONInputPaths } from "./GeoJSONFiles";
 import convertOSMFileToGeoJSON from "./OSMToGeoJSONConverter";
@@ -76,7 +76,6 @@ async function downloadAndConvertOSMToGeoJSON(
   convertOSMFileToGeoJSON(
     tempOSMPath,
     targetGeoJSONPath,
-    config.shouldIncludeFeature
   );
 }
 
