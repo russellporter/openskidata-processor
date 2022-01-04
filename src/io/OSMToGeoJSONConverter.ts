@@ -90,20 +90,18 @@ const polygonFeatures = {
 export default function convertOSMFileToGeoJSON(
   inputFile: string,
   outputFile: string,
-  shouldIncludeFeature: (tags: { [key: string]: string }) => boolean
 ) {
   const content = Fs.readFileSync(inputFile, "utf8");
   Fs.writeFileSync(
     outputFile,
     JSON.stringify(
-      convertOSMToGeoJSON(JSON.parse(content), shouldIncludeFeature)
+      convertOSMToGeoJSON(JSON.parse(content))
     )
   );
 }
 
 export function convertOSMToGeoJSON(
   osmJSON: any,
-  shouldIncludeFeature: (tags: { [key: string]: string }) => boolean
 ) {
   return osmtogeojson(osmJSON, {
     verbose: false,
@@ -117,7 +115,7 @@ export function convertOSMToGeoJSON(
       // By deferring this we can get better data by combining data from the ski run way and the ski run relation, for example.
       // The same is true for winter sports relations that associate multiple ski areas together.
       ignoreTags: { [key: string]: string | boolean }
-    ) => !shouldIncludeFeature(tags || {}),
+    ) => false,
     deduplicator: undefined,
   });
 }

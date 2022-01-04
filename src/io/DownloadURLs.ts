@@ -3,7 +3,6 @@ import { lifecycleStates } from "../transforms/Status";
 
 export interface OSMDownloadConfig {
   query: (bbox: GeoJSON.BBox | null) => string;
-  shouldIncludeFeature: (tags: { [key: string]: string }) => boolean;
 }
 
 export const runsDownloadConfig: OSMDownloadConfig = {
@@ -12,8 +11,7 @@ export const runsDownloadConfig: OSMDownloadConfig = {
     wr["piste:type"];
     (._; >;);
     out;
-    `,
-  shouldIncludeFeature: (tags) => tags["piste:type"] !== undefined,
+    `
 };
 
 export const liftsDownloadConfig: OSMDownloadConfig = {
@@ -26,11 +24,7 @@ export const liftsDownloadConfig: OSMDownloadConfig = {
     way[~"^([A-Za-z]+:)?aerialway$"~"^.*$"]->.aerialways;
     ((.aerialways; .siterailways; .funiculars;); >;);
     out;
-    `,
-  shouldIncludeFeature: (tags) =>
-    lifecyclePrefixes.some((prefix) => {
-      tags[prefix + "aerialway"] !== undefined;
-    }) || tags.railway !== undefined,
+    `
 };
 
 export const skiAreasDownloadConfig: OSMDownloadConfig = {
@@ -39,11 +33,7 @@ export const skiAreasDownloadConfig: OSMDownloadConfig = {
     wr[~"^([A-Za-z]+:)?landuse$"~"^winter_sports$"];
     (._; >;);
     out;
-    `,
-  shouldIncludeFeature: (tags) =>
-    lifecyclePrefixes.some((prefix) => {
-      tags[prefix + "landuse"] === "winter_sports";
-    }),
+    `
 };
 
 export const skiAreaSitesDownloadConfig: OSMDownloadConfig = {
@@ -51,8 +41,7 @@ export const skiAreaSitesDownloadConfig: OSMDownloadConfig = {
   [out:json][timeout:1800]${bboxQuery(bbox)};
   rel[site=piste];
   out;
-  `,
-  shouldIncludeFeature: (tags) => true,
+  `
 };
 
 export const pointsOfInterestDownloadConfig: OSMDownloadConfig = {
@@ -63,8 +52,7 @@ export const pointsOfInterestDownloadConfig: OSMDownloadConfig = {
   node(r.sites);)->.pois;
   (.pois; .pois>;);
   out;
-  `,
-  shouldIncludeFeature: (tags) => true,
+  `
 };
 
 export const skiMapSkiAreasURL = "https://skimap.org/SkiAreas/index.geojson";
