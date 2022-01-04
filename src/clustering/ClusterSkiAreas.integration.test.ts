@@ -35,7 +35,7 @@ let container: StartedTestContainer;
 beforeAll(async () => {
   console.log("establishing container");
   // keep version in sync with that used in docker-compose.yml
-  container = await new GenericContainer("arangodb:3.7.6")
+  container = await new GenericContainer("arangodb:3.8.4")
     .withExposedPorts(8529)
     .withEnv("ARANGO_NO_AUTH", "1d")
     .start();
