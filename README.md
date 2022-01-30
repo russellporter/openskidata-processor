@@ -23,10 +23,16 @@ For quick development iterations, `./run.sh prepare-geojson` uses the previously
 
 ### Elevation data
 
-Lifts & runs will be augmented with elevation data.
+Features will be augmented with elevation data.
 
-`ELEVATION_SERVER_URL` must be set to an endpoint that can receive POST requests in the format of https://github.com/racemap/elevation-service
+To enable, set `ELEVATION_SERVER_URL` to an endpoint that can receive POST requests in the format of https://github.com/racemap/elevation-service. 
 You should use a local instance of the elevation server because a large number of requests will be performed.
+
+### Reverse geocoding
+
+Features will be augmented with country/region/locality information.
+
+To enable, set `GEOCODING_SERVER_URL` to an endpoint that reverse geocodes in the format of https://photon.komoot.io/reverse. Geocoding results are cached on disk (by default in the `cache` directory) for faster subsequent runs of the processor.
 
 ## Troubleshooting
 
