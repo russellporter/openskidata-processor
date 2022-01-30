@@ -17,7 +17,7 @@ The output is placed in several `geojson` and `mbtiles` files within the `data` 
 
 ### Advanced
 
-For quick development iterations, `./run.sh prepare-geojson` uses the previously downloaded data.
+For quick development iterations, `./run.sh --skip-download` uses the previously downloaded data.
 
 ## Optional Features
 

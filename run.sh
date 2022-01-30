@@ -4,14 +4,21 @@ set -e
 MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 cd $MY_DIR
 
-RUN_MODE=${1:-download-and-prepare}
+RUN_MODE=$1
+
+if [[ "$RUN_MODE" != "--skip-download" ]]; then
+	echo "Downloading..."
+	npm run download
+fi
 
 if [ -z "$CLUSTERING_ARANGODB_URL" ]; then
+		echo "Starting clustering DB..."
     docker-compose up -d
     CLUSTERING_ARANGODB_URL="http://$(docker-compose port arangodb 8529)"
 fi
 
-GEOCODING_SERVER_URL="https://photon.komoot.io/reverse" CLUSTERING_ARANGODB_URL=$CLUSTERING_ARANGODB_URL npm run "$RUN_MODE"
+echo "Converting to GeoJSON..."
+GEOCODING_SERVER_URL="https://photon.komoot.io/reverse" CLUSTERING_ARANGODB_URL=$CLUSTERING_ARANGODB_URL npm run prepare-geojson
 
 docker-compose run tippecanoe \
   tippecanoe -o /data/planet_lifts.mbtiles \
