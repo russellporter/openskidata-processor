@@ -5,7 +5,7 @@ import { Readable } from "stream";
 import StreamToPromise from "stream-to-promise";
 import clusterSkiAreas from "./clustering/ClusterSkiAreas";
 import { Config } from "./Config";
-import { GeoJSONPaths, getPath } from "./io/GeoJSONFiles";
+import { DataPaths, getPath } from "./io/GeoJSONFiles";
 import { readGeoJSONFeatures } from "./io/GeoJSONReader";
 import { RunNormalizerAccumulator } from "./transforms/accumulator/RunNormalizerAccumulator";
 import addElevation from "./transforms/Elevation";
@@ -25,18 +25,18 @@ import {
   mapAsync,
 } from "./transforms/StreamTransforms";
 
-export default async function prepare(paths: GeoJSONPaths, config: Config) {
+export default async function prepare(paths: DataPaths, config: Config) {
   const siteProvider = new SkiAreaSiteProvider();
-  siteProvider.loadSites(paths.input.skiAreaSites);
+  siteProvider.loadSites(paths.input.osmJSON.skiAreaSites);
 
   await Promise.all(
     [
       merge([
-        readGeoJSONFeatures(paths.input.skiAreas).pipe(
+        readGeoJSONFeatures(paths.input.geoJSON.skiAreas).pipe(
           flatMap(formatSkiArea(InputSkiAreaType.OPENSTREETMAP_LANDUSE))
         ),
         Readable.from(siteProvider.getGeoJSONSites()),
-        readGeoJSONFeatures(paths.input.skiMapSkiAreas).pipe(
+        readGeoJSONFeatures(paths.input.geoJSON.skiMapSkiAreas).pipe(
           flatMap(formatSkiArea(InputSkiAreaType.SKIMAP_ORG))
         ),
       ])
@@ -49,7 +49,7 @@ export default async function prepare(paths: GeoJSONPaths, config: Config) {
           )
         ),
 
-      readGeoJSONFeatures(paths.input.runs)
+      readGeoJSONFeatures(paths.input.geoJSON.runs)
         .pipe(flatMap(formatRun))
         .pipe(map(addSkiAreaSites(siteProvider)))
         .pipe(accumulate(new RunNormalizerAccumulator()))
@@ -70,7 +70,7 @@ export default async function prepare(paths: GeoJSONPaths, config: Config) {
           )
         ),
 
-      readGeoJSONFeatures(paths.input.lifts)
+      readGeoJSONFeatures(paths.input.geoJSON.lifts)
         .pipe(flatMap(formatLift))
         .pipe(map(addSkiAreaSites(siteProvider)))
         .pipe(

@@ -30,18 +30,18 @@ import {
   OSMSkiAreaSite,
 } from "./features/SkiAreaFeature";
 import {
-  GeoJSONInputPaths,
+  DataPaths,
   GeoJSONIntermediatePaths,
   GeoJSONOutputPaths,
-  GeoJSONPaths,
+  InputDataPaths,
 } from "./io/GeoJSONFiles";
 
 export interface FolderContents extends Map<string, any> {}
 
-export function getFilePaths(): GeoJSONPaths {
+export function getFilePaths(): DataPaths {
   const dir = tmp.dirSync().name;
   return {
-    input: new GeoJSONInputPaths(path.join(dir, "input")),
+    input: new InputDataPaths(path.join(dir, "input")),
     intermediate: new GeoJSONIntermediatePaths(path.join(dir, "intermediate")),
     output: new GeoJSONOutputPaths(path.join(dir, "output")),
   };
@@ -55,37 +55,37 @@ export function mockInputFiles(
     lifts: InputLiftFeature[];
     runs: InputRunFeature[];
   },
-  inputPaths: GeoJSONInputPaths
+  inputPaths: InputDataPaths
 ) {
   fs.writeFileSync(
-    inputPaths.skiMapSkiAreas,
+    inputPaths.geoJSON.skiMapSkiAreas,
     JSON.stringify({
       type: "FeatureCollection",
       features: input.skiMapSkiAreas,
     })
   );
   fs.writeFileSync(
-    inputPaths.skiAreas,
+    inputPaths.geoJSON.skiAreas,
     JSON.stringify({
       type: "FeatureCollection",
       features: input.openStreetMapSkiAreas,
     })
   );
   fs.writeFileSync(
-    inputPaths.skiAreaSites,
+    inputPaths.osmJSON.skiAreaSites,
     JSON.stringify({
       elements: input.openStreetMapSkiAreaSites,
     })
   );
   fs.writeFileSync(
-    inputPaths.lifts,
+    inputPaths.geoJSON.lifts,
     JSON.stringify({
       type: "FeatureCollection",
       features: input.lifts,
     })
   );
   fs.writeFileSync(
-    inputPaths.runs,
+    inputPaths.geoJSON.runs,
     JSON.stringify({
       type: "FeatureCollection",
       features: input.runs,

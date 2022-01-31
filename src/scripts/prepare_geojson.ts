@@ -1,14 +1,14 @@
 import { configFromEnvironment } from "../Config";
 import {
-  GeoJSONInputPaths,
   GeoJSONIntermediatePaths,
   GeoJSONOutputPaths,
+  InputDataPaths,
 } from "../io/GeoJSONFiles";
 import prepare from "../PrepareGeoJSON";
 
 prepare(
   {
-    input: new GeoJSONInputPaths("data"),
+    input: new InputDataPaths("data"),
     intermediate: new GeoJSONIntermediatePaths("data"),
     output: new GeoJSONOutputPaths("data"),
   },

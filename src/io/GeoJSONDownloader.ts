@@ -4,7 +4,6 @@ import * as Fs from "fs";
 import { readFile, writeFile } from "fs/promises";
 import request from "request";
 import streamToPromise from "stream-to-promise";
-import * as tmp from "tmp";
 import { InputSkiMapOrgSkiAreaFeature } from "../features/SkiAreaFeature";
 import {
   liftsDownloadConfig,
@@ -12,48 +11,52 @@ import {
   runsDownloadConfig,
   skiAreasDownloadConfig,
   skiAreaSitesDownloadConfig,
-  skiMapSkiAreasURL
+  skiMapSkiAreasURL,
 } from "./DownloadURLs";
-import { GeoJSONInputPaths } from "./GeoJSONFiles";
+import { InputDataPaths } from "./GeoJSONFiles";
 import convertOSMFileToGeoJSON from "./OSMToGeoJSONConverter";
 
 export default async function downloadAndConvertToGeoJSON(
   folder: string,
   bbox: GeoJSON.BBox | null
-): Promise<GeoJSONInputPaths> {
-  const paths = new GeoJSONInputPaths(folder);
+): Promise<InputDataPaths> {
+  const paths = new InputDataPaths(folder);
 
+  // Serialize downloads using the same endpoint so we don't get rate limited by the Overpass API
   await Promise.all([
-    downloadAndConvertOSMToGeoJSON(
+    downloadOSMJSON(
       OSMEndpoint.Z,
       runsDownloadConfig,
-      paths.runs,
+      paths.osmJSON.runs,
       bbox
     ),
     (async () => {
-      // Serialize downloads using the same endpoint so we don't get rate limited by the Overpass API
-      await downloadAndConvertOSMToGeoJSON(
+      await downloadOSMJSON(
         OSMEndpoint.LZ4,
         liftsDownloadConfig,
-        paths.lifts,
+        paths.osmJSON.lifts,
         bbox
       );
-      await downloadAndConvertOSMToGeoJSON(
+      await downloadOSMJSON(
         OSMEndpoint.LZ4,
         skiAreasDownloadConfig,
-        paths.skiAreas,
+        paths.osmJSON.skiAreas,
         bbox
       );
-      // As sites are just relations, they are not representable in GeoJSON.
       await downloadOSMJSON(
         OSMEndpoint.LZ4,
         skiAreaSitesDownloadConfig,
-        paths.skiAreaSites,
+        paths.osmJSON.skiAreaSites,
         bbox
       );
     })(),
-    downloadSkiMapOrgSkiAreas(paths.skiMapSkiAreas, bbox),
+    downloadSkiMapOrgSkiAreas(paths.geoJSON.skiMapSkiAreas, bbox),
   ]);
+
+  // Conversions are done serially for lower memory pressure.
+  convertOSMFileToGeoJSON(paths.osmJSON.runs, paths.geoJSON.runs);
+  convertOSMFileToGeoJSON(paths.osmJSON.lifts, paths.geoJSON.lifts);
+  convertOSMFileToGeoJSON(paths.osmJSON.skiAreas, paths.geoJSON.skiAreas);
 
   return paths;
 }
@@ -61,22 +64,6 @@ export default async function downloadAndConvertToGeoJSON(
 enum OSMEndpoint {
   LZ4 = "https://lz4.overpass-api.de/api/interpreter",
   Z = "https://z.overpass-api.de/api/interpreter",
-}
-
-async function downloadAndConvertOSMToGeoJSON(
-  endpoint: OSMEndpoint,
-  config: OSMDownloadConfig,
-  targetGeoJSONPath: string,
-  bbox: GeoJSON.BBox | null
-): Promise<void> {
-  const tempOSMPath = tmp.fileSync().name;
-
-  await downloadOSMJSON(endpoint, config, tempOSMPath, bbox);
-
-  convertOSMFileToGeoJSON(
-    tempOSMPath,
-    targetGeoJSONPath,
-  );
 }
 
 async function downloadOSMJSON(
