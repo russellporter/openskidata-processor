@@ -1,4 +1,5 @@
 import * as Fs from "fs";
+import * as JSONStream from "JSONStream";
 import osmtogeojson from "osmtogeojson";
 
 const polygonFeatures = {
@@ -87,22 +88,15 @@ const polygonFeatures = {
   },
 };
 
-export default function convertOSMFileToGeoJSON(
+export default async function convertOSMFileToGeoJSON(
   inputFile: string,
-  outputFile: string,
+  outputFile: string
 ) {
-  const content = Fs.readFileSync(inputFile, "utf8");
-  Fs.writeFileSync(
-    outputFile,
-    JSON.stringify(
-      convertOSMToGeoJSON(JSON.parse(content))
-    )
-  );
+  const osmJSON = await readOSMJSON(inputFile);
+  writeFeatureCollection(convertOSMToGeoJSON(osmJSON), outputFile);
 }
 
-export function convertOSMToGeoJSON(
-  osmJSON: any,
-) {
+export function convertOSMToGeoJSON(osmJSON: any) {
   return osmtogeojson(osmJSON, {
     verbose: false,
     polygonFeatures: polygonFeatures,
@@ -118,4 +112,54 @@ export function convertOSMToGeoJSON(
     ) => false,
     deduplicator: undefined,
   });
+}
+
+async function readOSMJSON(path: string): Promise<any> {
+  return await new Promise((resolve, reject) => {
+    Fs.createReadStream(path)
+      .pipe(JSONStream.parse(null))
+      .on("root", function (data) {
+        // iron out some nasty floating point rounding errors
+        if (data.version) data.version = Math.round(data.version * 1000) / 1000;
+        data.elements.forEach(function (element: any) {
+          if (element.lat) element.lat = Math.round(element.lat * 1e12) / 1e12;
+          if (element.lon) element.lon = Math.round(element.lon * 1e12) / 1e12;
+        });
+        // convert to geojson
+        resolve(data);
+      })
+      .on("error", function (error) {
+        reject(error);
+      });
+  });
+}
+
+/**
+ * This is much faster than a simple JSON.stringify of the whole geojson
+ * object. also, this is less memory intensive and output starts right
+ * after the conversion without any additional delay
+ *
+ * (copied from osmtogeojson CLI)
+ */
+function writeFeatureCollection(geojson: any, path: string) {
+  const outputStream = Fs.createWriteStream(path);
+
+  const separator = "\n";
+
+  outputStream.write(
+    "{" +
+      separator +
+      '"type": "FeatureCollection",' +
+      separator +
+      '"features": [' +
+      separator
+  );
+  geojson.features.forEach(function (f: any, i: any) {
+    outputStream.write(JSON.stringify(f, null, 0));
+    if (i != geojson.features.length - 1) {
+      outputStream.write("," + separator);
+    }
+  });
+  outputStream.write(separator + "]" + separator + "}" + separator);
+  outputStream.close();
 }

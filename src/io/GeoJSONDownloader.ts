@@ -54,9 +54,9 @@ export default async function downloadAndConvertToGeoJSON(
   ]);
 
   // Conversions are done serially for lower memory pressure.
-  convertOSMFileToGeoJSON(paths.osmJSON.runs, paths.geoJSON.runs);
-  convertOSMFileToGeoJSON(paths.osmJSON.lifts, paths.geoJSON.lifts);
-  convertOSMFileToGeoJSON(paths.osmJSON.skiAreas, paths.geoJSON.skiAreas);
+  await convertOSMFileToGeoJSON(paths.osmJSON.runs, paths.geoJSON.runs);
+  await convertOSMFileToGeoJSON(paths.osmJSON.lifts, paths.geoJSON.lifts);
+  await convertOSMFileToGeoJSON(paths.osmJSON.skiAreas, paths.geoJSON.skiAreas);
 
   return paths;
 }
