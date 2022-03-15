@@ -266,7 +266,18 @@ export default async function clusterArangoGraph(
             if (bufferedObjectGeometries.length > 0) {
               searchPolygon = bufferedObjectGeometries.reduce(
                 (previous, current) => {
-                  return union(previous, current)!.geometry;
+                  try {
+                    return union(previous, current)!.geometry;
+                  } catch (error) {
+                    // https://github.com/mfogel/polygon-clipping/issues/115
+                    console.log(`
+                    Failed unioning polygons: ${error}
+                    
+                    Left: ${JSON.stringify(previous)}
+                    Right: ${JSON.stringify(current)}
+                    `);
+                    return previous;
+                  }
                 }
               );
             }
