@@ -11,7 +11,6 @@ import {
 import nearestPointOnLine, {
   NearestPointOnLine,
 } from "@turf/nearest-point-on-line";
-import union from "@turf/union";
 
 export function bufferGeometry(
   geometry:
@@ -67,29 +66,6 @@ export function bufferFeatureCollection(
     );
     return null;
   }
-}
-
-export function polygonEnclosing(
-  objects: GeoJSON.FeatureCollection<any, any>
-): GeoJSON.MultiPolygon | GeoJSON.Polygon | null {
-  const featureCollections = bufferFeatureCollection(objects, 0.25);
-  if (!featureCollections) {
-    return null;
-  }
-
-  const features = featureCollections.features;
-  const initialGeometry = features.shift()?.geometry;
-  if (!initialGeometry) {
-    return null;
-  }
-
-  return features
-    .flatMap<GeoJSON.Polygon | GeoJSON.MultiPolygon>((feature) =>
-      feature.geometry ? [feature.geometry] : []
-    )
-    .reduce((unionedGeometry, otherGeometry) => {
-      return union(unionedGeometry, otherGeometry)!.geometry;
-    }, initialGeometry);
 }
 
 export function centralPointsInFeature(
