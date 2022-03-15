@@ -266,7 +266,7 @@ export default async function clusterArangoGraph(
             if (bufferedObjectGeometries.length > 0) {
               searchPolygon = bufferedObjectGeometries.reduce(
                 (previous, current) => {
-                  return union(previous, current).geometry;
+                  return union(previous, current)!.geometry;
                 }
               );
             }

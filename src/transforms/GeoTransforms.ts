@@ -88,7 +88,7 @@ export function polygonEnclosing(
       feature.geometry ? [feature.geometry] : []
     )
     .reduce((unionedGeometry, otherGeometry) => {
-      return union(unionedGeometry, otherGeometry).geometry;
+      return union(unionedGeometry, otherGeometry)!.geometry;
     }, initialGeometry);
 }
 
