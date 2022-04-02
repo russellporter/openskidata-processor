@@ -4,6 +4,7 @@ export function isArangoInvalidGeometryError(error: any): boolean {
   let invalidGeometryMessages = [
     "Polygon is not valid",
     "Invalid loop in polygon",
+    "Subsequent loop not a hole in polygon",
     "Loop not closed",
   ];
   let errorMessage: string = error.response.body.errorMessage;
