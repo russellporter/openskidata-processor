@@ -63,12 +63,17 @@ export default async function clusterArangoGraph(
 ): Promise<void> {
   const objectsCollection = database.collection("objects");
 
+  console.log(
+    "Assign ski area activities and geometry based on member objects"
+  );
   await assignSkiAreaActivitiesAndGeometryBasedOnMemberObjects();
 
+  console.log("Remove ambiguous duplicate ski areas");
   await removeAmbiguousDuplicateSkiAreas();
 
   // For all OpenStreetMap ski areas (polygons), associate runs & lifts within that polygon.
   // Ski areas without any objects or with a significant number of objects assigned to a site=piste relation are removed.
+  console.log("Assign objects in OSM polygon ski areas");
   await assignObjectsToSkiAreas({
     skiArea: {
       onlySource: SourceType.OPENSTREETMAP,
@@ -79,15 +84,18 @@ export default async function clusterArangoGraph(
   });
 
   // For all OpenStreetMap ski areas, in a second pass, associate nearby runs & lifts that are not already assigned to a ski area.
+  console.log("Assign nearby objects to OSM ski areas");
   await assignObjectsToSkiAreas({
     skiArea: { onlySource: SourceType.OPENSTREETMAP },
     objects: { onlyIfNotAlreadyAssigned: true },
   });
 
   // Merge ski areas from different sources: For all Skimap.org ski areas, if an OpenStreetMap ski area is nearby, merge them
+  console.log("Merge skimap.org and OpenStreetMap ski areas");
   await mergeSkimapOrgWithOpenStreetMapSkiAreas();
 
   // For all Skimap.org ski areas, associate nearby runs & lifts that are not already assigned to a ski area.
+  console.log("assign nearby objects to Skimap.org ski areas");
   await assignObjectsToSkiAreas({
     skiArea: {
       onlySource: SourceType.SKIMAP_ORG,
@@ -96,10 +104,13 @@ export default async function clusterArangoGraph(
   });
 
   // For each remaining unclaimed run, generate a ski area for it, associating nearby unclaimed runs & lifts.
+  console.log("Generate ski areas for unassigned objects");
   await generateSkiAreasForUnassignedObjects();
 
+  console.log("Augment ski areas based on assigned lifts and runs");
   await augmentSkiAreasBasedOnAssignedLiftsAndRuns(geocoder);
 
+  console.log("Remove ski areas without a geometry");
   await removeSkiAreasWithoutGeometry();
 
   /**
