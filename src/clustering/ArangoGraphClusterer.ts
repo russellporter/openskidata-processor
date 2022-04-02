@@ -5,7 +5,6 @@ import length from "@turf/length";
 import nearestPoint from "@turf/nearest-point";
 import union from "@turf/union";
 import { aql, Database } from "arangojs";
-import { AqlQuery } from "arangojs/aql";
 import { AssertionError } from "assert";
 import * as GeoJSON from "geojson";
 import { Activity, FeatureType, SourceType, Status } from "openskidata-format";
@@ -20,6 +19,7 @@ import {
 import { getRunConvention } from "../transforms/RunFormatter";
 import notEmpty from "../utils/notEmpty";
 import { isPlaceholderGeometry } from "../utils/PlaceholderSiteGeometry";
+import { arangoGeometry, isArangoInvalidGeometryError } from "./ArangoHelpers";
 import {
   DraftSkiArea,
   LiftObject,
@@ -589,7 +589,7 @@ export default async function clusterArangoGraph(
       allFound.forEach((object) => context.alreadyVisited.push(object._key));
       return allFound;
     } catch (error) {
-      if (isInvalidGeometryError(error)) {
+      if (isArangoInvalidGeometryError(error)) {
         // ArangoDB can fail with polygon not valid in rare cases.
         // Seems to happen when people abuse landuse=winter_sports and add all members of a ski area to a multipolygon relation.
         // For example https://www.openstreetmap.org/relation/6250272
@@ -669,7 +669,7 @@ export default async function clusterArangoGraph(
         { batchSize: batchSize, ttl: 3600 }
       );
     } catch (error) {
-      if (isInvalidGeometryError(error)) {
+      if (isArangoInvalidGeometryError(error)) {
         console.log("Failed getting ski areas (invalid geometry)");
         console.log(error);
         console.log("Options: " + JSON.stringify(options));
@@ -850,29 +850,6 @@ export default async function clusterArangoGraph(
           });
           return accumulatedActivities;
         }, new Set<Activity>())
-    );
-  }
-
-  function arangoGeometry(
-    object: GeoJSON.Polygon | GeoJSON.MultiPolygon
-  ): AqlQuery {
-    switch (object.type) {
-      case "Polygon":
-        return aql`GEO_POLYGON(${object.coordinates})`;
-      case "MultiPolygon":
-        return aql`GEO_MULTIPOLYGON(${object.coordinates})`;
-    }
-  }
-
-  function isInvalidGeometryError(error: any): boolean {
-    return (
-      (error.response.body.errorMessage as string).includes(
-        "Polygon is not valid"
-      ) ||
-      (error.response.body.errorMessage as string).includes(
-        "Invalid loop in polygon"
-      ) ||
-      (error.response.body.errorMessage as string).includes("Loop not closed")
     );
   }
 }
