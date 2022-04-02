@@ -247,10 +247,8 @@ export default async function clusterArangoGraph(
 
           let isFixedSearchArea: boolean;
           let searchType: SearchType;
-          let searchPolygon:
-            | GeoJSON.Polygon
-            | GeoJSON.MultiPolygon
-            | null = null;
+          let searchPolygon: GeoJSON.Polygon | GeoJSON.MultiPolygon | null =
+            null;
           if (options.objects.onlyInPolygon) {
             if (
               skiArea.geometry.type === "Polygon" ||
@@ -546,9 +544,7 @@ export default async function clusterArangoGraph(
     skiAreas: SkiAreaObject[]
   ): Promise<void> {
     console.log(
-      `Merging ${JSON.stringify(
-        skimapOrgSkiArea.properties
-      )} into: ${skiAreas
+      `Merging ${JSON.stringify(skimapOrgSkiArea.properties)} into: ${skiAreas
         .map((object) => JSON.stringify(object.properties))
         .join(", ")}`
     );
