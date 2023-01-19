@@ -58,6 +58,7 @@ export type MapboxGLRunProperties = {
   oneway: boolean | null;
   lit: boolean | null;
   gladed: boolean | null;
+  patrolled: boolean | null;
   color: string;
   colorName: ColorName | null;
   grooming: RunGrooming | null;

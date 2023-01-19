@@ -65,6 +65,7 @@ export function formatter(
       oneway: properties.oneway,
       lit: properties.lit,
       gladed: properties.gladed,
+      patrolled: properties.patrolled,
       color: properties.color,
       colorName: properties.colorName,
       grooming: properties.grooming,

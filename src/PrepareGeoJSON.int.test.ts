@@ -251,6 +251,7 @@ it("produces output for simple input", async () => {
               "lit": null,
               "name": "Oberauer Skiabfahrt",
               "oneway": true,
+              "patrolled": null,
               "skiAreas": Array [],
             },
             "type": "Feature",
