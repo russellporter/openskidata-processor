@@ -182,6 +182,48 @@ describe("RunFormatter", () => {
     expect(run!.properties.grooming).toBe(RunGrooming.Backcountry);
   });
 
+  it("supports nordic trails tagged as classic;skating", () => {
+    const run = formatRun(
+      inputRun({
+        type: "way",
+        id: 1,
+        tags: {
+          "piste:type": "nordic",
+          "piste:grooming": "classic;skating",
+        },
+      })
+    );
+    expect(run!.properties.grooming).toBe(RunGrooming.ClassicAndSkating);
+  });
+
+  it("supports nordic trails tagged as skating;classic", () => {
+    const run = formatRun(
+      inputRun({
+        type: "way",
+        id: 1,
+        tags: {
+          "piste:type": "nordic",
+          "piste:grooming": "classic;skating",
+        },
+      })
+    );
+    expect(run!.properties.grooming).toBe(RunGrooming.ClassicAndSkating);
+  });
+
+  it("supports nordic trails tagged as classic+skating", () => {
+    const run = formatRun(
+      inputRun({
+        type: "way",
+        id: 1,
+        tags: {
+          "piste:type": "nordic",
+          "piste:grooming": "classic;skating",
+        },
+      })
+    );
+    expect(run!.properties.grooming).toBe(RunGrooming.ClassicAndSkating);
+  });
+
   it("supports fatbike trails", () => {
     const run = formatRun(
       inputRun({

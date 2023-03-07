@@ -146,9 +146,17 @@ function getOrElse<P extends { [key: string]: string | undefined }>(
 }
 
 function getGrooming(tags: OSMRunTags): RunGrooming | null {
-  const value = tags["piste:grooming"];
-  if (Object.values(RunGrooming).includes(value as RunGrooming)) {
-    return value as RunGrooming;
+  const value = tags["piste:grooming"]?.replace(";", "+");
+  if (value) {
+    const values = new Set(value.split("+"));
+
+    if (values.has(RunGrooming.Classic) && values.has(RunGrooming.Skating)) {
+      return RunGrooming.ClassicAndSkating;
+    }
+
+    if (Object.values(RunGrooming).includes(value as RunGrooming)) {
+      return value as RunGrooming;
+    }
   }
 
   // Default to piste:grooming = backcountry for the most difficult runs
