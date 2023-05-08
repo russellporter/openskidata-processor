@@ -7,7 +7,10 @@ export function isArangoInvalidGeometryError(error: any): boolean {
     "Subsequent loop not a hole in polygon",
     "Loop not closed",
   ];
-  let errorMessage: string = error.response.body.errorMessage;
+  let errorMessage = error.response?.body?.errorMessage;
+  if (!errorMessage) {
+    return false;
+  }
   return invalidGeometryMessages.some((invalidMessage) =>
     errorMessage.includes(invalidMessage)
   );

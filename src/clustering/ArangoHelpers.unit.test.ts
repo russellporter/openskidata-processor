@@ -19,4 +19,11 @@ describe("isArangoInvalidGeometryError", () => {
       })
     ).toBe(false);
   });
+  it("is false for error with null response", () => {
+    expect(
+      isArangoInvalidGeometryError({
+        response: null,
+      })
+    ).toBe(false);
+  });
 });
