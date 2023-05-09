@@ -6,6 +6,7 @@ export function isArangoInvalidGeometryError(error: any): boolean {
     "Invalid loop in polygon",
     "Subsequent loop not a hole in polygon",
     "Loop not closed",
+    "Invalid GeoJSON Geometry Object",
   ];
   let errorMessage = error.response?.body?.errorMessage;
   if (!errorMessage) {
