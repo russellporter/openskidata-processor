@@ -35,7 +35,7 @@ let container: StartedTestContainer;
 beforeAll(async () => {
   console.log("establishing container");
   // keep version in sync with that used in docker-compose.yml
-  container = await new GenericContainer("arangodb:3.8.4")
+  container = await new GenericContainer("arangodb:3.10.6")
     .withExposedPorts(8529)
     .withEnv("ARANGO_NO_AUTH", "1d")
     .start();
@@ -339,8 +339,9 @@ it("generates ski areas by activity", async () => {
     null
   );
 
-  const runs: RunFeature[] = TestHelpers.fileContents(paths.output.runs)
-    .features;
+  const runs: RunFeature[] = TestHelpers.fileContents(
+    paths.output.runs
+  ).features;
   expect(
     runs.map((feature) => {
       return {
@@ -2005,8 +2006,7 @@ it("removes an OpenStreetMap ski area that does not contain any runs/lifts as it
             [1.5, 1.5],
           ],
         },
-        name:
-          "Run outside the ski area should be associated with a separate, generated ski area",
+        name: "Run outside the ski area should be associated with a separate, generated ski area",
         uses: [RunUse.Nordic],
       }),
     ],

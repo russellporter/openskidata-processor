@@ -23,7 +23,7 @@
     "@turf/nearest-point-on-line": "^6",
     "@turf/point-to-line-distance": "^6",
     "@turf/union": "^6.5.0",
-    "arangojs": "^7",
+    "arangojs": "^8",
     "cacache": "^15",
     "dataloader": "^2",
     "iso3166-2-db": "^2",

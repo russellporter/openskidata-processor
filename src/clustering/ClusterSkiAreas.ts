@@ -16,14 +16,13 @@ export default async function clusterSkiAreas(
   arangoDBURL: string,
   geocoderConfig: GeocodingServerConfig | null
 ): Promise<void> {
-  const client = new arangojs.Database(arangoDBURL);
+  let client = new arangojs.Database(arangoDBURL);
 
   try {
     await client.dropDatabase("cluster");
   } catch (_) {}
 
-  await client.createDatabase("cluster");
-  client.useDatabase("cluster");
+  client = await client.createDatabase("cluster");
 
   console.log("Loading graph into ArangoDB");
   await loadArangoGraph(

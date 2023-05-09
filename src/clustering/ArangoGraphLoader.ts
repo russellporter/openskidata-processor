@@ -43,18 +43,19 @@ export default async function loadArangoGraph(
   await objectsCollection.ensureIndex({
     type: "geo",
     geoJson: true,
+    legacyPolygons: true,
     fields: ["geometry"],
   });
   await objectsCollection.ensureIndex({
-    type: "skiplist",
+    type: "persistent",
     fields: ["type", "source", "isPolygon"],
   });
   await objectsCollection.ensureIndex({
-    type: "skiplist",
+    type: "persistent",
     fields: ["skiAreas"],
   });
   await objectsCollection.ensureIndex({
-    type: "skiplist",
+    type: "persistent",
     fields: ["isBasisForNewSkiArea"],
     sparse: true,
   });
