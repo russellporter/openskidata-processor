@@ -666,7 +666,7 @@ export default async function clusterArangoGraph(
                 : aql``
             }
             RETURN object`,
-        { batchSize: batchSize, ttl: 3600 }
+        { batchSize: batchSize, ttl: 7200, stream: true }
       );
     } catch (error) {
       if (isArangoInvalidGeometryError(error)) {
