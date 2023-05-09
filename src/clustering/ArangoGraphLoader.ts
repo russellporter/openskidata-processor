@@ -43,7 +43,6 @@ export default async function loadArangoGraph(
   await objectsCollection.ensureIndex({
     type: "geo",
     geoJson: true,
-    legacyPolygons: true,
     fields: ["geometry"],
   });
   await objectsCollection.ensureIndex({

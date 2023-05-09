@@ -1311,8 +1311,8 @@ it("associates lifts correctly to adjacent ski areas based on their polygons", a
         geometry: {
           type: "LineString",
           coordinates: [
-            [0.0001, 0],
-            [1, 0],
+            [0.0001, 0.0001],
+            [1, 0.0001],
           ],
         },
       }),
@@ -1323,8 +1323,8 @@ it("associates lifts correctly to adjacent ski areas based on their polygons", a
         geometry: {
           type: "LineString",
           coordinates: [
-            [-0.0001, 0],
-            [-1, 0],
+            [-0.0001, -0.0001],
+            [-1, -0.0001],
           ],
         },
       }),
@@ -1815,8 +1815,8 @@ it("adds activities to OpenStreetMap ski areas based on the associated runs", as
         geometry: {
           type: "LineString",
           coordinates: [
-            [0, 0],
-            [1, 0],
+            [0.0001, 0.0001],
+            [0.9999, 0.0001],
           ],
         },
         uses: [RunUse.Nordic],
