@@ -584,7 +584,7 @@ export default async function clusterArangoGraph(
         `;
 
     try {
-      const cursor = await database.query(query, { ttl: 240 });
+      const cursor = await database.query(query, { ttl: 360 });
       const allFound: MapObject[] = await cursor.all();
       allFound.forEach((object) => context.alreadyVisited.push(object._key));
       return allFound;
@@ -742,7 +742,7 @@ export default async function clusterArangoGraph(
             RETURN object
         `;
 
-    const cursor = await database.query(query);
+    const cursor = await database.query(query, { ttl: 360 });
     return await cursor.all();
   }
 
