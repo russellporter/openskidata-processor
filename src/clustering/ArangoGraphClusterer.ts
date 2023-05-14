@@ -600,6 +600,7 @@ export default async function clusterArangoGraph(
         return [];
       }
 
+      console.log("Failed finding nearby objects");
       throw error;
     }
   }
@@ -742,8 +743,13 @@ export default async function clusterArangoGraph(
             RETURN object
         `;
 
-    const cursor = await database.query(query, { ttl: 360 });
-    return await cursor.all();
+    try {
+      const cursor = await database.query(query, { ttl: 360 });
+      return await cursor.all();
+    } catch (exception) {
+      console.log("Failed getting objects");
+      throw exception;
+    }
   }
 
   async function augmentSkiAreasBasedOnAssignedLiftsAndRuns(
