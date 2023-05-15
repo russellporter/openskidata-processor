@@ -643,7 +643,7 @@ export default async function clusterArangoGraph(
     onlyPolygons?: boolean;
     onlyInPolygon?: GeoJSON.Polygon | GeoJSON.MultiPolygon | null;
   }): Promise<SkiAreasCursor> {
-    const batchSize = 50;
+    const batchSize = 10;
     try {
       return await database.query(
         aql`
