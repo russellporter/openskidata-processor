@@ -84,6 +84,21 @@ describe("RunFormatter", () => {
     );
   });
 
+  it("de-duplicates names", () => {
+    const run = formatRun(
+      inputRun({
+        type: "way",
+        id: 1,
+        tags: {
+          "piste:type": "downhill",
+          name: "Run name",
+          "name:en": "Run name",
+        },
+      })
+    );
+    expect(run!.properties.name).toMatchInlineSnapshot(`"Run name""`);
+  });
+
   it("adds oneway to downhill run if not specified", () => {
     const run = formatRun(
       inputRun({

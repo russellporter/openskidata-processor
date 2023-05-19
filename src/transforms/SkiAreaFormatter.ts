@@ -13,9 +13,10 @@ import {
   OSMSkiAreaSite,
   OSMSkiAreaTags,
 } from "../features/SkiAreaFeature";
-import notEmpty from "../utils/notEmpty";
 import placeholderSiteGeometry from "../utils/PlaceholderSiteGeometry";
+import notEmpty from "../utils/notEmpty";
 import buildFeature from "./FeatureBuilder";
+import { getOSMName } from "./OSMTransforms";
 import { Omit } from "./Omit";
 import { getRunConvention } from "./RunFormatter";
 import getStatusAndValue from "./Status";
@@ -80,8 +81,10 @@ function formatOpenStreetMapLanduse(
   }
 
   // We don't care about the value here, just get the status. The value is always "winter_sports".
-  const status = getStatusAndValue("landuse", tags as { [key: string]: string })
-    .status;
+  const status = getStatusAndValue(
+    "landuse",
+    tags as { [key: string]: string }
+  ).status;
 
   if (status === null) {
     return null;
@@ -140,7 +143,7 @@ function propertiesForOpenStreetMapSkiArea(
 ): Omit<SkiAreaProperties, "id"> {
   return {
     type: FeatureType.SkiArea,
-    name: tags.name || null,
+    name: getOSMName(tags, "name"),
     sources: [
       {
         type: SourceType.OPENSTREETMAP,

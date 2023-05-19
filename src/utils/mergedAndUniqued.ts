@@ -1,3 +1,5 @@
+import unique from "./unique";
+
 export default function mergedAndUniqued<T>(...values: T[][]): T[] {
-  return Array.from(new Set(values.flat()));
+  return unique(values.flat());
 }

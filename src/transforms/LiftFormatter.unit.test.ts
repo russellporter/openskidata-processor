@@ -51,6 +51,21 @@ describe("LiftFormatter", () => {
     );
   });
 
+  it("de-duplicates names", () => {
+    const feature = formatLift(
+      inputLift({
+        type: "way",
+        id: 1,
+        tags: {
+          aerialway: "chair_lift",
+          name: "Lift name",
+          "name:en": "Lift name",
+        },
+      })
+    );
+    expect(feature!.properties.name).toMatchInlineSnapshot(`"Lift name"`);
+  });
+
   it("drops unsupported lift types", () => {
     expect(
       formatLift(

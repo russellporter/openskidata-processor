@@ -1,3 +1,5 @@
+import unique from "../utils/unique";
+
 export function mapOSMNumber(input: string | undefined): number | null {
   if (input === undefined) {
     return null;
@@ -42,11 +44,7 @@ export function getOSMName<Properties extends OSMTags>(
     return null;
   }
 
-  return keys
-    .map(function (key) {
-      return properties[key];
-    })
-    .join(", ");
+  return unique(keys.map((key) => properties[key])).join(", ");
 }
 
 function nameKeysForRootKey<Properties extends OSMTags>(

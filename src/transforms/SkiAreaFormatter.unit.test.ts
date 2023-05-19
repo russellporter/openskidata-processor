@@ -4,7 +4,7 @@ import {
   InputSkiMapOrgSkiAreaFeature,
   OSMSkiAreaSite,
 } from "../features/SkiAreaFeature";
-import { formatSkiArea, InputSkiAreaType } from "./SkiAreaFormatter";
+import { InputSkiAreaType, formatSkiArea } from "./SkiAreaFormatter";
 
 describe("SkiAreaFormatter", () => {
   it("formats OpenStreetMap ski area", () => {
@@ -235,5 +235,97 @@ describe("SkiAreaFormatter", () => {
         "type": "Feature",
       }
     `);
+  });
+
+  it("uses localized names of site", () => {
+    const site: OSMSkiAreaSite = {
+      id: 1,
+      type: "relation",
+      members: [{ type: "way", ref: 1, role: "" }],
+      tags: {
+        name: "English",
+        "name:fr": "French",
+      },
+    };
+
+    expect(
+      formatSkiArea(InputSkiAreaType.OPENSTREETMAP_SITE)(site)?.properties.name
+    ).toMatchInlineSnapshot(`"English, French"`);
+  });
+
+  it("de-duplicates names of site", () => {
+    const site: OSMSkiAreaSite = {
+      id: 1,
+      type: "relation",
+      members: [{ type: "way", ref: 1, role: "" }],
+      tags: {
+        name: "Wendelstein",
+        "name:en": "Wendelstein",
+      },
+    };
+
+    expect(
+      formatSkiArea(InputSkiAreaType.OPENSTREETMAP_SITE)(site)?.properties.name
+    ).toMatchInlineSnapshot(`"Wendelstein"`);
+  });
+
+  it("uses localized names of landuse", () => {
+    const feature: InputOpenStreetMapSkiAreaFeature = {
+      type: "Feature",
+      geometry: {
+        type: "Polygon",
+        coordinates: [
+          [
+            [0, 0],
+            [0, 1],
+            [0, 0],
+          ],
+        ],
+      },
+      properties: {
+        type: "way",
+        id: 1,
+        tags: {
+          landuse: "winter_sports",
+          name: "English",
+          "name:fr": "French",
+        },
+      },
+    };
+
+    expect(
+      formatSkiArea(InputSkiAreaType.OPENSTREETMAP_LANDUSE)(feature)?.properties
+        .name
+    ).toMatchInlineSnapshot(`"English, French"`);
+  });
+
+  it("de-duplicates names of landuse", () => {
+    const feature: InputOpenStreetMapSkiAreaFeature = {
+      type: "Feature",
+      geometry: {
+        type: "Polygon",
+        coordinates: [
+          [
+            [0, 0],
+            [0, 1],
+            [0, 0],
+          ],
+        ],
+      },
+      properties: {
+        type: "way",
+        id: 1,
+        tags: {
+          landuse: "winter_sports",
+          name: "English",
+          "name:en": "English",
+        },
+      },
+    };
+
+    expect(
+      formatSkiArea(InputSkiAreaType.OPENSTREETMAP_LANDUSE)(feature)?.properties
+        .name
+    ).toMatchInlineSnapshot(`"English"`);
   });
 });

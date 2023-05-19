@@ -23,6 +23,7 @@ import {
   MapboxGLSkiAreaFeature,
   MapboxGLSkiAreaProperties,
 } from "../features/SkiAreaFeature";
+import unique from "../utils/unique";
 import { centralPointsInFeature } from "./GeoTransforms";
 
 export function formatter(
@@ -185,10 +186,6 @@ function getNameIncludingRef(name: string | null, ref: string | null) {
   }
 
   return ref + " - " + name;
-}
-
-function unique<T>(input: T[]): T[] {
-  return [...new Set(input)];
 }
 
 function mapboxGLRunUse(runUse: RunUse): MapboxGLRunUse {
