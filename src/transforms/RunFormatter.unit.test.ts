@@ -96,7 +96,7 @@ describe("RunFormatter", () => {
         },
       })
     );
-    expect(run!.properties.name).toMatchInlineSnapshot(`"Run name""`);
+    expect(run!.properties.name).toMatchInlineSnapshot(`"Run name"`);
   });
 
   it("adds oneway to downhill run if not specified", () => {
