@@ -5,7 +5,11 @@ import length from "@turf/length";
 import nearestPoint from "@turf/nearest-point";
 import union from "@turf/union";
 import { aql, Database } from "arangojs";
+import { AqlQuery } from "arangojs/aql";
+import { ArrayCursor } from "arangojs/cursor";
+import { QueryOptions } from "arangojs/database";
 import { AssertionError } from "assert";
+import { backOff } from "exponential-backoff";
 import * as GeoJSON from "geojson";
 import { Activity, FeatureType, SourceType, Status } from "openskidata-format";
 import { v4 as uuid } from "uuid";
@@ -112,6 +116,18 @@ export default async function clusterArangoGraph(
 
   console.log("Remove ski areas without a geometry");
   await removeSkiAreasWithoutGeometry();
+
+  async function performQuery<T = any>(
+    query: AqlQuery,
+    options?: QueryOptions
+  ): Promise<ArrayCursor<T>> {
+    try {
+      return await backOff(() => database.query(query, options));
+    } catch (exception) {
+      console.error(`Error performing query: ${query.query}: ${exception}`);
+      throw exception;
+    }
+  }
 
   /**
    * Remove OpenStreetMap ski areas that contain multiple Skimap.org ski areas in their geometry.
@@ -584,7 +600,7 @@ export default async function clusterArangoGraph(
         `;
 
     try {
-      const cursor = await database.query(query, { ttl: 360 });
+      const cursor = await performQuery(query, { ttl: 360 });
       const allFound: MapObject[] = await cursor.all();
       allFound.forEach((object) => context.alreadyVisited.push(object._key));
       return allFound;
@@ -626,11 +642,11 @@ export default async function clusterArangoGraph(
             OPTIONS { exclusive: true }
         `;
 
-    await database.query(query);
+    await performQuery(query);
   }
 
   async function getSkiAreasByID(ids: string[]): Promise<SkiAreasCursor> {
-    return await database.query(
+    return await performQuery(
       aql`
             FOR object IN ${objectsCollection}
             FILTER object.id IN ${ids}
@@ -645,7 +661,7 @@ export default async function clusterArangoGraph(
   }): Promise<SkiAreasCursor> {
     const batchSize = 10;
     try {
-      return await database.query(
+      return await performQuery(
         aql`
             FOR object IN ${objectsCollection}
             ${
@@ -682,7 +698,7 @@ export default async function clusterArangoGraph(
 
   // Find a run that isn't part of a ski area.
   async function nextUnassignedRun(): Promise<RunObject> {
-    const array = await database.query(aql`
+    const array = await performQuery(aql`
             FOR object IN ${objectsCollection}
             FILTER object.isBasisForNewSkiArea == true
             LIMIT ${1}
@@ -744,7 +760,7 @@ export default async function clusterArangoGraph(
         `;
 
     try {
-      const cursor = await database.query(query, { ttl: 360 });
+      const cursor = await performQuery(query, { ttl: 360 });
       return await cursor.all();
     } catch (exception) {
       console.log("Failed getting objects");

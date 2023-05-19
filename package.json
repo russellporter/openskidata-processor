@@ -26,6 +26,7 @@
     "arangojs": "^8",
     "cacache": "^15",
     "dataloader": "^2",
+    "exponential-backoff": "^3.1.1",
     "iso3166-2-db": "^2",
     "lodash": "^4",
     "lru_map": "^0.4.1",
