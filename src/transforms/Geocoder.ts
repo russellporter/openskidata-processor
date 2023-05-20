@@ -4,7 +4,6 @@ import * as iso3166_2 from "iso3166-2-db";
 import { Region } from "iso3166-2-db";
 import { LRUMap } from "lru_map";
 import * as ngeohash from "ngeohash";
-import * as querystring from "querystring";
 import request from "request-promise-native";
 import * as Config from "../Config";
 
@@ -74,14 +73,12 @@ export default class Geocoder {
       const point = ngeohash.decode(geohash);
       const response = await request({
         json: true,
-        uri:
-          this.config.url +
-          "?" +
-          querystring.stringify({
-            lon: point.longitude,
-            lat: point.latitude,
-            lang: "en",
-          }),
+        uri: this.config.url,
+        qs: {
+          lon: point.longitude,
+          lat: point.latitude,
+          lang: "en",
+        },
       });
       await cacache.put(
         this.config.cacheDir,
