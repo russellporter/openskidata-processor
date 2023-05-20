@@ -38,7 +38,7 @@ export function configFromEnvironment(): Config {
             diskTTL:
               geocodingCacheTTL !== undefined
                 ? Number.parseInt(geocodingCacheTTL)
-                : 1000 * 60 * 60 * 24 * 30 * 365, // 1 year
+                : 1000 * 60 * 60 * 24 * 365, // 1 year
             cacheDir: "cache",
             inMemoryCacheSize: 1000,
           }
