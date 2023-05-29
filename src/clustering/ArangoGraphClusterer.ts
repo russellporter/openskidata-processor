@@ -538,9 +538,6 @@ export default async function clusterArangoGraph(
       isFixedSearchArea: true,
     });
 
-    console.log(`ski area: ${skiArea.properties.id}`);
-    console.log(JSON.stringify(nearbyObjects));
-
     const otherSkiAreaIDs = new Set(
       nearbyObjects.flatMap((object) => object.skiAreas)
     );
