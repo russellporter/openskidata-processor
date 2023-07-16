@@ -16,11 +16,12 @@ export default function addElevation(
     let elevations: number[];
     try {
       elevations = await loadElevations(
-        Array.from(coordinates).concat(elevationProfileCoordinates),
+        // Elevation service expects lat,lng order instead of lng,lat of GeoJSON
+        Array.from(coordinates).concat(elevationProfileCoordinates).map(([lng, lat]) => [lat, lng]),
         elevationServerURL
       );
     } catch (error) {
-      console.log("Failed to load elevations");
+      console.log("Failed to load elevations", error);
       return feature;
     }
 
