@@ -13,6 +13,7 @@ const config: Config = {
   elevationServerURL: null,
   bbox: null,
   geocodingServer: null,
+  outputDir: "data",
 };
 
 it("produces empty output for empty input", async () => {

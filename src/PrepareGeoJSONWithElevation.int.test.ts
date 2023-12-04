@@ -9,6 +9,7 @@ const config: Config = {
   elevationServerURL: "http://elevation.example.com",
   bbox: null,
   geocodingServer: null,
+  outputDir: "data",
 };
 
 function mockElevationServer(code: number) {
