@@ -83,9 +83,9 @@
     "test": "jest",
     "record-tests": "jest -u",
     "check-types": "tsc",
-    "download": "npm run build && node --max_old_space_size=3072 dist/scripts/download.js",
-    "prepare-geojson": "npm run build && node --max_old_space_size=3072 dist/scripts/prepare_geojson.js",
-    "cluster": "npm run build && node --max_old_space_size=3072 dist/scripts/cluster_ski_areas.js"
+    "download": "npm run build && node --optimize_for_size --max_old_space_size=3072 dist/scripts/download.js",
+    "prepare-geojson": "npm run build && node --optimize_for_size --max_old_space_size=3072 dist/scripts/prepare_geojson.js",
+    "cluster": "npm run build && node --optimize_for_size --max_old_space_size=3072 dist/scripts/cluster_ski_areas.js"
   },
   "author": "Russell Porter",
   "license": "ISC"
