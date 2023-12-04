@@ -13,7 +13,7 @@ if (!arangoDBURL) {
 
 clusterSkiAreas(
   new GeoJSONIntermediatePaths("data"),
-  new GeoJSONOutputPaths("data"),
+  new GeoJSONOutputPaths(config.outputDir),
   arangoDBURL,
   config.geocodingServer
 );

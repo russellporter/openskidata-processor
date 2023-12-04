@@ -15,6 +15,7 @@ export interface Config {
   geocodingServer: GeocodingServerConfig | null;
   // GeoJSON format (https://geojson.org/geojson-spec.html#bounding-boxes)
   bbox: GeoJSON.BBox | null;
+  outputDir: string;
 }
 
 export function configFromEnvironment(): Config {
@@ -44,5 +45,6 @@ export function configFromEnvironment(): Config {
           }
         : null,
     bbox: bbox as GeoJSON.BBox,
+    outputDir: process.env["OUTPUT_DIR"] ?? "data",
   };
 }

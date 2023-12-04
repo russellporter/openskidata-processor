@@ -11,9 +11,9 @@ This is a data pipeline that consumes OpenStreetMap & Skimap.org data and produc
 
 `./run.sh`
 
-To download data for only a specific area, specify a GeoJSON format bounding box in an environment variable: `BBOX="[8.593668937683105, 46.63066709037708, 8.61976146697998, 46.64740340708274]"`
+To download data for only a specific area, specify a GeoJSON format bounding box in an environment variable: `BBOX="[-13, -90, 65, 90]"`
 
-The output is placed in several `geojson` and `mbtiles` files within the `data` folder.
+The output is placed in several `geojson` and `mbtiles` files within the `data` folder. The output location can be overridden by setting `OUTPUT_DIR`.
 
 ### Advanced
 
