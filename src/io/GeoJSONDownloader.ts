@@ -6,11 +6,11 @@ import request from "request";
 import streamToPromise from "stream-to-promise";
 import { InputSkiMapOrgSkiAreaFeature } from "../features/SkiAreaFeature";
 import {
-  liftsDownloadConfig,
   OSMDownloadConfig,
+  liftsDownloadConfig,
   runsDownloadConfig,
-  skiAreasDownloadConfig,
   skiAreaSitesDownloadConfig,
+  skiAreasDownloadConfig,
   skiMapSkiAreasURL,
 } from "./DownloadURLs";
 import { InputDataPaths } from "./GeoJSONFiles";
