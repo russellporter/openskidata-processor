@@ -30,41 +30,6 @@ export default async function prepare(paths: DataPaths, config: Config) {
   const siteProvider = new SkiAreaSiteProvider();
   siteProvider.loadSites(paths.input.osmJSON.skiAreaSites);
 
-  let _maxMemoryConsumption = 0;
-  let _maxHeap = 0;
-  let _dtOfMaxMemoryConsumption: any;
-
-  var stop = false;
-
-  function printMemoryUsage() {
-    if (stop) {
-      return;
-    }
-    process.nextTick(() => {
-      let memUsage = process.memoryUsage();
-      if (memUsage.rss > _maxMemoryConsumption) {
-        _maxMemoryConsumption = memUsage.rss;
-        _dtOfMaxMemoryConsumption = new Date();
-      }
-
-      if (memUsage.heapUsed > _maxHeap) {
-        _maxHeap = memUsage.heapUsed;
-      }
-
-      console.log(`Memory usage: ${process.memoryUsage().rss}`);
-
-      setTimeout(printMemoryUsage, 1000);
-    });
-  }
-
-  printMemoryUsage();
-
-  process.on("exit", () => {
-    console.log(
-      `Max memory consumption: ${_maxMemoryConsumption} at ${_dtOfMaxMemoryConsumption}. Heap: ${_maxHeap}`
-    );
-  });
-
   console.log("Processing ski areas...");
 
   await StreamToPromise(
@@ -163,6 +128,4 @@ export default async function prepare(paths: DataPaths, config: Config) {
   );
 
   console.log("Done preparing");
-
-  stop = true;
 }
