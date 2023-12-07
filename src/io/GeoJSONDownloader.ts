@@ -72,7 +72,10 @@ async function downloadOSMJSON(
   targetPath: string,
   bbox: GeoJSON.BBox | null
 ) {
-  const url = overpassURLForQuery(endpoint, config.query(bbox));
+  const query = config.query(bbox);
+  console.log("Performing overpass query...");
+  console.log(query);
+  const url = overpassURLForQuery(endpoint, query);
   await downloadToFile(url, targetPath);
 }
 
