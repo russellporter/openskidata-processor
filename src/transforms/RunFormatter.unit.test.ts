@@ -34,7 +34,7 @@ describe("RunFormatter", () => {
       inputRun({ type: "way", id: 1, tags: { "piste:type": "downhill" } })
     );
     expect(run!.properties).toMatchInlineSnapshot(`
-      Object {
+      {
         "color": "hsl(0, 0%, 35%)",
         "colorName": "grey",
         "convention": "europe",
@@ -49,19 +49,19 @@ describe("RunFormatter", () => {
         "oneway": true,
         "patrolled": null,
         "ref": null,
-        "skiAreas": Array [],
-        "sources": Array [
-          Object {
+        "skiAreas": [],
+        "sources": [
+          {
             "id": "way/1",
             "type": "openstreetmap",
           },
         ],
         "status": "operating",
         "type": "run",
-        "uses": Array [
+        "uses": [
           "downhill",
         ],
-        "websites": Array [],
+        "websites": [],
       }
     `);
   });

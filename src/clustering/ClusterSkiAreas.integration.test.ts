@@ -89,11 +89,11 @@ it("skips generating ski areas for runs with unsupported activity", async () => 
 
   expect(TestHelpers.fileContents(paths.output.skiAreas))
     .toMatchInlineSnapshot(`
-      Object {
-        "features": Array [],
-        "type": "FeatureCollection",
-      }
-    `);
+    {
+      "features": [],
+      "type": "FeatureCollection",
+    }
+  `);
 });
 
 it("generates ski areas for runs without them", async () => {
@@ -165,38 +165,38 @@ it("generates ski areas for runs without them", async () => {
       simplifiedRunFeature
     )
   ).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "id": "3",
-          "name": "Oberauer Skiabfahrt",
-          "skiAreas": Array [
-            "mock-UUID-0",
-          ],
-        },
-        Object {
-          "id": "4",
-          "name": "Another run nearby",
-          "skiAreas": Array [
-            "mock-UUID-0",
-          ],
-        },
-      ]
-    `);
+    [
+      {
+        "id": "3",
+        "name": "Oberauer Skiabfahrt",
+        "skiAreas": [
+          "mock-UUID-0",
+        ],
+      },
+      {
+        "id": "4",
+        "name": "Another run nearby",
+        "skiAreas": [
+          "mock-UUID-0",
+        ],
+      },
+    ]
+  `);
   expect(
     TestHelpers.fileContents(paths.output.skiAreas).features.map(
       simplifiedSkiAreaFeature
     )
   ).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "activities": Array [
-            "downhill",
-          ],
-          "id": "mock-UUID-0",
-          "name": null,
-        },
-      ]
-    `);
+    [
+      {
+        "activities": [
+          "downhill",
+        ],
+        "id": "mock-UUID-0",
+        "name": null,
+      },
+    ]
+  `);
 });
 
 it("does not generate ski area for lone downhill run without lift", async () => {
@@ -255,24 +255,24 @@ it("does not generate ski area for lone downhill run without lift", async () => 
       simplifiedRunFeature
     )
   ).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "id": "3",
-          "name": "Oberauer Skiabfahrt",
-          "skiAreas": Array [],
-        },
-        Object {
-          "id": "4",
-          "name": "Another run nearby",
-          "skiAreas": Array [],
-        },
-      ]
-    `);
+    [
+      {
+        "id": "3",
+        "name": "Oberauer Skiabfahrt",
+        "skiAreas": [],
+      },
+      {
+        "id": "4",
+        "name": "Another run nearby",
+        "skiAreas": [],
+      },
+    ]
+  `);
   expect(
     TestHelpers.fileContents(paths.output.skiAreas).features.map(
       simplifiedSkiAreaFeature
     )
-  ).toMatchInlineSnapshot(`Array []`);
+  ).toMatchInlineSnapshot(`[]`);
 });
 
 it("generates ski areas by activity", async () => {
@@ -354,27 +354,27 @@ it("generates ski areas by activity", async () => {
       };
     })
   ).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "id": "3",
-          "name": "Downhill Run",
-          "skiAreas": Array [
-            Array [
-              "downhill",
-            ],
+    [
+      {
+        "id": "3",
+        "name": "Downhill Run",
+        "skiAreas": [
+          [
+            "downhill",
           ],
-        },
-        Object {
-          "id": "4",
-          "name": "Nordic run",
-          "skiAreas": Array [
-            Array [
-              "nordic",
-            ],
+        ],
+      },
+      {
+        "id": "4",
+        "name": "Nordic run",
+        "skiAreas": [
+          [
+            "nordic",
           ],
-        },
-      ]
-    `);
+        ],
+      },
+    ]
+  `);
 });
 
 it("clusters ski areas", async () => {
@@ -442,48 +442,48 @@ it("clusters ski areas", async () => {
       simplifiedLiftFeature
     )
   ).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "id": "2",
-          "name": "Skilift Oberau",
-          "skiAreas": Array [
-            "1",
-          ],
-        },
-      ]
-    `);
+    [
+      {
+        "id": "2",
+        "name": "Skilift Oberau",
+        "skiAreas": [
+          "1",
+        ],
+      },
+    ]
+  `);
 
   expect(
     TestHelpers.fileContents(paths.output.runs).features.map(
       simplifiedRunFeature
     )
   ).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "id": "3",
-          "name": "Oberauer Skiabfahrt",
-          "skiAreas": Array [
-            "1",
-          ],
-        },
-      ]
-    `);
+    [
+      {
+        "id": "3",
+        "name": "Oberauer Skiabfahrt",
+        "skiAreas": [
+          "1",
+        ],
+      },
+    ]
+  `);
 
   expect(
     TestHelpers.fileContents(paths.output.skiAreas).features.map(
       simplifiedSkiAreaFeature
     )
   ).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "activities": Array [
-            "downhill",
-          ],
-          "id": "1",
-          "name": "Rabenkopflift Oberau",
-        },
-      ]
-    `);
+    [
+      {
+        "activities": [
+          "downhill",
+        ],
+        "id": "1",
+        "name": "Rabenkopflift Oberau",
+      },
+    ]
+  `);
 });
 
 it("clusters ski area activities independently", async () => {
@@ -553,30 +553,30 @@ it("clusters ski area activities independently", async () => {
       simplifiedRunFeature
     )
   ).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "id": "2",
-          "name": "Downhill run part of ski area",
-          "skiAreas": Array [
-            "1",
-          ],
-        },
-        Object {
-          "id": "3",
-          "name": "Nordic run part of ski area",
-          "skiAreas": Array [
-            "1",
-          ],
-        },
-        Object {
-          "id": "4",
-          "name": "Nordic run not part of ski area",
-          "skiAreas": Array [
-            "mock-UUID-0",
-          ],
-        },
-      ]
-    `);
+    [
+      {
+        "id": "2",
+        "name": "Downhill run part of ski area",
+        "skiAreas": [
+          "1",
+        ],
+      },
+      {
+        "id": "3",
+        "name": "Nordic run part of ski area",
+        "skiAreas": [
+          "1",
+        ],
+      },
+      {
+        "id": "4",
+        "name": "Nordic run not part of ski area",
+        "skiAreas": [
+          "mock-UUID-0",
+        ],
+      },
+    ]
+  `);
 });
 
 it("generates a downhill ski area but does not include backcountry runs when clustering from a mixed use run", async () => {
@@ -639,21 +639,21 @@ it("generates a downhill ski area but does not include backcountry runs when clu
       simplifiedRunFeature
     )
   ).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "id": "3",
-          "name": "Downhill Run & Backcountry Route",
-          "skiAreas": Array [
-            "mock-UUID-0",
-          ],
-        },
-        Object {
-          "id": "4",
-          "name": "Backcountry Route",
-          "skiAreas": Array [],
-        },
-      ]
-    `);
+    [
+      {
+        "id": "3",
+        "name": "Downhill Run & Backcountry Route",
+        "skiAreas": [
+          "mock-UUID-0",
+        ],
+      },
+      {
+        "id": "4",
+        "name": "Backcountry Route",
+        "skiAreas": [],
+      },
+    ]
+  `);
 });
 
 it("generates elevation statistics for run & lift based on lift served skiable vertical", async () => {
@@ -704,50 +704,50 @@ it("generates elevation statistics for run & lift based on lift served skiable v
       simplifiedSkiAreaFeatureWithStatistics
     )
   ).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "activities": Array [
-            "downhill",
-          ],
-          "id": "mock-UUID-0",
-          "name": null,
-          "statistics": Object {
-            "lifts": Object {
-              "byType": Object {
-                "t-bar": Object {
-                  "combinedElevationChange": 100,
-                  "count": 1,
-                  "lengthInKm": 0.4553273553619445,
-                  "maxElevation": 200,
-                  "minElevation": 100,
-                },
+    [
+      {
+        "activities": [
+          "downhill",
+        ],
+        "id": "mock-UUID-0",
+        "name": null,
+        "statistics": {
+          "lifts": {
+            "byType": {
+              "t-bar": {
+                "combinedElevationChange": 100,
+                "count": 1,
+                "lengthInKm": 0.4553273553619445,
+                "maxElevation": 200,
+                "minElevation": 100,
               },
-              "maxElevation": 200,
-              "minElevation": 100,
             },
             "maxElevation": 200,
-            "minElevation": 150,
-            "runs": Object {
-              "byActivity": Object {
-                "downhill": Object {
-                  "byDifficulty": Object {
-                    "other": Object {
-                      "combinedElevationChange": 100,
-                      "count": 1,
-                      "lengthInKm": 0.46264499967438083,
-                      "maxElevation": 250,
-                      "minElevation": 150,
-                    },
+            "minElevation": 100,
+          },
+          "maxElevation": 200,
+          "minElevation": 150,
+          "runs": {
+            "byActivity": {
+              "downhill": {
+                "byDifficulty": {
+                  "other": {
+                    "combinedElevationChange": 100,
+                    "count": 1,
+                    "lengthInKm": 0.46264499967438083,
+                    "maxElevation": 250,
+                    "minElevation": 150,
                   },
                 },
               },
-              "maxElevation": 250,
-              "minElevation": 150,
             },
+            "maxElevation": 250,
+            "minElevation": 150,
           },
         },
-      ]
-    `);
+      },
+    ]
+  `);
 });
 
 it("allows point & multilinestring lifts to be processed", async () => {
@@ -800,19 +800,19 @@ it("allows point & multilinestring lifts to be processed", async () => {
       simplifiedLiftFeature
     )
   ).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "id": "2",
-          "name": "Skilift Oberau",
-          "skiAreas": Array [],
-        },
-        Object {
-          "id": "3",
-          "name": "Gondola",
-          "skiAreas": Array [],
-        },
-      ]
-    `);
+    [
+      {
+        "id": "2",
+        "name": "Skilift Oberau",
+        "skiAreas": [],
+      },
+      {
+        "id": "3",
+        "name": "Gondola",
+        "skiAreas": [],
+      },
+    ]
+  `);
 });
 
 it("does not generate ski area for lone snow park", async () => {
@@ -851,11 +851,11 @@ it("does not generate ski area for lone snow park", async () => {
 
   expect(TestHelpers.fileContents(paths.output.skiAreas))
     .toMatchInlineSnapshot(`
-      Object {
-        "features": Array [],
-        "type": "FeatureCollection",
-      }
-    `);
+    {
+      "features": [],
+      "type": "FeatureCollection",
+    }
+  `);
 });
 
 it("generates ski area which includes the snow park", async () => {
@@ -923,23 +923,23 @@ it("generates ski area which includes the snow park", async () => {
       simplifiedRunFeature
     )
   ).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "id": "1",
-          "name": "Run",
-          "skiAreas": Array [
-            "mock-UUID-0",
-          ],
-        },
-        Object {
-          "id": "2",
-          "name": "Terrain Park",
-          "skiAreas": Array [
-            "mock-UUID-0",
-          ],
-        },
-      ]
-    `);
+    [
+      {
+        "id": "1",
+        "name": "Run",
+        "skiAreas": [
+          "mock-UUID-0",
+        ],
+      },
+      {
+        "id": "2",
+        "name": "Terrain Park",
+        "skiAreas": [
+          "mock-UUID-0",
+        ],
+      },
+    ]
+  `);
 });
 
 it("generates ski area which includes the patrolled ungroomed run", async () => {
@@ -995,16 +995,16 @@ it("generates ski area which includes the patrolled ungroomed run", async () => 
       simplifiedRunFeature
     )
   ).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "id": "1",
-          "name": "Run",
-          "skiAreas": Array [
-            "mock-UUID-0",
-          ],
-        },
-      ]
-      `);
+    [
+      {
+        "id": "1",
+        "name": "Run",
+        "skiAreas": [
+          "mock-UUID-0",
+        ],
+      },
+    ]
+  `);
 });
 
 it("does not generate ski area for ungroomed run", async () => {
@@ -1043,11 +1043,11 @@ it("does not generate ski area for ungroomed run", async () => {
 
   expect(TestHelpers.fileContents(paths.output.skiAreas))
     .toMatchInlineSnapshot(`
-      Object {
-        "features": Array [],
-        "type": "FeatureCollection",
-      }
-    `);
+    {
+      "features": [],
+      "type": "FeatureCollection",
+    }
+  `);
 });
 
 it("associates lifts and runs with polygon openstreetmap ski area", async () => {
@@ -1121,32 +1121,32 @@ it("associates lifts and runs with polygon openstreetmap ski area", async () => 
       simplifiedLiftFeature
     )
   ).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "id": "2",
-          "name": "Skilift Oberau",
-          "skiAreas": Array [
-            "1",
-          ],
-        },
-      ]
-    `);
+    [
+      {
+        "id": "2",
+        "name": "Skilift Oberau",
+        "skiAreas": [
+          "1",
+        ],
+      },
+    ]
+  `);
 
   expect(
     TestHelpers.fileContents(paths.output.runs).features.map(
       simplifiedRunFeature
     )
   ).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "id": "3",
-          "name": "Oberauer Skiabfahrt",
-          "skiAreas": Array [
-            "1",
-          ],
-        },
-      ]
-    `);
+    [
+      {
+        "id": "3",
+        "name": "Oberauer Skiabfahrt",
+        "skiAreas": [
+          "1",
+        ],
+      },
+    ]
+  `);
 });
 
 it("associates lifts and runs adjacent to polygon openstreetmap ski area when no other polygon contains them", async () => {
@@ -1229,11 +1229,11 @@ it("associates lifts and runs adjacent to polygon openstreetmap ski area when no
       simplifiedLiftFeature
     )
   ).toMatchInlineSnapshot(`
-    Array [
-      Object {
+    [
+      {
         "id": "2",
         "name": "Lift",
-        "skiAreas": Array [
+        "skiAreas": [
           "1",
         ],
       },
@@ -1245,18 +1245,18 @@ it("associates lifts and runs adjacent to polygon openstreetmap ski area when no
       simplifiedRunFeature
     )
   ).toMatchInlineSnapshot(`
-    Array [
-      Object {
+    [
+      {
         "id": "3",
         "name": "Run",
-        "skiAreas": Array [
+        "skiAreas": [
           "1",
         ],
       },
-      Object {
+      {
         "id": "4",
         "name": "Run",
-        "skiAreas": Array [
+        "skiAreas": [
           "1",
         ],
       },
@@ -1345,23 +1345,23 @@ it("associates lifts correctly to adjacent ski areas based on their polygons", a
       simplifiedLiftFeature
     )
   ).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "id": "3",
-          "name": "Ski Area 1: Lift",
-          "skiAreas": Array [
-            "1",
-          ],
-        },
-        Object {
-          "id": "4",
-          "name": "Ski Area 2: Lift",
-          "skiAreas": Array [
-            "2",
-          ],
-        },
-      ]
-      `);
+    [
+      {
+        "id": "3",
+        "name": "Ski Area 1: Lift",
+        "skiAreas": [
+          "1",
+        ],
+      },
+      {
+        "id": "4",
+        "name": "Ski Area 2: Lift",
+        "skiAreas": [
+          "2",
+        ],
+      },
+    ]
+  `);
 });
 
 it("merges Skimap.org ski area with OpenStreetMap ski area", async () => {
@@ -1417,19 +1417,19 @@ it("merges Skimap.org ski area with OpenStreetMap ski area", async () => {
       simplifiedSkiAreaFeatureWithSources
     )
   ).toMatchInlineSnapshot(`
-    Array [
-      Object {
-        "activities": Array [
+    [
+      {
+        "activities": [
           "downhill",
         ],
         "id": "1",
         "name": "Name",
-        "sources": Array [
-          Object {
+        "sources": [
+          {
             "id": "1",
             "type": "openstreetmap",
           },
-          Object {
+          {
             "id": "2",
             "type": "skimap.org",
           },
@@ -1443,11 +1443,11 @@ it("merges Skimap.org ski area with OpenStreetMap ski area", async () => {
       simplifiedLiftFeature
     )
   ).toMatchInlineSnapshot(`
-    Array [
-      Object {
+    [
+      {
         "id": "3",
         "name": "Lift",
-        "skiAreas": Array [
+        "skiAreas": [
           "1",
         ],
       },
@@ -1545,36 +1545,36 @@ it("merges Skimap.org ski area into adjacent OpenStreetMap ski areas", async () 
       .features.map(simplifiedSkiAreaFeatureWithSources)
       .sort(orderedByID)
   ).toMatchInlineSnapshot(`
-    Array [
-      Object {
-        "activities": Array [
+    [
+      {
+        "activities": [
           "downhill",
         ],
         "id": "1",
         "name": "Name",
-        "sources": Array [
-          Object {
+        "sources": [
+          {
             "id": "1",
             "type": "openstreetmap",
           },
-          Object {
+          {
             "id": "3",
             "type": "skimap.org",
           },
         ],
       },
-      Object {
-        "activities": Array [
+      {
+        "activities": [
           "downhill",
         ],
         "id": "2",
         "name": "Name",
-        "sources": Array [
-          Object {
+        "sources": [
+          {
             "id": "2",
             "type": "openstreetmap",
           },
-          Object {
+          {
             "id": "3",
             "type": "skimap.org",
           },
@@ -1637,19 +1637,19 @@ it("merges Skimap.org ski area without activities with OpenStreetMap ski area", 
       simplifiedSkiAreaFeatureWithSources
     )
   ).toMatchInlineSnapshot(`
-    Array [
-      Object {
-        "activities": Array [
+    [
+      {
+        "activities": [
           "downhill",
         ],
         "id": "1",
         "name": "Name",
-        "sources": Array [
-          Object {
+        "sources": [
+          {
             "id": "1",
             "type": "openstreetmap",
           },
-          Object {
+          {
             "id": "2",
             "type": "skimap.org",
           },
@@ -1701,8 +1701,8 @@ it("prefers OSM sourced websites when merging Skimap.org ski area with OpenStree
       (feature: SkiAreaFeature) => feature.properties.websites
     )
   ).toMatchInlineSnapshot(`
-    Array [
-      Array [
+    [
+      [
         "https://openstreetmap.org",
       ],
     ]
@@ -1766,23 +1766,23 @@ it("removes OpenStreetMap ski areas that span across multiple Skimap.org ski are
       .features.map(simplifiedSkiAreaFeature)
       .sort(orderedByID)
   ).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "activities": Array [
-            "downhill",
-          ],
-          "id": "2",
-          "name": "Name",
-        },
-        Object {
-          "activities": Array [
-            "downhill",
-          ],
-          "id": "3",
-          "name": "Name",
-        },
-      ]
-      `);
+    [
+      {
+        "activities": [
+          "downhill",
+        ],
+        "id": "2",
+        "name": "Name",
+      },
+      {
+        "activities": [
+          "downhill",
+        ],
+        "id": "3",
+        "name": "Name",
+      },
+    ]
+  `);
 });
 
 it("adds activities to OpenStreetMap ski areas based on the associated runs", async () => {
@@ -1837,16 +1837,16 @@ it("adds activities to OpenStreetMap ski areas based on the associated runs", as
       simplifiedSkiAreaFeature
     )
   ).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "activities": Array [
-            "nordic",
-          ],
-          "id": "1",
-          "name": "Name",
-        },
-      ]
-    `);
+    [
+      {
+        "activities": [
+          "nordic",
+        ],
+        "id": "1",
+        "name": "Name",
+      },
+    ]
+  `);
 });
 
 it("removes OpenStreetMap ski area without nearby runs/lifts", async () => {
@@ -1887,7 +1887,7 @@ it("removes OpenStreetMap ski area without nearby runs/lifts", async () => {
     TestHelpers.fileContents(paths.output.skiAreas).features.map(
       simplifiedSkiAreaFeature
     )
-  ).toMatchInlineSnapshot(`Array []`);
+  ).toMatchInlineSnapshot(`[]`);
 });
 
 it("uses runs fully contained in the ski area polygon to determine activities when they are not known", async () => {
@@ -1954,23 +1954,23 @@ it("uses runs fully contained in the ski area polygon to determine activities wh
       .features.map(simplifiedSkiAreaFeature)
       .sort(orderedByID)
   ).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "activities": Array [
-            "downhill",
-          ],
-          "id": "1",
-          "name": "Name",
-        },
-        Object {
-          "activities": Array [
-            "nordic",
-          ],
-          "id": "mock-UUID-0",
-          "name": null,
-        },
-      ]
-    `);
+    [
+      {
+        "activities": [
+          "downhill",
+        ],
+        "id": "1",
+        "name": "Name",
+      },
+      {
+        "activities": [
+          "nordic",
+        ],
+        "id": "mock-UUID-0",
+        "name": null,
+      },
+    ]
+  `);
 });
 
 it("removes an OpenStreetMap ski area that does not contain any runs/lifts as it might be representing something other than a ski area", async () => {
@@ -2025,32 +2025,32 @@ it("removes an OpenStreetMap ski area that does not contain any runs/lifts as it
       simplifiedSkiAreaFeature
     )
   ).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "activities": Array [
-            "nordic",
-          ],
-          "id": "mock-UUID-0",
-          "name": null,
-        },
-      ]
-    `);
+    [
+      {
+        "activities": [
+          "nordic",
+        ],
+        "id": "mock-UUID-0",
+        "name": null,
+      },
+    ]
+  `);
 
   expect(
     TestHelpers.fileContents(paths.output.runs).features.map(
       simplifiedRunFeature
     )
   ).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "id": "2",
-          "name": "Run outside the ski area should be associated with a separate, generated ski area",
-          "skiAreas": Array [
-            "mock-UUID-0",
-          ],
-        },
-      ]
-    `);
+    [
+      {
+        "id": "2",
+        "name": "Run outside the ski area should be associated with a separate, generated ski area",
+        "skiAreas": [
+          "mock-UUID-0",
+        ],
+      },
+    ]
+  `);
 });
 
 it("updates geometry, run convention, and activities for a site based ski area", async () => {
@@ -2101,14 +2101,14 @@ it("updates geometry, run convention, and activities for a site based ski area",
   const skiAreaFeature = skiAreaFeatures[0];
 
   expect(skiAreaFeature.properties.activities).toMatchInlineSnapshot(`
-    Array [
+    [
       "nordic",
     ]
   `);
 
   expect(skiAreaFeature.geometry).toMatchInlineSnapshot(`
-    Object {
-      "coordinates": Array [
+    {
+      "coordinates": [
         1.4993639242219372,
         1.4993640268530994,
       ],
@@ -2119,8 +2119,8 @@ it("updates geometry, run convention, and activities for a site based ski area",
     `"europe"`
   );
   expect(skiAreaFeature.properties.sources).toMatchInlineSnapshot(`
-    Array [
-      Object {
+    [
+      {
         "id": "1",
         "type": "openstreetmap",
       },
@@ -2189,18 +2189,18 @@ it("adds nearby unassociated runs of same activity to site based ski area", asyn
       simplifiedRunFeature
     )
   ).toMatchInlineSnapshot(`
-    Array [
-      Object {
+    [
+      {
         "id": "2",
         "name": "Run",
-        "skiAreas": Array [
+        "skiAreas": [
           "1",
         ],
       },
-      Object {
+      {
         "id": "3",
         "name": "Run",
-        "skiAreas": Array [
+        "skiAreas": [
           "1",
         ],
       },
@@ -2265,18 +2265,18 @@ it("does not add nearby unassociated runs of different activity to site based sk
       simplifiedRunFeature
     )
   ).toMatchInlineSnapshot(`
-    Array [
-      Object {
+    [
+      {
         "id": "2",
         "name": "Run",
-        "skiAreas": Array [
+        "skiAreas": [
           "1",
         ],
       },
-      Object {
+      {
         "id": "3",
         "name": "Run",
-        "skiAreas": Array [
+        "skiAreas": [
           "mock-UUID-0",
         ],
       },
@@ -2308,7 +2308,7 @@ it("removes site based ski area that doesn't have associated lifts and runs", as
     TestHelpers.fileContents(paths.output.runs).features.map(
       simplifiedRunFeature
     )
-  ).toMatchInlineSnapshot(`Array []`);
+  ).toMatchInlineSnapshot(`[]`);
 });
 
 it("removes landuse based ski area when there is a site with sufficient overlap", async () => {
@@ -2398,8 +2398,8 @@ it("removes landuse based ski area when there is a site with sufficient overlap"
 
   const skiAreaFeature = skiAreaFeatures[0];
   expect(skiAreaFeature.geometry).toMatchInlineSnapshot(`
-    Object {
-      "coordinates": Array [
+    {
+      "coordinates": [
         0.9995977536044848,
         0.9991956218569416,
       ],
@@ -2407,8 +2407,8 @@ it("removes landuse based ski area when there is a site with sufficient overlap"
     }
   `);
   expect(skiAreaFeature.properties.sources).toMatchInlineSnapshot(`
-    Array [
-      Object {
+    [
+      {
         "id": "1",
         "type": "openstreetmap",
       },
@@ -2520,34 +2520,34 @@ it("keeps landuse based ski area when there is a site with insufficient overlap"
   ).features.map(simplifiedRunFeature);
 
   expect(runFeatures).toMatchInlineSnapshot(`
-    Array [
-      Object {
+    [
+      {
         "id": "2",
         "name": "Run",
-        "skiAreas": Array [
+        "skiAreas": [
           "1",
           "ID",
         ],
       },
-      Object {
+      {
         "id": "3",
         "name": "Run",
-        "skiAreas": Array [
+        "skiAreas": [
           "1",
           "ID",
         ],
       },
-      Object {
+      {
         "id": "4",
         "name": "Run",
-        "skiAreas": Array [
+        "skiAreas": [
           "ID",
         ],
       },
-      Object {
+      {
         "id": "5",
         "name": "Run",
-        "skiAreas": Array [
+        "skiAreas": [
           "ID",
         ],
       },

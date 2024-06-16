@@ -107,46 +107,46 @@ describe("OSMToGeoJSONConverter", () => {
     };
 
     expect(convertOSMToGeoJSON(input)).toMatchInlineSnapshot(`
-      Object {
-        "features": Array [
-          Object {
-            "geometry": Object {
-              "coordinates": Array [
-                Array [
-                  Array [
-                    Array [
+      {
+        "features": [
+          {
+            "geometry": {
+              "coordinates": [
+                [
+                  [
+                    [
                       2,
                       2,
                     ],
-                    Array [
+                    [
                       3,
                       3,
                     ],
-                    Array [
+                    [
                       2,
                       3,
                     ],
-                    Array [
+                    [
                       2,
                       2,
                     ],
                   ],
                 ],
-                Array [
-                  Array [
-                    Array [
+                [
+                  [
+                    [
                       0,
                       1,
                     ],
-                    Array [
+                    [
                       0,
                       0,
                     ],
-                    Array [
+                    [
                       1,
                       1,
                     ],
-                    Array [
+                    [
                       0,
                       1,
                     ],
@@ -156,11 +156,11 @@ describe("OSMToGeoJSONConverter", () => {
               "type": "MultiPolygon",
             },
             "id": "relation/10001",
-            "properties": Object {
+            "properties": {
               "id": 10001,
-              "meta": Object {},
-              "relations": Array [],
-              "tags": Object {
+              "meta": {},
+              "relations": [],
+              "tags": {
                 "landuse": "winter_sports",
                 "type": "multipolygon",
               },
@@ -168,23 +168,23 @@ describe("OSMToGeoJSONConverter", () => {
             },
             "type": "Feature",
           },
-          Object {
-            "geometry": Object {
-              "coordinates": Array [
-                Array [
-                  Array [
+          {
+            "geometry": {
+              "coordinates": [
+                [
+                  [
                     2,
                     2,
                   ],
-                  Array [
+                  [
                     3,
                     3,
                   ],
-                  Array [
+                  [
                     2,
                     3,
                   ],
-                  Array [
+                  [
                     2,
                     2,
                   ],
@@ -193,20 +193,20 @@ describe("OSMToGeoJSONConverter", () => {
               "type": "Polygon",
             },
             "id": "way/1003",
-            "properties": Object {
+            "properties": {
               "id": 1003,
-              "meta": Object {},
-              "relations": Array [
-                Object {
+              "meta": {},
+              "relations": [
+                {
                   "rel": 10001,
-                  "reltags": Object {
+                  "reltags": {
                     "landuse": "winter_sports",
                     "type": "multipolygon",
                   },
                   "role": "outer",
                 },
               ],
-              "tags": Object {
+              "tags": {
                 "landuse": "winter_sports",
                 "natural": "wood",
                 "source": "Kartverket N50",
@@ -216,14 +216,14 @@ describe("OSMToGeoJSONConverter", () => {
             },
             "type": "Feature",
           },
-          Object {
-            "geometry": Object {
-              "coordinates": Array [
-                Array [
+          {
+            "geometry": {
+              "coordinates": [
+                [
                   0,
                   0,
                 ],
-                Array [
+                [
                   0,
                   1,
                 ],
@@ -231,20 +231,20 @@ describe("OSMToGeoJSONConverter", () => {
               "type": "LineString",
             },
             "id": "way/1001",
-            "properties": Object {
+            "properties": {
               "id": 1001,
-              "meta": Object {},
-              "relations": Array [
-                Object {
+              "meta": {},
+              "relations": [
+                {
                   "rel": 10001,
-                  "reltags": Object {
+                  "reltags": {
                     "landuse": "winter_sports",
                     "type": "multipolygon",
                   },
                   "role": "outer",
                 },
               ],
-              "tags": Object {
+              "tags": {
                 "natural": "wood",
                 "source": "Kartverket N50",
                 "source:date": "1989-07-01",
@@ -253,18 +253,18 @@ describe("OSMToGeoJSONConverter", () => {
             },
             "type": "Feature",
           },
-          Object {
-            "geometry": Object {
-              "coordinates": Array [
-                Array [
+          {
+            "geometry": {
+              "coordinates": [
+                [
                   0,
                   1,
                 ],
-                Array [
+                [
                   1,
                   1,
                 ],
-                Array [
+                [
                   0,
                   0,
                 ],
@@ -272,20 +272,20 @@ describe("OSMToGeoJSONConverter", () => {
               "type": "LineString",
             },
             "id": "way/1002",
-            "properties": Object {
+            "properties": {
               "id": 1002,
-              "meta": Object {},
-              "relations": Array [
-                Object {
+              "meta": {},
+              "relations": [
+                {
                   "rel": 10001,
-                  "reltags": Object {
+                  "reltags": {
                     "landuse": "winter_sports",
                     "type": "multipolygon",
                   },
                   "role": "outer",
                 },
               ],
-              "tags": Object {
+              "tags": {
                 "natural": "wood",
                 "source": "Kartverket N50",
                 "source:date": "1989-07-01",

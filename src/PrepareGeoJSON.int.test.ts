@@ -35,28 +35,28 @@ it("produces empty output for empty input", async () => {
 
   expect(TestHelpers.contents(paths.output)).toMatchInlineSnapshot(`
     Map {
-      "output/lifts.geojson" => Object {
-        "features": Array [],
+      "output/lifts.geojson" => {
+        "features": [],
         "type": "FeatureCollection",
       },
-      "output/mapboxgl_lifts.geojson" => Object {
-        "features": Array [],
+      "output/mapboxgl_lifts.geojson" => {
+        "features": [],
         "type": "FeatureCollection",
       },
-      "output/mapboxgl_runs.geojson" => Object {
-        "features": Array [],
+      "output/mapboxgl_runs.geojson" => {
+        "features": [],
         "type": "FeatureCollection",
       },
-      "output/mapboxgl_ski_areas.geojson" => Object {
-        "features": Array [],
+      "output/mapboxgl_ski_areas.geojson" => {
+        "features": [],
         "type": "FeatureCollection",
       },
-      "output/runs.geojson" => Object {
-        "features": Array [],
+      "output/runs.geojson" => {
+        "features": [],
         "type": "FeatureCollection",
       },
-      "output/ski_areas.geojson" => Object {
-        "features": Array [],
+      "output/ski_areas.geojson" => {
+        "features": [],
         "type": "FeatureCollection",
       },
     }
@@ -141,23 +141,23 @@ it("produces output for simple input", async () => {
 
   expect(TestHelpers.contents(paths.output)).toMatchInlineSnapshot(`
     Map {
-      "output/lifts.geojson" => Object {
-        "features": Array [
-          Object {
-            "geometry": Object {
-              "coordinates": Array [
-                Array [
+      "output/lifts.geojson" => {
+        "features": [
+          {
+            "geometry": {
+              "coordinates": [
+                [
                   11.1223444,
                   47.5572422,
                 ],
-                Array [
+                [
                   11.1164297,
                   47.55815630000001,
                 ],
               ],
               "type": "LineString",
             },
-            "properties": Object {
+            "properties": {
               "bubble": null,
               "capacity": null,
               "color": "hsl(0, 82%, 42%)",
@@ -171,43 +171,43 @@ it("produces output for simple input", async () => {
               "occupancy": null,
               "oneway": null,
               "ref": null,
-              "skiAreas": Array [],
-              "sources": Array [
-                Object {
+              "skiAreas": [],
+              "sources": [
+                {
                   "id": "way/227407273",
                   "type": "openstreetmap",
                 },
               ],
               "status": "operating",
               "type": "lift",
-              "websites": Array [],
+              "websites": [],
             },
             "type": "Feature",
           },
         ],
         "type": "FeatureCollection",
       },
-      "output/mapboxgl_lifts.geojson" => Object {
-        "features": Array [
-          Object {
-            "geometry": Object {
-              "coordinates": Array [
-                Array [
+      "output/mapboxgl_lifts.geojson" => {
+        "features": [
+          {
+            "geometry": {
+              "coordinates": [
+                [
                   11.1223444,
                   47.5572422,
                 ],
-                Array [
+                [
                   11.1164297,
                   47.558156300000014,
                 ],
               ],
               "type": "LineString",
             },
-            "properties": Object {
+            "properties": {
               "color": "hsl(0, 82%, 42%)",
               "id": "4d07b91974c5a5b3a0ad9e1928c0a6d433c5093b",
               "name_and_type": "Skilift Oberau (T-bar)",
-              "skiAreas": Array [],
+              "skiAreas": [],
               "status": "operating",
             },
             "type": "Feature",
@@ -215,25 +215,25 @@ it("produces output for simple input", async () => {
         ],
         "type": "FeatureCollection",
       },
-      "output/mapboxgl_runs.geojson" => Object {
-        "features": Array [
-          Object {
-            "geometry": Object {
-              "coordinates": Array [
-                Array [
-                  Array [
+      "output/mapboxgl_runs.geojson" => {
+        "features": [
+          {
+            "geometry": {
+              "coordinates": [
+                [
+                  [
                     11.1164229,
                     47.55812500000001,
                   ],
-                  Array [
+                  [
                     11.116365499999999,
                     47.5579742,
                   ],
-                  Array [
+                  [
                     11.1171866,
                     47.557641299999986,
                   ],
-                  Array [
+                  [
                     11.1164229,
                     47.55812500000001,
                   ],
@@ -241,7 +241,7 @@ it("produces output for simple input", async () => {
               ],
               "type": "Polygon",
             },
-            "properties": Object {
+            "properties": {
               "color": "hsl(208, 100%, 33%)",
               "colorName": "blue",
               "difficulty": "easy",
@@ -253,24 +253,24 @@ it("produces output for simple input", async () => {
               "name": "Oberauer Skiabfahrt",
               "oneway": true,
               "patrolled": null,
-              "skiAreas": Array [],
+              "skiAreas": [],
             },
             "type": "Feature",
           },
         ],
         "type": "FeatureCollection",
       },
-      "output/mapboxgl_ski_areas.geojson" => Object {
-        "features": Array [
-          Object {
-            "geometry": Object {
-              "coordinates": Array [
+      "output/mapboxgl_ski_areas.geojson" => {
+        "features": [
+          {
+            "geometry": {
+              "coordinates": [
                 11.122066084534,
                 47.557111836837,
               ],
               "type": "Point",
             },
-            "properties": Object {
+            "properties": {
               "downhillDistance": null,
               "has_downhill": true,
               "id": "02911313f405ef0415188ceb357b415f02af5d64",
@@ -285,25 +285,25 @@ it("produces output for simple input", async () => {
         ],
         "type": "FeatureCollection",
       },
-      "output/runs.geojson" => Object {
-        "features": Array [
-          Object {
-            "geometry": Object {
-              "coordinates": Array [
-                Array [
-                  Array [
+      "output/runs.geojson" => {
+        "features": [
+          {
+            "geometry": {
+              "coordinates": [
+                [
+                  [
                     11.1164229,
                     47.558125000000004,
                   ],
-                  Array [
+                  [
                     11.116365499999999,
                     47.5579742,
                   ],
-                  Array [
+                  [
                     11.1171866,
                     47.55764129999999,
                   ],
-                  Array [
+                  [
                     11.1164229,
                     47.558125000000004,
                   ],
@@ -311,7 +311,7 @@ it("produces output for simple input", async () => {
               ],
               "type": "Polygon",
             },
-            "properties": Object {
+            "properties": {
               "color": "hsl(208, 100%, 33%)",
               "colorName": "blue",
               "convention": "europe",
@@ -326,37 +326,37 @@ it("produces output for simple input", async () => {
               "oneway": true,
               "patrolled": null,
               "ref": null,
-              "skiAreas": Array [],
-              "sources": Array [
-                Object {
+              "skiAreas": [],
+              "sources": [
+                {
                   "id": "way/227407268",
                   "type": "openstreetmap",
                 },
               ],
               "status": "operating",
               "type": "run",
-              "uses": Array [
+              "uses": [
                 "downhill",
               ],
-              "websites": Array [],
+              "websites": [],
             },
             "type": "Feature",
           },
         ],
         "type": "FeatureCollection",
       },
-      "output/ski_areas.geojson" => Object {
-        "features": Array [
-          Object {
-            "geometry": Object {
-              "coordinates": Array [
+      "output/ski_areas.geojson" => {
+        "features": [
+          {
+            "geometry": {
+              "coordinates": [
                 11.122066084534,
                 47.557111836837,
               ],
               "type": "Point",
             },
-            "properties": Object {
-              "activities": Array [
+            "properties": {
+              "activities": [
                 "downhill",
               ],
               "generated": false,
@@ -364,15 +364,15 @@ it("produces output for simple input", async () => {
               "location": null,
               "name": "Rabenkopflift Oberau",
               "runConvention": "europe",
-              "sources": Array [
-                Object {
+              "sources": [
+                {
                   "id": "13666",
                   "type": "skimap.org",
                 },
               ],
               "status": null,
               "type": "skiArea",
-              "websites": Array [],
+              "websites": [],
             },
             "type": "Feature",
           },
@@ -464,25 +464,25 @@ it("processes OpenStreetMap ski areas", async () => {
 
   expect(TestHelpers.fileContents(paths.output.skiAreas))
     .toMatchInlineSnapshot(`
-    Object {
-      "features": Array [
-        Object {
-          "geometry": Object {
-            "coordinates": Array [
-              Array [
-                Array [
+    {
+      "features": [
+        {
+          "geometry": {
+            "coordinates": [
+              [
+                [
                   0,
                   0,
                 ],
-                Array [
+                [
                   0,
                   1,
                 ],
-                Array [
+                [
                   1,
                   0,
                 ],
-                Array [
+                [
                   0,
                   0,
                 ],
@@ -490,22 +490,22 @@ it("processes OpenStreetMap ski areas", async () => {
             ],
             "type": "Polygon",
           },
-          "properties": Object {
-            "activities": Array [],
+          "properties": {
+            "activities": [],
             "generated": false,
             "id": "c638251d70817a3d3ad227cce5d353d3abff6abb",
             "location": null,
             "name": null,
             "runConvention": "europe",
-            "sources": Array [
-              Object {
+            "sources": [
+              {
                 "id": "way/13666",
                 "type": "openstreetmap",
               },
             ],
             "status": "operating",
             "type": "skiArea",
-            "websites": Array [],
+            "websites": [],
           },
           "type": "Feature",
         },
@@ -579,9 +579,9 @@ it("processes OpenStreetMap ski area sites", async () => {
       simplifiedSkiAreaFeature
     )
   ).toMatchInlineSnapshot(`
-    Array [
-      Object {
-        "activities": Array [],
+    [
+      {
+        "activities": [],
         "id": "2033ab9be8698fcd4794c24e42782bf33c124e8d",
         "name": "Wendelstein",
       },
@@ -593,11 +593,11 @@ it("processes OpenStreetMap ski area sites", async () => {
       simplifiedLiftFeature
     )
   ).toMatchInlineSnapshot(`
-    Array [
-      Object {
+    [
+      {
         "id": "fa8b7321d15e0f111786a467e69c7b8e1d4f9431",
         "name": "Wendelsteinbahn",
-        "skiAreas": Array [
+        "skiAreas": [
           "2033ab9be8698fcd4794c24e42782bf33c124e8d",
         ],
       },
@@ -609,11 +609,11 @@ it("processes OpenStreetMap ski area sites", async () => {
       simplifiedRunFeature
     )
   ).toMatchInlineSnapshot(`
-    Array [
-      Object {
+    [
+      {
         "id": "ab2c973773eabc9757213f2e917575286f7e6c7e",
         "name": "Westabfahrt",
-        "skiAreas": Array [
+        "skiAreas": [
           "2033ab9be8698fcd4794c24e42782bf33c124e8d",
         ],
       },
