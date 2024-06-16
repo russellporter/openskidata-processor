@@ -10,15 +10,15 @@ describe("MapboxGLFormatter", () => {
     const mapboxGLFeature = formatter(FeatureType.SkiArea)(feature);
 
     expect(mapboxGLFeature).toMatchInlineSnapshot(`
-      Object {
-        "geometry": Object {
-          "coordinates": Array [
+      {
+        "geometry": {
+          "coordinates": [
             1,
             1,
           ],
           "type": "Point",
         },
-        "properties": Object {
+        "properties": {
           "downhillDistance": null,
           "has_downhill": true,
           "id": "ID",
@@ -150,7 +150,7 @@ describe("MapboxGLFormatter", () => {
     const mapboxGLFeature = formatter(FeatureType.Lift)(feature);
 
     expect(mapboxGLFeature?.properties.skiAreas).toMatchInlineSnapshot(`
-      Array [
+      [
         "2",
       ]
     `);
@@ -246,7 +246,7 @@ describe("MapboxGLFormatter", () => {
     const mapboxGLFeature = formatter(FeatureType.Run)(feature);
 
     expect(mapboxGLFeature?.properties.skiAreas).toMatchInlineSnapshot(`
-      Array [
+      [
         "2",
       ]
     `);

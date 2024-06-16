@@ -34,23 +34,23 @@ describe("SkiAreaFormatter", () => {
 
     expect(formatSkiArea(InputSkiAreaType.OPENSTREETMAP_LANDUSE)(feature))
       .toMatchInlineSnapshot(`
-      Object {
-        "geometry": Object {
-          "coordinates": Array [
-            Array [
-              Array [
+      {
+        "geometry": {
+          "coordinates": [
+            [
+              [
                 0,
                 0,
               ],
-              Array [
+              [
                 0,
                 1,
               ],
-              Array [
+              [
                 1,
                 0,
               ],
-              Array [
+              [
                 0,
                 0,
               ],
@@ -58,22 +58,22 @@ describe("SkiAreaFormatter", () => {
           ],
           "type": "Polygon",
         },
-        "properties": Object {
-          "activities": Array [],
+        "properties": {
+          "activities": [],
           "generated": false,
           "id": "c638251d70817a3d3ad227cce5d353d3abff6abb",
           "location": null,
           "name": "Ski Area",
           "runConvention": "europe",
-          "sources": Array [
-            Object {
+          "sources": [
+            {
               "id": "way/1",
               "type": "openstreetmap",
             },
           ],
           "status": "operating",
           "type": "skiArea",
-          "websites": Array [
+          "websites": [
             "http://example.com",
           ],
         },
@@ -160,16 +160,16 @@ describe("SkiAreaFormatter", () => {
 
     expect(formatSkiArea(InputSkiAreaType.SKIMAP_ORG)(feature))
       .toMatchInlineSnapshot(`
-      Object {
-        "geometry": Object {
-          "coordinates": Array [
+      {
+        "geometry": {
+          "coordinates": [
             0,
             0,
           ],
           "type": "Point",
         },
-        "properties": Object {
-          "activities": Array [
+        "properties": {
+          "activities": [
             "downhill",
           ],
           "generated": false,
@@ -177,15 +177,15 @@ describe("SkiAreaFormatter", () => {
           "location": null,
           "name": "Ski Area",
           "runConvention": "europe",
-          "sources": Array [
-            Object {
+          "sources": [
+            {
               "id": "1",
               "type": "skimap.org",
             },
           ],
           "status": "operating",
           "type": "skiArea",
-          "websites": Array [
+          "websites": [
             "http://example.com",
           ],
         },
@@ -206,31 +206,31 @@ describe("SkiAreaFormatter", () => {
 
     expect(formatSkiArea(InputSkiAreaType.OPENSTREETMAP_SITE)(site))
       .toMatchInlineSnapshot(`
-      Object {
-        "geometry": Object {
-          "coordinates": Array [
+      {
+        "geometry": {
+          "coordinates": [
             360,
             360,
             1,
           ],
           "type": "Point",
         },
-        "properties": Object {
-          "activities": Array [],
+        "properties": {
+          "activities": [],
           "generated": false,
           "id": "2033ab9be8698fcd4794c24e42782bf33c124e8d",
           "location": null,
           "name": "Wendelstein",
           "runConvention": "north_america",
-          "sources": Array [
-            Object {
+          "sources": [
+            {
               "id": "relation/1",
               "type": "openstreetmap",
             },
           ],
           "status": "operating",
           "type": "skiArea",
-          "websites": Array [],
+          "websites": [],
         },
         "type": "Feature",
       }

@@ -33,15 +33,15 @@ describe("SkiAreaStatistics", () => {
     const statistics = skiAreaStatistics([run]);
 
     expect(statistics).toMatchInlineSnapshot(`
-      Object {
-        "lifts": Object {
-          "byType": Object {},
+      {
+        "lifts": {
+          "byType": {},
         },
-        "runs": Object {
-          "byActivity": Object {
-            "downhill": Object {
-              "byDifficulty": Object {
-                "easy": Object {
+        "runs": {
+          "byActivity": {
+            "downhill": {
+              "byDifficulty": {
+                "easy": {
                   "count": 1,
                   "lengthInKm": 111.1950802335329,
                 },
@@ -82,17 +82,17 @@ describe("SkiAreaStatistics", () => {
     const statistics = skiAreaStatistics([lift]);
 
     expect(statistics).toMatchInlineSnapshot(`
-      Object {
-        "lifts": Object {
-          "byType": Object {
-            "gondola": Object {
+      {
+        "lifts": {
+          "byType": {
+            "gondola": {
               "count": 1,
               "lengthInKm": 111.1950802335329,
             },
           },
         },
-        "runs": Object {
-          "byActivity": Object {},
+        "runs": {
+          "byActivity": {},
         },
       }
     `);
@@ -136,12 +136,12 @@ describe("SkiAreaStatistics", () => {
     const statistics = skiAreaStatistics([run]);
 
     expect(statistics).toMatchInlineSnapshot(`
-      Object {
-        "lifts": Object {
-          "byType": Object {},
+      {
+        "lifts": {
+          "byType": {},
         },
-        "runs": Object {
-          "byActivity": Object {},
+        "runs": {
+          "byActivity": {},
         },
       }
     `);
@@ -178,15 +178,15 @@ it("should not count backcountry activity in mixed use runs", () => {
   const statistics = skiAreaStatistics([run]);
 
   expect(statistics).toMatchInlineSnapshot(`
-    Object {
-      "lifts": Object {
-        "byType": Object {},
+    {
+      "lifts": {
+        "byType": {},
       },
-      "runs": Object {
-        "byActivity": Object {
-          "downhill": Object {
-            "byDifficulty": Object {
-              "easy": Object {
+      "runs": {
+        "byActivity": {
+          "downhill": {
+            "byDifficulty": {
+              "easy": {
                 "count": 1,
                 "lengthInKm": 111.1950802335329,
               },

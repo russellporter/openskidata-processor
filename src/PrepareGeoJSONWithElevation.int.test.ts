@@ -62,17 +62,17 @@ it("adds elevations to lift geometry", async () => {
   await prepare(paths, config);
 
   expect(TestHelpers.fileContents(paths.output.lifts)).toMatchInlineSnapshot(`
-    Object {
-      "features": Array [
-        Object {
-          "geometry": Object {
-            "coordinates": Array [
-              Array [
+    {
+      "features": [
+        {
+          "geometry": {
+            "coordinates": [
+              [
                 11.1223444,
                 47.5572422,
                 0,
               ],
-              Array [
+              [
                 11.1164297,
                 47.55815630000001,
                 1,
@@ -80,7 +80,7 @@ it("adds elevations to lift geometry", async () => {
             ],
             "type": "LineString",
           },
-          "properties": Object {
+          "properties": {
             "bubble": null,
             "capacity": null,
             "color": "hsl(0, 82%, 42%)",
@@ -94,16 +94,16 @@ it("adds elevations to lift geometry", async () => {
             "occupancy": null,
             "oneway": null,
             "ref": null,
-            "skiAreas": Array [],
-            "sources": Array [
-              Object {
+            "skiAreas": [],
+            "sources": [
+              {
                 "id": "way/227407273",
                 "type": "openstreetmap",
               },
             ],
             "status": "operating",
             "type": "lift",
-            "websites": Array [],
+            "websites": [],
           },
           "type": "Feature",
         },
@@ -157,8 +157,8 @@ it("adds elevations to run geometry & elevation profile", async () => {
     .features[0];
 
   expect(feature.properties.elevationProfile).toMatchInlineSnapshot(`
-    Object {
-      "heights": Array [
+    {
+      "heights": [
         3,
         4,
         5,
@@ -177,19 +177,19 @@ it("adds elevations to run geometry & elevation profile", async () => {
     }
   `);
   expect(feature.geometry).toMatchInlineSnapshot(`
-    Object {
-      "coordinates": Array [
-        Array [
+    {
+      "coordinates": [
+        [
           11.1164229,
           47.558125000000004,
           0,
         ],
-        Array [
+        [
           11.116365499999999,
           47.5579742,
           1,
         ],
-        Array [
+        [
           11.1171866,
           47.5556413,
           2,
@@ -237,23 +237,23 @@ it("completes without adding elevations when elevation server fails", async () =
   await prepare(paths, config);
 
   expect(TestHelpers.fileContents(paths.output.lifts)).toMatchInlineSnapshot(`
-    Object {
-      "features": Array [
-        Object {
-          "geometry": Object {
-            "coordinates": Array [
-              Array [
+    {
+      "features": [
+        {
+          "geometry": {
+            "coordinates": [
+              [
                 11.1223444,
                 47.5572422,
               ],
-              Array [
+              [
                 11.1164297,
                 47.55815630000001,
               ],
             ],
             "type": "LineString",
           },
-          "properties": Object {
+          "properties": {
             "bubble": null,
             "capacity": null,
             "color": "hsl(0, 82%, 42%)",
@@ -267,16 +267,16 @@ it("completes without adding elevations when elevation server fails", async () =
             "occupancy": null,
             "oneway": null,
             "ref": null,
-            "skiAreas": Array [],
-            "sources": Array [
-              Object {
+            "skiAreas": [],
+            "sources": [
+              {
                 "id": "way/227407273",
                 "type": "openstreetmap",
               },
             ],
             "status": "operating",
             "type": "lift",
-            "websites": Array [],
+            "websites": [],
           },
           "type": "Feature",
         },
@@ -335,47 +335,47 @@ it("adds elevations to run polygons", async () => {
 
   expect(TestHelpers.fileContents(paths.output.runs).features[0].geometry)
     .toMatchInlineSnapshot(`
-    Object {
-      "coordinates": Array [
-        Array [
-          Array [
+    {
+      "coordinates": [
+        [
+          [
             6.544500899999997,
             45.3230511,
             0,
           ],
-          Array [
+          [
             6.543409400000002,
             45.32317370000001,
             1,
           ],
-          Array [
+          [
             6.544500899999997,
             45.3230511,
             2,
           ],
-          Array [
+          [
             6.544500899999997,
             45.3230511,
             0,
           ],
         ],
-        Array [
-          Array [
+        [
+          [
             6.5502579,
             45.3224134,
             4,
           ],
-          Array [
+          [
             6.550612,
             45.3222571,
             5,
           ],
-          Array [
+          [
             6.5502579,
             45.3224134,
             6,
           ],
-          Array [
+          [
             6.5502579,
             45.3224134,
             4,

@@ -73,11 +73,11 @@ describe("Geocoder", () => {
     const result = await defaultGeocoder().geocode([0, 0]);
 
     expect(result).toMatchInlineSnapshot(`
-      Object {
+      {
         "iso3166_1Alpha2": "DE",
         "iso3166_2": null,
-        "localized": Object {
-          "en": Object {
+        "localized": {
+          "en": {
             "country": "Germany",
             "locality": null,
             "region": null,
@@ -93,11 +93,11 @@ describe("Geocoder", () => {
     const result = await defaultGeocoder().geocode([0, 0]);
 
     expect(result).toMatchInlineSnapshot(`
-      Object {
+      {
         "iso3166_1Alpha2": "DE",
         "iso3166_2": "DE-BY",
-        "localized": Object {
-          "en": Object {
+        "localized": {
+          "en": {
             "country": "Germany",
             "locality": null,
             "region": "Bavaria",
@@ -113,11 +113,11 @@ describe("Geocoder", () => {
     const result = await defaultGeocoder().geocode([0, 0]);
 
     expect(result).toMatchInlineSnapshot(`
-      Object {
+      {
         "iso3166_1Alpha2": "DE",
         "iso3166_2": "DE-BY",
-        "localized": Object {
-          "en": Object {
+        "localized": {
+          "en": {
             "country": "Germany",
             "locality": "Mittenwald",
             "region": "Bavaria",
@@ -139,11 +139,11 @@ describe("Geocoder", () => {
     const result = await defaultGeocoder().geocode([0, 0]);
 
     expect(result).toMatchInlineSnapshot(`
-      Object {
+      {
         "iso3166_1Alpha2": "US",
         "iso3166_2": "US-CA",
-        "localized": Object {
-          "en": Object {
+        "localized": {
+          "en": {
             "country": "United States",
             "locality": "Alpine Meadows",
             "region": "California",
@@ -169,11 +169,11 @@ describe("Geocoder", () => {
     const result = await defaultGeocoder().geocode([0, 0]);
 
     expect(result).toMatchInlineSnapshot(`
-      Object {
+      {
         "iso3166_1Alpha2": "DE",
         "iso3166_2": null,
-        "localized": Object {
-          "en": Object {
+        "localized": {
+          "en": {
             "country": "Germany",
             "locality": null,
             "region": null,

@@ -6,8 +6,8 @@ describe("GeoTransforms", () => {
     it("should provide same output for point input", () => {
       expect(centralPointsInFeature(point([0, 0]).geometry))
         .toMatchInlineSnapshot(`
-        Object {
-          "coordinates": Array [
+        {
+          "coordinates": [
             0,
             0,
           ],
@@ -30,8 +30,8 @@ describe("GeoTransforms", () => {
           ]).geometry
         )
       ).toMatchInlineSnapshot(`
-        Object {
-          "coordinates": Array [
+        {
+          "coordinates": [
             0.5,
             0.5,
           ],
@@ -51,6 +51,7 @@ describe("GeoTransforms", () => {
               [0, 1],
               [0, 0],
             ],
+
             [
               [0.25, 0.25],
               [0.25, 0.75],
@@ -61,8 +62,8 @@ describe("GeoTransforms", () => {
           ]).geometry
         )
       ).toMatchInlineSnapshot(`
-        Object {
-          "coordinates": Array [
+        {
+          "coordinates": [
             0.25,
             0.49999048070563396,
           ],
@@ -94,13 +95,13 @@ describe("GeoTransforms", () => {
       expect(
         centralPointsInFeature(multiPolygon([firstShape, secondShape]).geometry)
       ).toMatchInlineSnapshot(`
-        Object {
-          "coordinates": Array [
-            Array [
+        {
+          "coordinates": [
+            [
               0.5,
               0.5,
             ],
-            Array [
+            [
               2.5,
               2.5,
             ],
