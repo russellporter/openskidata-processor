@@ -28,30 +28,30 @@ export enum InputSkiAreaType {
 }
 
 export function formatSkiArea(
-  type: InputSkiAreaType.OPENSTREETMAP_LANDUSE
+  type: InputSkiAreaType.OPENSTREETMAP_LANDUSE,
 ): (feature: InputOpenStreetMapSkiAreaFeature) => SkiAreaFeature | null;
 
 export function formatSkiArea(
-  type: InputSkiAreaType.OPENSTREETMAP_SITE
+  type: InputSkiAreaType.OPENSTREETMAP_SITE,
 ): (feature: OSMSkiAreaSite) => SkiAreaFeature | null;
 
 export function formatSkiArea(
-  type: InputSkiAreaType.SKIMAP_ORG
+  type: InputSkiAreaType.SKIMAP_ORG,
 ): (feature: InputSkiMapOrgSkiAreaFeature) => SkiAreaFeature | null;
 
 export function formatSkiArea(
-  type: InputSkiAreaType
+  type: InputSkiAreaType,
 ): (
   feature:
     | InputSkiMapOrgSkiAreaFeature
     | InputOpenStreetMapSkiAreaFeature
-    | OSMSkiAreaSite
+    | OSMSkiAreaSite,
 ) => SkiAreaFeature | null {
   return (feature) => {
     switch (type) {
       case InputSkiAreaType.OPENSTREETMAP_LANDUSE:
         return formatOpenStreetMapLanduse(
-          feature as InputOpenStreetMapSkiAreaFeature
+          feature as InputOpenStreetMapSkiAreaFeature,
         );
       case InputSkiAreaType.OPENSTREETMAP_SITE:
         return formatOpenStreetMapSite(feature as OSMSkiAreaSite);
@@ -62,7 +62,7 @@ export function formatSkiArea(
 }
 
 function formatOpenStreetMapLanduse(
-  feature: InputOpenStreetMapSkiAreaFeature
+  feature: InputOpenStreetMapSkiAreaFeature,
 ): SkiAreaFeature | null {
   const osmFeature = feature as InputOpenStreetMapSkiAreaFeature;
   const tags = osmFeature.properties.tags;
@@ -83,7 +83,7 @@ function formatOpenStreetMapLanduse(
   // We don't care about the value here, just get the status. The value is always "winter_sports".
   const status = getStatusAndValue(
     "landuse",
-    tags as { [key: string]: string }
+    tags as { [key: string]: string },
   ).status;
 
   if (status === null) {
@@ -96,8 +96,8 @@ function formatOpenStreetMapLanduse(
       osmID(osmFeature.properties),
       osmFeature.properties.tags,
       status,
-      getRunConvention(osmFeature)
-    )
+      getRunConvention(osmFeature),
+    ),
   );
 }
 
@@ -105,7 +105,7 @@ function formatOpenStreetMapSite(site: OSMSkiAreaSite): SkiAreaFeature | null {
   // We don't care about the value here, just get the status. The value is always "piste".
   const status = getStatusAndValue(
     "site",
-    site.tags as { [key: string]: string }
+    site.tags as { [key: string]: string },
   ).status;
 
   if (status === null) {
@@ -121,17 +121,17 @@ function formatOpenStreetMapSite(site: OSMSkiAreaSite): SkiAreaFeature | null {
       osmID(site),
       site.tags,
       status,
-      RunConvention.NORTH_AMERICA // also bogus, will be updated later when we know the real geometry
-    )
+      RunConvention.NORTH_AMERICA, // also bogus, will be updated later when we know the real geometry
+    ),
   );
 }
 
 function formatSkiMapOrg(
-  feature: InputSkiMapOrgSkiAreaFeature
+  feature: InputSkiMapOrgSkiAreaFeature,
 ): SkiAreaFeature | null {
   return buildFeature(
     feature.geometry,
-    propertiesForSkiMapOrgSkiArea(feature as InputSkiMapOrgSkiAreaFeature)
+    propertiesForSkiMapOrgSkiArea(feature as InputSkiMapOrgSkiAreaFeature),
   );
 }
 
@@ -139,7 +139,7 @@ function propertiesForOpenStreetMapSkiArea(
   osmID: string,
   tags: OSMSkiAreaTags,
   status: Status,
-  runConvention: RunConvention
+  runConvention: RunConvention,
 ): Omit<SkiAreaProperties, "id"> {
   return {
     type: FeatureType.SkiArea,
@@ -160,7 +160,7 @@ function propertiesForOpenStreetMapSkiArea(
 }
 
 function propertiesForSkiMapOrgSkiArea(
-  feature: InputSkiMapOrgSkiAreaFeature
+  feature: InputSkiMapOrgSkiAreaFeature,
 ): Omit<SkiAreaProperties, "id"> {
   const activities = feature.properties.activities;
   return {

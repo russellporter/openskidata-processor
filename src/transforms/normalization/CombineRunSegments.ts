@@ -4,7 +4,7 @@ import notEmpty from "../../utils/notEmpty";
 import PointGraph from "./PointGraph";
 
 export default function combineRunSegments(
-  geojson: GeoJSON.FeatureCollection<RunGeometry, RunProperties>
+  geojson: GeoJSON.FeatureCollection<RunGeometry, RunProperties>,
 ) {
   const graph = new PointGraph();
   let runs = geojson.features;

@@ -27,7 +27,7 @@ export default async function loadArangoGraph(
   skiAreasPath: string,
   liftsPath: string,
   runsPath: string,
-  database: Database
+  database: Database,
 ): Promise<void> {
   const objectsCollection = database.collection("objects");
   await objectsCollection.create();
@@ -37,7 +37,7 @@ export default async function loadArangoGraph(
       load(skiAreasPath, prepareSkiArea),
       load(liftsPath, prepareLift),
       load(runsPath, prepareRun),
-    ].map<Promise<Buffer>>(StreamToPromise)
+    ].map<Promise<Buffer>>(StreamToPromise),
   );
 
   await objectsCollection.ensureIndex({
@@ -61,7 +61,7 @@ export default async function loadArangoGraph(
 
   function load(
     path: string,
-    prepare: (feature: any) => DraftMapObject
+    prepare: (feature: any) => DraftMapObject,
   ): NodeJS.ReadableStream {
     return readGeoJSONFeatures(path).pipe(
       mapAsync(async (feature: any) => {
@@ -70,7 +70,7 @@ export default async function loadArangoGraph(
         } catch (e) {
           console.log("Failed loading feature " + JSON.stringify(feature), e);
         }
-      }, 10)
+      }, 10),
     );
   }
 
@@ -79,7 +79,7 @@ export default async function loadArangoGraph(
 
     assert(
       sources.length === 1,
-      "Only ski areas with a single source are supported for clustering."
+      "Only ski areas with a single source are supported for clustering.",
     );
     const properties = feature.properties;
     properties.generated = false;
@@ -108,7 +108,7 @@ export default async function loadArangoGraph(
       activities:
         properties["status"] === Status.Operating ? [Activity.Downhill] : [],
       skiAreas: feature.properties.skiAreas.map(
-        (skiArea) => skiArea.properties.id
+        (skiArea) => skiArea.properties.id,
       ),
       isInSkiAreaPolygon: false,
       // all ski areas associated with the feature at this point are site=piste relations.
@@ -156,7 +156,7 @@ export default async function loadArangoGraph(
         activities.some((activity) => allSkiAreaActivities.has(activity)) &&
         feature.properties.skiAreas.length == 0,
       skiAreas: feature.properties.skiAreas.map(
-        (skiArea) => skiArea.properties.id
+        (skiArea) => skiArea.properties.id,
       ),
       isInSkiAreaPolygon: false,
       // all ski areas associated with the feature at this point are site=piste relations.
@@ -168,7 +168,7 @@ export default async function loadArangoGraph(
 }
 
 function geometryWithoutElevations(
-  geometry: GeoJSON.Geometry
+  geometry: GeoJSON.Geometry,
 ): GeoJSON.Geometry {
   switch (geometry.type) {
     case "Point":
@@ -189,7 +189,7 @@ function geometryWithoutElevations(
       return {
         type: geometry.type,
         coordinates: geometry.coordinates.map((coordinates) =>
-          coordinates.map((coordinate) => [coordinate[0], coordinate[1]])
+          coordinates.map((coordinate) => [coordinate[0], coordinate[1]]),
         ),
       };
     case "MultiPolygon":
@@ -200,8 +200,8 @@ function geometryWithoutElevations(
             coordinatess.map((coordinatesss) => [
               coordinatesss[0],
               coordinatesss[1],
-            ])
-          )
+            ]),
+          ),
         ),
       };
     default:

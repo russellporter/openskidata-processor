@@ -86,9 +86,8 @@ export type MapObjectGeometry =
   | GeoJSON.MultiLineString
   | GeoJSON.Point;
 
-export type MapFeature<
-  Geometry extends GeoJSON.Geometry = MapObjectGeometry
-> = GeoJSON.Feature<Geometry, MapFeatureProperties>;
+export type MapFeature<Geometry extends GeoJSON.Geometry = MapObjectGeometry> =
+  GeoJSON.Feature<Geometry, MapFeatureProperties>;
 
 interface AugmentedMapFeatureProperties extends MapFeatureProperties {
   skiAreas: SkiAreaFeature[];

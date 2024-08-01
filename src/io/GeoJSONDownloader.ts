@@ -18,7 +18,7 @@ import convertOSMFileToGeoJSON from "./OSMToGeoJSONConverter";
 
 export default async function downloadAndConvertToGeoJSON(
   folder: string,
-  bbox: GeoJSON.BBox | null
+  bbox: GeoJSON.BBox | null,
 ): Promise<InputDataPaths> {
   const paths = new InputDataPaths(folder);
 
@@ -28,26 +28,26 @@ export default async function downloadAndConvertToGeoJSON(
       OSMEndpoint.Z,
       runsDownloadConfig,
       paths.osmJSON.runs,
-      bbox
+      bbox,
     ),
     (async () => {
       await downloadOSMJSON(
         OSMEndpoint.LZ4,
         liftsDownloadConfig,
         paths.osmJSON.lifts,
-        bbox
+        bbox,
       );
       await downloadOSMJSON(
         OSMEndpoint.LZ4,
         skiAreasDownloadConfig,
         paths.osmJSON.skiAreas,
-        bbox
+        bbox,
       );
       await downloadOSMJSON(
         OSMEndpoint.LZ4,
         skiAreaSitesDownloadConfig,
         paths.osmJSON.skiAreaSites,
-        bbox
+        bbox,
       );
     })(),
     downloadSkiMapOrgSkiAreas(paths.geoJSON.skiMapSkiAreas, bbox),
@@ -70,7 +70,7 @@ async function downloadOSMJSON(
   endpoint: OSMEndpoint,
   config: OSMDownloadConfig,
   targetPath: string,
-  bbox: GeoJSON.BBox | null
+  bbox: GeoJSON.BBox | null,
 ) {
   const query = config.query(bbox);
   console.log("Performing overpass query...");
@@ -81,7 +81,7 @@ async function downloadOSMJSON(
 
 async function downloadSkiMapOrgSkiAreas(
   targetPath: string,
-  bbox: GeoJSON.BBox | null
+  bbox: GeoJSON.BBox | null,
 ) {
   await downloadToFile(skiMapSkiAreasURL, targetPath);
 
@@ -94,7 +94,7 @@ async function downloadSkiMapOrgSkiAreas(
   const contents = await readFile(targetPath);
   const json: GeoJSON.FeatureCollection = JSON.parse(contents.toString());
   json.features = (json.features as InputSkiMapOrgSkiAreaFeature[]).filter(
-    (feature) => booleanContains(bboxGeometry, feature)
+    (feature) => booleanContains(bboxGeometry, feature),
   );
 
   await writeFile(targetPath, JSON.stringify(json));
@@ -103,7 +103,7 @@ async function downloadSkiMapOrgSkiAreas(
 async function downloadToFile(
   sourceURL: string,
   targetPath: string,
-  retries: number = 10
+  retries: number = 10,
 ): Promise<void> {
   try {
     await _downloadToFile(sourceURL, targetPath);
@@ -113,7 +113,7 @@ async function downloadToFile(
     }
 
     console.log(
-      "Download failed due to " + e + ". Will wait a minute and try again."
+      "Download failed due to " + e + ". Will wait a minute and try again.",
     );
 
     // Wait a bit in case we are rate limited by the server.
@@ -125,7 +125,7 @@ async function downloadToFile(
 
 async function _downloadToFile(
   sourceURL: string,
-  targetPath: string
+  targetPath: string,
 ): Promise<void> {
   const outputStream = Fs.createWriteStream(targetPath);
   let statusCode: number | null = null;

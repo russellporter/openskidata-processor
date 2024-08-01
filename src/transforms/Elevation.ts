@@ -5,20 +5,21 @@ import request from "request-promise-native";
 const elevationProfileResolution = 25;
 
 export default function addElevation(
-  elevationServerURL: string
+  elevationServerURL: string,
 ): (feature: RunFeature | LiftFeature) => Promise<RunFeature | LiftFeature> {
   return async (feature: RunFeature | LiftFeature) => {
     const coordinates: number[][] = getCoordinates(feature);
-    const elevationProfileCoordinates: number[][] = getCoordinatesForElevationProfile(
-      feature
-    );
+    const elevationProfileCoordinates: number[][] =
+      getCoordinatesForElevationProfile(feature);
 
     let elevations: number[];
     try {
       elevations = await loadElevations(
         // Elevation service expects lat,lng order instead of lng,lat of GeoJSON
-        Array.from(coordinates).concat(elevationProfileCoordinates).map(([lng, lat]) => [lat, lng]),
-        elevationServerURL
+        Array.from(coordinates)
+          .concat(elevationProfileCoordinates)
+          .map(([lng, lat]) => [lat, lng]),
+        elevationServerURL,
       );
     } catch (error) {
       console.log("Failed to load elevations", error);
@@ -28,7 +29,7 @@ export default function addElevation(
     const coordinateElevations = elevations.slice(0, coordinates.length);
     const profileElevations = elevations.slice(
       coordinates.length,
-      elevations.length
+      elevations.length,
     );
 
     if (feature.properties.type === FeatureType.Run) {
@@ -48,7 +49,7 @@ export default function addElevation(
 
 async function loadElevations(
   coordinates: number[][],
-  elevationServerURL: string
+  elevationServerURL: string,
 ): Promise<number[]> {
   const response = await request(elevationServerURL, {
     method: "POST",
@@ -111,7 +112,7 @@ function getCoordinatesForElevationProfile(feature: RunFeature | LiftFeature) {
   const subfeatures = turfLineChunk(
     feature.geometry,
     elevationProfileResolution,
-    { units: "meters" }
+    { units: "meters" },
   ).features;
   const points: [number, number][] = [];
   for (let subline of subfeatures) {
@@ -137,7 +138,7 @@ function getCoordinatesForElevationProfile(feature: RunFeature | LiftFeature) {
 
 function addElevations(
   feature: RunFeature | LiftFeature,
-  elevations: number[]
+  elevations: number[],
 ) {
   let i = 0;
   switch (feature.geometry.type) {

@@ -90,7 +90,7 @@ const polygonFeatures = {
 
 export default async function convertOSMFileToGeoJSON(
   inputFile: string,
-  outputFile: string
+  outputFile: string,
 ) {
   const osmJSON = await readOSMJSON(inputFile);
   writeFeatureCollection(convertOSMToGeoJSON(osmJSON), outputFile);
@@ -108,7 +108,7 @@ export function convertOSMToGeoJSON(osmJSON: any) {
       // However we handle this ourselves later on by merging overlapping ski runs and ski areas, so don't do this here.
       // By deferring this we can get better data by combining data from the ski run way and the ski run relation, for example.
       // The same is true for winter sports relations that associate multiple ski areas together.
-      ignoreTags: { [key: string]: string | boolean }
+      ignoreTags: { [key: string]: string | boolean },
     ) => false,
     deduplicator: undefined,
   });
@@ -152,7 +152,7 @@ function writeFeatureCollection(geojson: any, path: string) {
       '"type": "FeatureCollection",' +
       separator +
       '"features": [' +
-      separator
+      separator,
   );
   geojson.features.forEach(function (f: any, i: any) {
     outputStream.write(JSON.stringify(f, null, 0));

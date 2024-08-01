@@ -8,7 +8,7 @@ import { Status } from "openskidata-format";
 // - {key} = construction & construction = {value}
 export default function getStatusAndValue(
   key: string,
-  properties: { [key: string]: string }
+  properties: { [key: string]: string },
 ): { status: Status | null; value: string | null } {
   if (isUnsupportedStatus(key, properties)) {
     return { status: null, value: null };
@@ -49,7 +49,7 @@ export default function getStatusAndValue(
 
 function isUnsupportedStatus(
   key: string,
-  properties: { [key: string]: string }
+  properties: { [key: string]: string },
 ): boolean {
   return (
     unsupportedStates.has(properties[key]) ||

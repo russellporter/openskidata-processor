@@ -36,7 +36,7 @@ type OSMTags = Record<string, string | undefined>;
 export function getOSMName<Properties extends OSMTags>(
   properties: Properties,
   rootKey: Extract<keyof Properties, string>,
-  fallbackRootKey: Extract<keyof Properties, string> | null = null
+  fallbackRootKey: Extract<keyof Properties, string> | null = null,
 ): string | null {
   const keys = sortedNameKeys(properties, rootKey, fallbackRootKey);
 
@@ -49,17 +49,17 @@ export function getOSMName<Properties extends OSMTags>(
 
 function nameKeysForRootKey<Properties extends OSMTags>(
   properties: Properties,
-  rootKey: Extract<keyof Properties, string>
+  rootKey: Extract<keyof Properties, string>,
 ): (keyof Properties)[] {
   return Object.keys(properties).filter(
-    (key) => key === rootKey || key.startsWith(`${rootKey}:`)
+    (key) => key === rootKey || key.startsWith(`${rootKey}:`),
   );
 }
 
 function sortedNameKeys<Properties extends OSMTags>(
   properties: Properties,
   rootKey: Extract<keyof Properties, string>,
-  fallbackRootKey: Extract<keyof Properties, string> | null = null
+  fallbackRootKey: Extract<keyof Properties, string> | null = null,
 ): (keyof Properties)[] {
   let keys = nameKeysForRootKey(properties, rootKey);
   if (keys.length == 0 && fallbackRootKey !== null) {

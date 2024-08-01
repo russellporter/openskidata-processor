@@ -25,7 +25,7 @@ export function configFromEnvironment(): Config {
     assert(
       Array.isArray(bbox) &&
         bbox.length === 4 &&
-        bbox.every((value) => typeof value === "number")
+        bbox.every((value) => typeof value === "number"),
     );
   }
   const geocodingCacheTTL = process.env.GEOCODING_SERVER_URL_TTL;

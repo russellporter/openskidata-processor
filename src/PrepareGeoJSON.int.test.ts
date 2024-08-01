@@ -26,7 +26,7 @@ it("produces empty output for empty input", async () => {
       lifts: [],
       runs: [],
     },
-    paths.input
+    paths.input,
   );
 
   await prepare(paths, config);
@@ -134,7 +134,7 @@ it("produces output for simple input", async () => {
         },
       ],
     },
-    paths.input
+    paths.input,
   );
 
   await prepare(paths, config);
@@ -411,17 +411,17 @@ it("shortens ski area names for Mapbox GL output", async () => {
       lifts: [],
       runs: [],
     },
-    paths.input
+    paths.input,
   );
 
   await prepare(paths, config);
 
   expect(
     TestHelpers.fileContents(paths.output.mapboxGL.skiAreas).features[0]
-      .properties.name
+      .properties.name,
   ).toBe("Ski Welt");
   expect(
-    TestHelpers.fileContents(paths.output.skiAreas).features[0].properties.name
+    TestHelpers.fileContents(paths.output.skiAreas).features[0].properties.name,
   ).toBe(longName);
 });
 
@@ -457,7 +457,7 @@ it("processes OpenStreetMap ski areas", async () => {
       lifts: [],
       runs: [],
     },
-    paths.input
+    paths.input,
   );
 
   await prepare(paths, config);
@@ -569,15 +569,15 @@ it("processes OpenStreetMap ski area sites", async () => {
         },
       ],
     },
-    paths.input
+    paths.input,
   );
 
   await prepare(paths, config);
 
   expect(
     TestHelpers.fileContents(paths.output.skiAreas).features.map(
-      simplifiedSkiAreaFeature
-    )
+      simplifiedSkiAreaFeature,
+    ),
   ).toMatchInlineSnapshot(`
     [
       {
@@ -590,8 +590,8 @@ it("processes OpenStreetMap ski area sites", async () => {
 
   expect(
     TestHelpers.fileContents(paths.output.lifts).features.map(
-      simplifiedLiftFeature
-    )
+      simplifiedLiftFeature,
+    ),
   ).toMatchInlineSnapshot(`
     [
       {
@@ -606,8 +606,8 @@ it("processes OpenStreetMap ski area sites", async () => {
 
   expect(
     TestHelpers.fileContents(paths.output.runs).features.map(
-      simplifiedRunFeature
-    )
+      simplifiedRunFeature,
+    ),
   ).toMatchInlineSnapshot(`
     [
       {

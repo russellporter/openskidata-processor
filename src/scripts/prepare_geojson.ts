@@ -14,7 +14,7 @@ prepare(
     intermediate: new GeoJSONIntermediatePaths("data"),
     output: new GeoJSONOutputPaths(config.outputDir),
   },
-  config
+  config,
 ).catch((reason: any) => {
   console.log("Failed preparing", reason);
   process.exit(1);

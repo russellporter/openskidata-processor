@@ -18,7 +18,7 @@ export function bufferGeometry(
     | GeoJSON.MultiLineString
     | GeoJSON.Polygon
     | GeoJSON.MultiPolygon,
-  radius: number
+  radius: number,
 ): GeoJSON.Polygon | GeoJSON.MultiPolygon | null {
   try {
     const bufferArea = buffer(geometry, radius, {
@@ -26,7 +26,7 @@ export function bufferGeometry(
     })?.geometry;
     if (!bufferArea) {
       console.log(
-        "Failed buffering geometry. This can happen if the geometry is invalid."
+        "Failed buffering geometry. This can happen if the geometry is invalid.",
       );
       return null;
     }
@@ -35,7 +35,7 @@ export function bufferGeometry(
   } catch (exception) {
     console.log(
       "Failed buffering geometry. This can happen if the geometry is invalid.",
-      exception
+      exception,
     );
     return null;
   }
@@ -43,7 +43,7 @@ export function bufferGeometry(
 
 export function bufferFeatureCollection(
   featureCollection: GeoJSON.FeatureCollection,
-  radius: number
+  radius: number,
 ) {
   try {
     const bufferArea = buffer(featureCollection, radius, {
@@ -51,7 +51,7 @@ export function bufferFeatureCollection(
     });
     if (!bufferArea) {
       console.log(
-        "Failed buffering geometry. This can happen if the geometry is invalid."
+        "Failed buffering geometry. This can happen if the geometry is invalid.",
       );
       return null;
     }
@@ -60,29 +60,29 @@ export function bufferFeatureCollection(
   } catch (exception) {
     console.log(
       "Failed buffering geometry. This can happen if the geometry is invalid.",
-      exception
+      exception,
     );
     return null;
   }
 }
 
 export function centralPointsInFeature(
-  geojson: GeoJSON.Point | GeoJSON.Polygon
+  geojson: GeoJSON.Point | GeoJSON.Polygon,
 ): GeoJSON.Point;
 
 export function centralPointsInFeature(
-  geojson: GeoJSON.MultiPolygon
+  geojson: GeoJSON.MultiPolygon,
 ): GeoJSON.MultiPoint;
 
 export function centralPointsInFeature(
-  geojson: GeoJSON.Point | GeoJSON.Polygon | GeoJSON.MultiPolygon
+  geojson: GeoJSON.Point | GeoJSON.Polygon | GeoJSON.MultiPolygon,
 ): GeoJSON.Point | GeoJSON.MultiPoint;
 
 /**
  * Finds a central point that is guaranteed to be the given polygon.
  */
 export function centralPointsInFeature(
-  geojson: GeoJSON.Point | GeoJSON.Polygon | GeoJSON.MultiPolygon
+  geojson: GeoJSON.Point | GeoJSON.Polygon | GeoJSON.MultiPolygon,
 ): GeoJSON.Point | GeoJSON.MultiPoint {
   if (geojson.type === "Point") {
     return geojson;
@@ -101,7 +101,7 @@ export function centralPointsInFeature(
         .reduce(
           (
             nearestPointSoFar: GeoJSON.Feature<GeoJSON.Point> | null,
-            line: GeoJSON.LineString
+            line: GeoJSON.LineString,
           ) => {
             const nearestPointOnThisLine = nearestPointOnLine(line, center);
             const distanceToNearestPointSoFar =
@@ -121,21 +121,21 @@ export function centralPointsInFeature(
               ? nearestPointSoFar
               : nearestPointOnThisLine;
           },
-          null
+          null,
         )!.geometry;
     case "MultiPolygon":
       return multiPoint(
         geojson.coordinates
           .map((coords) => polygon(coords))
           .map(
-            (polygon) => centralPointsInFeature(polygon.geometry).coordinates
-          )
+            (polygon) => centralPointsInFeature(polygon.geometry).coordinates,
+          ),
       ).geometry;
   }
 }
 
 export function getPoints(
-  positions: GeoJSON.Position[]
+  positions: GeoJSON.Position[],
 ): GeoJSON.FeatureCollection<GeoJSON.Point> {
   return featureCollection(positions.map((position) => point(position)));
 }
@@ -147,7 +147,7 @@ export function getPositions(
     | GeoJSON.LineString
     | GeoJSON.MultiLineString
     | GeoJSON.Polygon
-    | GeoJSON.MultiPolygon
+    | GeoJSON.MultiPolygon,
 ): GeoJSON.Position[] {
   switch (geojson.type) {
     case "Point":

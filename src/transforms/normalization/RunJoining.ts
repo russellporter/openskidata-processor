@@ -16,7 +16,7 @@ const ignoredPropertiesForComparison: Set<string> = new Set<
 
 export function isPartOfSameRun(
   leftFeature: RunFeature,
-  rightFeature: RunFeature
+  rightFeature: RunFeature,
 ): boolean {
   return _.isEqualWith(
     leftFeature.properties,
@@ -27,7 +27,7 @@ export function isPartOfSameRun(
       indexOrKey: _.PropertyName | undefined,
       leftParent: any,
       rightParent: any,
-      stack: any
+      stack: any,
     ) => {
       if (
         leftParent === leftFeature.properties &&
@@ -38,12 +38,12 @@ export function isPartOfSameRun(
       }
 
       return undefined;
-    }
+    },
   );
 }
 
 export function mergedProperties(
-  allProperties: RunProperties[]
+  allProperties: RunProperties[],
 ): RunProperties {
   if (allProperties.length === 0) {
     throw "No input properties";
@@ -69,15 +69,18 @@ export function mergedProperties(
     difficulty: difficultyAndColor.difficulty,
     convention: allProperties[0].convention,
     status: allProperties.map((p) => p.status).reduce(statusReducer),
-    oneway: allProperties.reduce((accumulated, properties) => {
-      if (accumulated === null) {
-        return properties.oneway;
-      }
-      if (properties.oneway === null) {
-        return accumulated;
-      }
-      return accumulated && properties.oneway;
-    }, null as boolean | null),
+    oneway: allProperties.reduce(
+      (accumulated, properties) => {
+        if (accumulated === null) {
+          return properties.oneway;
+        }
+        if (properties.oneway === null) {
+          return accumulated;
+        }
+        return accumulated && properties.oneway;
+      },
+      null as boolean | null,
+    ),
     lit: allProperties.map((p) => p.lit).reduce(litReducer),
     gladed: allProperties.map((p) => p.gladed).reduce(gladedReducer),
     patrolled: allProperties.map((p) => p.patrolled).reduce(patrolledReducer),
@@ -87,11 +90,11 @@ export function mergedProperties(
     skiAreas: uniquedByID(allProperties.flatMap((p) => p.skiAreas)),
     elevationProfile: allProperties[0].elevationProfile,
     sources: uniquedSources(
-      allProperties.flatMap((properties) => properties.sources)
+      allProperties.flatMap((properties) => properties.sources),
     ),
     location: null,
     websites: mergedAndUniqued(
-      ...allProperties.map((properties) => properties.websites)
+      ...allProperties.map((properties) => properties.websites),
     ),
   };
 }
@@ -106,7 +109,7 @@ enum ComparisonResult {
 function comparePriority<V>(
   left: V,
   right: V,
-  priorityTable: Map<V, number>
+  priorityTable: Map<V, number>,
 ): ComparisonResult {
   const leftPriority = priorityTable.get(left);
   const rightPriority = priorityTable.get(right);
@@ -140,7 +143,7 @@ function sanitizeUniqueAndJoin(values: (string | null)[]): string | null {
       })
       .filter((value) => {
         return value.length > 0;
-      })
+      }),
   );
 
   return uniqueValues.size > 0 ? _.join(Array.from(uniqueValues), ", ") : null;
@@ -172,12 +175,12 @@ const difficultyPriority = sortPriority([
 
 function difficultyReducer<V extends { difficulty: RunDifficulty | null }>(
   previousValue: V,
-  currentValue: V
+  currentValue: V,
 ): V {
   return comparePriority(
     previousValue.difficulty,
     currentValue.difficulty,
-    difficultyPriority
+    difficultyPriority,
   ) == ComparisonResult.LEFT
     ? previousValue
     : currentValue;
@@ -209,7 +212,7 @@ const patrolledReducer = priorityReducer([true, false, null]);
 const litReducer = priorityReducer([true, false, null]);
 
 function uniquedByID<Feature extends { properties: { id: string } }>(
-  features: Feature[]
+  features: Feature[],
 ): Feature[] {
   let ids = new Set();
 

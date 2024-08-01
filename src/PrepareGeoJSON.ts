@@ -35,11 +35,11 @@ export default async function prepare(paths: DataPaths, config: Config) {
   await StreamToPromise(
     merge([
       readGeoJSONFeatures(paths.input.geoJSON.skiAreas).pipe(
-        flatMap(formatSkiArea(InputSkiAreaType.OPENSTREETMAP_LANDUSE))
+        flatMap(formatSkiArea(InputSkiAreaType.OPENSTREETMAP_LANDUSE)),
       ),
       Readable.from(siteProvider.getGeoJSONSites()),
       readGeoJSONFeatures(paths.input.geoJSON.skiMapSkiAreas).pipe(
-        flatMap(formatSkiArea(InputSkiAreaType.SKIMAP_ORG))
+        flatMap(formatSkiArea(InputSkiAreaType.SKIMAP_ORG)),
       ),
     ])
       .pipe(toFeatureCollection())
@@ -47,9 +47,9 @@ export default async function prepare(paths: DataPaths, config: Config) {
         createWriteStream(
           config.arangoDBURLForClustering
             ? paths.intermediate.skiAreas
-            : paths.output.skiAreas
-        )
-      )
+            : paths.output.skiAreas,
+        ),
+      ),
   );
 
   console.log("Processing runs...");
@@ -67,17 +67,17 @@ export default async function prepare(paths: DataPaths, config: Config) {
           config.elevationServerURL
             ? addElevation(config.elevationServerURL)
             : null,
-          10
-        )
+          10,
+        ),
       )
       .pipe(toFeatureCollection())
       .pipe(
         createWriteStream(
           config.arangoDBURLForClustering
             ? paths.intermediate.runs
-            : paths.output.runs
-        )
-      )
+            : paths.output.runs,
+        ),
+      ),
   );
 
   console.log("Processing lifts...");
@@ -91,17 +91,17 @@ export default async function prepare(paths: DataPaths, config: Config) {
           config.elevationServerURL
             ? addElevation(config.elevationServerURL)
             : null,
-          10
-        )
+          10,
+        ),
       )
       .pipe(toFeatureCollection())
       .pipe(
         createWriteStream(
           config.arangoDBURLForClustering
             ? paths.intermediate.lifts
-            : paths.output.lifts
-        )
-      )
+            : paths.output.lifts,
+        ),
+      ),
   );
 
   if (config.arangoDBURLForClustering) {
@@ -110,7 +110,7 @@ export default async function prepare(paths: DataPaths, config: Config) {
       paths.intermediate,
       paths.output,
       config.arangoDBURLForClustering,
-      config.geocodingServer
+      config.geocodingServer,
     );
   }
 
@@ -122,9 +122,9 @@ export default async function prepare(paths: DataPaths, config: Config) {
         readGeoJSONFeatures(getPath(paths.output, type))
           .pipe(flatMap(MapboxGLFormatter.formatter(type)))
           .pipe(toFeatureCollection())
-          .pipe(createWriteStream(getPath(paths.output.mapboxGL, type)))
+          .pipe(createWriteStream(getPath(paths.output.mapboxGL, type))),
       );
-    })
+    }),
   );
 
   console.log("Done preparing");

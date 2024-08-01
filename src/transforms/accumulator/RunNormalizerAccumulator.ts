@@ -13,7 +13,8 @@ import {
 import Accumulator from "./Accumulator";
 
 export class RunNormalizerAccumulator
-  implements Accumulator<FormattedInputRunFeature, RunFeature> {
+  implements Accumulator<FormattedInputRunFeature, RunFeature>
+{
   private features: FormattedInputRunFeature[];
 
   constructor() {
@@ -31,14 +32,14 @@ export class RunNormalizerAccumulator
     const topology = mergeOverlappingRuns(
       topojsonServer.topology({
         runs: turf.featureCollection(features) as GeoJsonObject,
-      }) as RunTopology
+      }) as RunTopology,
     );
 
     return combineRunSegments(
       topojsonClient.feature(
         topology,
-        topology.objects.runs
-      ) as GeoJSON.FeatureCollection<RunGeometry, RunProperties>
+        topology.objects.runs,
+      ) as GeoJSON.FeatureCollection<RunGeometry, RunProperties>,
     ).features.map((f) => {
       // Re-compute id hashes after normalizing
       return buildFeature(f.geometry, f.properties);

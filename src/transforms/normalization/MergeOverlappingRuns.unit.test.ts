@@ -51,7 +51,7 @@ describe("MergeOverlappingRuns", () => {
   it("should merge two overlapping paths", () => {
     assert.deepStrictEqual(
       merge([mockRun({ name: "A" }), mockRun({ name: "B" })]),
-      [mockRun({ name: "A, B" })]
+      [mockRun({ name: "A, B" })],
     );
   });
 
@@ -82,7 +82,7 @@ describe("MergeOverlappingRuns", () => {
             { type: SourceType.OPENSTREETMAP, id: "relation/2" },
           ],
         }),
-      ]
+      ],
     );
   });
 
@@ -92,7 +92,7 @@ describe("MergeOverlappingRuns", () => {
         mockRun({ name: "A", oneway: true }),
         mockRun({ name: "B", oneway: true }),
       ]),
-      [mockRun({ name: "A, B", oneway: true })]
+      [mockRun({ name: "A, B", oneway: true })],
     );
   });
 
@@ -133,7 +133,7 @@ describe("MergeOverlappingRuns", () => {
             ],
           },
         }),
-      ]
+      ],
     );
   });
 
@@ -143,7 +143,7 @@ describe("MergeOverlappingRuns", () => {
         mockRun({ name: "A", oneway: true }),
         mockRun({ name: "B", oneway: false }),
       ]),
-      [mockRun({ name: "A, B", oneway: false })]
+      [mockRun({ name: "A, B", oneway: false })],
     );
   });
 
@@ -185,7 +185,7 @@ describe("MergeOverlappingRuns", () => {
             ],
           },
         }),
-      ]
+      ],
     );
   });
 
@@ -227,7 +227,7 @@ describe("MergeOverlappingRuns", () => {
             ],
           },
         }),
-      ]
+      ],
     );
   });
 
@@ -282,7 +282,7 @@ describe("MergeOverlappingRuns", () => {
             ],
           },
         }),
-      ]
+      ],
     );
   });
 
@@ -366,7 +366,7 @@ describe("MergeOverlappingRuns", () => {
             ],
           },
         }),
-      ]
+      ],
     );
   });
 
@@ -450,7 +450,7 @@ describe("MergeOverlappingRuns", () => {
             ],
           },
         }),
-      ]
+      ],
     );
   });
 
@@ -534,7 +534,7 @@ describe("MergeOverlappingRuns", () => {
             ],
           },
         }),
-      ]
+      ],
     );
   });
 });

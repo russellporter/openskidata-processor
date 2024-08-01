@@ -27,8 +27,8 @@ describe("GeoTransforms", () => {
               [1, 0],
               [0, 0],
             ],
-          ]).geometry
-        )
+          ]).geometry,
+        ),
       ).toMatchInlineSnapshot(`
         {
           "coordinates": [
@@ -59,8 +59,8 @@ describe("GeoTransforms", () => {
               [0.75, 0.25],
               [0.25, 0.25],
             ],
-          ]).geometry
-        )
+          ]).geometry,
+        ),
       ).toMatchInlineSnapshot(`
         {
           "coordinates": [
@@ -93,7 +93,9 @@ describe("GeoTransforms", () => {
       ];
 
       expect(
-        centralPointsInFeature(multiPolygon([firstShape, secondShape]).geometry)
+        centralPointsInFeature(
+          multiPolygon([firstShape, secondShape]).geometry,
+        ),
       ).toMatchInlineSnapshot(`
         {
           "coordinates": [

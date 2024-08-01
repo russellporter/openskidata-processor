@@ -28,8 +28,8 @@ describe("RunJoining", () => {
                 [3, 3],
               ],
             },
-          })
-        )
+          }),
+        ),
       ).toBe(true);
     });
   });

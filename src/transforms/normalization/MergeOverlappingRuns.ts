@@ -22,13 +22,14 @@ interface RunArc {
 
 // Finds overlapping run segments and merges them
 export function mergeOverlappingRuns(data: RunTopology) {
-  const lines = _.remove(data.objects.runs.geometries, function (
-    geometry: TopoJSON.GeometryObject
-  ) {
-    return (
-      geometry.type === "LineString" || geometry.type === "MultiLineString"
-    );
-  }) as RunLine[];
+  const lines = _.remove(
+    data.objects.runs.geometries,
+    function (geometry: TopoJSON.GeometryObject) {
+      return (
+        geometry.type === "LineString" || geometry.type === "MultiLineString"
+      );
+    },
+  ) as RunLine[];
 
   // store mapping of arc ID to merged properties for that arc
   const arcProperties: { [key: number]: ArcData } = {};
@@ -58,7 +59,7 @@ export function mergeOverlappingRuns(data: RunTopology) {
 
       function addLineIfCompleted(
         properties: ArcData | null,
-        forceSplit?: boolean
+        forceSplit?: boolean,
       ) {
         if (
           lastArcProperties !== null &&
@@ -103,7 +104,7 @@ export function mergeOverlappingRuns(data: RunTopology) {
 
 function forEachArc(
   arcs: number[],
-  callback: (arc: number, isReversed: boolean) => void
+  callback: (arc: number, isReversed: boolean) => void,
 ) {
   _.forEach(arcs, function (arc) {
     arc = Number(arc);

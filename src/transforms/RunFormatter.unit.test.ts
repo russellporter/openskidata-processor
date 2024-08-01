@@ -13,7 +13,7 @@ describe("RunFormatter", () => {
           "piste:type": "downhill",
           "piste:abandoned": "yes",
         },
-      })
+      }),
     );
     expect(run).toBeNull();
   });
@@ -24,14 +24,14 @@ describe("RunFormatter", () => {
         type: "way",
         id: 1,
         tags: { "proposed:piste:type": "downhill" },
-      })
+      }),
     );
     expect(run).toBeNull();
   });
 
   it("formats simple run", () => {
     const run = formatRun(
-      inputRun({ type: "way", id: 1, tags: { "piste:type": "downhill" } })
+      inputRun({ type: "way", id: 1, tags: { "piste:type": "downhill" } }),
     );
     expect(run!.properties).toMatchInlineSnapshot(`
       {
@@ -77,10 +77,10 @@ describe("RunFormatter", () => {
           "piste:name:en": "Run name",
           name: "Name that shouldn't be shown",
         },
-      })
+      }),
     );
     expect(run!.properties.name).toMatchInlineSnapshot(
-      `"🇫🇷 Nom de la piste, Run name"`
+      `"🇫🇷 Nom de la piste, Run name"`,
     );
   });
 
@@ -94,7 +94,7 @@ describe("RunFormatter", () => {
           name: "Run name",
           "name:en": "Run name",
         },
-      })
+      }),
     );
     expect(run!.properties.name).toMatchInlineSnapshot(`"Run name"`);
   });
@@ -107,7 +107,7 @@ describe("RunFormatter", () => {
         tags: {
           "piste:type": "downhill",
         },
-      })
+      }),
     );
     expect(run!.properties.oneway).toBe(true);
   });
@@ -121,7 +121,7 @@ describe("RunFormatter", () => {
           "piste:type": "downhill",
           oneway: "no",
         },
-      })
+      }),
     );
     expect(run!.properties.oneway).toBe(false);
   });
@@ -135,7 +135,7 @@ describe("RunFormatter", () => {
           "piste:type": "downhill",
           gladed: "yes",
         },
-      })
+      }),
     );
     expect(run!.properties.gladed).toBe(true);
   });
@@ -149,7 +149,7 @@ describe("RunFormatter", () => {
           "piste:type": "downhill",
           landuse: "forest",
         },
-      })
+      }),
     );
     expect(run!.properties.gladed).toBe(true);
   });
@@ -163,7 +163,7 @@ describe("RunFormatter", () => {
           "piste:type": "downhill",
           natural: "wood",
         },
-      })
+      }),
     );
     expect(run!.properties.gladed).toBe(true);
   });
@@ -178,7 +178,7 @@ describe("RunFormatter", () => {
           natural: "wood",
           gladed: "no",
         },
-      })
+      }),
     );
     expect(run!.properties.gladed).toBe(false);
   });
@@ -192,7 +192,7 @@ describe("RunFormatter", () => {
           "piste:type": "downhill",
           "piste:grooming": "no",
         },
-      })
+      }),
     );
     expect(run!.properties.grooming).toBe(RunGrooming.Backcountry);
   });
@@ -206,7 +206,7 @@ describe("RunFormatter", () => {
           "piste:type": "nordic",
           "piste:grooming": "classic;skating",
         },
-      })
+      }),
     );
     expect(run!.properties.grooming).toBe(RunGrooming.ClassicAndSkating);
   });
@@ -220,7 +220,7 @@ describe("RunFormatter", () => {
           "piste:type": "nordic",
           "piste:grooming": "classic;skating",
         },
-      })
+      }),
     );
     expect(run!.properties.grooming).toBe(RunGrooming.ClassicAndSkating);
   });
@@ -234,7 +234,7 @@ describe("RunFormatter", () => {
           "piste:type": "nordic",
           "piste:grooming": "classic;skating",
         },
-      })
+      }),
     );
     expect(run!.properties.grooming).toBe(RunGrooming.ClassicAndSkating);
   });
@@ -247,7 +247,7 @@ describe("RunFormatter", () => {
         tags: {
           "piste:type": "fatbike",
         },
-      })
+      }),
     );
     expect(run!.properties.uses).toEqual([RunUse.Fatbike]);
   });
@@ -262,8 +262,8 @@ describe("RunFormatter", () => {
             "piste:type": "downhill",
             demolished: "yes",
           },
-        })
-      )
+        }),
+      ),
     ).toBeNull();
 
     expect(
@@ -275,14 +275,14 @@ describe("RunFormatter", () => {
             "piste:type": "demolished",
             demolished: "downhill",
           },
-        })
-      )
+        }),
+      ),
     ).toBeNull();
   });
 });
 
 function inputRun(
-  properties: OSMGeoJSONProperties<OSMRunTags>
+  properties: OSMGeoJSONProperties<OSMRunTags>,
 ): InputRunFeature {
   return {
     type: "Feature",

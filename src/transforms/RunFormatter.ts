@@ -26,7 +26,7 @@ import { getOSMName, mapOSMBoolean, mapOSMString } from "./OSMTransforms";
 import getStatusAndValue from "./Status";
 
 export function formatRun(
-  feature: InputRunFeature
+  feature: InputRunFeature,
 ): FormattedInputRunFeature | null {
   if (feature.geometry.type === "Point") {
     return null;
@@ -54,7 +54,7 @@ export function formatRun(
     name: getOSMName(tags, "piste:name", "name"),
     ref: mapOSMString(getOrElse(tags, "piste:ref", "ref")),
     description: mapOSMString(
-      getOrElse(tags, "piste:description", "description")
+      getOrElse(tags, "piste:description", "description"),
     ),
     difficulty: difficulty,
     convention: convention,
@@ -80,7 +80,7 @@ export function formatRun(
 function getStatusAndUses(tags: OSMRunTags) {
   let { status, value: pisteType } = getStatusAndValue(
     "piste:type",
-    tags as { [key: string]: string }
+    tags as { [key: string]: string },
   );
 
   // Special case status check for runs: https://wiki.openstreetmap.org/wiki/Piste_Maps
@@ -97,7 +97,7 @@ function getUses(type: string): RunUse[] {
     .split(";")
     .map((t) => t.trim().toLowerCase())
     .flatMap((t) =>
-      Object.values(RunUse).includes(t as RunUse) ? [t as RunUse] : []
+      Object.values(RunUse).includes(t as RunUse) ? [t as RunUse] : [],
     );
 }
 
@@ -130,7 +130,7 @@ function getOneway(tags: OSMRunTags, uses: RunUse[]): boolean | null {
 function getOrElse<P extends { [key: string]: string | undefined }>(
   properties: P,
   key: keyof P,
-  fallbackKey: keyof P
+  fallbackKey: keyof P,
 ): string | undefined {
   const value = properties[key];
   if (value !== undefined) {

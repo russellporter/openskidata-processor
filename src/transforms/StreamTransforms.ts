@@ -13,7 +13,7 @@ export function map<X, Y>(mapper: (input: X) => Y): Transform {
 
 export function mapAsync<X, Y>(
   mapper: ((input: X) => Promise<Y>) | null,
-  parallelism: number = 1
+  parallelism: number = 1,
 ): Transform {
   if (!mapper) {
     return passThrough();

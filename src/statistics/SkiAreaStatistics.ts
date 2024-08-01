@@ -91,7 +91,7 @@ function runStatistics(runs: RunObject[]): RunStatistics {
         ...elevationStatistics(run.geometryWithElevations),
         difficulty: run.difficulty,
         activities: run.activities.filter((activity) =>
-          allSkiAreaActivities.has(activity)
+          allSkiAreaActivities.has(activity),
         ),
         distance: turfLength(feature(run.geometry)),
       };
@@ -119,7 +119,7 @@ function runStatistics(runs: RunObject[]): RunStatistics {
       },
       {
         byActivity: {},
-      } as RunStatistics
+      } as RunStatistics,
     );
 }
 
@@ -145,13 +145,13 @@ function liftStatistics(lifts: LiftObject[]): LiftStatistics {
         augmentElevationStatistics(statistics, lift);
         return statistics;
       },
-      { byType: {} } as LiftStatistics
+      { byType: {} } as LiftStatistics,
     );
 }
 
 function augmentRunOrLiftStatistics(
   statistics: MapObjectStatistics,
-  object: ObjectStatistics
+  object: ObjectStatistics,
 ) {
   statistics.count++;
   statistics.lengthInKm += object.distance;
@@ -166,7 +166,7 @@ function augmentRunOrLiftStatistics(
 
 function augmentElevationStatistics(
   statistics: { minElevation?: number; maxElevation?: number },
-  object: ObjectStatistics
+  object: ObjectStatistics,
 ) {
   if (
     object.minElevation &&

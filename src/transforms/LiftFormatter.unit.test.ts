@@ -14,7 +14,7 @@ describe("LiftFormatter", () => {
           name: "🇫🇷 Nom de la téléski",
           "name:en": "Lift name",
         },
-      })
+      }),
     );
     expect(feature!.properties.liftType).toBe(LiftType.Funicular);
   });
@@ -29,7 +29,7 @@ describe("LiftFormatter", () => {
           railway: "narrow_gauge",
           "railway:traffic_mode": "passenger",
         },
-      })
+      }),
     );
     expect(feature!.properties.liftType).toBe(LiftType.RackRailway);
   });
@@ -44,10 +44,10 @@ describe("LiftFormatter", () => {
           name: "🇫🇷 Nom de la téléski",
           "name:en": "Lift name",
         },
-      })
+      }),
     );
     expect(feature!.properties.name).toMatchInlineSnapshot(
-      `"🇫🇷 Nom de la téléski, Lift name"`
+      `"🇫🇷 Nom de la téléski, Lift name"`,
     );
   });
 
@@ -61,7 +61,7 @@ describe("LiftFormatter", () => {
           name: "Lift name",
           "name:en": "Lift name",
         },
-      })
+      }),
     );
     expect(feature!.properties.name).toMatchInlineSnapshot(`"Lift name"`);
   });
@@ -75,8 +75,8 @@ describe("LiftFormatter", () => {
           tags: {
             aerialway: "zip_line",
           },
-        })
-      )
+        }),
+      ),
     ).toBeNull();
 
     expect(
@@ -87,8 +87,8 @@ describe("LiftFormatter", () => {
           tags: {
             aerialway: "goods",
           },
-        })
-      )
+        }),
+      ),
     ).toBeNull();
   });
 
@@ -102,8 +102,8 @@ describe("LiftFormatter", () => {
             aerialway: "chair_lift",
             access: "private",
           },
-        })
-      )
+        }),
+      ),
     ).toBeNull();
 
     expect(
@@ -115,8 +115,8 @@ describe("LiftFormatter", () => {
             aerialway: "chair_lift",
             foot: "no",
           },
-        })
-      )
+        }),
+      ),
     ).toBeNull();
 
     expect(
@@ -129,8 +129,8 @@ describe("LiftFormatter", () => {
             railway: "narrow_gauge",
             "railway:traffic_mode": "freight",
           },
-        })
-      )
+        }),
+      ),
     ).toBeNull();
   });
 
@@ -144,8 +144,8 @@ describe("LiftFormatter", () => {
             aerialway: "proposed",
             "proposed:aerialway": "gondola",
           },
-        })
-      )
+        }),
+      ),
     ).toBeNull();
   });
 
@@ -159,8 +159,8 @@ describe("LiftFormatter", () => {
             aerialway: "gondola",
             demolished: "yes",
           },
-        })
-      )
+        }),
+      ),
     ).toBeNull();
 
     expect(
@@ -172,14 +172,14 @@ describe("LiftFormatter", () => {
             aerialway: "demolished",
             demolished: "gondola",
           },
-        })
-      )
+        }),
+      ),
     ).toBeNull();
   });
 });
 
 function inputLift(
-  properties: OSMGeoJSONProperties<OSMLiftTags>
+  properties: OSMGeoJSONProperties<OSMLiftTags>,
 ): InputLiftFeature {
   return {
     type: "Feature",

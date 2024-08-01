@@ -11,7 +11,7 @@ import objectToFeature from "./ObjectToFeature";
 
 export default async function exportSkiAreasGeoJSON(
   path: string,
-  client: Database
+  client: Database,
 ) {
   const objectsCollection = client.collection("objects");
   const cursor = await client.query(
@@ -19,19 +19,19 @@ export default async function exportSkiAreasGeoJSON(
   FOR object IN ${objectsCollection}
   FILTER object.type == ${MapObjectType.SkiArea}
   RETURN object`,
-    { stream: true }
+    { stream: true },
   );
   await streamToPromise(
     arangoQueryStream(cursor, client)
       .pipe(map<SkiAreaObject, SkiAreaFeature>(objectToFeature))
       .pipe(toFeatureCollection())
-      .pipe(createWriteStream(path))
+      .pipe(createWriteStream(path)),
   );
 }
 
 function arangoQueryStream(
   streamingCursor: ArrayCursor,
-  client: Database
+  client: Database,
 ): Readable {
   return new Readable({
     objectMode: true,

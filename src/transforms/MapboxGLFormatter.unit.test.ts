@@ -111,7 +111,7 @@ describe("MapboxGLFormatter", () => {
     const mapboxGLFeature = formatter(FeatureType.Lift)(feature);
 
     expect(mapboxGLFeature?.properties.name_and_type).toBe(
-      "99 - Lift (Chairlift)"
+      "99 - Lift (Chairlift)",
     );
   });
 

@@ -132,8 +132,8 @@ describe("Geocoder", () => {
       mockPhotonGeocode(
         "United States of America",
         "California",
-        "Alpine Meadows"
-      )
+        "Alpine Meadows",
+      ),
     );
 
     const result = await defaultGeocoder().geocode([0, 0]);
@@ -163,7 +163,7 @@ describe("Geocoder", () => {
 
   it("does not geocode invalid region", async () => {
     mockHTTPResponse(
-      mockPhotonGeocode("Germany", "British Columbia", undefined)
+      mockPhotonGeocode("Germany", "British Columbia", undefined),
     );
 
     const result = await defaultGeocoder().geocode([0, 0]);
@@ -211,7 +211,7 @@ function mockPhotonNoDataGeocode(): PhotonGeocode {
 function mockPhotonGeocode(
   country: string | undefined,
   state: string | undefined,
-  city: string | undefined
+  city: string | undefined,
 ): PhotonGeocode {
   return {
     type: "FeatureCollection",

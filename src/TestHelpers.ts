@@ -55,41 +55,41 @@ export function mockInputFiles(
     lifts: InputLiftFeature[];
     runs: InputRunFeature[];
   },
-  inputPaths: InputDataPaths
+  inputPaths: InputDataPaths,
 ) {
   fs.writeFileSync(
     inputPaths.geoJSON.skiMapSkiAreas,
     JSON.stringify({
       type: "FeatureCollection",
       features: input.skiMapSkiAreas,
-    })
+    }),
   );
   fs.writeFileSync(
     inputPaths.geoJSON.skiAreas,
     JSON.stringify({
       type: "FeatureCollection",
       features: input.openStreetMapSkiAreas,
-    })
+    }),
   );
   fs.writeFileSync(
     inputPaths.osmJSON.skiAreaSites,
     JSON.stringify({
       elements: input.openStreetMapSkiAreaSites,
-    })
+    }),
   );
   fs.writeFileSync(
     inputPaths.geoJSON.lifts,
     JSON.stringify({
       type: "FeatureCollection",
       features: input.lifts,
-    })
+    }),
   );
   fs.writeFileSync(
     inputPaths.geoJSON.runs,
     JSON.stringify({
       type: "FeatureCollection",
       features: input.runs,
-    })
+    }),
   );
 }
 
@@ -97,28 +97,28 @@ export function mockFeatureFiles(
   skiAreas: SkiAreaFeature[],
   lifts: LiftFeature[],
   runs: RunFeature[],
-  intermedatePaths: GeoJSONIntermediatePaths
+  intermedatePaths: GeoJSONIntermediatePaths,
 ) {
   fs.writeFileSync(
     intermedatePaths.skiAreas,
     JSON.stringify({
       type: "FeatureCollection",
       features: skiAreas,
-    })
+    }),
   );
   fs.writeFileSync(
     intermedatePaths.lifts,
     JSON.stringify({
       type: "FeatureCollection",
       features: lifts,
-    })
+    }),
   );
   fs.writeFileSync(
     intermedatePaths.runs,
     JSON.stringify({
       type: "FeatureCollection",
       features: runs,
-    })
+    }),
   );
 }
 
@@ -264,7 +264,7 @@ export function simplifiedLiftFeature(feature: LiftFeature) {
     id: feature.properties.id,
     name: feature.properties.name,
     skiAreas: feature.properties.skiAreas.map(
-      (skiArea) => skiArea.properties.id
+      (skiArea) => skiArea.properties.id,
     ),
   };
 }
@@ -274,7 +274,7 @@ export function simplifiedRunFeature(feature: RunFeature) {
     id: feature.properties.id,
     name: feature.properties.name,
     skiAreas: feature.properties.skiAreas.map(
-      (skiArea) => skiArea.properties.id
+      (skiArea) => skiArea.properties.id,
     ),
   };
 }
@@ -288,7 +288,7 @@ export function simplifiedSkiAreaFeature(feature: SkiAreaFeature) {
 }
 
 export function simplifiedSkiAreaFeatureWithStatistics(
-  feature: SkiAreaFeature
+  feature: SkiAreaFeature,
 ) {
   return {
     ...simplifiedSkiAreaFeature(feature),

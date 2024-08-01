@@ -10,7 +10,7 @@ import objectToFeature from "./ObjectToFeature";
 export default async function augmentGeoJSONWithSkiAreas(
   inputPath: string,
   outputPath: string,
-  client: Database
+  client: Database,
 ) {
   await streamToPromise(
     readGeoJSONFeatures(inputPath)
@@ -20,16 +20,16 @@ export default async function augmentGeoJSONWithSkiAreas(
 
           feature.properties.skiAreas = skiAreas.map(objectToFeature);
           return feature;
-        }, 10)
+        }, 10),
       )
       .pipe(toFeatureCollection())
-      .pipe(createWriteStream(outputPath))
+      .pipe(createWriteStream(outputPath)),
   );
 }
 
 async function getSkiAreas(
   feature: MapFeature,
-  client: Database
+  client: Database,
 ): Promise<SkiAreaObject[]> {
   const query = aql`
   FOR object in ${client.collection("objects")}

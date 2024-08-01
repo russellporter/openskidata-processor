@@ -56,7 +56,7 @@ it("adds elevations to lift geometry", async () => {
       ],
       runs: [],
     },
-    paths.input
+    paths.input,
   );
 
   await prepare(paths, config);
@@ -148,7 +148,7 @@ it("adds elevations to run geometry & elevation profile", async () => {
         },
       ],
     },
-    paths.input
+    paths.input,
   );
 
   await prepare(paths, config);
@@ -231,7 +231,7 @@ it("completes without adding elevations when elevation server fails", async () =
       ],
       runs: [],
     },
-    paths.input
+    paths.input,
   );
 
   await prepare(paths, config);
@@ -328,7 +328,7 @@ it("adds elevations to run polygons", async () => {
         },
       ],
     },
-    paths.input
+    paths.input,
   );
 
   await prepare(paths, config);

@@ -39,7 +39,7 @@ export default class PointGraph {
     feature = _.cloneDeep(feature);
 
     feature.properties = mergedProperties(
-      features.map((f) => f.feature.properties)
+      features.map((f) => f.feature.properties),
     );
 
     feature.geometry.coordinates = features.reduce(
@@ -58,7 +58,7 @@ export default class PointGraph {
         }
         return coordinates.concat(featureCoords);
       },
-      []
+      [],
     );
 
     return feature;
@@ -75,7 +75,7 @@ export default class PointGraph {
   _expand(
     feature: RunLineFeature | null,
     direction: Direction,
-    reversed?: boolean
+    reversed?: boolean,
   ): { feature: RunLineFeature; reversed: boolean }[] {
     if (!feature || this.processed.has(feature)) {
       return [];
@@ -91,15 +91,15 @@ export default class PointGraph {
     if (direction !== Direction.FORWARD) {
       const inbound = this._expand(
         this.inbound.getFeatures(head).find(featureMatcher) || null,
-        Direction.BACKWARD
+        Direction.BACKWARD,
       );
       features.push(...inbound);
       if (inbound.length === 0) {
         features.push(
           ...this._expandInReverse(
             this.outbound.getFeatures(head).find(featureMatcher) || null,
-            Direction.BACKWARD
-          )
+            Direction.BACKWARD,
+          ),
         );
       }
     }
@@ -109,15 +109,15 @@ export default class PointGraph {
     if (direction !== Direction.BACKWARD) {
       const outbound = this._expand(
         this.outbound.getFeatures(tail).find(featureMatcher) || null,
-        Direction.FORWARD
+        Direction.FORWARD,
       );
       features.push(...outbound);
       if (outbound.length === 0) {
         features.push(
           ...this._expandInReverse(
             this.inbound.getFeatures(tail).find(featureMatcher) || null,
-            Direction.FORWARD
-          )
+            Direction.FORWARD,
+          ),
         );
       }
     }

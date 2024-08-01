@@ -13,12 +13,12 @@ export function isArangoInvalidGeometryError(error: any): boolean {
     return false;
   }
   return invalidGeometryMessages.some((invalidMessage) =>
-    errorMessage.includes(invalidMessage)
+    errorMessage.includes(invalidMessage),
   );
 }
 
 export function arangoGeometry(
-  object: GeoJSON.Polygon | GeoJSON.MultiPolygon
+  object: GeoJSON.Polygon | GeoJSON.MultiPolygon,
 ): AqlQuery {
   switch (object.type) {
     case "Polygon":

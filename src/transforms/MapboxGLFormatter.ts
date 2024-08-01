@@ -27,23 +27,23 @@ import unique from "../utils/unique";
 import { centralPointsInFeature } from "./GeoTransforms";
 
 export function formatter(
-  type: FeatureType.SkiArea
+  type: FeatureType.SkiArea,
 ): (feature: SkiAreaFeature) => MapboxGLSkiAreaFeature | null;
 export function formatter(
-  type: FeatureType.Lift
+  type: FeatureType.Lift,
 ): (feature: LiftFeature) => MapboxGLLiftFeature | null;
 export function formatter(
-  type: FeatureType.Run
+  type: FeatureType.Run,
 ): (feature: RunFeature) => MapboxGLRunFeature | null;
 
 export function formatter(
-  type: FeatureType
+  type: FeatureType,
 ): (
-  feature: SkiAreaFeature | LiftFeature | RunFeature
+  feature: SkiAreaFeature | LiftFeature | RunFeature,
 ) => MapboxGLSkiAreaFeature | MapboxGLLiftFeature | MapboxGLRunFeature | null;
 
 export function formatter(
-  type: FeatureType
+  type: FeatureType,
 ): (feature: GeoJSON.Feature<any, any>) => GeoJSON.Feature | null {
   switch (type) {
     case FeatureType.Lift:
@@ -106,7 +106,7 @@ export function formatter(
       id: properties.id,
       name_and_type: getNameIncludingRef(
         getLiftNameAndType(properties),
-        properties.ref
+        properties.ref,
       ),
       color: properties.color,
       status: properties.status,
@@ -137,13 +137,13 @@ export function formatter(
       downhillDistance:
         statistics && statistics.runs.byActivity.downhill
           ? Math.round(
-              getDistance(statistics.runs.byActivity.downhill.byDifficulty)
+              getDistance(statistics.runs.byActivity.downhill.byDifficulty),
             )
           : null,
       nordicDistance:
         statistics && statistics.runs.byActivity.nordic
           ? Math.round(
-              getDistance(statistics.runs.byActivity.nordic.byDifficulty)
+              getDistance(statistics.runs.byActivity.nordic.byDifficulty),
             )
           : null,
       maxElevation:

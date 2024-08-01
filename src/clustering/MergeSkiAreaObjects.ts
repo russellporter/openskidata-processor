@@ -5,7 +5,7 @@ import { SkiAreaObject } from "./MapObject";
 
 export default function mergeSkiAreaObjects(
   primarySkiArea: SkiAreaObject,
-  otherSkiAreas: SkiAreaObject[]
+  otherSkiAreas: SkiAreaObject[],
 ): SkiAreaObject {
   if (otherSkiAreas.length === 0) {
     return primarySkiArea;
@@ -23,11 +23,11 @@ export default function mergeSkiAreaObjects(
       type: primarySkiArea.type,
       activities: mergedAndUniqued(
         primarySkiArea.activities,
-        otherSkiArea.activities
+        otherSkiArea.activities,
       ),
       properties: mergeSkiAreaProperties(
         primarySkiArea.properties,
-        otherSkiArea.properties
+        otherSkiArea.properties,
       ),
     };
   }, primarySkiArea);
@@ -35,19 +35,19 @@ export default function mergeSkiAreaObjects(
 
 function mergeSkiAreaProperties(
   primarySkiArea: SkiAreaProperties,
-  otherSkiArea: SkiAreaProperties
+  otherSkiArea: SkiAreaProperties,
 ): SkiAreaProperties {
   return {
     id: primarySkiArea.id,
     name: primarySkiArea.name || otherSkiArea.name,
     activities: mergedAndUniqued(
       primarySkiArea.activities,
-      otherSkiArea.activities
+      otherSkiArea.activities,
     ),
     generated: primarySkiArea.generated && otherSkiArea.generated,
     runConvention: primarySkiArea.runConvention,
     sources: uniquedSources(
-      primarySkiArea.sources.concat(otherSkiArea.sources)
+      primarySkiArea.sources.concat(otherSkiArea.sources),
     ),
     status: primarySkiArea.status || otherSkiArea.status,
     type: primarySkiArea.type,
@@ -64,12 +64,12 @@ function mergedWebsites(...skiAreas: SkiAreaProperties[]): string[] {
   const openStreetMapSkiAreasWithWebsites = skiAreas.filter(
     (skiArea) =>
       skiArea.sources.every(
-        (source) => source.type == SourceType.OPENSTREETMAP
-      ) && skiArea.websites.length > 0
+        (source) => source.type == SourceType.OPENSTREETMAP,
+      ) && skiArea.websites.length > 0,
   );
   if (openStreetMapSkiAreasWithWebsites.length > 0) {
     return mergedAndUniqued(
-      openStreetMapSkiAreasWithWebsites.flatMap((skiArea) => skiArea.websites)
+      openStreetMapSkiAreasWithWebsites.flatMap((skiArea) => skiArea.websites),
     );
   } else {
     return mergedAndUniqued(skiAreas.flatMap((skiArea) => skiArea.websites));

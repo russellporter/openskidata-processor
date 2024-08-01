@@ -107,7 +107,7 @@ describe("SkiAreaFormatter", () => {
 
     expect(
       formatSkiArea(InputSkiAreaType.OPENSTREETMAP_LANDUSE)(feature)?.properties
-        .status
+        .status,
     ).toBe(Status.Abandoned);
   });
 
@@ -137,7 +137,7 @@ describe("SkiAreaFormatter", () => {
 
     expect(
       formatSkiArea(InputSkiAreaType.OPENSTREETMAP_LANDUSE)(feature)?.properties
-        .status
+        .status,
     ).toBe(Status.Abandoned);
   });
 
@@ -249,7 +249,7 @@ describe("SkiAreaFormatter", () => {
     };
 
     expect(
-      formatSkiArea(InputSkiAreaType.OPENSTREETMAP_SITE)(site)?.properties.name
+      formatSkiArea(InputSkiAreaType.OPENSTREETMAP_SITE)(site)?.properties.name,
     ).toMatchInlineSnapshot(`"English, French"`);
   });
 
@@ -265,7 +265,7 @@ describe("SkiAreaFormatter", () => {
     };
 
     expect(
-      formatSkiArea(InputSkiAreaType.OPENSTREETMAP_SITE)(site)?.properties.name
+      formatSkiArea(InputSkiAreaType.OPENSTREETMAP_SITE)(site)?.properties.name,
     ).toMatchInlineSnapshot(`"Wendelstein"`);
   });
 
@@ -295,7 +295,7 @@ describe("SkiAreaFormatter", () => {
 
     expect(
       formatSkiArea(InputSkiAreaType.OPENSTREETMAP_LANDUSE)(feature)?.properties
-        .name
+        .name,
     ).toMatchInlineSnapshot(`"English, French"`);
   });
 
@@ -325,7 +325,7 @@ describe("SkiAreaFormatter", () => {
 
     expect(
       formatSkiArea(InputSkiAreaType.OPENSTREETMAP_LANDUSE)(feature)?.properties
-        .name
+        .name,
     ).toMatchInlineSnapshot(`"English"`);
   });
 });

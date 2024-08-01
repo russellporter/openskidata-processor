@@ -2,7 +2,7 @@ import { SkiAreaFeature } from "openskidata-format";
 import { SkiAreaObject } from "./MapObject";
 
 export default function objectToFeature(
-  arangoDBObject: SkiAreaObject
+  arangoDBObject: SkiAreaObject,
 ): SkiAreaFeature {
   return {
     properties: arangoDBObject.properties,

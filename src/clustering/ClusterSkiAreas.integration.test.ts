@@ -36,7 +36,7 @@ beforeAll(async () => {
   // keep version in sync with that used in docker-compose.yml
   container = await new GenericContainer("arangodb:3.12.1")
     .withExposedPorts(8529)
-    .withEnvironment({"ARANGO_NO_AUTH": "1d"})
+    .withEnvironment({ ARANGO_NO_AUTH: "1d" })
     .start();
 
   console.log("done establishing container");
@@ -76,14 +76,14 @@ it("skips generating ski areas for runs with unsupported activity", async () => 
         },
       }),
     ],
-    paths.intermediate
+    paths.intermediate,
   );
 
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
     "http://localhost:" + container.getMappedPort(8529),
-    null
+    null,
   );
 
   expect(TestHelpers.fileContents(paths.output.skiAreas))
@@ -149,20 +149,20 @@ it("generates ski areas for runs without them", async () => {
         },
       }),
     ],
-    paths.intermediate
+    paths.intermediate,
   );
 
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
     "http://localhost:" + container.getMappedPort(8529),
-    null
+    null,
   );
 
   expect(
     TestHelpers.fileContents(paths.output.runs).features.map(
-      simplifiedRunFeature
-    )
+      simplifiedRunFeature,
+    ),
   ).toMatchInlineSnapshot(`
     [
       {
@@ -183,8 +183,8 @@ it("generates ski areas for runs without them", async () => {
   `);
   expect(
     TestHelpers.fileContents(paths.output.skiAreas).features.map(
-      simplifiedSkiAreaFeature
-    )
+      simplifiedSkiAreaFeature,
+    ),
   ).toMatchInlineSnapshot(`
     [
       {
@@ -239,20 +239,20 @@ it("does not generate ski area for lone downhill run without lift", async () => 
         },
       }),
     ],
-    paths.intermediate
+    paths.intermediate,
   );
 
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
     "http://localhost:" + container.getMappedPort(8529),
-    null
+    null,
   );
 
   expect(
     TestHelpers.fileContents(paths.output.runs).features.map(
-      simplifiedRunFeature
-    )
+      simplifiedRunFeature,
+    ),
   ).toMatchInlineSnapshot(`
     [
       {
@@ -269,8 +269,8 @@ it("does not generate ski area for lone downhill run without lift", async () => 
   `);
   expect(
     TestHelpers.fileContents(paths.output.skiAreas).features.map(
-      simplifiedSkiAreaFeature
-    )
+      simplifiedSkiAreaFeature,
+    ),
   ).toMatchInlineSnapshot(`[]`);
 });
 
@@ -328,18 +328,18 @@ it("generates ski areas by activity", async () => {
         },
       }),
     ],
-    paths.intermediate
+    paths.intermediate,
   );
 
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
     "http://localhost:" + container.getMappedPort(8529),
-    null
+    null,
   );
 
   const runs: RunFeature[] = TestHelpers.fileContents(
-    paths.output.runs
+    paths.output.runs,
   ).features;
   expect(
     runs.map((feature) => {
@@ -348,10 +348,10 @@ it("generates ski areas by activity", async () => {
         // Inline only the ski area activities to avoid flaky test failures due to mismatched ski area IDs
         //  when one ski area is generated before the other.
         skiAreas: feature.properties.skiAreas.map(
-          (skiArea) => skiArea.properties.activities
+          (skiArea) => skiArea.properties.activities,
         ),
       };
-    })
+    }),
   ).toMatchInlineSnapshot(`
     [
       {
@@ -426,20 +426,20 @@ it("clusters ski areas", async () => {
         },
       }),
     ],
-    paths.intermediate
+    paths.intermediate,
   );
 
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
     "http://localhost:" + container.getMappedPort(8529),
-    null
+    null,
   );
 
   expect(
     TestHelpers.fileContents(paths.output.lifts).features.map(
-      simplifiedLiftFeature
-    )
+      simplifiedLiftFeature,
+    ),
   ).toMatchInlineSnapshot(`
     [
       {
@@ -454,8 +454,8 @@ it("clusters ski areas", async () => {
 
   expect(
     TestHelpers.fileContents(paths.output.runs).features.map(
-      simplifiedRunFeature
-    )
+      simplifiedRunFeature,
+    ),
   ).toMatchInlineSnapshot(`
     [
       {
@@ -470,8 +470,8 @@ it("clusters ski areas", async () => {
 
   expect(
     TestHelpers.fileContents(paths.output.skiAreas).features.map(
-      simplifiedSkiAreaFeature
-    )
+      simplifiedSkiAreaFeature,
+    ),
   ).toMatchInlineSnapshot(`
     [
       {
@@ -537,20 +537,20 @@ it("clusters ski area activities independently", async () => {
         },
       }),
     ],
-    paths.intermediate
+    paths.intermediate,
   );
 
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
     "http://localhost:" + container.getMappedPort(8529),
-    null
+    null,
   );
 
   expect(
     TestHelpers.fileContents(paths.output.runs).features.map(
-      simplifiedRunFeature
-    )
+      simplifiedRunFeature,
+    ),
   ).toMatchInlineSnapshot(`
     [
       {
@@ -623,20 +623,20 @@ it("generates a downhill ski area but does not include backcountry runs when clu
         },
       }),
     ],
-    paths.intermediate
+    paths.intermediate,
   );
 
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
     "http://localhost:" + container.getMappedPort(8529),
-    null
+    null,
   );
 
   expect(
     TestHelpers.fileContents(paths.output.runs).features.map(
-      simplifiedRunFeature
-    )
+      simplifiedRunFeature,
+    ),
   ).toMatchInlineSnapshot(`
     [
       {
@@ -688,20 +688,20 @@ it("generates elevation statistics for run & lift based on lift served skiable v
         },
       }),
     ],
-    paths.intermediate
+    paths.intermediate,
   );
 
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
     "http://localhost:" + container.getMappedPort(8529),
-    null
+    null,
   );
 
   expect(
     TestHelpers.fileContents(paths.output.skiAreas).features.map(
-      simplifiedSkiAreaFeatureWithStatistics
-    )
+      simplifiedSkiAreaFeatureWithStatistics,
+    ),
   ).toMatchInlineSnapshot(`
     [
       {
@@ -784,20 +784,20 @@ it("allows point & multilinestring lifts to be processed", async () => {
       }),
     ],
     [],
-    paths.intermediate
+    paths.intermediate,
   );
 
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
     "http://localhost:" + container.getMappedPort(8529),
-    null
+    null,
   );
 
   expect(
     TestHelpers.fileContents(paths.output.lifts).features.map(
-      simplifiedLiftFeature
-    )
+      simplifiedLiftFeature,
+    ),
   ).toMatchInlineSnapshot(`
     [
       {
@@ -838,14 +838,14 @@ it("does not generate ski area for lone snow park", async () => {
         },
       }),
     ],
-    paths.intermediate
+    paths.intermediate,
   );
 
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
     "http://localhost:" + container.getMappedPort(8529),
-    null
+    null,
   );
 
   expect(TestHelpers.fileContents(paths.output.skiAreas))
@@ -907,20 +907,20 @@ it("generates ski area which includes the snow park", async () => {
         },
       }),
     ],
-    paths.intermediate
+    paths.intermediate,
   );
 
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
     "http://localhost:" + container.getMappedPort(8529),
-    null
+    null,
   );
 
   expect(
     TestHelpers.fileContents(paths.output.runs).features.map(
-      simplifiedRunFeature
-    )
+      simplifiedRunFeature,
+    ),
   ).toMatchInlineSnapshot(`
     [
       {
@@ -979,20 +979,20 @@ it("generates ski area which includes the patrolled ungroomed run", async () => 
         },
       }),
     ],
-    paths.intermediate
+    paths.intermediate,
   );
 
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
     "http://localhost:" + container.getMappedPort(8529),
-    null
+    null,
   );
 
   expect(
     TestHelpers.fileContents(paths.output.runs).features.map(
-      simplifiedRunFeature
-    )
+      simplifiedRunFeature,
+    ),
   ).toMatchInlineSnapshot(`
     [
       {
@@ -1030,14 +1030,14 @@ it("does not generate ski area for ungroomed run", async () => {
         },
       }),
     ],
-    paths.intermediate
+    paths.intermediate,
   );
 
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
     "http://localhost:" + container.getMappedPort(8529),
-    null
+    null,
   );
 
   expect(TestHelpers.fileContents(paths.output.skiAreas))
@@ -1105,20 +1105,20 @@ it("associates lifts and runs with polygon openstreetmap ski area", async () => 
         },
       }),
     ],
-    paths.intermediate
+    paths.intermediate,
   );
 
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
     "http://localhost:" + container.getMappedPort(8529),
-    null
+    null,
   );
 
   expect(
     TestHelpers.fileContents(paths.output.lifts).features.map(
-      simplifiedLiftFeature
-    )
+      simplifiedLiftFeature,
+    ),
   ).toMatchInlineSnapshot(`
     [
       {
@@ -1133,8 +1133,8 @@ it("associates lifts and runs with polygon openstreetmap ski area", async () => 
 
   expect(
     TestHelpers.fileContents(paths.output.runs).features.map(
-      simplifiedRunFeature
-    )
+      simplifiedRunFeature,
+    ),
   ).toMatchInlineSnapshot(`
     [
       {
@@ -1213,20 +1213,20 @@ it("associates lifts and runs adjacent to polygon openstreetmap ski area when no
         },
       }),
     ],
-    paths.intermediate
+    paths.intermediate,
   );
 
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
     "http://localhost:" + container.getMappedPort(8529),
-    null
+    null,
   );
 
   expect(
     TestHelpers.fileContents(paths.output.lifts).features.map(
-      simplifiedLiftFeature
-    )
+      simplifiedLiftFeature,
+    ),
   ).toMatchInlineSnapshot(`
     [
       {
@@ -1241,8 +1241,8 @@ it("associates lifts and runs adjacent to polygon openstreetmap ski area when no
 
   expect(
     TestHelpers.fileContents(paths.output.runs).features.map(
-      simplifiedRunFeature
-    )
+      simplifiedRunFeature,
+    ),
   ).toMatchInlineSnapshot(`
     [
       {
@@ -1329,20 +1329,20 @@ it("associates lifts correctly to adjacent ski areas based on their polygons", a
       }),
     ],
     [],
-    paths.intermediate
+    paths.intermediate,
   );
 
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
     "http://localhost:" + container.getMappedPort(8529),
-    null
+    null,
   );
 
   expect(
     TestHelpers.fileContents(paths.output.lifts).features.map(
-      simplifiedLiftFeature
-    )
+      simplifiedLiftFeature,
+    ),
   ).toMatchInlineSnapshot(`
     [
       {
@@ -1401,20 +1401,20 @@ it("merges Skimap.org ski area with OpenStreetMap ski area", async () => {
       }),
     ],
     [],
-    paths.intermediate
+    paths.intermediate,
   );
 
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
     "http://localhost:" + container.getMappedPort(8529),
-    null
+    null,
   );
 
   expect(
     TestHelpers.fileContents(paths.output.skiAreas).features.map(
-      simplifiedSkiAreaFeatureWithSources
-    )
+      simplifiedSkiAreaFeatureWithSources,
+    ),
   ).toMatchInlineSnapshot(`
     [
       {
@@ -1439,8 +1439,8 @@ it("merges Skimap.org ski area with OpenStreetMap ski area", async () => {
 
   expect(
     TestHelpers.fileContents(paths.output.lifts).features.map(
-      simplifiedLiftFeature
-    )
+      simplifiedLiftFeature,
+    ),
   ).toMatchInlineSnapshot(`
     [
       {
@@ -1529,20 +1529,20 @@ it("merges Skimap.org ski area into adjacent OpenStreetMap ski areas", async () 
       }),
     ],
     [],
-    paths.intermediate
+    paths.intermediate,
   );
 
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
     "http://localhost:" + container.getMappedPort(8529),
-    null
+    null,
   );
 
   expect(
     TestHelpers.fileContents(paths.output.skiAreas)
       .features.map(simplifiedSkiAreaFeatureWithSources)
-      .sort(orderedByID)
+      .sort(orderedByID),
   ).toMatchInlineSnapshot(`
     [
       {
@@ -1621,20 +1621,20 @@ it("merges Skimap.org ski area without activities with OpenStreetMap ski area", 
       }),
     ],
     [],
-    paths.intermediate
+    paths.intermediate,
   );
 
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
     "http://localhost:" + container.getMappedPort(8529),
-    null
+    null,
   );
 
   expect(
     TestHelpers.fileContents(paths.output.skiAreas).features.map(
-      simplifiedSkiAreaFeatureWithSources
-    )
+      simplifiedSkiAreaFeatureWithSources,
+    ),
   ).toMatchInlineSnapshot(`
     [
       {
@@ -1685,20 +1685,20 @@ it("prefers OSM sourced websites when merging Skimap.org ski area with OpenStree
     ],
     [],
     [],
-    paths.intermediate
+    paths.intermediate,
   );
 
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
     "http://localhost:" + container.getMappedPort(8529),
-    null
+    null,
   );
 
   expect(
     TestHelpers.fileContents(paths.output.skiAreas).features.map(
-      (feature: SkiAreaFeature) => feature.properties.websites
-    )
+      (feature: SkiAreaFeature) => feature.properties.websites,
+    ),
   ).toMatchInlineSnapshot(`
     [
       [
@@ -1750,20 +1750,20 @@ it("removes OpenStreetMap ski areas that span across multiple Skimap.org ski are
     ],
     [],
     [],
-    paths.intermediate
+    paths.intermediate,
   );
 
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
     "http://localhost:" + container.getMappedPort(8529),
-    null
+    null,
   );
 
   expect(
     TestHelpers.fileContents(paths.output.skiAreas)
       .features.map(simplifiedSkiAreaFeature)
-      .sort(orderedByID)
+      .sort(orderedByID),
   ).toMatchInlineSnapshot(`
     [
       {
@@ -1821,20 +1821,20 @@ it("adds activities to OpenStreetMap ski areas based on the associated runs", as
         uses: [RunUse.Nordic],
       }),
     ],
-    paths.intermediate
+    paths.intermediate,
   );
 
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
     "http://localhost:" + container.getMappedPort(8529),
-    null
+    null,
   );
 
   expect(
     TestHelpers.fileContents(paths.output.skiAreas).features.map(
-      simplifiedSkiAreaFeature
-    )
+      simplifiedSkiAreaFeature,
+    ),
   ).toMatchInlineSnapshot(`
     [
       {
@@ -1872,20 +1872,20 @@ it("removes OpenStreetMap ski area without nearby runs/lifts", async () => {
     ],
     [],
     [],
-    paths.intermediate
+    paths.intermediate,
   );
 
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
     "http://localhost:" + container.getMappedPort(8529),
-    null
+    null,
   );
 
   expect(
     TestHelpers.fileContents(paths.output.skiAreas).features.map(
-      simplifiedSkiAreaFeature
-    )
+      simplifiedSkiAreaFeature,
+    ),
   ).toMatchInlineSnapshot(`[]`);
 });
 
@@ -1938,20 +1938,20 @@ it("uses runs fully contained in the ski area polygon to determine activities wh
         uses: [RunUse.Downhill],
       }),
     ],
-    paths.intermediate
+    paths.intermediate,
   );
 
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
     "http://localhost:" + container.getMappedPort(8529),
-    null
+    null,
   );
 
   expect(
     TestHelpers.fileContents(paths.output.skiAreas)
       .features.map(simplifiedSkiAreaFeature)
-      .sort(orderedByID)
+      .sort(orderedByID),
   ).toMatchInlineSnapshot(`
     [
       {
@@ -2009,20 +2009,20 @@ it("removes an OpenStreetMap ski area that does not contain any runs/lifts as it
         uses: [RunUse.Nordic],
       }),
     ],
-    paths.intermediate
+    paths.intermediate,
   );
 
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
     "http://localhost:" + container.getMappedPort(8529),
-    null
+    null,
   );
 
   expect(
     TestHelpers.fileContents(paths.output.skiAreas).features.map(
-      simplifiedSkiAreaFeature
-    )
+      simplifiedSkiAreaFeature,
+    ),
   ).toMatchInlineSnapshot(`
     [
       {
@@ -2037,8 +2037,8 @@ it("removes an OpenStreetMap ski area that does not contain any runs/lifts as it
 
   expect(
     TestHelpers.fileContents(paths.output.runs).features.map(
-      simplifiedRunFeature
-    )
+      simplifiedRunFeature,
+    ),
   ).toMatchInlineSnapshot(`
     [
       {
@@ -2081,18 +2081,18 @@ it("updates geometry, run convention, and activities for a site based ski area",
         skiAreas: [siteSkiArea],
       }),
     ],
-    paths.intermediate
+    paths.intermediate,
   );
 
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
     "http://localhost:" + container.getMappedPort(8529),
-    null
+    null,
   );
 
   const skiAreaFeatures: [SkiAreaFeature] = TestHelpers.fileContents(
-    paths.output.skiAreas
+    paths.output.skiAreas,
   ).features;
 
   expect(skiAreaFeatures.length).toBe(1);
@@ -2115,7 +2115,7 @@ it("updates geometry, run convention, and activities for a site based ski area",
     }
   `);
   expect(skiAreaFeature.properties.runConvention).toMatchInlineSnapshot(
-    `"europe"`
+    `"europe"`,
   );
   expect(skiAreaFeature.properties.sources).toMatchInlineSnapshot(`
     [
@@ -2127,7 +2127,7 @@ it("updates geometry, run convention, and activities for a site based ski area",
   `);
 
   expect(
-    TestHelpers.fileContents(paths.output.runs).features[0].properties.skiAreas
+    TestHelpers.fileContents(paths.output.runs).features[0].properties.skiAreas,
   ).toMatchObject([skiAreaFeature]);
 });
 
@@ -2173,20 +2173,20 @@ it("adds nearby unassociated runs of same activity to site based ski area", asyn
         skiAreas: [],
       }),
     ],
-    paths.intermediate
+    paths.intermediate,
   );
 
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
     "http://localhost:" + container.getMappedPort(8529),
-    null
+    null,
   );
 
   expect(
     TestHelpers.fileContents(paths.output.runs).features.map(
-      simplifiedRunFeature
-    )
+      simplifiedRunFeature,
+    ),
   ).toMatchInlineSnapshot(`
     [
       {
@@ -2249,20 +2249,20 @@ it("does not add nearby unassociated runs of different activity to site based sk
         skiAreas: [],
       }),
     ],
-    paths.intermediate
+    paths.intermediate,
   );
 
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
     "http://localhost:" + container.getMappedPort(8529),
-    null
+    null,
   );
 
   expect(
     TestHelpers.fileContents(paths.output.runs).features.map(
-      simplifiedRunFeature
-    )
+      simplifiedRunFeature,
+    ),
   ).toMatchInlineSnapshot(`
     [
       {
@@ -2300,13 +2300,13 @@ it("removes site based ski area that doesn't have associated lifts and runs", as
     paths.intermediate,
     paths.output,
     "http://localhost:" + container.getMappedPort(8529),
-    null
+    null,
   );
 
   expect(
     TestHelpers.fileContents(paths.output.runs).features.map(
-      simplifiedRunFeature
-    )
+      simplifiedRunFeature,
+    ),
   ).toMatchInlineSnapshot(`[]`);
 });
 
@@ -2379,18 +2379,18 @@ it("removes landuse based ski area when there is a site with sufficient overlap"
         skiAreas: [],
       }),
     ],
-    paths.intermediate
+    paths.intermediate,
   );
 
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
     "http://localhost:" + container.getMappedPort(8529),
-    null
+    null,
   );
 
   const skiAreaFeatures: [SkiAreaFeature] = TestHelpers.fileContents(
-    paths.output.skiAreas
+    paths.output.skiAreas,
   ).features;
 
   expect(skiAreaFeatures.length).toBe(1);
@@ -2415,7 +2415,7 @@ it("removes landuse based ski area when there is a site with sufficient overlap"
   `);
 
   expect(
-    TestHelpers.fileContents(paths.output.runs).features[0].properties.skiAreas
+    TestHelpers.fileContents(paths.output.runs).features[0].properties.skiAreas,
   ).toMatchObject([skiAreaFeature]);
 });
 
@@ -2498,24 +2498,24 @@ it("keeps landuse based ski area when there is a site with insufficient overlap"
         skiAreas: [],
       }),
     ],
-    paths.intermediate
+    paths.intermediate,
   );
 
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
     "http://localhost:" + container.getMappedPort(8529),
-    null
+    null,
   );
 
   const skiAreaFeatures: [SkiAreaFeature] = TestHelpers.fileContents(
-    paths.output.skiAreas
+    paths.output.skiAreas,
   ).features;
 
   expect(skiAreaFeatures.length).toBe(2);
 
   const runFeatures: [RunFeature] = TestHelpers.fileContents(
-    paths.output.runs
+    paths.output.runs,
   ).features.map(simplifiedRunFeature);
 
   expect(runFeatures).toMatchInlineSnapshot(`

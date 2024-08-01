@@ -35,7 +35,7 @@ describe("PointGraph", () => {
             [2, 2],
           ]),
           oneway: true,
-        })
+        }),
       );
       assert.equal(graph.merge(tail), null);
     });
@@ -70,7 +70,7 @@ describe("PointGraph", () => {
             [2, 2],
           ]),
           oneway: true,
-        })
+        }),
       );
       assert.equal(graph.merge(head), null);
     });
@@ -104,7 +104,7 @@ describe("PointGraph", () => {
             [1, 1],
           ]),
           oneway: true,
-        })
+        }),
       );
 
       assert.deepStrictEqual(
@@ -116,7 +116,7 @@ describe("PointGraph", () => {
             [1, 1],
           ]),
           oneway: true,
-        })
+        }),
       );
     });
 
@@ -157,7 +157,7 @@ describe("PointGraph", () => {
             [2, 2],
             [3, 3],
           ]),
-        })
+        }),
       );
 
       assert.equal(graph.merge(mid), null);
@@ -201,7 +201,7 @@ describe("PointGraph", () => {
             [1, 1],
             [0, 0],
           ]),
-        })
+        }),
       );
 
       assert.equal(graph.merge(head), null);
@@ -245,7 +245,7 @@ describe("PointGraph", () => {
             [2, 2],
             [3, 3],
           ]),
-        })
+        }),
       );
 
       assert.equal(graph.merge(head), null);
@@ -298,7 +298,7 @@ describe("PointGraph", () => {
             [3, 3],
             [2, 2],
           ]),
-        })
+        }),
       );
       assert.equal(graph.merge(other), null);
       assert.equal(graph.merge(head), null);
@@ -355,7 +355,7 @@ describe("PointGraph", () => {
             [3, 3],
           ]),
           oneway: true,
-        })
+        }),
       );
       assert.deepStrictEqual(
         graph.merge(other),
@@ -366,7 +366,7 @@ describe("PointGraph", () => {
             [3, 3],
           ]),
           oneway: true,
-        })
+        }),
       );
       assert.equal(graph.merge(head), null);
       assert.equal(graph.merge(tail), null);
@@ -453,7 +453,7 @@ describe("PointGraph", () => {
           TestHelpers.mockRunFeature({
             id: "1",
             geometry: lineString(test.e),
-          })
+          }),
         );
       }
     });
@@ -490,7 +490,7 @@ describe("PointGraph", () => {
             [1, 1],
           ]),
           oneway: true,
-        })
+        }),
       );
     });
   });
@@ -533,7 +533,7 @@ describe("PointGraph", () => {
           { type: SourceType.SKIMAP_ORG, id: "1" },
           { type: SourceType.OPENSTREETMAP, id: "1" },
         ],
-      })
+      }),
     );
   });
 });

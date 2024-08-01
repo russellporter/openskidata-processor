@@ -15,5 +15,5 @@ clusterSkiAreas(
   new GeoJSONIntermediatePaths("data"),
   new GeoJSONOutputPaths(config.outputDir),
   arangoDBURL,
-  config.geocodingServer
+  config.geocodingServer,
 );

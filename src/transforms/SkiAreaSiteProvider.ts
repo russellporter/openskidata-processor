@@ -28,7 +28,7 @@ export class SkiAreaSiteProvider {
         });
       } else {
         console.log(
-          "Failed converting site to ski are: " + JSON.stringify(site)
+          "Failed converting site to ski are: " + JSON.stringify(site),
         );
       }
     });
@@ -47,7 +47,7 @@ export function addSkiAreaSites(siteProvider: SkiAreaSiteProvider) {
       .filter((source) => source.type == SourceType.OPENSTREETMAP)
       .map((source) => source.id);
     feature.properties.skiAreas = osmIDs.flatMap((osmID) =>
-      siteProvider.getSitesForObject(osmID)
+      siteProvider.getSitesForObject(osmID),
     );
     return feature;
   };

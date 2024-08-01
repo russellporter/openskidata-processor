@@ -75,7 +75,7 @@ function getStatusAndLiftType(tags: OSMLiftTags) {
     "aerialway",
     tags as {
       [key: string]: string;
-    }
+    },
   );
 
   if (value === null) {
@@ -83,7 +83,7 @@ function getStatusAndLiftType(tags: OSMLiftTags) {
       "railway",
       tags as {
         [key: string]: string;
-      }
+      },
     ));
 
     if (value !== null && value !== "funicular") {
