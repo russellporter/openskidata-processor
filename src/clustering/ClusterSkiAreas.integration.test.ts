@@ -1,23 +1,23 @@
 import {
-  Activity,
-  LiftType,
-  RunDifficulty,
-  RunFeature,
-  RunGrooming,
-  RunUse,
-  SkiAreaFeature,
-  SourceType,
-  Status,
+    Activity,
+    LiftType,
+    RunDifficulty,
+    RunFeature,
+    RunGrooming,
+    RunUse,
+    SkiAreaFeature,
+    SourceType,
+    Status,
 } from "openskidata-format";
 import { GenericContainer } from "testcontainers";
 import { StartedTestContainer } from "testcontainers/dist/test-container";
 import * as TestHelpers from "../TestHelpers";
 import {
-  simplifiedLiftFeature,
-  simplifiedRunFeature,
-  simplifiedSkiAreaFeature,
-  simplifiedSkiAreaFeatureWithSources,
-  simplifiedSkiAreaFeatureWithStatistics,
+    simplifiedLiftFeature,
+    simplifiedRunFeature,
+    simplifiedSkiAreaFeature,
+    simplifiedSkiAreaFeatureWithSources,
+    simplifiedSkiAreaFeatureWithStatistics,
 } from "../TestHelpers";
 import clusterSkiAreas from "./ClusterSkiAreas";
 
@@ -35,7 +35,7 @@ let container: StartedTestContainer;
 beforeAll(async () => {
   console.log("establishing container");
   // keep version in sync with that used in docker-compose.yml
-  container = await new GenericContainer("arangodb:3.10.6")
+  container = await new GenericContainer("arangodb:3.12.1")
     .withExposedPorts(8529)
     .withEnv("ARANGO_NO_AUTH", "1d")
     .start();

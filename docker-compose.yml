@@ -1,6 +1,6 @@
 services:
   arangodb:
-    image: arangodb:3.10.6 # keep in sync with the version used in integration tests
+    image: arangodb:3.12.1 # keep in sync with the version used in integration tests
     ports:
       - 0:8529
     environment:
