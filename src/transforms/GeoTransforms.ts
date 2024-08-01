@@ -8,9 +8,7 @@ import {
   point,
   polygon,
 } from "@turf/helpers";
-import nearestPointOnLine, {
-  NearestPointOnLine,
-} from "@turf/nearest-point-on-line";
+import nearestPointOnLine from "@turf/nearest-point-on-line";
 
 export function bufferGeometry(
   geometry:
@@ -25,7 +23,7 @@ export function bufferGeometry(
   try {
     const bufferArea = buffer(geometry, radius, {
       steps: 16,
-    }).geometry;
+    })?.geometry;
     if (!bufferArea) {
       console.log(
         "Failed buffering geometry. This can happen if the geometry is invalid."
@@ -102,7 +100,7 @@ export function centralPointsInFeature(
         .map<GeoJSON.LineString>((coords) => lineString(coords).geometry)
         .reduce(
           (
-            nearestPointSoFar: NearestPointOnLine | null,
+            nearestPointSoFar: GeoJSON.Feature<GeoJSON.Point> | null,
             line: GeoJSON.LineString
           ) => {
             const nearestPointOnThisLine = nearestPointOnLine(line, center);

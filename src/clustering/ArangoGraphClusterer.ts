@@ -292,7 +292,7 @@ export default async function clusterArangoGraph(
               searchPolygon = bufferedObjectGeometries.reduce(
                 (previous, current) => {
                   try {
-                    return union(previous, current)!.geometry;
+                    return union(turf.featureCollection([turf.feature(previous), turf.feature(current)]))!.geometry;
                   } catch (error) {
                     // https://github.com/mfogel/polygon-clipping/issues/115
                     console.log(`
