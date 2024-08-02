@@ -38,7 +38,7 @@ if [ -z "$CLUSTERING_ARANGODB_URL" ]; then
 fi
 
 echo "Converting to GeoJSON..."
-GEOCODING_SERVER_URL="https://photon.komoot.io/reverse" CLUSTERING_ARANGODB_URL=$CLUSTERING_ARANGODB_URL npm run prepare-geojson
+CLUSTERING_ARANGODB_URL=$CLUSTERING_ARANGODB_URL npm run prepare-geojson
 
 if [ -z "$CLUSTERING_ARANGODB_URL" ]; then
 	docker compose down
