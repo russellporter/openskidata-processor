@@ -7,10 +7,7 @@
     {
       "label": "build",
       "type": "shell",
-      "args": [
-        "run",
-        "build"
-      ],
+      "args": ["run", "build"],
       "problemMatcher": [],
       "group": {
         "_id": "build",
@@ -20,11 +17,7 @@
     {
       "label": "test",
       "type": "shell",
-      "args": [
-        "run",
-        "mocha",
-        "${relativeFile}"
-      ],
+      "args": ["run", "mocha", "${relativeFile}"],
       "problemMatcher": []
     }
   ]

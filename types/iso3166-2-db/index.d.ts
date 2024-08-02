@@ -1,7 +1,7 @@
 export function changeDispute(dispute: string): void;
 
 export function changeNameProvider(
-  nameProvider: "geonames" | "osm" | "wikipedia"
+  nameProvider: "geonames" | "osm" | "wikipedia",
 ): void;
 
 export type Country = {

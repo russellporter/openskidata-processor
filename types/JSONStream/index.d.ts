@@ -22,7 +22,7 @@ export declare function stringify(): NodeJS.ReadWriteStream;
 
 /** If you call JSONStream.stringify(false) the elements will only be seperated by a newline. */
 export declare function stringify(
-  newlineOnly: NewlineOnlyIndicator
+  newlineOnly: NewlineOnlyIndicator,
 ): NodeJS.ReadWriteStream;
 type NewlineOnlyIndicator = false;
 
@@ -35,12 +35,12 @@ type NewlineOnlyIndicator = false;
 export declare function stringify(
   open: string,
   sep: string,
-  close: string
+  close: string,
 ): NodeJS.ReadWriteStream;
 
 export declare function stringifyObject(): NodeJS.ReadWriteStream;
 export declare function stringifyObject(
   open: string,
   sep: string,
-  close: string
+  close: string,
 ): NodeJS.ReadWriteStream;
