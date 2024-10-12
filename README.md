@@ -1,6 +1,6 @@
 # OpenSkiData Processor
 
-This is a data pipeline that consumes OpenStreetMap & Skimap.org data and produces GeoJSON & Mapbox GL tiles for usage on OpenSkiMap.org.
+This is a data pipeline that consumes OpenStreetMap & Skimap.org data and produces GeoJSON & Mapbox GL tiles for usage on [OpenSkiMap.org](https://github.com/russellporter/openskimap.org).
 
 ## Installation
 
@@ -33,3 +33,7 @@ You should use a local instance of the elevation server because a large number o
 Features will be augmented with country/region/locality information.
 
 To enable, set `GEOCODING_SERVER_URL` to an endpoint that reverse geocodes in the format of https://photon.komoot.io/reverse. Geocoding results are cached on disk (by default in the `cache` directory) for faster subsequent runs of the processor.
+
+## Contact
+
+Feature requests and bug reports are tracked in the [main project repo](https://github.com/russellporter/openskimap.org/issues/). 
