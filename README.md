@@ -34,6 +34,6 @@ Features will be augmented with country/region/locality information.
 
 To enable, set `GEOCODING_SERVER_URL` to an endpoint that reverse geocodes in the format of https://photon.komoot.io/reverse. Geocoding results are cached on disk (by default in the `cache` directory) for faster subsequent runs of the processor.
 
-## Contact
+## Issue reporting
 
 Feature requests and bug reports are tracked in the [main project repo](https://github.com/russellporter/openskimap.org/issues/). 
