@@ -1,11 +1,10 @@
 import turfLineChunk from "@turf/line-chunk";
 import { FeatureType, LiftFeature, RunFeature } from "openskidata-format";
-import request from "request-promise-native";
 
 const elevationProfileResolution = 25;
 
 export default function addElevation(
-  elevationServerURL: string,
+  elevationServerURL: string
 ): (feature: RunFeature | LiftFeature) => Promise<RunFeature | LiftFeature> {
   return async (feature: RunFeature | LiftFeature) => {
     const coordinates: number[][] = getCoordinates(feature);
@@ -19,7 +18,7 @@ export default function addElevation(
         Array.from(coordinates)
           .concat(elevationProfileCoordinates)
           .map(([lng, lat]) => [lat, lng]),
-        elevationServerURL,
+        elevationServerURL
       );
     } catch (error) {
       console.log("Failed to load elevations", error);
@@ -29,7 +28,7 @@ export default function addElevation(
     const coordinateElevations = elevations.slice(0, coordinates.length);
     const profileElevations = elevations.slice(
       coordinates.length,
-      elevations.length,
+      elevations.length
     );
 
     if (feature.properties.type === FeatureType.Run) {
@@ -49,30 +48,32 @@ export default function addElevation(
 
 async function loadElevations(
   coordinates: number[][],
-  elevationServerURL: string,
+  elevationServerURL: string
 ): Promise<number[]> {
-  const response = await request(elevationServerURL, {
+  const response = await fetch(elevationServerURL, {
     method: "POST",
-    json: coordinates,
-    timeout: 5 * 60 * 1000,
-    resolveWithFullResponse: true,
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(coordinates),
   });
 
-  if (response.statusCode < 200 || response.statusCode >= 300) {
-    throw "Failed status code: " + response.statusCode;
+  if (!response.ok) {
+    throw new Error("Failed status code: " + response.status);
   }
 
-  const elevations = response.toJSON().body;
+  const elevations = await response.json();
 
   if (coordinates.length !== elevations.length) {
-    throw (
+    throw new Error(
       "Number of coordinates (" +
-      coordinates.length +
-      ") is different than number of elevations (" +
-      elevations.length +
-      ")"
+        coordinates.length +
+        ") is different than number of elevations (" +
+        elevations.length +
+        ")"
     );
   }
+
   return elevations;
 }
 
@@ -112,7 +113,7 @@ function getCoordinatesForElevationProfile(feature: RunFeature | LiftFeature) {
   const subfeatures = turfLineChunk(
     feature.geometry,
     elevationProfileResolution,
-    { units: "meters" },
+    { units: "meters" }
   ).features;
   const points: [number, number][] = [];
   for (let subline of subfeatures) {
@@ -138,7 +139,7 @@ function getCoordinatesForElevationProfile(feature: RunFeature | LiftFeature) {
 
 function addElevations(
   feature: RunFeature | LiftFeature,
-  elevations: number[],
+  elevations: number[]
 ) {
   let i = 0;
   switch (feature.geometry.type) {

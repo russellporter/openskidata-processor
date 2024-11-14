@@ -4,7 +4,6 @@ import * as iso3166_2 from "iso3166-2-db";
 import { Region } from "iso3166-2-db";
 import { LRUMap } from "lru_map";
 import * as ngeohash from "ngeohash";
-import request from "request-promise-native";
 import * as Config from "../Config";
 
 export type PhotonGeocode = GeoJSON.FeatureCollection<
@@ -46,7 +45,7 @@ export default class Geocoder {
       {
         batch: false,
         cacheMap: new LRUMap(config.inMemoryCacheSize),
-      },
+      }
     );
   }
 
@@ -57,12 +56,12 @@ export default class Geocoder {
   };
 
   private geocodeInternal = async (
-    geohash: string,
+    geohash: string
   ): Promise<Geocode | null> => {
     try {
       const cacheObject = await cacache.get(
         this.config.cacheDir,
-        cacheKey(geohash),
+        cacheKey(geohash)
       );
       const content = JSON.parse(cacheObject.data.toString());
       if (content.timestamp + this.config.diskTTL < currentTimestamp()) {
@@ -71,22 +70,22 @@ export default class Geocoder {
       return this.enhance(content.data);
     } catch {
       const point = ngeohash.decode(geohash);
-      const response = await request({
-        json: true,
-        uri: this.config.url,
-        qs: {
-          lon: point.longitude,
-          lat: point.latitude,
-          lang: "en",
-        },
-      });
+      const response = await fetch(
+        `${this.config.url}?lon=${point.longitude}&lat=${point.latitude}&lang=en`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      ).then((res) => res.json());
       await cacache.put(
         this.config.cacheDir,
         cacheKey(geohash),
         JSON.stringify({
           data: response,
           timestamp: currentTimestamp(),
-        }),
+        })
       );
       return this.enhance(response);
     }
@@ -95,7 +94,7 @@ export default class Geocoder {
   private enhance = (rawGeocode: PhotonGeocode): Geocode | null => {
     console.assert(
       rawGeocode.features.length <= 1,
-      "Expected Photon geocode to only have at most a single feature.",
+      "Expected Photon geocode to only have at most a single feature."
     );
     if (rawGeocode.features.length === 0) {
       return null;

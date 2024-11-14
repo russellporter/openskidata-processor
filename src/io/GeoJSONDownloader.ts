@@ -1,9 +1,7 @@
 import bboxPolygon from "@turf/bbox-polygon";
 import booleanContains from "@turf/boolean-contains";
-import * as Fs from "fs";
-import { readFile, writeFile } from "fs/promises";
-import request from "request";
-import streamToPromise from "stream-to-promise";
+import { readFile, writeFile } from "node:fs/promises";
+import { Readable } from "node:stream";
 import { InputSkiMapOrgSkiAreaFeature } from "../features/SkiAreaFeature";
 import {
   OSMDownloadConfig,
@@ -18,7 +16,7 @@ import convertOSMFileToGeoJSON from "./OSMToGeoJSONConverter";
 
 export default async function downloadAndConvertToGeoJSON(
   folder: string,
-  bbox: GeoJSON.BBox | null,
+  bbox: GeoJSON.BBox | null
 ): Promise<InputDataPaths> {
   const paths = new InputDataPaths(folder);
 
@@ -28,26 +26,26 @@ export default async function downloadAndConvertToGeoJSON(
       OSMEndpoint.Z,
       runsDownloadConfig,
       paths.osmJSON.runs,
-      bbox,
+      bbox
     ),
     (async () => {
       await downloadOSMJSON(
         OSMEndpoint.LZ4,
         liftsDownloadConfig,
         paths.osmJSON.lifts,
-        bbox,
+        bbox
       );
       await downloadOSMJSON(
         OSMEndpoint.LZ4,
         skiAreasDownloadConfig,
         paths.osmJSON.skiAreas,
-        bbox,
+        bbox
       );
       await downloadOSMJSON(
         OSMEndpoint.LZ4,
         skiAreaSitesDownloadConfig,
         paths.osmJSON.skiAreaSites,
-        bbox,
+        bbox
       );
     })(),
     downloadSkiMapOrgSkiAreas(paths.geoJSON.skiMapSkiAreas, bbox),
@@ -70,7 +68,7 @@ async function downloadOSMJSON(
   endpoint: OSMEndpoint,
   config: OSMDownloadConfig,
   targetPath: string,
-  bbox: GeoJSON.BBox | null,
+  bbox: GeoJSON.BBox | null
 ) {
   const query = config.query(bbox);
   console.log("Performing overpass query...");
@@ -81,7 +79,7 @@ async function downloadOSMJSON(
 
 async function downloadSkiMapOrgSkiAreas(
   targetPath: string,
-  bbox: GeoJSON.BBox | null,
+  bbox: GeoJSON.BBox | null
 ) {
   await downloadToFile(skiMapSkiAreasURL, targetPath);
 
@@ -94,7 +92,7 @@ async function downloadSkiMapOrgSkiAreas(
   const contents = await readFile(targetPath);
   const json: GeoJSON.FeatureCollection = JSON.parse(contents.toString());
   json.features = (json.features as InputSkiMapOrgSkiAreaFeature[]).filter(
-    (feature) => booleanContains(bboxGeometry, feature),
+    (feature) => booleanContains(bboxGeometry, feature)
   );
 
   await writeFile(targetPath, JSON.stringify(json));
@@ -103,7 +101,7 @@ async function downloadSkiMapOrgSkiAreas(
 async function downloadToFile(
   sourceURL: string,
   targetPath: string,
-  retries: number = 10,
+  retries: number = 10
 ): Promise<void> {
   try {
     await _downloadToFile(sourceURL, targetPath);
@@ -113,7 +111,7 @@ async function downloadToFile(
     }
 
     console.log(
-      "Download failed due to " + e + ". Will wait a minute and try again.",
+      "Download failed due to " + e + ". Will wait a minute and try again."
     );
 
     // Wait a bit in case we are rate limited by the server.
@@ -125,35 +123,24 @@ async function downloadToFile(
 
 async function _downloadToFile(
   sourceURL: string,
-  targetPath: string,
+  targetPath: string
 ): Promise<void> {
-  const outputStream = Fs.createWriteStream(targetPath);
-  let statusCode: number | null = null;
-  let error: any = null;
-  request(sourceURL, {
-    timeout: 30 * 60 * 1000,
+  const response = await fetch(sourceURL, {
     headers: { Referer: "https://openskimap.org" },
-  })
-    .on("response", function (response) {
-      statusCode = response.statusCode;
-    })
-    .on("error", function (err) {
-      error = err;
-    })
-    .pipe(outputStream);
-  await streamToPromise(outputStream);
+    signal: AbortSignal.timeout(30 * 60 * 1000),
+  });
 
-  if (statusCode === null || statusCode < 200 || statusCode >= 300) {
+  if (!response.ok) {
     throw (
       "Failed downloading file at URL (status: " +
-      statusCode +
+      response.status +
       "): " +
       sourceURL
     );
-  } else if (error) {
-    console.error(error);
-    throw error;
   }
+
+  const stream = Readable.fromWeb(response.body as any);
+  await writeFile(targetPath, stream);
 }
 
 function sleep(ms: number) {
