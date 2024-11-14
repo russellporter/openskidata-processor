@@ -1,5 +1,7 @@
+import { Mutex } from "async-mutex";
 import cacache from "cacache";
 import DataLoader from "dataloader";
+import fetchRetry from "fetch-retry";
 import * as iso3166_2 from "iso3166-2-db";
 import { Region } from "iso3166-2-db";
 import { LRUMap } from "lru_map";
@@ -35,6 +37,9 @@ iso3166_2.changeNameProvider("osm");
 export default class Geocoder {
   private config: Config.GeocodingServerConfig;
   private loader: DataLoader<string, Geocode | null>;
+  private remoteErrorCount = 0;
+  private maxRemoteErrors = 10;
+  private mutex = new Mutex();
 
   constructor(config: Config.GeocodingServerConfig) {
     this.config = config;
@@ -69,16 +74,41 @@ export default class Geocoder {
       }
       return this.enhance(content.data);
     } catch {
+      if (this.remoteErrorCount >= this.maxRemoteErrors) {
+        throw "Too many errors, not trying remote";
+      }
+
+      try {
+        return this.geocodeRemote(geohash);
+      } catch {
+        this.remoteErrorCount++;
+        return null;
+      }
+    }
+  };
+
+  private geocodeRemote = async (geohash: string): Promise<Geocode | null> => {
+    return this.mutex.runExclusive(async () => {
       const point = ngeohash.decode(geohash);
-      const response = await fetch(
+      const response = await fetchRetry(fetch)(
         `${this.config.url}?lon=${point.longitude}&lat=${point.latitude}&lang=en`,
         {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
           },
+          retryDelay: 10000,
+          retryOn: (attempt, error, response) => {
+            if (attempt > 1) {
+              return false;
+            }
+            return (
+              error !== null || (response !== null && response.status >= 400)
+            );
+          },
         }
       ).then((res) => res.json());
+
       await cacache.put(
         this.config.cacheDir,
         cacheKey(geohash),
@@ -88,7 +118,7 @@ export default class Geocoder {
         })
       );
       return this.enhance(response);
-    }
+    });
   };
 
   private enhance = (rawGeocode: PhotonGeocode): Geocode | null => {
