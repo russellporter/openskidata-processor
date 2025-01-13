@@ -12,7 +12,9 @@ export type PhotonGeocode = GeoJSON.FeatureCollection<
   GeoJSON.Geometry,
   {
     country?: string;
+    countrycode?: string;
     state?: string;
+    county?: string;
     city?: string;
   }
 >;
@@ -131,14 +133,15 @@ export default class Geocoder {
     }
 
     const properties = rawGeocode.features[0].properties;
-    if (properties.country === undefined) {
+    if (!properties.countrycode) {
       return null;
     }
 
-    const countryName = normalizedCountryName(properties.country);
-    const country = iso3166_2.findCountryByName(countryName);
-    if (country === null) {
-      console.log(`Could not find country info for ${countryName}`);
+    const country = iso3166_2.getDataSet()[properties.countrycode];
+    if (!country) {
+      console.log(
+        `Could not find country info for code ${properties.countrycode}`
+      );
       return null;
     }
 
@@ -146,8 +149,16 @@ export default class Geocoder {
 
     if (properties.state !== undefined) {
       region =
-        country.regions.find((region) => region.name === properties.state) ||
-        null;
+        country.regions.find(
+          (region: Region) => region.name === properties.state
+        ) || null;
+    }
+
+    if (region === null && properties.county !== undefined) {
+      region =
+        country.regions.find(
+          (region: Region) => region.name === properties.county
+        ) || null;
     }
 
     return {
@@ -162,19 +173,6 @@ export default class Geocoder {
       },
     };
   };
-}
-
-function normalizedCountryName(countryName: string): string {
-  switch (countryName) {
-    case "United States of America":
-      return "United States";
-    case "The Netherlands":
-      return "Netherlands";
-    case "Macedonia":
-      return "Republic of Macedonia";
-    default:
-      return countryName;
-  }
 }
 
 function cacheKey(geohash: string) {
