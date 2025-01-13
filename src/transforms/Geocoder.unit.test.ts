@@ -11,7 +11,7 @@ describe("Geocoder", () => {
       .get("/reverse?lon=-0.0054931640625&lat=-0.00274658203125&lang=en")
       .reply(200, () => {
         requestCount++;
-        return mockPhotonGeocode("DE", undefined, undefined);
+        return mockPhotonGeocode("DE", undefined, undefined, undefined);
       });
 
     const geocoder = new Geocoder({
@@ -38,7 +38,7 @@ describe("Geocoder", () => {
       .get("/reverse?lon=-0.0054931640625&lat=-0.00274658203125&lang=en")
       .reply(200, () => {
         requestCount++;
-        return mockPhotonGeocode("DE", undefined, undefined);
+        return mockPhotonGeocode("DE", undefined, undefined, undefined);
       });
 
     const geocoder = new Geocoder({
@@ -222,7 +222,9 @@ describe("Geocoder", () => {
   });
 
   it("does not geocode invalid region", async () => {
-    mockHTTPResponse(mockPhotonGeocode("DE", "British Columbia", undefined));
+    mockHTTPResponse(
+      mockPhotonGeocode("DE", "British Columbia", undefined, undefined)
+    );
 
     const result = await defaultGeocoder().geocode([0, 0]);
 
