@@ -27,12 +27,12 @@ while [[ "$#" -gt 0 ]]; do
 done
 
 if [ "$DOWNLOAD" = true ]; then
-	echo "Downloading..."
-	npm run download
+    echo "Downloading..."
+    npm run download
 fi
 
 if [ -z "$CLUSTERING_ARANGODB_URL" ]; then
-		echo "Starting clustering DB..."
+    echo "Starting clustering DB..."
     docker compose up -d
     CLUSTERING_ARANGODB_URL="http://$(docker compose port arangodb 8529)"
 fi
@@ -41,10 +41,10 @@ echo "Converting to GeoJSON..."
 CLUSTERING_ARANGODB_URL=$CLUSTERING_ARANGODB_URL npm run prepare-geojson
 
 if [ -z "$CLUSTERING_ARANGODB_URL" ]; then
-	docker compose down
+    docker compose down
 fi
 
 if [ "$GENERATE_MBTILES" = true ]; then
-	echo "Convert to MBTiles..."
-	./generate_mbtiles.sh
+    echo "Convert to MBTiles..."
+    ./generate_mbtiles.sh
 fi
