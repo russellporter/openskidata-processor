@@ -47,6 +47,22 @@ export function getOSMName<Properties extends OSMTags>(
   return unique(keys.map((key) => properties[key])).join(", ");
 }
 
+export function getOSMFirstValue<Properties extends OSMTags>(
+  properties: Properties,
+  key: Extract<keyof Properties, string>,
+): string | null {
+  const input = properties[key];
+  if (input === undefined) {
+    return null;
+  }
+
+  let values = input.split(";");
+  if (values.length > 1) {
+    console.log(`Ignoring following values for ${key}: ${input}`);
+  }
+  return values[0];
+}
+
 function nameKeysForRootKey<Properties extends OSMTags>(
   properties: Properties,
   rootKey: Extract<keyof Properties, string>,

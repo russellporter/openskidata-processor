@@ -140,247 +140,250 @@ it("produces output for simple input", async () => {
   await prepare(paths, config);
 
   expect(TestHelpers.contents(paths.output)).toMatchInlineSnapshot(`
-    Map {
-      "output/lifts.geojson" => {
-        "features": [
-          {
-            "geometry": {
-              "coordinates": [
-                [
-                  11.1223444,
-                  47.5572422,
-                ],
-                [
-                  11.1164297,
-                  47.55815630000001,
-                ],
-              ],
-              "type": "LineString",
+Map {
+  "output/lifts.geojson" => {
+    "features": [
+      {
+        "geometry": {
+          "coordinates": [
+            [
+              11.1223444,
+              47.5572422,
+            ],
+            [
+              11.1164297,
+              47.55815630000001,
+            ],
+          ],
+          "type": "LineString",
+        },
+        "properties": {
+          "bubble": null,
+          "capacity": null,
+          "color": "hsl(0, 82%, 42%)",
+          "description": null,
+          "duration": null,
+          "heating": null,
+          "id": "4d07b91974c5a5b3a0ad9e1928c0a6d433c5093b",
+          "liftType": "t-bar",
+          "location": null,
+          "name": "Skilift Oberau",
+          "occupancy": null,
+          "oneway": null,
+          "ref": null,
+          "skiAreas": [],
+          "sources": [
+            {
+              "id": "way/227407273",
+              "type": "openstreetmap",
             },
-            "properties": {
-              "bubble": null,
-              "capacity": null,
-              "color": "hsl(0, 82%, 42%)",
-              "description": null,
-              "duration": null,
-              "heating": null,
-              "id": "4d07b91974c5a5b3a0ad9e1928c0a6d433c5093b",
-              "liftType": "t-bar",
-              "location": null,
-              "name": "Skilift Oberau",
-              "occupancy": null,
-              "oneway": null,
-              "ref": null,
-              "skiAreas": [],
-              "sources": [
-                {
-                  "id": "way/227407273",
-                  "type": "openstreetmap",
-                },
-              ],
-              "status": "operating",
-              "type": "lift",
-              "websites": [],
-            },
-            "type": "Feature",
-          },
-        ],
-        "type": "FeatureCollection",
+          ],
+          "status": "operating",
+          "type": "lift",
+          "websites": [],
+          "wikidata_id": null,
+        },
+        "type": "Feature",
       },
-      "output/mapboxgl_lifts.geojson" => {
-        "features": [
-          {
-            "geometry": {
-              "coordinates": [
-                [
-                  11.1223444,
-                  47.5572422,
-                ],
-                [
-                  11.1164297,
-                  47.558156300000014,
-                ],
-              ],
-              "type": "LineString",
-            },
-            "properties": {
-              "color": "hsl(0, 82%, 42%)",
-              "id": "4d07b91974c5a5b3a0ad9e1928c0a6d433c5093b",
-              "name_and_type": "Skilift Oberau (T-bar)",
-              "skiAreas": [],
-              "status": "operating",
-            },
-            "type": "Feature",
-          },
-        ],
-        "type": "FeatureCollection",
+    ],
+    "type": "FeatureCollection",
+  },
+  "output/mapboxgl_lifts.geojson" => {
+    "features": [
+      {
+        "geometry": {
+          "coordinates": [
+            [
+              11.1223444,
+              47.5572422,
+            ],
+            [
+              11.1164297,
+              47.558156300000014,
+            ],
+          ],
+          "type": "LineString",
+        },
+        "properties": {
+          "color": "hsl(0, 82%, 42%)",
+          "id": "4d07b91974c5a5b3a0ad9e1928c0a6d433c5093b",
+          "name_and_type": "Skilift Oberau (T-bar)",
+          "skiAreas": [],
+          "status": "operating",
+        },
+        "type": "Feature",
       },
-      "output/mapboxgl_runs.geojson" => {
-        "features": [
-          {
-            "geometry": {
-              "coordinates": [
-                [
-                  [
-                    11.1164229,
-                    47.55812500000001,
-                  ],
-                  [
-                    11.116365499999999,
-                    47.5579742,
-                  ],
-                  [
-                    11.1171866,
-                    47.557641299999986,
-                  ],
-                  [
-                    11.1164229,
-                    47.55812500000001,
-                  ],
-                ],
+    ],
+    "type": "FeatureCollection",
+  },
+  "output/mapboxgl_runs.geojson" => {
+    "features": [
+      {
+        "geometry": {
+          "coordinates": [
+            [
+              [
+                11.1164229,
+                47.55812500000001,
               ],
-              "type": "Polygon",
-            },
-            "properties": {
-              "color": "hsl(208, 100%, 33%)",
-              "colorName": "blue",
-              "difficulty": "easy",
-              "downhill": 0,
-              "gladed": null,
-              "grooming": null,
-              "id": "6e08a9b5ca97fc7d1fff89f008c987280b3b6b20",
-              "lit": null,
-              "name": "Oberauer Skiabfahrt",
-              "oneway": true,
-              "patrolled": null,
-              "skiAreas": [],
-            },
-            "type": "Feature",
-          },
-        ],
-        "type": "FeatureCollection",
+              [
+                11.116365499999999,
+                47.5579742,
+              ],
+              [
+                11.1171866,
+                47.557641299999986,
+              ],
+              [
+                11.1164229,
+                47.55812500000001,
+              ],
+            ],
+          ],
+          "type": "Polygon",
+        },
+        "properties": {
+          "color": "hsl(208, 100%, 33%)",
+          "colorName": "blue",
+          "difficulty": "easy",
+          "downhill": 0,
+          "gladed": null,
+          "grooming": null,
+          "id": "6e08a9b5ca97fc7d1fff89f008c987280b3b6b20",
+          "lit": null,
+          "name": "Oberauer Skiabfahrt",
+          "oneway": true,
+          "patrolled": null,
+          "skiAreas": [],
+        },
+        "type": "Feature",
       },
-      "output/mapboxgl_ski_areas.geojson" => {
-        "features": [
-          {
-            "geometry": {
-              "coordinates": [
-                11.122066084534,
-                47.557111836837,
-              ],
-              "type": "Point",
-            },
-            "properties": {
-              "downhillDistance": null,
-              "has_downhill": true,
-              "id": "02911313f405ef0415188ceb357b415f02af5d64",
-              "maxElevation": null,
-              "name": "Rabenkopflift Oberau",
-              "nordicDistance": null,
-              "status": null,
-              "vertical": null,
-            },
-            "type": "Feature",
-          },
-        ],
-        "type": "FeatureCollection",
+    ],
+    "type": "FeatureCollection",
+  },
+  "output/mapboxgl_ski_areas.geojson" => {
+    "features": [
+      {
+        "geometry": {
+          "coordinates": [
+            11.122066084534,
+            47.557111836837,
+          ],
+          "type": "Point",
+        },
+        "properties": {
+          "downhillDistance": null,
+          "has_downhill": true,
+          "id": "02911313f405ef0415188ceb357b415f02af5d64",
+          "maxElevation": null,
+          "name": "Rabenkopflift Oberau",
+          "nordicDistance": null,
+          "status": null,
+          "vertical": null,
+        },
+        "type": "Feature",
       },
-      "output/runs.geojson" => {
-        "features": [
-          {
-            "geometry": {
-              "coordinates": [
-                [
-                  [
-                    11.1164229,
-                    47.558125000000004,
-                  ],
-                  [
-                    11.116365499999999,
-                    47.5579742,
-                  ],
-                  [
-                    11.1171866,
-                    47.55764129999999,
-                  ],
-                  [
-                    11.1164229,
-                    47.558125000000004,
-                  ],
-                ],
+    ],
+    "type": "FeatureCollection",
+  },
+  "output/runs.geojson" => {
+    "features": [
+      {
+        "geometry": {
+          "coordinates": [
+            [
+              [
+                11.1164229,
+                47.558125000000004,
               ],
-              "type": "Polygon",
+              [
+                11.116365499999999,
+                47.5579742,
+              ],
+              [
+                11.1171866,
+                47.55764129999999,
+              ],
+              [
+                11.1164229,
+                47.558125000000004,
+              ],
+            ],
+          ],
+          "type": "Polygon",
+        },
+        "properties": {
+          "color": "hsl(208, 100%, 33%)",
+          "colorName": "blue",
+          "convention": "europe",
+          "description": null,
+          "difficulty": "easy",
+          "gladed": null,
+          "grooming": null,
+          "id": "6e08a9b5ca97fc7d1fff89f008c987280b3b6b20",
+          "lit": null,
+          "location": null,
+          "name": "Oberauer Skiabfahrt",
+          "oneway": true,
+          "patrolled": null,
+          "ref": null,
+          "skiAreas": [],
+          "sources": [
+            {
+              "id": "way/227407268",
+              "type": "openstreetmap",
             },
-            "properties": {
-              "color": "hsl(208, 100%, 33%)",
-              "colorName": "blue",
-              "convention": "europe",
-              "description": null,
-              "difficulty": "easy",
-              "gladed": null,
-              "grooming": null,
-              "id": "6e08a9b5ca97fc7d1fff89f008c987280b3b6b20",
-              "lit": null,
-              "location": null,
-              "name": "Oberauer Skiabfahrt",
-              "oneway": true,
-              "patrolled": null,
-              "ref": null,
-              "skiAreas": [],
-              "sources": [
-                {
-                  "id": "way/227407268",
-                  "type": "openstreetmap",
-                },
-              ],
-              "status": "operating",
-              "type": "run",
-              "uses": [
-                "downhill",
-              ],
-              "websites": [],
-            },
-            "type": "Feature",
-          },
-        ],
-        "type": "FeatureCollection",
+          ],
+          "status": "operating",
+          "type": "run",
+          "uses": [
+            "downhill",
+          ],
+          "websites": [],
+          "wikidata_id": null,
+        },
+        "type": "Feature",
       },
-      "output/ski_areas.geojson" => {
-        "features": [
-          {
-            "geometry": {
-              "coordinates": [
-                11.122066084534,
-                47.557111836837,
-              ],
-              "type": "Point",
+    ],
+    "type": "FeatureCollection",
+  },
+  "output/ski_areas.geojson" => {
+    "features": [
+      {
+        "geometry": {
+          "coordinates": [
+            11.122066084534,
+            47.557111836837,
+          ],
+          "type": "Point",
+        },
+        "properties": {
+          "activities": [
+            "downhill",
+          ],
+          "generated": false,
+          "id": "02911313f405ef0415188ceb357b415f02af5d64",
+          "location": null,
+          "name": "Rabenkopflift Oberau",
+          "runConvention": "europe",
+          "sources": [
+            {
+              "id": "13666",
+              "type": "skimap.org",
             },
-            "properties": {
-              "activities": [
-                "downhill",
-              ],
-              "generated": false,
-              "id": "02911313f405ef0415188ceb357b415f02af5d64",
-              "location": null,
-              "name": "Rabenkopflift Oberau",
-              "runConvention": "europe",
-              "sources": [
-                {
-                  "id": "13666",
-                  "type": "skimap.org",
-                },
-              ],
-              "status": null,
-              "type": "skiArea",
-              "websites": [],
-            },
-            "type": "Feature",
-          },
-        ],
-        "type": "FeatureCollection",
+          ],
+          "status": null,
+          "type": "skiArea",
+          "websites": [],
+          "wikidata_id": null,
+        },
+        "type": "Feature",
       },
-    }
-  `);
+    ],
+    "type": "FeatureCollection",
+  },
+}
+`);
 });
 
 it("shortens ski area names for Mapbox GL output", async () => {
@@ -464,55 +467,56 @@ it("processes OpenStreetMap ski areas", async () => {
 
   expect(TestHelpers.fileContents(paths.output.skiAreas))
     .toMatchInlineSnapshot(`
+{
+  "features": [
     {
-      "features": [
-        {
-          "geometry": {
-            "coordinates": [
-              [
-                [
-                  0,
-                  0,
-                ],
-                [
-                  0,
-                  1,
-                ],
-                [
-                  1,
-                  0,
-                ],
-                [
-                  0,
-                  0,
-                ],
-              ],
+      "geometry": {
+        "coordinates": [
+          [
+            [
+              0,
+              0,
             ],
-            "type": "Polygon",
-          },
-          "properties": {
-            "activities": [],
-            "generated": false,
-            "id": "c638251d70817a3d3ad227cce5d353d3abff6abb",
-            "location": null,
-            "name": null,
-            "runConvention": "europe",
-            "sources": [
-              {
-                "id": "way/13666",
-                "type": "openstreetmap",
-              },
+            [
+              0,
+              1,
             ],
-            "status": "operating",
-            "type": "skiArea",
-            "websites": [],
+            [
+              1,
+              0,
+            ],
+            [
+              0,
+              0,
+            ],
+          ],
+        ],
+        "type": "Polygon",
+      },
+      "properties": {
+        "activities": [],
+        "generated": false,
+        "id": "c638251d70817a3d3ad227cce5d353d3abff6abb",
+        "location": null,
+        "name": null,
+        "runConvention": "europe",
+        "sources": [
+          {
+            "id": "way/13666",
+            "type": "openstreetmap",
           },
-          "type": "Feature",
-        },
-      ],
-      "type": "FeatureCollection",
-    }
-  `);
+        ],
+        "status": "operating",
+        "type": "skiArea",
+        "websites": [],
+        "wikidata_id": null,
+      },
+      "type": "Feature",
+    },
+  ],
+  "type": "FeatureCollection",
+}
+`);
 });
 
 it("processes OpenStreetMap ski area sites", async () => {

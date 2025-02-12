@@ -22,7 +22,12 @@ import {
   FormattedInputRunProperties,
 } from "./FormattedInputRunFeature";
 import { Omit } from "./Omit";
-import { getOSMName, mapOSMBoolean, mapOSMString } from "./OSMTransforms";
+import {
+  getOSMFirstValue,
+  getOSMName,
+  mapOSMBoolean,
+  mapOSMString,
+} from "./OSMTransforms";
 import getStatusAndValue from "./Status";
 
 export function formatRun(
@@ -72,6 +77,7 @@ export function formatRun(
     ],
     location: null,
     websites: [tags.website].filter(notEmpty),
+    wikidata_id: getOSMFirstValue(tags, "wikidata"),
   };
 
   return buildFeature(feature.geometry, properties);

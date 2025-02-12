@@ -62,55 +62,56 @@ it("adds elevations to lift geometry", async () => {
   await prepare(paths, config);
 
   expect(TestHelpers.fileContents(paths.output.lifts)).toMatchInlineSnapshot(`
+{
+  "features": [
     {
-      "features": [
-        {
-          "geometry": {
-            "coordinates": [
-              [
-                11.1223444,
-                47.5572422,
-                0,
-              ],
-              [
-                11.1164297,
-                47.55815630000001,
-                1,
-              ],
-            ],
-            "type": "LineString",
+      "geometry": {
+        "coordinates": [
+          [
+            11.1223444,
+            47.5572422,
+            0,
+          ],
+          [
+            11.1164297,
+            47.55815630000001,
+            1,
+          ],
+        ],
+        "type": "LineString",
+      },
+      "properties": {
+        "bubble": null,
+        "capacity": null,
+        "color": "hsl(0, 82%, 42%)",
+        "description": null,
+        "duration": null,
+        "heating": null,
+        "id": "4d07b91974c5a5b3a0ad9e1928c0a6d433c5093b",
+        "liftType": "t-bar",
+        "location": null,
+        "name": "Skilift Oberau",
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "skiAreas": [],
+        "sources": [
+          {
+            "id": "way/227407273",
+            "type": "openstreetmap",
           },
-          "properties": {
-            "bubble": null,
-            "capacity": null,
-            "color": "hsl(0, 82%, 42%)",
-            "description": null,
-            "duration": null,
-            "heating": null,
-            "id": "4d07b91974c5a5b3a0ad9e1928c0a6d433c5093b",
-            "liftType": "t-bar",
-            "location": null,
-            "name": "Skilift Oberau",
-            "occupancy": null,
-            "oneway": null,
-            "ref": null,
-            "skiAreas": [],
-            "sources": [
-              {
-                "id": "way/227407273",
-                "type": "openstreetmap",
-              },
-            ],
-            "status": "operating",
-            "type": "lift",
-            "websites": [],
-          },
-          "type": "Feature",
-        },
-      ],
-      "type": "FeatureCollection",
-    }
-  `);
+        ],
+        "status": "operating",
+        "type": "lift",
+        "websites": [],
+        "wikidata_id": null,
+      },
+      "type": "Feature",
+    },
+  ],
+  "type": "FeatureCollection",
+}
+`);
 });
 
 it("adds elevations to run geometry & elevation profile", async () => {
@@ -237,53 +238,54 @@ it("completes without adding elevations when elevation server fails", async () =
   await prepare(paths, config);
 
   expect(TestHelpers.fileContents(paths.output.lifts)).toMatchInlineSnapshot(`
+{
+  "features": [
     {
-      "features": [
-        {
-          "geometry": {
-            "coordinates": [
-              [
-                11.1223444,
-                47.5572422,
-              ],
-              [
-                11.1164297,
-                47.55815630000001,
-              ],
-            ],
-            "type": "LineString",
+      "geometry": {
+        "coordinates": [
+          [
+            11.1223444,
+            47.5572422,
+          ],
+          [
+            11.1164297,
+            47.55815630000001,
+          ],
+        ],
+        "type": "LineString",
+      },
+      "properties": {
+        "bubble": null,
+        "capacity": null,
+        "color": "hsl(0, 82%, 42%)",
+        "description": null,
+        "duration": null,
+        "heating": null,
+        "id": "4d07b91974c5a5b3a0ad9e1928c0a6d433c5093b",
+        "liftType": "t-bar",
+        "location": null,
+        "name": "Skilift Oberau",
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "skiAreas": [],
+        "sources": [
+          {
+            "id": "way/227407273",
+            "type": "openstreetmap",
           },
-          "properties": {
-            "bubble": null,
-            "capacity": null,
-            "color": "hsl(0, 82%, 42%)",
-            "description": null,
-            "duration": null,
-            "heating": null,
-            "id": "4d07b91974c5a5b3a0ad9e1928c0a6d433c5093b",
-            "liftType": "t-bar",
-            "location": null,
-            "name": "Skilift Oberau",
-            "occupancy": null,
-            "oneway": null,
-            "ref": null,
-            "skiAreas": [],
-            "sources": [
-              {
-                "id": "way/227407273",
-                "type": "openstreetmap",
-              },
-            ],
-            "status": "operating",
-            "type": "lift",
-            "websites": [],
-          },
-          "type": "Feature",
-        },
-      ],
-      "type": "FeatureCollection",
-    }
-  `);
+        ],
+        "status": "operating",
+        "type": "lift",
+        "websites": [],
+        "wikidata_id": null,
+      },
+      "type": "Feature",
+    },
+  ],
+  "type": "FeatureCollection",
+}
+`);
 });
 
 it("adds elevations to run polygons", async () => {

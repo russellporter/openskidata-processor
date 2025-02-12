@@ -16,7 +16,7 @@ import {
 import placeholderSiteGeometry from "../utils/PlaceholderSiteGeometry";
 import notEmpty from "../utils/notEmpty";
 import buildFeature from "./FeatureBuilder";
-import { getOSMName } from "./OSMTransforms";
+import { getOSMFirstValue, getOSMName } from "./OSMTransforms";
 import { Omit } from "./Omit";
 import { getRunConvention } from "./RunFormatter";
 import getStatusAndValue from "./Status";
@@ -154,6 +154,7 @@ function propertiesForOpenStreetMapSkiArea(
     generated: false,
     status: status,
     websites: [tags.website].filter(notEmpty),
+    wikidata_id: getOSMFirstValue(tags, "wikidata"),
     runConvention: runConvention,
     location: null,
   };
@@ -177,6 +178,8 @@ function propertiesForSkiMapOrgSkiArea(
     status: feature.properties.status,
     runConvention: getRunConvention(feature),
     websites: [feature.properties.official_website].filter(notEmpty),
+    // TODO: #153 Get Wikidata ID from Skimap.org ID (https://github.com/russellporter/openskimap.org/issues/153)
+    wikidata_id: null,
     location: null,
   };
 }

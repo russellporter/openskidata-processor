@@ -52,6 +52,7 @@ function mergeSkiAreaProperties(
     status: primarySkiArea.status || otherSkiArea.status,
     type: primarySkiArea.type,
     websites: mergedWebsites(primarySkiArea, otherSkiArea),
+    wikidata_id: primarySkiArea.wikidata_id || otherSkiArea.wikidata_id,
     statistics: primarySkiArea.statistics,
     location: null,
   };

@@ -34,52 +34,53 @@ describe("SkiAreaFormatter", () => {
 
     expect(formatSkiArea(InputSkiAreaType.OPENSTREETMAP_LANDUSE)(feature))
       .toMatchInlineSnapshot(`
+{
+  "geometry": {
+    "coordinates": [
+      [
+        [
+          0,
+          0,
+        ],
+        [
+          0,
+          1,
+        ],
+        [
+          1,
+          0,
+        ],
+        [
+          0,
+          0,
+        ],
+      ],
+    ],
+    "type": "Polygon",
+  },
+  "properties": {
+    "activities": [],
+    "generated": false,
+    "id": "c638251d70817a3d3ad227cce5d353d3abff6abb",
+    "location": null,
+    "name": "Ski Area",
+    "runConvention": "europe",
+    "sources": [
       {
-        "geometry": {
-          "coordinates": [
-            [
-              [
-                0,
-                0,
-              ],
-              [
-                0,
-                1,
-              ],
-              [
-                1,
-                0,
-              ],
-              [
-                0,
-                0,
-              ],
-            ],
-          ],
-          "type": "Polygon",
-        },
-        "properties": {
-          "activities": [],
-          "generated": false,
-          "id": "c638251d70817a3d3ad227cce5d353d3abff6abb",
-          "location": null,
-          "name": "Ski Area",
-          "runConvention": "europe",
-          "sources": [
-            {
-              "id": "way/1",
-              "type": "openstreetmap",
-            },
-          ],
-          "status": "operating",
-          "type": "skiArea",
-          "websites": [
-            "http://example.com",
-          ],
-        },
-        "type": "Feature",
-      }
-    `);
+        "id": "way/1",
+        "type": "openstreetmap",
+      },
+    ],
+    "status": "operating",
+    "type": "skiArea",
+    "websites": [
+      "http://example.com",
+    ],
+    "wikidata_id": null,
+  },
+  "type": "Feature",
+}
+`);
   });
 
   it("formats status for abandoned OpenStreetMap ski area using lifecycle tagging", () => {
@@ -160,38 +161,39 @@ describe("SkiAreaFormatter", () => {
 
     expect(formatSkiArea(InputSkiAreaType.SKIMAP_ORG)(feature))
       .toMatchInlineSnapshot(`
+{
+  "geometry": {
+    "coordinates": [
+      0,
+      0,
+    ],
+    "type": "Point",
+  },
+  "properties": {
+    "activities": [
+      "downhill",
+    ],
+    "generated": false,
+    "id": "fde59eba834efdc0f8859c40c4211027d9b6e3e9",
+    "location": null,
+    "name": "Ski Area",
+    "runConvention": "europe",
+    "sources": [
       {
-        "geometry": {
-          "coordinates": [
-            0,
-            0,
-          ],
-          "type": "Point",
-        },
-        "properties": {
-          "activities": [
-            "downhill",
-          ],
-          "generated": false,
-          "id": "fde59eba834efdc0f8859c40c4211027d9b6e3e9",
-          "location": null,
-          "name": "Ski Area",
-          "runConvention": "europe",
-          "sources": [
-            {
-              "id": "1",
-              "type": "skimap.org",
-            },
-          ],
-          "status": "operating",
-          "type": "skiArea",
-          "websites": [
-            "http://example.com",
-          ],
-        },
-        "type": "Feature",
-      }
-    `);
+        "id": "1",
+        "type": "skimap.org",
+      },
+    ],
+    "status": "operating",
+    "type": "skiArea",
+    "websites": [
+      "http://example.com",
+    ],
+    "wikidata_id": null,
+  },
+  "type": "Feature",
+}
+`);
   });
 
   it("formats OpenStreetMap ski area site", () => {
@@ -206,35 +208,36 @@ describe("SkiAreaFormatter", () => {
 
     expect(formatSkiArea(InputSkiAreaType.OPENSTREETMAP_SITE)(site))
       .toMatchInlineSnapshot(`
+{
+  "geometry": {
+    "coordinates": [
+      360,
+      360,
+      1,
+    ],
+    "type": "Point",
+  },
+  "properties": {
+    "activities": [],
+    "generated": false,
+    "id": "2033ab9be8698fcd4794c24e42782bf33c124e8d",
+    "location": null,
+    "name": "Wendelstein",
+    "runConvention": "north_america",
+    "sources": [
       {
-        "geometry": {
-          "coordinates": [
-            360,
-            360,
-            1,
-          ],
-          "type": "Point",
-        },
-        "properties": {
-          "activities": [],
-          "generated": false,
-          "id": "2033ab9be8698fcd4794c24e42782bf33c124e8d",
-          "location": null,
-          "name": "Wendelstein",
-          "runConvention": "north_america",
-          "sources": [
-            {
-              "id": "relation/1",
-              "type": "openstreetmap",
-            },
-          ],
-          "status": "operating",
-          "type": "skiArea",
-          "websites": [],
-        },
-        "type": "Feature",
-      }
-    `);
+        "id": "relation/1",
+        "type": "openstreetmap",
+      },
+    ],
+    "status": "operating",
+    "type": "skiArea",
+    "websites": [],
+    "wikidata_id": null,
+  },
+  "type": "Feature",
+}
+`);
   });
 
   it("uses localized names of site", () => {

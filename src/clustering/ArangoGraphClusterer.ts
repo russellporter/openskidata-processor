@@ -740,6 +740,7 @@ export default async function clusterArangoGraph(
         sources: [],
         runConvention: getRunConvention(geometry),
         websites: [],
+        wikidata_id: null,
         location: null,
       },
     };

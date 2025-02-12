@@ -7,8 +7,10 @@
     "testPathIgnorePatterns": [
       "/node_modules/",
       "/dist/"
-    ]
+    ],
+    "prettierPath": null
   },
+  "prettier": {},
   "dependencies": {
     "@turf/along": "^7",
     "@turf/bbox-polygon": "^7",
@@ -36,7 +38,7 @@
     "merge2": "^1",
     "ngeohash": "^0.6.3",
     "object-hash": "^3",
-    "openskidata-format": "^0.14.0",
+    "openskidata-format": "^0.15.0",
     "osmtogeojson": "3.0.0-beta.5",
     "parallel-transform": "^1",
     "stream-to-promise": "^3",

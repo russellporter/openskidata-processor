@@ -34,36 +34,37 @@ describe("RunFormatter", () => {
       inputRun({ type: "way", id: 1, tags: { "piste:type": "downhill" } }),
     );
     expect(run!.properties).toMatchInlineSnapshot(`
-      {
-        "color": "hsl(0, 0%, 35%)",
-        "colorName": "grey",
-        "convention": "europe",
-        "description": null,
-        "difficulty": null,
-        "gladed": null,
-        "grooming": null,
-        "id": "64e1be16905be0666594b5c433d4aa1aa1a64e5f",
-        "lit": null,
-        "location": null,
-        "name": null,
-        "oneway": true,
-        "patrolled": null,
-        "ref": null,
-        "skiAreas": [],
-        "sources": [
-          {
-            "id": "way/1",
-            "type": "openstreetmap",
-          },
-        ],
-        "status": "operating",
-        "type": "run",
-        "uses": [
-          "downhill",
-        ],
-        "websites": [],
-      }
-    `);
+{
+  "color": "hsl(0, 0%, 35%)",
+  "colorName": "grey",
+  "convention": "europe",
+  "description": null,
+  "difficulty": null,
+  "gladed": null,
+  "grooming": null,
+  "id": "64e1be16905be0666594b5c433d4aa1aa1a64e5f",
+  "lit": null,
+  "location": null,
+  "name": null,
+  "oneway": true,
+  "patrolled": null,
+  "ref": null,
+  "skiAreas": [],
+  "sources": [
+    {
+      "id": "way/1",
+      "type": "openstreetmap",
+    },
+  ],
+  "status": "operating",
+  "type": "run",
+  "uses": [
+    "downhill",
+  ],
+  "websites": [],
+  "wikidata_id": null,
+}
+`);
   });
 
   it("uses piste name instead of other name", () => {

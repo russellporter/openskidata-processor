@@ -96,6 +96,10 @@ export function mergedProperties(
     websites: mergedAndUniqued(
       ...allProperties.map((properties) => properties.websites),
     ),
+    wikidata_id:
+      allProperties
+        .map((properties) => properties.wikidata_id)
+        .find((id) => id !== null) || null,
   };
 }
 

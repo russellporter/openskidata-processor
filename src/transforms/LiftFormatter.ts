@@ -11,6 +11,7 @@ import { osmID } from "../features/OSMGeoJSONProperties";
 import notEmpty from "../utils/notEmpty";
 import buildFeature from "./FeatureBuilder";
 import {
+  getOSMFirstValue,
   getOSMName,
   mapOSMBoolean,
   mapOSMNumber,
@@ -65,6 +66,7 @@ export function formatLift(feature: InputLiftFeature): LiftFeature | null {
     ],
     location: null,
     websites: [tags.website].filter(notEmpty),
+    wikidata_id: getOSMFirstValue(tags, "wikidata"),
   };
 
   return buildFeature(feature.geometry, properties);
