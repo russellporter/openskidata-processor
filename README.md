@@ -15,6 +15,8 @@ To download data for only a specific area, specify a GeoJSON format bounding box
 
 The output is placed in several `geojson` and `mbtiles` files within the `data` folder. The output location can be overridden by setting `OUTPUT_DIR`.
 
+The processor is RAM hungry. `MAX_OLD_SPACE_SIZE` can be set to adjust the memory usage of the node process, it defaults to 4GB which is sufficient for most cases.
+
 ### Advanced
 
 For quick development iterations, `./run.sh --skip-download` uses the previously downloaded data.

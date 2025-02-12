@@ -82,8 +82,8 @@
     "test": "jest",
     "record-tests": "jest -u",
     "check-types": "tsc",
-    "download": "npm run build && node --optimize_for_size --max_old_space_size=3072 dist/scripts/download.js",
-    "prepare-geojson": "npm run build && node --optimize_for_size --max_old_space_size=3072 dist/scripts/prepare_geojson.js",
+    "download": "npm run build && node --optimize_for_size --max_old_space_size=${MAX_OLD_SPACE_SIZE:-4096} dist/scripts/download.js",
+    "prepare-geojson": "npm run build && node --optimize_for_size --max_old_space_size=${MAX_OLD_SPACE_SIZE:-4096} dist/scripts/prepare_geojson.js"
   },
   "author": "Russell Porter",
   "license": "ISC"
