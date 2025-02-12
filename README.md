@@ -36,4 +36,4 @@ To enable, set `GEOCODING_SERVER_URL` to an endpoint that reverse geocodes in th
 
 ## Issue reporting
 
-Feature requests and bug reports are tracked in the [main project repo](https://github.com/russellporter/openskimap.org/issues/). 
+Feature requests and bug reports are tracked in the [main project repo](https://github.com/russellporter/openskimap.org/issues/).

@@ -52,7 +52,7 @@ export default class Geocoder {
       {
         batch: false,
         cacheMap: new LRUMap(config.inMemoryCacheSize),
-      }
+      },
     );
   }
 
@@ -63,12 +63,12 @@ export default class Geocoder {
   };
 
   private geocodeInternal = async (
-    geohash: string
+    geohash: string,
   ): Promise<Geocode | null> => {
     try {
       const cacheObject = await cacache.get(
         this.config.cacheDir,
-        cacheKey(geohash)
+        cacheKey(geohash),
       );
       const content = JSON.parse(cacheObject.data.toString());
       if (content.timestamp + this.config.diskTTL < currentTimestamp()) {
@@ -108,7 +108,7 @@ export default class Geocoder {
               error !== null || (response !== null && response.status >= 400)
             );
           },
-        }
+        },
       ).then((res) => res.json());
 
       await cacache.put(
@@ -117,7 +117,7 @@ export default class Geocoder {
         JSON.stringify({
           data: response,
           timestamp: currentTimestamp(),
-        })
+        }),
       );
       return this.enhance(response);
     });
@@ -126,7 +126,7 @@ export default class Geocoder {
   private enhance = (rawGeocode: PhotonGeocode): Geocode | null => {
     console.assert(
       rawGeocode.features.length <= 1,
-      "Expected Photon geocode to only have at most a single feature."
+      "Expected Photon geocode to only have at most a single feature.",
     );
     if (rawGeocode.features.length === 0) {
       return null;
@@ -140,7 +140,7 @@ export default class Geocoder {
     const country = iso3166_2.getDataSet()[properties.countrycode];
     if (!country) {
       console.log(
-        `Could not find country info for code ${properties.countrycode}`
+        `Could not find country info for code ${properties.countrycode}`,
       );
       return null;
     }
@@ -150,14 +150,14 @@ export default class Geocoder {
     if (properties.state !== undefined) {
       region =
         country.regions.find(
-          (region: Region) => region.name === properties.state
+          (region: Region) => region.name === properties.state,
         ) || null;
     }
 
     if (region === null && properties.county !== undefined) {
       region =
         country.regions.find(
-          (region: Region) => region.name === properties.county
+          (region: Region) => region.name === properties.county,
         ) || null;
     }
 

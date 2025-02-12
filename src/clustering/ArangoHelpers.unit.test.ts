@@ -9,7 +9,7 @@ describe("isArangoInvalidGeometryError", () => {
             errorMessage: "AQL: Polygon is not valid (while executing)",
           },
         },
-      })
+      }),
     ).toBe(true);
   });
   it("is false for other error", () => {
@@ -18,14 +18,14 @@ describe("isArangoInvalidGeometryError", () => {
         response: {
           parsedBody: { errorMessage: "AQL: Connection error" },
         },
-      })
+      }),
     ).toBe(false);
   });
   it("is false for error with null response", () => {
     expect(
       isArangoInvalidGeometryError({
         response: null,
-      })
+      }),
     ).toBe(false);
   });
 });

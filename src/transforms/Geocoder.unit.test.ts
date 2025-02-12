@@ -93,8 +93,8 @@ describe("Geocoder", () => {
         "DE",
         "Bavaria",
         "Landkreis Garmisch-Partenkirchen",
-        undefined
-      )
+        undefined,
+      ),
     );
 
     const result = await defaultGeocoder().geocode([0, 0]);
@@ -121,8 +121,8 @@ describe("Geocoder", () => {
         "DE",
         "Bavaria",
         "Landkreis Garmisch-Partenkirchen",
-        "Mittenwald"
-      )
+        "Mittenwald",
+      ),
     );
 
     const result = await defaultGeocoder().geocode([0, 0]);
@@ -145,7 +145,7 @@ describe("Geocoder", () => {
   it("can enhance a US geocode", async () => {
     // https://photon.komoot.io/reverse?lon=-120.238408&lat=39.154157&lang=en
     mockHTTPResponse(
-      mockPhotonGeocode("US", "California", "Placer County", "Alpine Meadows")
+      mockPhotonGeocode("US", "California", "Placer County", "Alpine Meadows"),
     );
 
     const result = await defaultGeocoder().geocode([0, 0]);
@@ -168,7 +168,7 @@ describe("Geocoder", () => {
   it("can enhance a Czechia geocode", async () => {
     // https://photon.komoot.io/reverse?lon=15.51456&lat=50.68039&lang=en
     mockHTTPResponse(
-      mockPhotonGeocode("CZ", "Northeast", "Liberec Region", "Vítkovice")
+      mockPhotonGeocode("CZ", "Northeast", "Liberec Region", "Vítkovice"),
     );
 
     const result = await defaultGeocoder().geocode([0, 0]);
@@ -191,7 +191,7 @@ describe("Geocoder", () => {
   it("can enhance a Japan geocode", async () => {
     // https://photon.komoot.io/reverse?lon=132.3609&lat=34.8246&lang=en
     mockHTTPResponse(
-      mockPhotonGeocode("JP", "Shimane Prefecture", undefined, "Hamada")
+      mockPhotonGeocode("JP", "Shimane Prefecture", undefined, "Hamada"),
     );
 
     const result = await defaultGeocoder().geocode([0, 0]);
@@ -213,7 +213,7 @@ describe("Geocoder", () => {
 
   it("does not geocode invalid country", async () => {
     mockHTTPResponse(
-      mockPhotonGeocode("DEUS", undefined, undefined, undefined)
+      mockPhotonGeocode("DEUS", undefined, undefined, undefined),
     );
 
     const result = await defaultGeocoder().geocode([0, 0]);
@@ -223,7 +223,7 @@ describe("Geocoder", () => {
 
   it("does not geocode invalid region", async () => {
     mockHTTPResponse(
-      mockPhotonGeocode("DE", "British Columbia", undefined, undefined)
+      mockPhotonGeocode("DE", "British Columbia", undefined, undefined),
     );
 
     const result = await defaultGeocoder().geocode([0, 0]);
@@ -272,7 +272,7 @@ function mockPhotonGeocode(
   countryCode: string | undefined,
   state: string | undefined,
   county: string | undefined,
-  city: string | undefined
+  city: string | undefined,
 ): PhotonGeocode {
   return {
     type: "FeatureCollection",
