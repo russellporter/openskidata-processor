@@ -16,6 +16,7 @@ docker compose run --rm tippecanoe \
 docker compose run --rm tippecanoe \
   tippecanoe -Q -o /data/ski_areas.mbtiles \
 		-f -z 15 -Z 0 -B 0 \
+		--drop-densest-as-needed \
 		--named-layer=skiareas:/data/mapboxgl_ski_areas.geojson;
 
 docker compose run --rm tippecanoe \
