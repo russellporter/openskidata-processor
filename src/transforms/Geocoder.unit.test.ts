@@ -8,10 +8,13 @@ describe("Geocoder", () => {
   it("caches in memory", async () => {
     let requestCount = 0;
     nock(geocoderURL)
-      .get("/reverse?lon=-0.0054931640625&lat=-0.00274658203125&lang=en")
+      .get(
+        "/reverse?lon=-0.0054931640625&lat=-0.00274658203125&lang=en&limit=1&radius=5",
+      )
       .reply(200, () => {
         requestCount++;
-        return mockPhotonGeocode("DE", undefined, undefined, undefined);
+        return mockPhotonGeocode("DE", undefined, undefined, undefined)
+          .response;
       });
 
     const geocoder = new Geocoder({
@@ -35,10 +38,13 @@ describe("Geocoder", () => {
   it("caches on disk", async () => {
     let requestCount = 0;
     nock(geocoderURL)
-      .get("/reverse?lon=-0.0054931640625&lat=-0.00274658203125&lang=en")
+      .get(
+        "/reverse?lon=-0.0054931640625&lat=-0.00274658203125&lang=en&limit=1&radius=5",
+      )
       .reply(200, () => {
         requestCount++;
-        return mockPhotonGeocode("DE", undefined, undefined, undefined);
+        return mockPhotonGeocode("DE", undefined, undefined, undefined)
+          .response;
       });
 
     const geocoder = new Geocoder({
@@ -255,16 +261,22 @@ function defaultGeocoder() {
 
 function mockHTTPResponse(geocode: PhotonGeocode) {
   nock(geocoderURL)
-    .get("/reverse?lon=-0.0054931640625&lat=-0.00274658203125&lang=en")
+    .get(
+      "/reverse?lon=-0.0054931640625&lat=-0.00274658203125&lang=en&limit=1&radius=5",
+    )
     .reply(200, () => {
-      return geocode;
+      return geocode.response;
     });
 }
 
 function mockPhotonNoDataGeocode(): PhotonGeocode {
   return {
-    type: "FeatureCollection",
-    features: [],
+    timestamp: 0,
+    url: "",
+    response: {
+      type: "FeatureCollection",
+      features: [],
+    },
   };
 }
 
@@ -275,21 +287,25 @@ function mockPhotonGeocode(
   city: string | undefined,
 ): PhotonGeocode {
   return {
-    type: "FeatureCollection",
-    features: [
-      {
-        type: "Feature",
-        geometry: {
-          type: "Point",
-          coordinates: [0, 0],
+    timestamp: 0,
+    url: "",
+    response: {
+      type: "FeatureCollection",
+      features: [
+        {
+          type: "Feature",
+          geometry: {
+            type: "Point",
+            coordinates: [0, 0],
+          },
+          properties: {
+            countrycode: countryCode,
+            state: state,
+            county: county,
+            city: city,
+          },
         },
-        properties: {
-          countrycode: countryCode,
-          state: state,
-          county: county,
-          city: city,
-        },
-      },
-    ],
+      ],
+    },
   };
 }

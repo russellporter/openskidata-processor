@@ -8,16 +8,20 @@ import { LRUMap } from "lru_map";
 import * as ngeohash from "ngeohash";
 import * as Config from "../Config";
 
-export type PhotonGeocode = GeoJSON.FeatureCollection<
-  GeoJSON.Geometry,
-  {
-    country?: string;
-    countrycode?: string;
-    state?: string;
-    county?: string;
-    city?: string;
-  }
->;
+export type PhotonGeocode = {
+  url: string;
+  timestamp: number;
+  response: GeoJSON.FeatureCollection<
+    GeoJSON.Geometry,
+    {
+      country?: string;
+      countrycode?: string;
+      state?: string;
+      county?: string;
+      city?: string;
+    }
+  >;
+};
 
 export type Geocode = {
   iso3166_1Alpha2: string;
@@ -38,16 +42,16 @@ iso3166_2.changeNameProvider("osm");
 
 export default class Geocoder {
   private config: Config.GeocodingServerConfig;
-  private loader: DataLoader<string, Geocode | null>;
+  private loader: DataLoader<string, PhotonGeocode>;
   private remoteErrorCount = 0;
   private maxRemoteErrors = 10;
   private mutex = new Mutex();
 
   constructor(config: Config.GeocodingServerConfig) {
     this.config = config;
-    this.loader = new DataLoader<string, Geocode | null>(
+    this.loader = new DataLoader<string, PhotonGeocode>(
       async (loadForKeys) => {
-        return [await this.geocodeInternal(loadForKeys[0])];
+        return [await this.rawGeocodeLocalOrRemote(loadForKeys[0])];
       },
       {
         batch: false,
@@ -57,82 +61,95 @@ export default class Geocoder {
   }
 
   geocode = async (position: GeoJSON.Position): Promise<Geocode | null> => {
+    const rawGeocode = await this.rawGeocode(position);
+    return this.enhance(rawGeocode);
+  };
+
+  rawGeocode = async (position: GeoJSON.Position): Promise<PhotonGeocode> => {
     const geohash = ngeohash.encode(position[1], position[0], geocodePrecision);
 
     return await this.loader.load(geohash);
   };
 
-  private geocodeInternal = async (
+  private rawGeocodeLocalOrRemote = async (
     geohash: string,
-  ): Promise<Geocode | null> => {
+  ): Promise<PhotonGeocode> => {
     try {
-      const cacheObject = await cacache.get(
-        this.config.cacheDir,
-        cacheKey(geohash),
-      );
-      const content = JSON.parse(cacheObject.data.toString());
+      let content = await this.rawGeocodeLocal(geohash);
       if (content.timestamp + this.config.diskTTL < currentTimestamp()) {
         throw "Cache expired, need to refetch";
       }
-      return this.enhance(content.data);
+      return content;
     } catch {
       if (this.remoteErrorCount >= this.maxRemoteErrors) {
         throw "Too many errors, not trying remote";
       }
 
       try {
-        return this.geocodeRemote(geohash);
-      } catch {
+        return await this.rawGeocodeRemote(geohash);
+      } catch (error) {
         this.remoteErrorCount++;
-        return null;
+        throw error;
       }
     }
   };
 
-  private geocodeRemote = async (geohash: string): Promise<Geocode | null> => {
+  private rawGeocodeLocal = async (geohash: string): Promise<PhotonGeocode> => {
+    // Promise is rejected if cached object is not found
+    const cacheObject = await cacache.get(
+      this.config.cacheDir,
+      cacheKey(geohash),
+    );
+    return JSON.parse(cacheObject.data.toString());
+  };
+
+  private rawGeocodeRemote = async (
+    geohash: string,
+  ): Promise<PhotonGeocode> => {
     return this.mutex.runExclusive(async () => {
       const point = ngeohash.decode(geohash);
-      const response = await fetchRetry(fetch)(
-        `${this.config.url}?lon=${point.longitude}&lat=${point.latitude}&lang=en`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          retryDelay: 10000,
-          retryOn: (attempt, error, response) => {
-            if (attempt > 1) {
-              return false;
-            }
-            return (
-              error !== null || (response !== null && response.status >= 400)
-            );
-          },
+      const url = `${this.config.url}?lon=${point.longitude}&lat=${point.latitude}&lang=en&limit=1&radius=5`;
+      const response = await fetchRetry(fetch)(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
         },
-      ).then((res) => res.json());
+        retryDelay: 10000,
+        retryOn: (attempt, error, response) => {
+          if (attempt > 1) {
+            return false;
+          }
+          return (
+            error !== null || (response !== null && response.status >= 400)
+          );
+        },
+      }).then((res) => res.json());
+
+      const data: PhotonGeocode = {
+        url: url,
+        response: response,
+        timestamp: currentTimestamp(),
+      };
 
       await cacache.put(
         this.config.cacheDir,
         cacheKey(geohash),
-        JSON.stringify({
-          data: response,
-          timestamp: currentTimestamp(),
-        }),
+        JSON.stringify(data),
       );
-      return this.enhance(response);
+      return data;
     });
   };
 
   private enhance = (rawGeocode: PhotonGeocode): Geocode | null => {
     console.assert(
-      rawGeocode.features.length <= 1,
+      rawGeocode.response.features.length <= 1,
       "Expected Photon geocode to only have at most a single feature.",
     );
-    if (rawGeocode.features.length === 0) {
+    if (rawGeocode.response.features.length === 0) {
       return null;
     }
 
-    const properties = rawGeocode.features[0].properties;
+    const properties = rawGeocode.response.features[0].properties;
     if (!properties.countrycode) {
       return null;
     }
