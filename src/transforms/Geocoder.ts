@@ -155,6 +155,22 @@ export default class Geocoder {
     }
 
     const country = iso3166_2.getDataSet()[properties.countrycode];
+
+    if (!country && properties.countrycode === "XK") {
+      // Kosovo is not in the iso3166-2-db dataset
+      return {
+        iso3166_1Alpha2: "XK",
+        iso3166_2: null,
+        localized: {
+          en: {
+            country: "Kosovo",
+            region: null,
+            locality: properties.city || null,
+          },
+        },
+      };
+    }
+
     if (!country) {
       console.log(
         `Could not find country info for code ${properties.countrycode}`,

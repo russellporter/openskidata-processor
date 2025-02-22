@@ -171,6 +171,34 @@ describe("Geocoder", () => {
     `);
   });
 
+  it("can enhance a Kosovo geocode", async () => {
+    // https://photon.komoot.io/reverse?lon=21.043023492030844&lat=42.17978924447299&lang=en
+    mockHTTPResponse(
+      mockPhotonGeocode(
+        "XK",
+        undefined,
+        "District of Ferizaj",
+        "Municipality of Štrpce",
+      ),
+    );
+
+    const result = await defaultGeocoder().geocode([0, 0]);
+
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "iso3166_1Alpha2": "XK",
+        "iso3166_2": null,
+        "localized": {
+          "en": {
+            "country": "Kosovo",
+            "locality": "Municipality of Štrpce",
+            "region": null,
+          },
+        },
+      }
+    `);
+  });
+
   it("can enhance a Czechia geocode", async () => {
     // https://photon.komoot.io/reverse?lon=15.51456&lat=50.68039&lang=en
     mockHTTPResponse(
