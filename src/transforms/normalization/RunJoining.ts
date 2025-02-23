@@ -49,16 +49,6 @@ export function mergedProperties(
     throw "No input properties";
   }
 
-  const difficultyAndColor = allProperties
-    .map((p) => {
-      return {
-        difficulty: p.difficulty,
-        color: p.color,
-        colorName: p.colorName,
-      };
-    })
-    .reduce(difficultyReducer);
-
   return {
     type: FeatureType.Run,
     id: allProperties[0].id,
@@ -66,8 +56,10 @@ export function mergedProperties(
     name: sanitizeUniqueAndJoin(allProperties.map((p) => p.name)),
     ref: sanitizeUniqueAndJoin(allProperties.map((p) => p.ref)),
     description: sanitizeUniqueAndJoin(allProperties.map((p) => p.description)),
-    difficulty: difficultyAndColor.difficulty,
-    convention: allProperties[0].convention,
+    difficulty: allProperties
+      .map((p) => p.difficulty)
+      .reduce(difficultyReducer),
+    difficultyConvention: allProperties[0].difficultyConvention,
     status: allProperties.map((p) => p.status).reduce(statusReducer),
     oneway: allProperties.reduce(
       (accumulated, properties) => {
@@ -85,14 +77,11 @@ export function mergedProperties(
     gladed: allProperties.map((p) => p.gladed).reduce(gladedReducer),
     patrolled: allProperties.map((p) => p.patrolled).reduce(patrolledReducer),
     grooming: allProperties.map((p) => p.grooming).reduce(groomingReducer),
-    color: difficultyAndColor.color,
-    colorName: difficultyAndColor.colorName,
     skiAreas: uniquedByID(allProperties.flatMap((p) => p.skiAreas)),
     elevationProfile: allProperties[0].elevationProfile,
     sources: uniquedSources(
       allProperties.flatMap((properties) => properties.sources),
     ),
-    location: null,
     websites: mergedAndUniqued(
       ...allProperties.map((properties) => properties.websites),
     ),
@@ -166,7 +155,7 @@ function priorityReducer<V>(values: V[]): Reducer<V> {
   return pickReducer(sortPriority(values));
 }
 
-const difficultyPriority = sortPriority([
+const difficultyReducer = priorityReducer([
   RunDifficulty.NOVICE,
   RunDifficulty.EASY,
   RunDifficulty.INTERMEDIATE,
@@ -176,19 +165,6 @@ const difficultyPriority = sortPriority([
   RunDifficulty.EXTREME,
   null,
 ]);
-
-function difficultyReducer<V extends { difficulty: RunDifficulty | null }>(
-  previousValue: V,
-  currentValue: V,
-): V {
-  return comparePriority(
-    previousValue.difficulty,
-    currentValue.difficulty,
-    difficultyPriority,
-  ) == ComparisonResult.LEFT
-    ? previousValue
-    : currentValue;
-}
 
 const groomingReducer = priorityReducer([
   RunGrooming.ClassicAndSkating,

@@ -1,4 +1,4 @@
-import { Activity, Status } from "openskidata-format";
+import { SkiAreaActivity, Status } from "openskidata-format";
 import OSMGeoJSONProperties from "./OSMGeoJSONProperties";
 
 // A ski area from Skimap.org
@@ -7,7 +7,7 @@ export interface InputSkiMapOrgSkiAreaProperties {
   name?: string;
   scalerank: number;
   status: Status | null;
-  activities: Activity[];
+  activities: SkiAreaActivity[];
   official_website: string | null;
 }
 

@@ -1,8 +1,7 @@
 import * as TurfHelper from "@turf/helpers";
 import * as assert from "assert";
 import { GeoJsonObject } from "geojson";
-import { RunProperties } from "openskidata-format";
-import Source, { SourceType } from "openskidata-format/dist/Source";
+import { RunProperties, Source, SourceType } from "openskidata-format";
 import * as TopoJSONClient from "topojson-client";
 import * as TopoJSONServer from "topojson-server";
 import { InputRunGeometry } from "../../features/RunFeature";

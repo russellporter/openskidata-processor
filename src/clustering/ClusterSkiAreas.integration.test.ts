@@ -1,10 +1,10 @@
 import {
-  Activity,
   LiftType,
   RunDifficulty,
   RunFeature,
   RunGrooming,
   RunUse,
+  SkiAreaActivity,
   SkiAreaFeature,
   SourceType,
   Status,
@@ -18,6 +18,7 @@ import {
   simplifiedSkiAreaFeatureWithSources,
   simplifiedSkiAreaFeatureWithStatistics,
 } from "../TestHelpers";
+import { toSkiAreaSummary } from "../transforms/toSkiAreaSummary";
 import clusterSkiAreas from "./ClusterSkiAreas";
 
 let mockUuidCount = 0;
@@ -384,7 +385,7 @@ it("clusters ski areas", async () => {
         id: "1",
         name: "Rabenkopflift Oberau",
         status: Status.Operating,
-        activities: [Activity.Downhill],
+        activities: [SkiAreaActivity.Downhill],
         sources: [{ type: SourceType.SKIMAP_ORG, id: "13666" }],
         geometry: {
           type: "Point",
@@ -491,7 +492,7 @@ it("clusters ski area activities independently", async () => {
     [
       TestHelpers.mockSkiAreaFeature({
         id: "1",
-        activities: [Activity.Downhill, Activity.Nordic],
+        activities: [SkiAreaActivity.Downhill, SkiAreaActivity.Nordic],
         geometry: {
           type: "Point",
           coordinates: [0, 0],
@@ -699,54 +700,54 @@ it("generates elevation statistics for run & lift based on lift served skiable v
   );
 
   expect(
-    TestHelpers.fileContents(paths.output.skiAreas).features.map(
-      simplifiedSkiAreaFeatureWithStatistics,
-    ),
-  ).toMatchInlineSnapshot(`
-    [
-      {
-        "activities": [
-          "downhill",
-        ],
-        "id": "mock-UUID-0",
-        "name": null,
-        "statistics": {
-          "lifts": {
-            "byType": {
-              "t-bar": {
-                "combinedElevationChange": 100,
-                "count": 1,
-                "lengthInKm": 0.4553273553619445,
-                "maxElevation": 200,
-                "minElevation": 100,
-              },
-            },
+  TestHelpers.fileContents(paths.output.skiAreas).features.map(
+    simplifiedSkiAreaFeatureWithStatistics
+  )
+).toMatchInlineSnapshot(`
+[
+  {
+    "activities": [
+      "downhill",
+    ],
+    "id": "mock-UUID-0",
+    "name": null,
+    "statistics": {
+      "lifts": {
+        "byType": {
+          "t-bar": {
+            "combinedElevationChange": 100,
+            "count": 1,
+            "lengthInKm": 0.4553273553619445,
             "maxElevation": 200,
             "minElevation": 100,
           },
-          "maxElevation": 200,
-          "minElevation": 150,
-          "runs": {
-            "byActivity": {
-              "downhill": {
-                "byDifficulty": {
-                  "other": {
-                    "combinedElevationChange": 100,
-                    "count": 1,
-                    "lengthInKm": 0.46264499967438083,
-                    "maxElevation": 250,
-                    "minElevation": 150,
-                  },
-                },
+        },
+        "maxElevation": 200,
+        "minElevation": 100,
+      },
+      "maxElevation": 200,
+      "minElevation": 150,
+      "runs": {
+        "byActivity": {
+          "downhill": {
+            "byDifficulty": {
+              "other": {
+                "combinedElevationChange": 100,
+                "count": 1,
+                "lengthInKm": 0.46264499967438083,
+                "maxElevation": 250,
+                "minElevation": 150,
               },
             },
-            "maxElevation": 250,
-            "minElevation": 150,
           },
         },
+        "maxElevation": 250,
+        "minElevation": 150,
       },
-    ]
-  `);
+    },
+  },
+]
+`);
 });
 
 it("allows point & multilinestring lifts to be processed", async () => {
@@ -1056,7 +1057,7 @@ it("associates lifts and runs with polygon openstreetmap ski area", async () => 
       TestHelpers.mockSkiAreaFeature({
         id: "1",
         name: "Rabenkopflift Oberau",
-        activities: [Activity.Downhill],
+        activities: [SkiAreaActivity.Downhill],
         sources: [{ type: SourceType.OPENSTREETMAP, id: "13666" }],
         geometry: {
           type: "Polygon",
@@ -1155,7 +1156,7 @@ it("associates lifts and runs adjacent to polygon openstreetmap ski area when no
       TestHelpers.mockSkiAreaFeature({
         id: "1",
         name: "Ski Area",
-        activities: [Activity.Downhill],
+        activities: [SkiAreaActivity.Downhill],
         sources: [{ type: SourceType.OPENSTREETMAP, id: "13666" }],
         geometry: {
           type: "Polygon",
@@ -1269,7 +1270,7 @@ it("associates lifts correctly to adjacent ski areas based on their polygons", a
     [
       TestHelpers.mockSkiAreaFeature({
         id: "1",
-        activities: [Activity.Downhill],
+        activities: [SkiAreaActivity.Downhill],
         sources: [{ type: SourceType.OPENSTREETMAP, id: "1" }],
         geometry: {
           type: "Polygon",
@@ -1286,7 +1287,7 @@ it("associates lifts correctly to adjacent ski areas based on their polygons", a
       }),
       TestHelpers.mockSkiAreaFeature({
         id: "2",
-        activities: [Activity.Downhill],
+        activities: [SkiAreaActivity.Downhill],
         sources: [{ type: SourceType.OPENSTREETMAP, id: "2" }],
         geometry: {
           type: "Polygon",
@@ -1369,7 +1370,7 @@ it("merges Skimap.org ski area with OpenStreetMap ski area", async () => {
     [
       TestHelpers.mockSkiAreaFeature({
         id: "1",
-        activities: [Activity.Downhill],
+        activities: [SkiAreaActivity.Downhill],
         sources: [{ type: SourceType.OPENSTREETMAP, id: "1" }],
         geometry: {
           type: "Point",
@@ -1378,7 +1379,7 @@ it("merges Skimap.org ski area with OpenStreetMap ski area", async () => {
       }),
       TestHelpers.mockSkiAreaFeature({
         id: "2",
-        activities: [Activity.Downhill],
+        activities: [SkiAreaActivity.Downhill],
         sources: [{ type: SourceType.SKIMAP_ORG, id: "2" }],
         geometry: {
           type: "Point",
@@ -1460,7 +1461,7 @@ it("merges Skimap.org ski area into adjacent OpenStreetMap ski areas", async () 
     [
       TestHelpers.mockSkiAreaFeature({
         id: "1",
-        activities: [Activity.Downhill],
+        activities: [SkiAreaActivity.Downhill],
         sources: [{ type: SourceType.OPENSTREETMAP, id: "1" }],
         geometry: {
           type: "Polygon",
@@ -1477,7 +1478,7 @@ it("merges Skimap.org ski area into adjacent OpenStreetMap ski areas", async () 
       }),
       TestHelpers.mockSkiAreaFeature({
         id: "2",
-        activities: [Activity.Downhill],
+        activities: [SkiAreaActivity.Downhill],
         sources: [{ type: SourceType.OPENSTREETMAP, id: "2" }],
         geometry: {
           type: "Polygon",
@@ -1494,7 +1495,7 @@ it("merges Skimap.org ski area into adjacent OpenStreetMap ski areas", async () 
       }),
       TestHelpers.mockSkiAreaFeature({
         id: "3",
-        activities: [Activity.Downhill],
+        activities: [SkiAreaActivity.Downhill],
         sources: [{ type: SourceType.SKIMAP_ORG, id: "3" }],
         geometry: {
           type: "Point",
@@ -1664,7 +1665,7 @@ it("prefers OSM sourced websites when merging Skimap.org ski area with OpenStree
     [
       TestHelpers.mockSkiAreaFeature({
         id: "1",
-        activities: [Activity.Downhill],
+        activities: [SkiAreaActivity.Downhill],
         sources: [{ type: SourceType.OPENSTREETMAP, id: "1" }],
         websites: ["https://openstreetmap.org"],
         geometry: {
@@ -1674,7 +1675,7 @@ it("prefers OSM sourced websites when merging Skimap.org ski area with OpenStree
       }),
       TestHelpers.mockSkiAreaFeature({
         id: "2",
-        activities: [Activity.Downhill],
+        activities: [SkiAreaActivity.Downhill],
         sources: [{ type: SourceType.SKIMAP_ORG, id: "2" }],
         websites: ["https://skimap.org"],
         geometry: {
@@ -1714,7 +1715,7 @@ it("removes OpenStreetMap ski areas that span across multiple Skimap.org ski are
     [
       TestHelpers.mockSkiAreaFeature({
         id: "1",
-        activities: [Activity.Downhill],
+        activities: [SkiAreaActivity.Downhill],
         sources: [{ type: SourceType.OPENSTREETMAP, id: "1" }],
         geometry: {
           type: "Polygon",
@@ -1731,7 +1732,7 @@ it("removes OpenStreetMap ski areas that span across multiple Skimap.org ski are
       }),
       TestHelpers.mockSkiAreaFeature({
         id: "2",
-        activities: [Activity.Downhill],
+        activities: [SkiAreaActivity.Downhill],
         sources: [{ type: SourceType.SKIMAP_ORG, id: "2" }],
         geometry: {
           type: "Point",
@@ -1740,7 +1741,7 @@ it("removes OpenStreetMap ski areas that span across multiple Skimap.org ski are
       }),
       TestHelpers.mockSkiAreaFeature({
         id: "3",
-        activities: [Activity.Downhill],
+        activities: [SkiAreaActivity.Downhill],
         sources: [{ type: SourceType.SKIMAP_ORG, id: "2" }],
         geometry: {
           type: "Point",
@@ -2128,7 +2129,7 @@ it("updates geometry, run convention, and activities for a site based ski area",
 
   expect(
     TestHelpers.fileContents(paths.output.runs).features[0].properties.skiAreas,
-  ).toMatchObject([skiAreaFeature]);
+  ).toMatchObject([toSkiAreaSummary(skiAreaFeature)]);
 });
 
 it("adds nearby unassociated runs of same activity to site based ski area", async () => {
@@ -2416,7 +2417,7 @@ it("removes landuse based ski area when there is a site with sufficient overlap"
 
   expect(
     TestHelpers.fileContents(paths.output.runs).features[0].properties.skiAreas,
-  ).toMatchObject([skiAreaFeature]);
+  ).toMatchObject([toSkiAreaSummary(skiAreaFeature)]);
 });
 
 it("keeps landuse based ski area when there is a site with insufficient overlap", async () => {

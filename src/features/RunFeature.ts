@@ -1,5 +1,6 @@
 import {
-  ColorName,
+  RunColor,
+  RunColorValue,
   RunDifficulty,
   RunGeometry,
   RunGrooming,
@@ -59,8 +60,8 @@ export type MapboxGLRunProperties = {
   lit: boolean | null;
   gladed: boolean | null;
   patrolled: boolean | null;
-  color: string;
-  colorName: ColorName | null;
+  color: RunColorValue;
+  colorName: RunColor;
   grooming: RunGrooming | null;
   // Run uses. Multiple uses are supported by rendering parallel lines for each use.
   // The value is the offset of the line from the baseline. The average of all offsets is always 0.

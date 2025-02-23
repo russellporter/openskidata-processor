@@ -2,7 +2,6 @@ import { feature } from "@turf/helpers";
 import turfLength from "@turf/length";
 import {
   LiftStatistics,
-  MapObjectStatistics,
   RunStatistics,
   SkiAreaStatistics,
 } from "openskidata-format";
@@ -21,6 +20,14 @@ function isRun(object: MapObject): object is RunObject {
 function isLift(object: MapObject): object is LiftObject {
   return object.type === MapObjectType.Lift;
 }
+
+type MapObjectStatistics = {
+  count: number;
+  lengthInKm: number;
+  minElevation?: number;
+  maxElevation?: number;
+  combinedElevationChange?: number;
+};
 
 export function skiAreaStatistics(mapObjects: MapObject[]): SkiAreaStatistics {
   const runStats = runStatistics(mapObjects.filter(isRun));

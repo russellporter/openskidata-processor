@@ -11,7 +11,12 @@ import { QueryOptions } from "arangojs/database";
 import { AssertionError } from "assert";
 import { backOff } from "exponential-backoff";
 import * as GeoJSON from "geojson";
-import { Activity, FeatureType, SourceType, Status } from "openskidata-format";
+import {
+  FeatureType,
+  SkiAreaActivity,
+  SourceType,
+  Status,
+} from "openskidata-format";
 import { v4 as uuid } from "uuid";
 import { skiAreaStatistics } from "../statistics/SkiAreaStatistics";
 import Geocoder from "../transforms/Geocoder";
@@ -20,7 +25,7 @@ import {
   getPoints,
   getPositions,
 } from "../transforms/GeoTransforms";
-import { getRunConvention } from "../transforms/RunFormatter";
+import { getRunDifficultyConvention } from "../transforms/RunFormatter";
 import notEmpty from "../utils/notEmpty";
 import { isPlaceholderGeometry } from "../utils/PlaceholderSiteGeometry";
 import { arangoGeometry, isArangoInvalidGeometryError } from "./ArangoHelpers";
@@ -38,7 +43,7 @@ import { emptySkiAreasCursor, SkiAreasCursor } from "./SkiAreasCursor";
 type SearchType = "contains" | "intersects";
 interface VisitContext {
   id: string;
-  activities: Activity[];
+  activities: SkiAreaActivity[];
   excludeObjectsAlreadyInSkiArea?: boolean;
   searchPolygon?: GeoJSON.Polygon | GeoJSON.MultiPolygon | null;
   searchType: SearchType;
@@ -49,8 +54,8 @@ interface VisitContext {
 const maxDistanceInKilometers = 0.5;
 
 export const allSkiAreaActivities = new Set([
-  Activity.Downhill,
-  Activity.Nordic,
+  SkiAreaActivity.Downhill,
+  SkiAreaActivity.Nordic,
 ]);
 
 /**
@@ -439,19 +444,19 @@ export default async function clusterArangoGraph(
 
     // Downhill ski areas must contain at least one lift.
     if (
-      activities.includes(Activity.Downhill) &&
+      activities.includes(SkiAreaActivity.Downhill) &&
       !memberObjects.some((object) => object.type == MapObjectType.Lift)
     ) {
       activities = activities.filter(
-        (activity) => activity !== Activity.Downhill,
+        (activity) => activity !== SkiAreaActivity.Downhill,
       );
       memberObjects = memberObjects.filter((object) => {
-        const hasAnotherActivity = object.activities.some(
+        const hasAnotherSkiAreaActivity = object.activities.some(
           (activity) =>
-            activity !== Activity.Downhill &&
+            activity !== SkiAreaActivity.Downhill &&
             allSkiAreaActivities.has(activity),
         );
-        return hasAnotherActivity;
+        return hasAnotherSkiAreaActivity;
       });
     }
 
@@ -716,7 +721,7 @@ export default async function clusterArangoGraph(
 
   async function createGeneratedSkiArea(
     id: string,
-    activities: Activity[],
+    activities: SkiAreaActivity[],
     memberObjects: MapObject[],
   ): Promise<void> {
     const geometry = skiAreaGeometry(memberObjects);
@@ -734,11 +739,10 @@ export default async function clusterArangoGraph(
         type: FeatureType.SkiArea,
         id: id,
         name: null,
-        generated: true,
         activities: activities,
         status: Status.Operating,
         sources: [],
-        runConvention: getRunConvention(geometry),
+        runConvention: getRunDifficultyConvention(geometry),
         websites: [],
         wikidata_id: null,
         location: null,
@@ -814,7 +818,9 @@ export default async function clusterArangoGraph(
     }
 
     skiArea.properties.statistics = skiAreaStatistics(memberObjects);
-    skiArea.properties.runConvention = getRunConvention(skiArea.geometry);
+    skiArea.properties.runConvention = getRunDifficultyConvention(
+      skiArea.geometry,
+    );
 
     if (geocoder) {
       const coordinates = centroid(skiArea.geometry).geometry.coordinates;
@@ -864,7 +870,7 @@ export default async function clusterArangoGraph(
 
   function getActivitiesBasedOnRunsAndLifts(
     mapObjects: MapObject[],
-  ): Activity[] {
+  ): SkiAreaActivity[] {
     return Array.from(
       mapObjects
         .filter((object) => object.type !== MapObjectType.SkiArea)
@@ -875,7 +881,7 @@ export default async function clusterArangoGraph(
             }
           });
           return accumulatedActivities;
-        }, new Set<Activity>()),
+        }, new Set<SkiAreaActivity>()),
     );
   }
 }

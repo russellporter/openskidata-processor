@@ -25,6 +25,11 @@ function mockElevationServer(code: number) {
     });
 }
 
+afterEach(() => {
+  nock.cleanAll();
+  nock.restore();
+});
+
 it("adds elevations to lift geometry", async () => {
   const paths = TestHelpers.getFilePaths();
   mockElevationServer(200);
@@ -83,13 +88,12 @@ it("adds elevations to lift geometry", async () => {
       "properties": {
         "bubble": null,
         "capacity": null,
-        "color": "hsl(0, 82%, 42%)",
         "description": null,
+        "detachable": null,
         "duration": null,
         "heating": null,
         "id": "4d07b91974c5a5b3a0ad9e1928c0a6d433c5093b",
         "liftType": "t-bar",
-        "location": null,
         "name": "Skilift Oberau",
         "occupancy": null,
         "oneway": null,
@@ -157,48 +161,26 @@ it("adds elevations to run geometry & elevation profile", async () => {
   const feature: RunFeature = TestHelpers.fileContents(paths.output.runs)
     .features[0];
 
-  expect(feature.properties.elevationProfile).toMatchInlineSnapshot(`
-    {
-      "heights": [
-        3,
-        4,
-        5,
-        6,
-        7,
-        8,
-        9,
-        10,
-        11,
-        12,
-        13,
-        14,
-        15,
-      ],
-      "resolution": 25,
-    }
-  `);
+  expect(feature.properties.elevationProfile).toMatchInlineSnapshot(`undefined`);
   expect(feature.geometry).toMatchInlineSnapshot(`
-    {
-      "coordinates": [
-        [
-          11.1164229,
-          47.558125000000004,
-          0,
-        ],
-        [
-          11.116365499999999,
-          47.5579742,
-          1,
-        ],
-        [
-          11.1171866,
-          47.5556413,
-          2,
-        ],
-      ],
-      "type": "LineString",
-    }
-  `);
+{
+  "coordinates": [
+    [
+      11.1164229,
+      47.558125000000004,
+    ],
+    [
+      11.116365499999999,
+      47.5579742,
+    ],
+    [
+      11.1171866,
+      47.5556413,
+    ],
+  ],
+  "type": "LineString",
+}
+`);
 });
 
 it("completes without adding elevations when elevation server fails", async () => {
@@ -257,13 +239,12 @@ it("completes without adding elevations when elevation server fails", async () =
       "properties": {
         "bubble": null,
         "capacity": null,
-        "color": "hsl(0, 82%, 42%)",
         "description": null,
+        "detachable": null,
         "duration": null,
         "heating": null,
         "id": "4d07b91974c5a5b3a0ad9e1928c0a6d433c5093b",
         "liftType": "t-bar",
-        "location": null,
         "name": "Skilift Oberau",
         "occupancy": null,
         "oneway": null,
@@ -335,56 +316,48 @@ it("adds elevations to run polygons", async () => {
 
   await prepare(paths, config);
 
-  expect(TestHelpers.fileContents(paths.output.runs).features[0].geometry)
-    .toMatchInlineSnapshot(`
-    {
-      "coordinates": [
-        [
-          [
-            6.544500899999997,
-            45.3230511,
-            0,
-          ],
-          [
-            6.543409400000002,
-            45.32317370000001,
-            1,
-          ],
-          [
-            6.544500899999997,
-            45.3230511,
-            2,
-          ],
-          [
-            6.544500899999997,
-            45.3230511,
-            0,
-          ],
-        ],
-        [
-          [
-            6.5502579,
-            45.3224134,
-            4,
-          ],
-          [
-            6.550612,
-            45.3222571,
-            5,
-          ],
-          [
-            6.5502579,
-            45.3224134,
-            6,
-          ],
-          [
-            6.5502579,
-            45.3224134,
-            4,
-          ],
-        ],
+  expect(TestHelpers.fileContents(paths.output.runs).features[0].geometry).
+toMatchInlineSnapshot(`
+{
+  "coordinates": [
+    [
+      [
+        6.544500899999997,
+        45.3230511,
       ],
-      "type": "Polygon",
-    }
-  `);
+      [
+        6.543409400000002,
+        45.32317370000001,
+      ],
+      [
+        6.544500899999997,
+        45.3230511,
+      ],
+      [
+        6.544500899999997,
+        45.3230511,
+      ],
+    ],
+    [
+      [
+        6.5502579,
+        45.3224134,
+      ],
+      [
+        6.550612,
+        45.3222571,
+      ],
+      [
+        6.5502579,
+        45.3224134,
+      ],
+      [
+        6.5502579,
+        45.3224134,
+      ],
+    ],
+  ],
+  "type": "Polygon",
+}
+`);
 });

@@ -1,4 +1,4 @@
-import { Activity, Status } from "openskidata-format";
+import { SkiAreaActivity, Status } from "openskidata-format";
 import {
   InputOpenStreetMapSkiAreaFeature,
   InputSkiMapOrgSkiAreaFeature,
@@ -60,7 +60,6 @@ describe("SkiAreaFormatter", () => {
   },
   "properties": {
     "activities": [],
-    "generated": false,
     "id": "c638251d70817a3d3ad227cce5d353d3abff6abb",
     "location": null,
     "name": "Ski Area",
@@ -154,7 +153,7 @@ describe("SkiAreaFormatter", () => {
         name: "Ski Area",
         official_website: "http://example.com",
         scalerank: 1,
-        activities: [Activity.Downhill],
+        activities: [SkiAreaActivity.Downhill],
         status: Status.Operating,
       },
     };
@@ -173,7 +172,6 @@ describe("SkiAreaFormatter", () => {
     "activities": [
       "downhill",
     ],
-    "generated": false,
     "id": "fde59eba834efdc0f8859c40c4211027d9b6e3e9",
     "location": null,
     "name": "Ski Area",
@@ -219,7 +217,6 @@ describe("SkiAreaFormatter", () => {
   },
   "properties": {
     "activities": [],
-    "generated": false,
     "id": "2033ab9be8698fcd4794c24e42782bf33c124e8d",
     "location": null,
     "name": "Wendelstein",

@@ -4,7 +4,6 @@ import {
   LiftProperties,
   LiftType,
   SourceType,
-  Status,
 } from "openskidata-format";
 import { InputLiftFeature, OSMLiftTags } from "../features/LiftFeature";
 import { osmID } from "../features/OSMGeoJSONProperties";
@@ -59,12 +58,11 @@ export function formatLift(feature: InputLiftFeature): LiftFeature | null {
     duration: mapDuration(tags["aerialway:duration"]),
     bubble: mapOSMBoolean(tags["aerialway:bubble"]),
     heating: mapOSMBoolean(tags["aerialway:heating"]),
-    color: getColor(status),
+    detachable: mapOSMBoolean(tags["aerialway:detachable"]),
     skiAreas: [],
     sources: [
       { type: SourceType.OPENSTREETMAP, id: osmID(feature.properties) },
     ],
-    location: null,
     websites: [tags.website].filter(notEmpty),
     wikidata_id: getOSMFirstValue(tags, "wikidata"),
   };
@@ -121,22 +119,4 @@ function mapDuration(string: string | undefined): number | null {
   }
 
   return null;
-}
-
-function getColor(status: string): string {
-  const BRIGHT_RED_COLOR = "hsl(0, 82%, 42%)";
-  const DIM_RED_COLOR = "hsl(0, 53%, 42%)";
-
-  switch (status) {
-    case Status.Disused:
-    case Status.Abandoned:
-      return DIM_RED_COLOR;
-    case Status.Proposed:
-    case Status.Planned:
-    case Status.Construction:
-    case Status.Operating:
-      return BRIGHT_RED_COLOR;
-  }
-
-  throw "Switch should be exhaustive";
 }

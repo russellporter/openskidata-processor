@@ -1,5 +1,4 @@
-import { SourceType } from "openskidata-format";
-import Source from "openskidata-format/dist/Source";
+import { Source, SourceType } from "openskidata-format";
 
 export default function uniquedSources(sources: Source[]): Source[] {
   const map = new Map<SourceType, Set<string>>();

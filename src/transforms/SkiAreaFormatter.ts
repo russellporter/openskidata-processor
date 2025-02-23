@@ -1,6 +1,6 @@
 import {
   FeatureType,
-  RunConvention,
+  RunDifficultyConvention,
   SkiAreaFeature,
   SkiAreaProperties,
   SourceType,
@@ -18,7 +18,7 @@ import notEmpty from "../utils/notEmpty";
 import buildFeature from "./FeatureBuilder";
 import { getOSMFirstValue, getOSMName } from "./OSMTransforms";
 import { Omit } from "./Omit";
-import { getRunConvention } from "./RunFormatter";
+import { getRunDifficultyConvention } from "./RunFormatter";
 import getStatusAndValue from "./Status";
 
 export enum InputSkiAreaType {
@@ -96,7 +96,7 @@ function formatOpenStreetMapLanduse(
       osmID(osmFeature.properties),
       osmFeature.properties.tags,
       status,
-      getRunConvention(osmFeature),
+      getRunDifficultyConvention(osmFeature),
     ),
   );
 }
@@ -121,7 +121,7 @@ function formatOpenStreetMapSite(site: OSMSkiAreaSite): SkiAreaFeature | null {
       osmID(site),
       site.tags,
       status,
-      RunConvention.NORTH_AMERICA, // also bogus, will be updated later when we know the real geometry
+      RunDifficultyConvention.NORTH_AMERICA, // also bogus, will be updated later when we know the real geometry
     ),
   );
 }
@@ -139,7 +139,7 @@ function propertiesForOpenStreetMapSkiArea(
   osmID: string,
   tags: OSMSkiAreaTags,
   status: Status,
-  runConvention: RunConvention,
+  runConvention: RunDifficultyConvention,
 ): Omit<SkiAreaProperties, "id"> {
   return {
     type: FeatureType.SkiArea,
@@ -151,7 +151,6 @@ function propertiesForOpenStreetMapSkiArea(
       },
     ],
     activities: [],
-    generated: false,
     status: status,
     websites: [tags.website].filter(notEmpty),
     wikidata_id: getOSMFirstValue(tags, "wikidata"),
@@ -174,9 +173,8 @@ function propertiesForSkiMapOrgSkiArea(
       },
     ],
     activities: activities,
-    generated: false,
     status: feature.properties.status,
-    runConvention: getRunConvention(feature),
+    runConvention: getRunDifficultyConvention(feature),
     websites: [feature.properties.official_website].filter(notEmpty),
     // TODO: #153 Get Wikidata ID from Skimap.org ID (https://github.com/russellporter/openskimap.org/issues/153)
     wikidata_id: null,

@@ -44,7 +44,6 @@ function mergeSkiAreaProperties(
       primarySkiArea.activities,
       otherSkiArea.activities,
     ),
-    generated: primarySkiArea.generated && otherSkiArea.generated,
     runConvention: primarySkiArea.runConvention,
     sources: uniquedSources(
       primarySkiArea.sources.concat(otherSkiArea.sources),

@@ -1,4 +1,4 @@
-import { Activity } from "openskidata-format";
+import { SkiAreaActivity } from "openskidata-format";
 import { Config } from "./Config";
 import prepare from "./PrepareGeoJSON";
 import * as TestHelpers from "./TestHelpers";
@@ -74,7 +74,7 @@ it("produces output for simple input", async () => {
             id: "13666",
             name: "Rabenkopflift Oberau",
             status: null,
-            activities: [Activity.Downhill],
+            activities: [SkiAreaActivity.Downhill],
             scalerank: 1,
             official_website: null,
           },
@@ -160,13 +160,12 @@ Map {
         "properties": {
           "bubble": null,
           "capacity": null,
-          "color": "hsl(0, 82%, 42%)",
           "description": null,
+          "detachable": null,
           "duration": null,
           "heating": null,
           "id": "4d07b91974c5a5b3a0ad9e1928c0a6d433c5093b",
           "liftType": "t-bar",
-          "location": null,
           "name": "Skilift Oberau",
           "occupancy": null,
           "oneway": null,
@@ -313,16 +312,13 @@ Map {
           "type": "Polygon",
         },
         "properties": {
-          "color": "hsl(208, 100%, 33%)",
-          "colorName": "blue",
-          "convention": "europe",
           "description": null,
           "difficulty": "easy",
+          "difficultyConvention": "europe",
           "gladed": null,
           "grooming": null,
           "id": "6e08a9b5ca97fc7d1fff89f008c987280b3b6b20",
           "lit": null,
-          "location": null,
           "name": "Oberauer Skiabfahrt",
           "oneway": true,
           "patrolled": null,
@@ -361,7 +357,6 @@ Map {
           "activities": [
             "downhill",
           ],
-          "generated": false,
           "id": "02911313f405ef0415188ceb357b415f02af5d64",
           "location": null,
           "name": "Rabenkopflift Oberau",
@@ -399,7 +394,7 @@ it("shortens ski area names for Mapbox GL output", async () => {
             id: "13666",
             name: longName,
             status: null,
-            activities: [Activity.Downhill],
+            activities: [SkiAreaActivity.Downhill],
             scalerank: 1,
             official_website: null,
           },
@@ -495,7 +490,6 @@ it("processes OpenStreetMap ski areas", async () => {
       },
       "properties": {
         "activities": [],
-        "generated": false,
         "id": "c638251d70817a3d3ad227cce5d353d3abff6abb",
         "location": null,
         "name": null,

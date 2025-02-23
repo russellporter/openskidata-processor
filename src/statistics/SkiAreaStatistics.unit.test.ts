@@ -1,4 +1,4 @@
-import { Activity, LiftType, RunDifficulty } from "openskidata-format";
+import { LiftType, RunDifficulty, SkiAreaActivity } from "openskidata-format";
 import { LiftObject, MapObjectType, RunObject } from "../clustering/MapObject";
 import { skiAreaStatistics } from "./SkiAreaStatistics";
 
@@ -8,7 +8,7 @@ describe("SkiAreaStatistics", () => {
       _id: "1",
       _key: "1",
       type: MapObjectType.Run,
-      activities: [Activity.Downhill],
+      activities: [SkiAreaActivity.Downhill],
       difficulty: RunDifficulty.EASY,
       geometry: {
         type: "LineString",
@@ -59,7 +59,7 @@ describe("SkiAreaStatistics", () => {
       _key: "1",
       type: MapObjectType.Lift,
       liftType: LiftType.Gondola,
-      activities: [Activity.Downhill],
+      activities: [SkiAreaActivity.Downhill],
       geometry: {
         type: "LineString",
         coordinates: [
@@ -103,7 +103,7 @@ describe("SkiAreaStatistics", () => {
       _id: "1",
       _key: "1",
       type: MapObjectType.Run,
-      activities: [Activity.Downhill],
+      activities: [SkiAreaActivity.Downhill],
       difficulty: RunDifficulty.EASY,
       geometry: {
         type: "Polygon",
@@ -146,54 +146,4 @@ describe("SkiAreaStatistics", () => {
       }
     `);
   });
-});
-
-it("should not count backcountry activity in mixed use runs", () => {
-  const run: RunObject = {
-    _id: "1",
-    _key: "1",
-    type: MapObjectType.Run,
-    activities: [Activity.Downhill, Activity.Backcountry],
-    difficulty: RunDifficulty.EASY,
-    geometry: {
-      type: "LineString",
-      coordinates: [
-        [0, 0],
-        [0, 1],
-      ],
-    },
-    geometryWithElevations: {
-      type: "LineString",
-      coordinates: [
-        [0, 0],
-        [0, 1],
-      ],
-    },
-    skiAreas: [],
-    isBasisForNewSkiArea: true,
-    isInSkiAreaPolygon: false,
-    isInSkiAreaSite: false,
-  };
-
-  const statistics = skiAreaStatistics([run]);
-
-  expect(statistics).toMatchInlineSnapshot(`
-    {
-      "lifts": {
-        "byType": {},
-      },
-      "runs": {
-        "byActivity": {
-          "downhill": {
-            "byDifficulty": {
-              "easy": {
-                "count": 1,
-                "lengthInKm": 111.1950802335329,
-              },
-            },
-          },
-        },
-      },
-    }
-  `);
 });

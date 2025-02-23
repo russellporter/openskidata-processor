@@ -4,10 +4,8 @@ import * as turf from "@turf/helpers";
 import { AllGeoJSON } from "@turf/helpers";
 import {
   FeatureType,
-  getColorName,
-  getRunColor,
-  RunConvention,
   RunDifficulty,
+  RunDifficultyConvention,
   RunGrooming,
   RunUse,
   SourceType,
@@ -44,14 +42,9 @@ export function formatRun(
     return null;
   }
 
-  // TODO: support runs that are not operational: https://github.com/russellporter/openskimap.org/issues/15
   if (status !== Status.Operating) {
     return null;
   }
-
-  const difficulty = getDifficulty(tags);
-  const convention = getRunConvention(feature);
-  const color = getRunColor(convention, difficulty);
 
   const properties: Omit<FormattedInputRunProperties, "id"> = {
     type: FeatureType.Run,
@@ -61,21 +54,18 @@ export function formatRun(
     description: mapOSMString(
       getOrElse(tags, "piste:description", "description"),
     ),
-    difficulty: difficulty,
-    convention: convention,
+    difficulty: getDifficulty(tags),
+    difficultyConvention: getRunDifficultyConvention(feature),
     oneway: getOneway(tags, uses),
     gladed: getGladed(tags),
     patrolled: mapOSMBoolean(getOrElse(tags, "piste:patrolled", "patrolled")),
     lit: mapOSMBoolean(getOrElse(tags, "piste:lit", "lit")),
-    color: color,
-    colorName: getColorName(color),
     grooming: getGrooming(tags),
     skiAreas: [],
     status: status,
     sources: [
       { type: SourceType.OPENSTREETMAP, id: osmID(feature.properties) },
     ],
-    location: null,
     websites: [tags.website].filter(notEmpty),
     wikidata_id: getOSMFirstValue(tags, "wikidata"),
   };
@@ -207,17 +197,19 @@ const jpPoly = turf.polygon([
   ],
 ]);
 
-export function getRunConvention(geojson: AllGeoJSON): RunConvention {
+export function getRunDifficultyConvention(
+  geojson: AllGeoJSON,
+): RunDifficultyConvention {
   const point = turfCenter(geojson).geometry;
   if (!point) {
     throw "Cannot determine center of geometry";
   }
 
   if (booleanPointInPolygon(point, euPoly)) {
-    return RunConvention.EUROPE;
+    return RunDifficultyConvention.EUROPE;
   } else if (booleanPointInPolygon(point, jpPoly)) {
-    return RunConvention.JAPAN;
+    return RunDifficultyConvention.JAPAN;
   } else {
-    return RunConvention.NORTH_AMERICA;
+    return RunDifficultyConvention.NORTH_AMERICA;
   }
 }

@@ -1,13 +1,16 @@
 import GeoJSON from "geojson";
 import {
-  Activity,
   FeatureType,
+  getColorValue,
+  getLiftColor,
   getLiftNameAndType,
+  getRunColor,
   LiftFeature,
   RunDifficulty,
   RunFeature,
   RunStatisticsByDifficulty,
   RunUse,
+  SkiAreaActivity,
   SkiAreaFeature,
 } from "openskidata-format";
 import {
@@ -59,6 +62,10 @@ export function formatter(
       return null;
     }
     const properties = feature.properties;
+    const color = getRunColor(
+      properties.difficultyConvention,
+      properties.difficulty,
+    );
     const mapboxGLProperties: MapboxGLRunProperties = {
       id: properties.id,
       name: getNameIncludingRef(properties.name, properties.ref),
@@ -67,8 +74,8 @@ export function formatter(
       lit: properties.lit,
       gladed: properties.gladed,
       patrolled: properties.patrolled,
-      color: properties.color,
-      colorName: properties.colorName,
+      color: getColorValue(color),
+      colorName: color,
       grooming: properties.grooming,
       skiAreas: properties.skiAreas.map((skiArea) => skiArea.properties.id),
     };
@@ -102,13 +109,12 @@ export function formatter(
   function formatLift(feature: LiftFeature): MapboxGLLiftFeature {
     const properties = feature.properties;
     const mapboxGLProperties: MapboxGLLiftProperties = {
-      // TODO: Find a better approach to multi-use runs
       id: properties.id,
       name_and_type: getNameIncludingRef(
         getLiftNameAndType(properties),
         properties.ref,
       ),
-      color: properties.color,
+      color: getLiftColor(properties.status),
       status: properties.status,
       skiAreas: properties.skiAreas.map((skiArea) => skiArea.properties.id),
     };
@@ -130,7 +136,6 @@ export function formatter(
     const properties = feature.properties;
     const statistics = properties.statistics;
     const mapboxGLProperties: MapboxGLSkiAreaProperties = {
-      // TODO: Find a better approach to multi-use runs
       id: properties.id,
       name: shortenedName(properties.name),
       status: properties.status,
@@ -156,11 +161,11 @@ export function formatter(
           : null,
     };
 
-    if (properties.activities.includes(Activity.Downhill)) {
+    if (properties.activities.includes(SkiAreaActivity.Downhill)) {
       mapboxGLProperties.has_downhill = true;
     }
 
-    if (properties.activities.includes(Activity.Nordic)) {
+    if (properties.activities.includes(SkiAreaActivity.Nordic)) {
       mapboxGLProperties.has_nordic = true;
     }
 

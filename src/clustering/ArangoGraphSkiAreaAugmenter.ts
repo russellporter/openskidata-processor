@@ -4,6 +4,7 @@ import streamToPromise from "stream-to-promise";
 import { readGeoJSONFeatures } from "../io/GeoJSONReader";
 import toFeatureCollection from "../transforms/FeatureCollection";
 import { mapAsync } from "../transforms/StreamTransforms";
+import { toSkiAreaSummary } from "../transforms/toSkiAreaSummary";
 import { AugmentedMapFeature, MapFeature, SkiAreaObject } from "./MapObject";
 import objectToFeature from "./ObjectToFeature";
 
@@ -18,7 +19,9 @@ export default async function augmentGeoJSONWithSkiAreas(
         mapAsync(async (feature: AugmentedMapFeature) => {
           let skiAreas = await getSkiAreas(feature, client);
 
-          feature.properties.skiAreas = skiAreas.map(objectToFeature);
+          feature.properties.skiAreas = skiAreas
+            .map(objectToFeature)
+            .map(toSkiAreaSummary);
           return feature;
         }, 10),
       )

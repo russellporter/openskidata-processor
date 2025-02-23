@@ -1,24 +1,24 @@
 import * as fs from "fs";
 import {
-  Activity,
-  ColorName,
   FeatureType,
   LiftFeature,
   LiftGeometry,
   LiftProperties,
   LiftType,
-  RunConvention,
   RunDifficulty,
+  RunDifficultyConvention,
   RunFeature,
   RunGrooming,
   RunProperties,
   RunUse,
+  SkiAreaActivity,
   SkiAreaFeature,
   SkiAreaProperties,
   SkiAreaStatistics,
+  Source,
+  SourceType,
   Status,
 } from "openskidata-format";
-import Source, { SourceType } from "openskidata-format/dist/Source";
 import * as path from "path";
 import * as tmp from "tmp";
 import { SkiAreaGeometry } from "./clustering/MapObject";
@@ -151,9 +151,9 @@ export function mockRunFeature<G extends InputRunGeometry>(options: {
   grooming?: RunGrooming | null;
   uses?: RunUse[];
   difficulty?: RunDifficulty;
+  difficultyConvention?: RunDifficultyConvention;
   websites?: string[];
   wikidata_id?: string | null;
-  convention?: RunConvention;
   geometry: G;
   skiAreas?: SkiAreaFeature[];
   status?: Status;
@@ -167,7 +167,8 @@ export function mockRunFeature<G extends InputRunGeometry>(options: {
       id: options.id,
       name: options.name || null,
       difficulty: options.difficulty || null,
-      convention: options.convention || RunConvention.EUROPE,
+      difficultyConvention:
+        options.difficultyConvention || RunDifficultyConvention.EUROPE,
       ref: options.ref || null,
       oneway: options.oneway !== undefined ? options.oneway : null,
       lit: null,
@@ -175,13 +176,10 @@ export function mockRunFeature<G extends InputRunGeometry>(options: {
       gladed: null,
       patrolled: options.patrolled !== undefined ? options.patrolled : null,
       grooming: options.grooming || null,
-      color: "",
-      colorName: ColorName.GREEN,
       skiAreas: options.skiAreas || [],
       elevationProfile: null,
       status: options.status || Status.Operating,
       sources: options.sources || [],
-      location: null,
       websites: options.websites || [],
       wikidata_id: options.wikidata_id || null,
     },
@@ -209,7 +207,6 @@ export function mockLiftFeature<G extends LiftGeometry>(options: {
       name: options.name,
       liftType: options.liftType,
       status: options.status || Status.Operating,
-      color: "",
       ref: options.ref || null,
       description: null,
       oneway: null,
@@ -218,9 +215,9 @@ export function mockLiftFeature<G extends LiftGeometry>(options: {
       duration: null,
       bubble: null,
       heating: null,
+      detachable: null,
       skiAreas: options.skiAreas || [],
       sources: options.sources || [],
-      location: null,
       websites: options.websites || [],
       wikidata_id: options.wikidata_id || null,
     },
@@ -231,7 +228,7 @@ export function mockLiftFeature<G extends LiftGeometry>(options: {
 export function mockSkiAreaFeature<G extends SkiAreaGeometry>(options: {
   id?: string;
   name?: string;
-  activities?: Activity[];
+  activities?: SkiAreaActivity[];
   status?: Status;
   sources?: Source[];
   statistics?: SkiAreaStatistics;
@@ -248,14 +245,13 @@ export function mockSkiAreaFeature<G extends SkiAreaGeometry>(options: {
       activities:
         options.activities !== undefined
           ? options.activities
-          : [Activity.Downhill],
+          : [SkiAreaActivity.Downhill],
       status: options.status !== undefined ? options.status : Status.Operating,
-      generated: false,
       sources:
         options.sources !== undefined
           ? options.sources
           : [{ id: "1", type: SourceType.SKIMAP_ORG }],
-      runConvention: RunConvention.EUROPE,
+      runConvention: RunDifficultyConvention.EUROPE,
       statistics: options.statistics,
       websites: options.websites || [],
       wikidata_id: options.wikidata_id || null,

@@ -1,13 +1,13 @@
 import { Database } from "arangojs";
 import assert from "assert";
 import {
-  Activity,
   LiftFeature,
   LiftGeometry,
   RunFeature,
   RunGeometry,
   RunGrooming,
   RunUse,
+  SkiAreaActivity,
   SkiAreaFeature,
   Status,
 } from "openskidata-format";
@@ -82,7 +82,6 @@ export default async function loadArangoGraph(
       "Only ski areas with a single source are supported for clustering.",
     );
     const properties = feature.properties;
-    properties.generated = false;
     return {
       _key: properties.id,
       id: properties.id,
@@ -106,7 +105,9 @@ export default async function loadArangoGraph(
       geometry: geometryWithoutElevations(feature.geometry) as LiftGeometry,
       geometryWithElevations: feature.geometry,
       activities:
-        properties["status"] === Status.Operating ? [Activity.Downhill] : [],
+        properties["status"] === Status.Operating
+          ? [SkiAreaActivity.Downhill]
+          : [],
       skiAreas: feature.properties.skiAreas.map(
         (skiArea) => skiArea.properties.id,
       ),
@@ -120,23 +121,23 @@ export default async function loadArangoGraph(
   function prepareRun(feature: RunFeature): DraftRun {
     const properties = feature.properties;
     const activities = (() => {
-      // This tagging is ambiguous, but for safety, lean towards marking runs as "backcountry skiing" instead of "resort skiing"
+      // This tagging is ambiguous, but for safety, avoid marking runs as having a ski area activity. As a result they will not be linked to a ski area.
       if (
         properties.grooming === RunGrooming.Backcountry &&
         properties.patrolled !== true
       ) {
-        return [Activity.Backcountry];
+        return [];
       }
 
       return properties.uses.flatMap((use) => {
         switch (use) {
           case RunUse.Downhill:
           case RunUse.SnowPark:
-            return [Activity.Downhill];
+            return [SkiAreaActivity.Downhill];
           case RunUse.Nordic:
-            return [Activity.Nordic];
+            return [SkiAreaActivity.Nordic];
           case RunUse.Skitour:
-            return [Activity.Backcountry];
+            return [];
           default:
             return [];
         }

@@ -1,10 +1,10 @@
 import {
-  Activity,
   LiftGeometry,
   LiftType,
   RunDifficulty,
-  SkiAreaFeature,
+  SkiAreaActivity,
   SkiAreaProperties,
+  SkiAreaSummaryFeature,
   SourceType,
 } from "openskidata-format";
 
@@ -56,7 +56,7 @@ export type SkiAreaGeometry =
 interface BaseDraftMapObject {
   _key: string;
   skiAreas: string[];
-  activities: Activity[];
+  activities: SkiAreaActivity[];
 }
 
 export enum MapObjectType {
@@ -90,7 +90,7 @@ export type MapFeature<Geometry extends GeoJSON.Geometry = MapObjectGeometry> =
   GeoJSON.Feature<Geometry, MapFeatureProperties>;
 
 interface AugmentedMapFeatureProperties extends MapFeatureProperties {
-  skiAreas: SkiAreaFeature[];
+  skiAreas: SkiAreaSummaryFeature[];
 }
 
 export type AugmentedMapFeature = GeoJSON.Feature<
