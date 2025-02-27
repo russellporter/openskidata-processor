@@ -1,11 +1,11 @@
 import GeoJSON from "geojson";
 import {
   FeatureType,
-  getColorValue,
   getLiftColor,
   getLiftNameAndType,
-  getRunColor,
+  getRunColorName,
   LiftFeature,
+  runColorNameToValue,
   RunDifficulty,
   RunFeature,
   RunStatisticsByDifficulty,
@@ -62,7 +62,7 @@ export function formatter(
       return null;
     }
     const properties = feature.properties;
-    const color = getRunColor(
+    const colorName = getRunColorName(
       properties.difficultyConvention,
       properties.difficulty,
     );
@@ -74,8 +74,8 @@ export function formatter(
       lit: properties.lit,
       gladed: properties.gladed,
       patrolled: properties.patrolled,
-      color: getColorValue(color),
-      colorName: color,
+      color: runColorNameToValue(colorName),
+      colorName: colorName,
       grooming: properties.grooming,
       skiAreas: properties.skiAreas.map((skiArea) => skiArea.properties.id),
     };
