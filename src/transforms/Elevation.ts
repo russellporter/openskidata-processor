@@ -1,5 +1,9 @@
-import turfLineChunk from "@turf/line-chunk";
-import { FeatureType, LiftFeature, RunFeature } from "openskidata-format";
+import {
+  extractPointsForElevationProfile,
+  FeatureType,
+  LiftFeature,
+  RunFeature,
+} from "openskidata-format";
 
 const elevationProfileResolution = 25;
 
@@ -8,8 +12,12 @@ export default function addElevation(
 ): (feature: RunFeature | LiftFeature) => Promise<RunFeature | LiftFeature> {
   return async (feature: RunFeature | LiftFeature) => {
     const coordinates: number[][] = getCoordinates(feature);
+    const geometry = feature.geometry;
     const elevationProfileCoordinates: number[][] =
-      getCoordinatesForElevationProfile(feature);
+      geometry.type === "LineString"
+        ? extractPointsForElevationProfile(geometry, elevationProfileResolution)
+            .coordinates
+        : [];
 
     let elevations: number[];
     try {
@@ -99,42 +107,6 @@ function getCoordinates(feature: RunFeature | LiftFeature) {
 
   // Remove elevation in case it was already added to this point
   return coordinates.map((coordinate) => [coordinate[0], coordinate[1]]);
-}
-
-function getCoordinatesForElevationProfile(feature: RunFeature | LiftFeature) {
-  if (feature.properties.type === FeatureType.Lift) {
-    return [];
-  }
-
-  if (feature.geometry.type !== "LineString") {
-    return [];
-  }
-
-  const subfeatures = turfLineChunk(
-    feature.geometry,
-    elevationProfileResolution,
-    { units: "meters" },
-  ).features;
-  const points: [number, number][] = [];
-  for (let subline of subfeatures) {
-    const geometry = subline.geometry;
-    if (geometry) {
-      const point = geometry.coordinates[0];
-      points.push([point[0], point[1]]);
-    }
-  }
-  if (subfeatures.length > 0) {
-    const geometry = subfeatures[subfeatures.length - 1].geometry;
-    if (geometry) {
-      const coords = geometry.coordinates;
-      if (coords.length > 1) {
-        const point = coords[coords.length - 1];
-        points.push([point[0], point[1]]);
-      }
-    }
-  }
-
-  return points;
 }
 
 function addElevations(

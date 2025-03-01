@@ -7,12 +7,14 @@ import { Config } from "./Config";
 import clusterSkiAreas from "./clustering/ClusterSkiAreas";
 import { DataPaths, getPath } from "./io/GeoJSONFiles";
 import { readGeoJSONFeatures } from "./io/GeoJSONReader";
+import * as CSVFormatter from "./transforms/CSVFormatter";
 import addElevation from "./transforms/Elevation";
 import toFeatureCollection from "./transforms/FeatureCollection";
 import { formatLift } from "./transforms/LiftFormatter";
 import * as MapboxGLFormatter from "./transforms/MapboxGLFormatter";
 import { formatRun } from "./transforms/RunFormatter";
 import { InputSkiAreaType, formatSkiArea } from "./transforms/SkiAreaFormatter";
+import { join } from "path";
 
 import {
   SkiAreaSiteProvider,
@@ -127,5 +129,18 @@ export default async function prepare(paths: DataPaths, config: Config) {
     }),
   );
 
+  console.log("Formatting for CSV export...");
+  
+  await Promise.all(
+    [FeatureType.SkiArea, FeatureType.Lift, FeatureType.Run].map((type) => {
+      return StreamToPromise(
+        readGeoJSONFeatures(getPath(paths.output, type))
+          .pipe(flatMap(CSVFormatter.formatter(type)))
+          .pipe(CSVFormatter.createCSVWriteStream(type))
+          .pipe(createWriteStream(join(paths.output.csv, CSVFormatter.getCSVFilename(type)))),
+      );
+    }),
+  );
+  
   console.log("Done preparing");
 }

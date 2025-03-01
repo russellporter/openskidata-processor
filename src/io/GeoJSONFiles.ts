@@ -73,6 +73,7 @@ export class GeoJSONOutputPaths implements CommonGeoJSONPaths {
   readonly lifts: string;
 
   readonly mapboxGL: CommonGeoJSONPaths;
+  readonly csv: string;
 
   constructor(folder: string) {
     if (!existsSync(folder)) {
@@ -87,6 +88,10 @@ export class GeoJSONOutputPaths implements CommonGeoJSONPaths {
       runs: join(folder, "mapboxgl_runs.geojson"),
       lifts: join(folder, "mapboxgl_lifts.geojson"),
     };
+    this.csv = join(folder, "csv");
+    if (!existsSync(this.csv)) {
+      mkdirSync(this.csv);
+    }
   }
 }
 export interface DataPaths {
