@@ -271,11 +271,13 @@ function extractLocationAndSkiAreas(skiAreas: SkiAreaSummaryFeature[]) {
   const locationFields = extractLocation(firstSkiArea?.properties.location);
 
   const skiAreaIDs = skiAreas.map((area) => area.properties.id).join(";");
-  const skiAreaNames = skiAreas
-    .filter((name) => name !== null)
-    .map((area) => escapeField(area.properties.name))
-    .sort()
-    .join(";");
+  const skiAreaNames = escapeField(
+    skiAreas
+      .filter((name) => name !== null)
+      .map((area) => area.properties.name)
+      .sort()
+      .join(","),
+  );
 
   return [...locationFields, skiAreaNames, skiAreaIDs];
 }
@@ -288,10 +290,12 @@ function extractLocation(location: Location | null | undefined): string[] {
 }
 
 function formatSources(sources: Source[]): string {
-  return sources
-    .map((source) => escapeField(getSourceURL(source)))
-    .sort()
-    .join(" ");
+  return escapeField(
+    sources
+      .map((source) => getSourceURL(source))
+      .sort()
+      .join(" "),
+  );
 }
 
 function formatWebsites(websites: string[]): string {
