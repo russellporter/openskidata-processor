@@ -27,7 +27,6 @@ function mockElevationServer(code: number) {
 
 afterEach(() => {
   nock.cleanAll();
-  nock.restore();
 });
 
 it("adds elevations to lift geometry", async () => {
@@ -161,21 +160,43 @@ it("adds elevations to run geometry & elevation profile", async () => {
   const feature: RunFeature = TestHelpers.fileContents(paths.output.runs)
     .features[0];
 
-  expect(feature.properties.elevationProfile).toMatchInlineSnapshot(`undefined`);
+  expect(feature.properties.elevationProfile).toMatchInlineSnapshot(`
+{
+  "heights": [
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+  ],
+  "resolution": 25,
+}
+`);
   expect(feature.geometry).toMatchInlineSnapshot(`
 {
   "coordinates": [
     [
       11.1164229,
       47.558125000000004,
+      0,
     ],
     [
       11.116365499999999,
       47.5579742,
+      1,
     ],
     [
       11.1171866,
       47.5556413,
+      2,
     ],
   ],
   "type": "LineString",
@@ -316,44 +337,52 @@ it("adds elevations to run polygons", async () => {
 
   await prepare(paths, config);
 
-  expect(TestHelpers.fileContents(paths.output.runs).features[0].geometry).
-toMatchInlineSnapshot(`
+  expect(TestHelpers.fileContents(paths.output.runs).features[0].geometry)
+    .toMatchInlineSnapshot(`
 {
   "coordinates": [
     [
       [
         6.544500899999997,
         45.3230511,
+        0,
       ],
       [
         6.543409400000002,
         45.32317370000001,
+        1,
       ],
       [
         6.544500899999997,
         45.3230511,
+        2,
       ],
       [
         6.544500899999997,
         45.3230511,
+        0,
       ],
     ],
     [
       [
         6.5502579,
         45.3224134,
+        4,
       ],
       [
         6.550612,
         45.3222571,
+        5,
       ],
       [
         6.5502579,
         45.3224134,
+        6,
       ],
       [
         6.5502579,
         45.3224134,
+        4,
       ],
     ],
   ],
