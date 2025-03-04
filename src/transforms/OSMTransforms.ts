@@ -32,11 +32,13 @@ type OSMTags = Record<string, string | undefined>;
 /**
  * Get the name of an object based on the OSM tags.
  * Extracts localized names as well.
+ * If ref is provided and the name starts with the ref, the ref prefix is removed.
  */
 export function getOSMName<Properties extends OSMTags>(
   properties: Properties,
   rootKey: Extract<keyof Properties, string>,
   fallbackRootKey: Extract<keyof Properties, string> | null = null,
+  ref: string | null = null,
 ): string | null {
   const keys = sortedNameKeys(properties, rootKey, fallbackRootKey);
 
@@ -44,7 +46,22 @@ export function getOSMName<Properties extends OSMTags>(
     return null;
   }
 
-  return unique(keys.map((key) => properties[key])).join(", ");
+  let name = unique(keys.map((key) => properties[key])).join(", ");
+  
+  // If ref exists and name starts with ref, remove the ref prefix
+  if (ref && name) {
+    // Check for pattern "11 - Peak Chair" or "11 Peak Chair"
+    const refWithDash = `${ref} - `;
+    const refWithSpace = `${ref} `;
+    
+    if (name.startsWith(refWithDash)) {
+      name = name.substring(refWithDash.length);
+    } else if (name.startsWith(refWithSpace)) {
+      name = name.substring(refWithSpace.length);
+    }
+  }
+
+  return name;
 }
 
 export function getOSMFirstValue<Properties extends OSMTags>(

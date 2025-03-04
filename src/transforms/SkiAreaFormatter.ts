@@ -143,7 +143,7 @@ function propertiesForOpenStreetMapSkiArea(
 ): Omit<SkiAreaProperties, "id"> {
   return {
     type: FeatureType.SkiArea,
-    name: getOSMName(tags, "name"),
+    name: getOSMName(tags, "name", null, null),
     sources: [
       {
         type: SourceType.OPENSTREETMAP,

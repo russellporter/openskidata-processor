@@ -45,13 +45,14 @@ export function formatLift(feature: InputLiftFeature): LiftFeature | null {
     return null;
   }
 
+  const ref = mapOSMString(tags.ref);
   const properties: LiftPropertiesWithoutID = {
     type: FeatureType.Lift,
     liftType: liftType,
     status: status,
-    name: getOSMName(tags, "name"),
+    name: getOSMName(tags, "name", null, ref),
     oneway: mapOSMBoolean(tags.oneway),
-    ref: mapOSMString(tags.ref),
+    ref: ref,
     description: tags.description || null,
     occupancy: mapOSMNumber(tags["aerialway:occupancy"]),
     capacity: mapOSMNumber(tags["aerialway:capacity"]),

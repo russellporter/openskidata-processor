@@ -46,11 +46,12 @@ export function formatRun(
     return null;
   }
 
+  const ref = mapOSMString(getOrElse(tags, "piste:ref", "ref"));
   const properties: Omit<FormattedInputRunProperties, "id"> = {
     type: FeatureType.Run,
     uses: uses,
-    name: getOSMName(tags, "piste:name", "name"),
-    ref: mapOSMString(getOrElse(tags, "piste:ref", "ref")),
+    name: getOSMName(tags, "piste:name", "name", ref),
+    ref: ref,
     description: mapOSMString(
       getOrElse(tags, "piste:description", "description"),
     ),
