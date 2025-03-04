@@ -18,6 +18,7 @@ import {
   Source,
 } from "openskidata-format";
 import { Transform } from "stream";
+import centroid from "@turf/centroid";
 
 /**
  * Type overloads for formatter function
@@ -115,13 +116,45 @@ export function getCSVFilename(type: FeatureType): string {
 function getHeadersForType(type: FeatureType): string {
   switch (type) {
     case FeatureType.Run:
-      return "name,ref,country,region,locality,ski_area_names,difficulty,color,oneway,lit,gladed,patrolled,grooming,uses,inclined_length_m,descent_m,ascent_m,average_pitch_%,max_pitch_%,min_elevation_m,max_elevation_m,difficulty_convention,wikidata_id,websites,openskimap,id,ski_area_ids,sources,description";
+      return "name,ref,country,region,locality,ski_area_names,difficulty,color,oneway,lit,gladed,patrolled,grooming,uses,inclined_length_m,descent_m,ascent_m,average_pitch_%,max_pitch_%,min_elevation_m,max_elevation_m,difficulty_convention,wikidata_id,websites,openskimap,id,geometry,lat,lng,ski_area_ids,sources,description";
     case FeatureType.Lift:
-      return "name,ref,lift_type,status,country,region,locality,ski_area_names,oneway,duration_sec,capacity,occupancy,detachable,bubble,heating,inclined_length_m,vertical_m,speed_m_per_s,min_elevation_,max_elevation_m,overall_pitch_%,wikidata_id,websites,openskimap,id,ski_area_ids,sources,description";
+      return "name,ref,lift_type,status,country,region,locality,ski_area_names,oneway,duration_sec,capacity,occupancy,detachable,bubble,heating,inclined_length_m,vertical_m,speed_m_per_s,min_elevation_,max_elevation_m,overall_pitch_%,wikidata_id,websites,openskimap,id,geometry,lat,lng,ski_area_ids,sources,description";
     case FeatureType.SkiArea:
-      return "name,country,region,locality,status,has_downhill,has_nordic,downhill_distance_km,nordic_distance_km,vertical_m,min_elevation_m,max_elevation_m,lift_count,surface_lifts_count,run_convention,wikidata_id,websites,openskimap,id,sources";
+      return "name,country,region,locality,status,has_downhill,has_nordic,downhill_distance_km,nordic_distance_km,vertical_m,min_elevation_m,max_elevation_m,lift_count,surface_lifts_count,run_convention,wikidata_id,websites,openskimap,id,geometry,lat,lng,sources";
     default:
       throw new Error(`Unknown feature type: ${type}`);
+  }
+}
+
+/**
+ * Generate an OpenSkiMap URL for a feature
+ * 
+ * @param featureId ID of the feature to generate URL for
+ * @returns URL string in the format https://openskimap.org/?obj={id}
+ */
+function getOpenSkiMapURL(featureId: string): string {
+  return `https://openskimap.org/?obj=${featureId}`;
+}
+
+/**
+ * Get the geometry information of a feature (type and centroid coordinates)
+ * 
+ * @param feature GeoJSON feature
+ * @returns Array with [geometryType, lat, lng]
+ */
+function getGeometry(feature: GeoJSON.Feature): [string, string, string] {
+  const geometryType = feature.geometry.type;
+  
+  try {
+    const centroidFeature = centroid(feature);
+    // GeoJSON coordinates are [lng, lat], but we want [lat, lng]
+    return [
+      geometryType,
+      centroidFeature.geometry.coordinates[1].toFixed(6),
+      centroidFeature.geometry.coordinates[0].toFixed(6)
+    ];
+  } catch (e) {
+    return [geometryType, "", ""];
   }
 }
 
@@ -158,6 +191,7 @@ function formatRun(feature: RunFeature): string {
     formatWebsites(properties.websites),
     getOpenSkiMapURL(properties.id),
     properties.id,
+    ...getGeometry(feature),
     extractSkiAreaIDs(properties.skiAreas),
     formatSources(properties.sources),
     properties.description ? escapeField(properties.description) : "",
@@ -191,6 +225,7 @@ function formatLift(feature: LiftFeature): string {
     formatWebsites(properties.websites),
     getOpenSkiMapURL(properties.id),
     properties.id,
+    ...getGeometry(feature),
     extractSkiAreaIDs(properties.skiAreas),
     formatSources(properties.sources),
     properties.description ? escapeField(properties.description) : "",
@@ -243,6 +278,7 @@ function formatSkiArea(feature: SkiAreaFeature): string {
     formatWebsites(properties.websites),
     getOpenSkiMapURL(properties.id),
     properties.id,
+    ...getGeometry(feature),
     formatSources(properties.sources),
   ].join(",");
 }
@@ -304,10 +340,6 @@ function formatSources(sources: Source[]): string {
       .sort()
       .join(" "),
   );
-}
-
-function getOpenSkiMapURL(featureId: string): string {
-  return `https://openskimap.org/?obj=${featureId}`;
 }
 
 function formatWebsites(websites: string[]): string {

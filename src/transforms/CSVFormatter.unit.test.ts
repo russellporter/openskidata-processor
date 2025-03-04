@@ -97,7 +97,7 @@ describe("CSVFormatter", () => {
 
         const csv = formatter(FeatureType.SkiArea)(skiAreaFeature);
 
-        expect(csv).toMatchInlineSnapshot(`"Test Ski Area,United States,Colorado,Vail,operating,yes,yes,15,8,1200,1200,2400,4,,europe,,https://testskiarea.com,https://openskimap.org/?obj=test-ski-area,test-ski-area,https://www.openstreetmap.org/123 https://www.skimap.org/SkiAreas/view/456"`);
+        expect(csv).toMatchInlineSnapshot(`"Test Ski Area,United States,Colorado,Vail,operating,yes,yes,15,8,1200,1200,2400,4,,europe,,https://testskiarea.com,https://openskimap.org/?obj=test-ski-area,test-ski-area,Point,20.000000,10.000000,https://www.openstreetmap.org/123 https://www.skimap.org/SkiAreas/view/456"`);
       });
     });
 
@@ -156,7 +156,7 @@ describe("CSVFormatter", () => {
 
         const csv = formatter(FeatureType.Run)(runFeature);
 
-        expect(csv).toMatchInlineSnapshot(`"Test Run,5,,,,Test Ski Area,intermediate,red,yes,yes,no,yes,,downhill,289,200,0,0.96,-0.96,1800,2000,europe,,,https://openskimap.org/?obj=test-run,test-run,test-ski-area,https://www.openstreetmap.org/123,"`);
+        expect(csv).toMatchInlineSnapshot(`"Test Run,5,,,,Test Ski Area,intermediate,red,yes,yes,no,yes,,downhill,289,200,0,0.96,-0.96,1800,2000,europe,,,https://openskimap.org/?obj=test-run,test-run,LineString,47.312020,11.176431,test-ski-area,https://www.openstreetmap.org/123,"`);
       });
     });
 
@@ -212,7 +212,7 @@ describe("CSVFormatter", () => {
 
         const csv = formatter(FeatureType.Lift)(liftFeature);
 
-        expect(csv).toMatchInlineSnapshot(`"Test Lift,A,chair_lift,operating,,,,Test Ski Area,no,600,2400,4,yes,yes,yes,30511,400,50.9,1600,2000,0.01,,,https://openskimap.org/?obj=test-lift,test-lift,test-ski-area,https://www.openstreetmap.org/123,"`);
+        expect(csv).toMatchInlineSnapshot(`"Test Lift,A,chair_lift,operating,,,,Test Ski Area,no,600,2400,4,yes,yes,yes,30511,400,50.9,1600,2000,0.01,,,https://openskimap.org/?obj=test-lift,test-lift,LineString,20.100000,10.100000,test-ski-area,https://www.openstreetmap.org/123,"`);
       });
     });
   });
@@ -235,7 +235,7 @@ describe("CSVFormatter", () => {
       stream.write("test-data-2");
       stream.end(() => {
         expect(output).toMatchInlineSnapshot(`
-"name,country,region,locality,status,has_downhill,has_nordic,downhill_distance_km,nordic_distance_km,vertical_m,min_elevation_m,max_elevation_m,lift_count,surface_lifts_count,run_convention,wikidata_id,websites,openskimap,id,sources
+"name,country,region,locality,status,has_downhill,has_nordic,downhill_distance_km,nordic_distance_km,vertical_m,min_elevation_m,max_elevation_m,lift_count,surface_lifts_count,run_convention,wikidata_id,websites,openskimap,id,geometry,lat,lng,sources
 test-data-1
 test-data-2
 "
