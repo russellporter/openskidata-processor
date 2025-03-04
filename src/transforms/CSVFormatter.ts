@@ -115,11 +115,11 @@ export function getCSVFilename(type: FeatureType): string {
 function getHeadersForType(type: FeatureType): string {
   switch (type) {
     case FeatureType.Run:
-      return "id,name,ref,country,region,locality,ski_area_names,ski_area_ids,difficulty,color,oneway,lit,gladed,patrolled,grooming,uses,inclined_length_m,descent_m,ascent_m,average_pitch_%,max_pitch_%,min_elevation_m,max_elevation_m,difficulty_convention,wikidata_id,websites,sources,description";
+      return "name,ref,country,region,locality,ski_area_names,difficulty,color,oneway,lit,gladed,patrolled,grooming,uses,inclined_length_m,descent_m,ascent_m,average_pitch_%,max_pitch_%,min_elevation_m,max_elevation_m,difficulty_convention,wikidata_id,websites,openskimap,id,ski_area_ids,sources,description";
     case FeatureType.Lift:
-      return "id,name,ref,country,region,locality,ski_area_names,ski_area_ids,lift_type,status,oneway,duration_sec,capacity,occupancy,detachable,bubble,heating,inclined_length_m,vertical_m,speed_m_per_s,min_elevation_,max_elevation_m,overall_pitch_%,wikidata_id,websites,sources,description";
+      return "name,ref,lift_type,status,country,region,locality,ski_area_names,oneway,duration_sec,capacity,occupancy,detachable,bubble,heating,inclined_length_m,vertical_m,speed_m_per_s,min_elevation_,max_elevation_m,overall_pitch_%,wikidata_id,websites,openskimap,id,ski_area_ids,sources,description";
     case FeatureType.SkiArea:
-      return "id,name,country,region,locality,status,has_downhill,has_nordic,downhill_distance_km,nordic_distance_km,vertical_m,min_elevation_m,max_elevation_m,lift_count,surface_lifts_count,run_convention,wikidata_id,websites,sources";
+      return "name,country,region,locality,status,has_downhill,has_nordic,downhill_distance_km,nordic_distance_km,vertical_m,min_elevation_m,max_elevation_m,lift_count,surface_lifts_count,run_convention,wikidata_id,websites,openskimap,id,sources";
     default:
       throw new Error(`Unknown feature type: ${type}`);
   }
@@ -135,7 +135,6 @@ function formatRun(feature: RunFeature): string {
   const elevationData = getRunElevationData(feature);
 
   return [
-    properties.id,
     escapeField(properties.name),
     escapeField(properties.ref),
     ...extractLocationAndSkiAreas(properties.skiAreas),
@@ -157,6 +156,9 @@ function formatRun(feature: RunFeature): string {
     properties.difficultyConvention,
     escapeField(properties.wikidata_id),
     formatWebsites(properties.websites),
+    getOpenSkiMapURL(properties.id),
+    properties.id,
+    extractSkiAreaIDs(properties.skiAreas),
     formatSources(properties.sources),
     properties.description ? escapeField(properties.description) : "",
   ].join(",");
@@ -167,12 +169,11 @@ function formatLift(feature: LiftFeature): string {
   const elevationData = getLiftElevationData(feature);
 
   return [
-    properties.id,
     escapeField(properties.name),
     escapeField(properties.ref),
-    ...extractLocationAndSkiAreas(properties.skiAreas),
     properties.liftType,
     properties.status,
+    ...extractLocationAndSkiAreas(properties.skiAreas),
     properties.oneway ? "yes" : "no",
     properties.duration ? properties.duration.toString() : "",
     properties.capacity ? properties.capacity.toString() : "",
@@ -188,6 +189,9 @@ function formatLift(feature: LiftFeature): string {
     elevationData?.overallPitchInPercent.toFixed(2),
     escapeField(properties.wikidata_id),
     formatWebsites(properties.websites),
+    getOpenSkiMapURL(properties.id),
+    properties.id,
+    extractSkiAreaIDs(properties.skiAreas),
     formatSources(properties.sources),
     properties.description ? escapeField(properties.description) : "",
   ].join(",");
@@ -208,7 +212,6 @@ function formatSkiArea(feature: SkiAreaFeature): string {
     ? "yes"
     : "no";
   return [
-    properties.id,
     escapeField(properties.name),
     ...extractLocation(properties.location),
     properties.status,
@@ -238,6 +241,8 @@ function formatSkiArea(feature: SkiAreaFeature): string {
     properties.runConvention,
     escapeField(properties.wikidata_id),
     formatWebsites(properties.websites),
+    getOpenSkiMapURL(properties.id),
+    properties.id,
     formatSources(properties.sources),
   ].join(",");
 }
@@ -270,7 +275,6 @@ function extractLocationAndSkiAreas(skiAreas: SkiAreaSummaryFeature[]) {
   const firstSkiArea = skiAreas.length > 0 ? skiAreas[0] : null;
   const locationFields = extractLocation(firstSkiArea?.properties.location);
 
-  const skiAreaIDs = skiAreas.map((area) => area.properties.id).join(";");
   const skiAreaNames = escapeField(
     skiAreas
       .filter((name) => name !== null)
@@ -279,7 +283,11 @@ function extractLocationAndSkiAreas(skiAreas: SkiAreaSummaryFeature[]) {
       .join(","),
   );
 
-  return [...locationFields, skiAreaNames, skiAreaIDs];
+  return [...locationFields, skiAreaNames];
+}
+
+function extractSkiAreaIDs(skiAreas: SkiAreaSummaryFeature[]) {
+  return skiAreas.map((area) => area.properties.id).join(";");
 }
 
 function extractLocation(location: Location | null | undefined): string[] {
@@ -296,6 +304,10 @@ function formatSources(sources: Source[]): string {
       .sort()
       .join(" "),
   );
+}
+
+function getOpenSkiMapURL(featureId: string): string {
+  return `https://openskimap.org/?obj=${featureId}`;
 }
 
 function formatWebsites(websites: string[]): string {
