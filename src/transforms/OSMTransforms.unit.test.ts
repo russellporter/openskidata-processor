@@ -16,16 +16,20 @@ describe("OSMTransforms", () => {
 
     it("should use fallback key when primary key is not found", () => {
       const properties: TestProperties = { fallback: "Fallback Name" };
-      expect(getOSMName<TestProperties>(properties, "name", "fallback")).toBe("Fallback Name");
+      expect(getOSMName<TestProperties>(properties, "name", "fallback")).toBe(
+        "Fallback Name",
+      );
     });
 
     it("should return multiple localized names joined with comma", () => {
       const properties: TestProperties = {
         name: "Test Chair",
         "name:en": "English Name",
-        "name:fr": "French Name"
+        "name:fr": "French Name",
       };
-      expect(getOSMName(properties, "name")).toBe("Test Chair, English Name, French Name");
+      expect(getOSMName(properties, "name")).toBe(
+        "Test Chair, English Name, French Name",
+      );
     });
 
     it("should remove ref prefix with dash when name starts with ref", () => {
@@ -51,6 +55,21 @@ describe("OSMTransforms", () => {
     it("should not modify name when ref doesn't match beginning", () => {
       const properties: TestProperties = { name: "11 Peak Chair" };
       expect(getOSMName(properties, "name", null, "12")).toBe("11 Peak Chair");
+    });
+
+    it("should remove ref prefix with dash and no space when name starts with ref", () => {
+      const properties: TestProperties = { name: "11-Peak Chair" };
+      expect(getOSMName(properties, "name", null, "11")).toBe("Peak Chair");
+    });
+
+    it("should not remove ref prefix with no space and no dash when name starts with ref", () => {
+      const properties: TestProperties = { name: "Peak Chair" };
+      expect(getOSMName(properties, "name", null, "P")).toBe("Peak Chair");
+    });
+
+    it("should handle names with multiple spaces after ref", () => {
+      const properties: TestProperties = { name: "11   Peak Chair" };
+      expect(getOSMName(properties, "name", null, "11")).toBe("Peak Chair");
     });
   });
 });

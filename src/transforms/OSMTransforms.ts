@@ -47,17 +47,17 @@ export function getOSMName<Properties extends OSMTags>(
   }
 
   let name = unique(keys.map((key) => properties[key])).join(", ");
-  
+
   // If ref exists and name starts with ref, remove the ref prefix
   if (ref && name) {
-    // Check for pattern "11 - Peak Chair" or "11 Peak Chair"
-    const refWithDash = `${ref} - `;
-    const refWithSpace = `${ref} `;
-    
-    if (name.startsWith(refWithDash)) {
-      name = name.substring(refWithDash.length);
-    } else if (name.startsWith(refWithSpace)) {
-      name = name.substring(refWithSpace.length);
+    // Check for various reference patterns: "11 - Peak Chair", "11-Peak Chair", "11- Peak Chair", "11 -Peak Chair", "11 Peak Chair"
+    // Create a regex that matches ref followed by:
+    // - optional spaces, then optional dash, then spaces
+    // - OR dash, then optional spaces
+    const refPrefixRegex = new RegExp(`^${ref}(\\s*-?\\s+|-\\s*)`);
+
+    if (refPrefixRegex.test(name)) {
+      name = name.replace(refPrefixRegex, "");
     }
   }
 
