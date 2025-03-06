@@ -1,3 +1,4 @@
+import centroid from "@turf/centroid";
 import GeoJSON from "geojson";
 import {
   FeatureType,
@@ -18,7 +19,6 @@ import {
   Source,
 } from "openskidata-format";
 import { Transform } from "stream";
-import centroid from "@turf/centroid";
 
 /**
  * Type overloads for formatter function
@@ -128,7 +128,7 @@ function getHeadersForType(type: FeatureType): string {
 
 /**
  * Generate an OpenSkiMap URL for a feature
- * 
+ *
  * @param featureId ID of the feature to generate URL for
  * @returns URL string in the format https://openskimap.org/?obj={id}
  */
@@ -138,20 +138,20 @@ function getOpenSkiMapURL(featureId: string): string {
 
 /**
  * Get the geometry information of a feature (type and centroid coordinates)
- * 
+ *
  * @param feature GeoJSON feature
  * @returns Array with [geometryType, lat, lng]
  */
 function getGeometry(feature: GeoJSON.Feature): [string, string, string] {
   const geometryType = feature.geometry.type;
-  
+
   try {
     const centroidFeature = centroid(feature);
     // GeoJSON coordinates are [lng, lat], but we want [lat, lng]
     return [
       geometryType,
       centroidFeature.geometry.coordinates[1].toFixed(6),
-      centroidFeature.geometry.coordinates[0].toFixed(6)
+      centroidFeature.geometry.coordinates[0].toFixed(6),
     ];
   } catch (e) {
     return [geometryType, "", ""];
@@ -173,10 +173,10 @@ function formatRun(feature: RunFeature): string {
     ...extractLocationAndSkiAreas(properties.skiAreas),
     properties.difficulty,
     colorName,
-    properties.oneway ? "yes" : "no",
-    properties.lit ? "yes" : "no",
-    properties.gladed ? "yes" : "no",
-    properties.patrolled ? "yes" : "no",
+    formatBoolean(properties.oneway),
+    formatBoolean(properties.lit),
+    formatBoolean(properties.gladed),
+    formatBoolean(properties.patrolled),
     properties.grooming,
     properties.uses.join(";"),
     elevationData?.inclinedLengthInMeters.toFixed(),
@@ -208,13 +208,13 @@ function formatLift(feature: LiftFeature): string {
     properties.liftType,
     properties.status,
     ...extractLocationAndSkiAreas(properties.skiAreas),
-    properties.oneway ? "yes" : "no",
+    formatBoolean(properties.oneway),
     properties.duration ? properties.duration.toString() : "",
     properties.capacity ? properties.capacity.toString() : "",
     properties.occupancy ? properties.occupancy.toString() : "",
-    properties.detachable ? "yes" : "no",
-    properties.bubble ? "yes" : "no",
-    properties.heating ? "yes" : "no",
+    formatBoolean(properties.detachable),
+    formatBoolean(properties.bubble),
+    formatBoolean(properties.heating),
     elevationData?.inclinedLengthInMeters.toFixed(),
     elevationData?.verticalInMeters.toFixed(),
     elevationData?.speedInMetersPerSecond?.toFixed(1),
@@ -239,19 +239,12 @@ function formatSkiArea(feature: SkiAreaFeature): string {
   // Calculate lift counts
   const { totalLiftCount, surfaceLiftCount } = calculateLiftCounts(statistics);
 
-  // Check for specific activities
-  const hasDownhill = properties.activities.includes(SkiAreaActivity.Downhill)
-    ? "yes"
-    : "no";
-  const hasNordic = properties.activities.includes(SkiAreaActivity.Nordic)
-    ? "yes"
-    : "no";
   return [
     escapeField(properties.name),
     ...extractLocation(properties.location),
     properties.status,
-    hasDownhill,
-    hasNordic,
+    formatBoolean(properties.activities.includes(SkiAreaActivity.Downhill)),
+    formatBoolean(properties.activities.includes(SkiAreaActivity.Nordic)),
     statistics?.runs.byActivity.downhill
       ? Math.round(
           getDistance(statistics.runs.byActivity.downhill.byDifficulty),
@@ -305,6 +298,11 @@ function escapeField(value: string | null | undefined): string {
   }
 
   return value;
+}
+
+function formatBoolean(value: boolean | null): string {
+  if (value === null) return "";
+  return value ? "yes" : "no";
 }
 
 function extractLocationAndSkiAreas(skiAreas: SkiAreaSummaryFeature[]) {

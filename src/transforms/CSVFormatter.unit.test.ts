@@ -212,7 +212,7 @@ describe("CSVFormatter", () => {
 
         const csv = formatter(FeatureType.Lift)(liftFeature);
 
-        expect(csv).toMatchInlineSnapshot(`"Test Lift,A,chair_lift,operating,,,,Test Ski Area,no,600,2400,4,yes,yes,yes,30511,400,50.9,1600,2000,0.01,,,https://openskimap.org/?obj=test-lift,test-lift,LineString,20.100000,10.100000,test-ski-area,https://www.openstreetmap.org/123,"`);
+        expect(csv).toMatchInlineSnapshot(`"Test Lift,A,chair_lift,operating,,,,Test Ski Area,,600,2400,4,yes,yes,yes,30511,400,50.9,1600,2000,0.01,,,https://openskimap.org/?obj=test-lift,test-lift,LineString,20.100000,10.100000,test-ski-area,https://www.openstreetmap.org/123,"`);
       });
     });
   });
