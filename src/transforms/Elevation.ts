@@ -70,7 +70,7 @@ async function loadElevations(
     throw new Error("Failed status code: " + response.status);
   }
 
-  const elevations = await response.json();
+  const elevations: (number | null)[] = await response.json();
 
   if (coordinates.length !== elevations.length) {
     throw new Error(
@@ -82,7 +82,16 @@ async function loadElevations(
     );
   }
 
-  return elevations;
+  // If there is a data hole, missing elevation data is represented as null.
+  if (
+    elevations.some((elevation) => {
+      elevation === null;
+    })
+  ) {
+    throw new Error("Elevation data contains nulls");
+  }
+
+  return elevations as number[];
 }
 
 function getCoordinates(feature: RunFeature | LiftFeature) {
