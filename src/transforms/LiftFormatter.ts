@@ -34,7 +34,16 @@ export function formatLift(feature: InputLiftFeature): LiftFeature | null {
     tags["foot"] == "private" ||
     tags["usage"] == "freight" ||
     tags["usage"] == "industrial" ||
-    tags["railway:traffic_mode"] == "freight"
+    tags["railway:traffic_mode"] == "freight" ||
+    tags["railway"] == "platform" ||
+    tags["railway"] == "station" ||
+    tags["railway"] == "crossing" ||
+    tags["railway"] == "level_crossing" ||
+    tags["railway"] == "halt" ||
+    tags["railway"] == "stop" ||
+    tags["railway"] == "switch" ||
+    tags["railway"] == "tram_stop" ||
+    tags["station"] == "funicular" ||
   ) {
     return null;
   }
