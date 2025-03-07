@@ -43,7 +43,7 @@ export function formatLift(feature: InputLiftFeature): LiftFeature | null {
     tags["railway"] == "stop" ||
     tags["railway"] == "switch" ||
     tags["railway"] == "tram_stop" ||
-    tags["station"] == "funicular" ||
+    tags["station"] == "funicular"
   ) {
     return null;
   }
