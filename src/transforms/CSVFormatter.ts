@@ -118,7 +118,7 @@ function getHeadersForType(type: FeatureType): string {
     case FeatureType.Run:
       return "name,ref,country,region,locality,ski_area_names,difficulty,color,oneway,lit,gladed,patrolled,grooming,uses,inclined_length_m,descent_m,ascent_m,average_pitch_%,max_pitch_%,min_elevation_m,max_elevation_m,difficulty_convention,wikidata_id,websites,openskimap,id,geometry,lat,lng,ski_area_ids,sources,description";
     case FeatureType.Lift:
-      return "name,ref,lift_type,status,country,region,locality,ski_area_names,oneway,duration_sec,capacity,occupancy,detachable,bubble,heating,inclined_length_m,vertical_m,speed_m_per_s,min_elevation_,max_elevation_m,overall_pitch_%,wikidata_id,websites,openskimap,id,geometry,lat,lng,ski_area_ids,sources,description";
+      return "name,ref,lift_type,status,country,region,locality,ski_area_names,oneway,duration_sec,capacity,occupancy,detachable,bubble,heating,inclined_length_m,vertical_m,speed_m_per_s,vertical_speed_m_per_s,min_elevation_m,max_elevation_m,overall_pitch_%,wikidata_id,websites,openskimap,id,geometry,lat,lng,ski_area_ids,sources,description";
     case FeatureType.SkiArea:
       return "name,country,region,locality,status,has_downhill,has_nordic,downhill_distance_km,nordic_distance_km,vertical_m,min_elevation_m,max_elevation_m,lift_count,surface_lifts_count,run_convention,wikidata_id,websites,openskimap,id,geometry,lat,lng,sources";
     default:
@@ -218,6 +218,7 @@ function formatLift(feature: LiftFeature): string {
     elevationData?.inclinedLengthInMeters.toFixed(),
     elevationData?.verticalInMeters.toFixed(),
     elevationData?.speedInMetersPerSecond?.toFixed(1),
+    elevationData?.verticalSpeedInMetersPerSecond?.toFixed(2),
     elevationData?.minElevationInMeters.toFixed(),
     elevationData?.maxElevationInMeters.toFixed(),
     elevationData?.overallPitchInPercent.toFixed(2),
