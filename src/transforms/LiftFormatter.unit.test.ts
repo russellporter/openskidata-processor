@@ -31,7 +31,20 @@ describe("LiftFormatter", () => {
         },
       }),
     );
-    expect(feature!.properties.liftType).toBe(LiftType.RackRailway);
+    expect(feature!.properties.liftType).toBe(LiftType.Railway);
+  });
+
+  it("formats normal railway", () => {
+    const feature = formatLift(
+      inputLift({
+        type: "way",
+        id: 1,
+        tags: {
+          railway: "rail",
+        },
+      }),
+    );
+    expect(feature!.properties.liftType).toBe(LiftType.Railway);
   });
 
   it("includes localized names", () => {
@@ -114,6 +127,19 @@ describe("LiftFormatter", () => {
           tags: {
             aerialway: "chair_lift",
             foot: "no",
+          },
+        }),
+      ),
+    ).toBeNull();
+
+    expect(
+      formatLift(
+        inputLift({
+          type: "way",
+          id: 1,
+          tags: {
+            rack: "riggenbach",
+            railway: "switch",
           },
         }),
       ),

@@ -34,19 +34,15 @@ export function formatLift(feature: InputLiftFeature): LiftFeature | null {
     tags["foot"] == "private" ||
     tags["usage"] == "freight" ||
     tags["usage"] == "industrial" ||
-    tags["railway:traffic_mode"] == "freight" ||
-    tags["railway"] == "platform" ||
-    tags["railway"] == "station" ||
-    tags["railway"] == "crossing" ||
-    tags["railway"] == "level_crossing" ||
-    tags["railway"] == "halt" ||
-    tags["railway"] == "stop" ||
-    tags["railway"] == "switch" ||
-    tags["railway"] == "tram_stop" ||
-    tags["station"] == "funicular"
+    tags["railway:traffic_mode"] == "freight"
   ) {
     return null;
   }
+
+  const railwayTag = getStatusAndValue(
+    "railway",
+    tags as { [key: string]: string },
+  );
 
   const { status, liftType } = getStatusAndLiftType(tags);
 
@@ -96,8 +92,15 @@ function getStatusAndLiftType(tags: OSMLiftTags) {
       },
     ));
 
-    if (value !== null && value !== "funicular") {
-      value = LiftType.RackRailway;
+    if (
+      value === "narrow_gauge" ||
+      value === "rail" ||
+      value === "light_rail" ||
+      value === "tram" ||
+      value === "subway" ||
+      value === "monorail"
+    ) {
+      value = LiftType.Railway;
     }
   }
 
