@@ -116,7 +116,7 @@ function formatOpenStreetMapSite(site: OSMSkiAreaSite): SkiAreaFeature | null {
     // super hacky thing, we don't know the coordinates of the site at this point.
     // later on the correct geometry will be set when doing clustering.
     // to get a stable identifier for the site, build a geometry based on its ID (which is then hashed by `buildFeature`)
-    placeholderSiteGeometry(site),
+    placeholderSiteGeometry(site.id),
     propertiesForOpenStreetMapSkiArea(
       osmID(site),
       site.tags,

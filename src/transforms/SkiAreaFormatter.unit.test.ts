@@ -204,8 +204,8 @@ describe("SkiAreaFormatter", () => {
       },
     };
 
-    expect(formatSkiArea(InputSkiAreaType.OPENSTREETMAP_SITE)(site))
-      .toMatchInlineSnapshot(`
+    expect(formatSkiArea(InputSkiAreaType.OPENSTREETMAP_SITE)(site)).
+toMatchInlineSnapshot(`
 {
   "geometry": {
     "coordinates": [

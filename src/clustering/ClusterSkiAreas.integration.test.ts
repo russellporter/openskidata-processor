@@ -700,10 +700,10 @@ it("generates elevation statistics for run & lift based on lift served skiable v
   );
 
   expect(
-  TestHelpers.fileContents(paths.output.skiAreas).features.map(
-    simplifiedSkiAreaFeatureWithStatistics
-  )
-).toMatchInlineSnapshot(`
+    TestHelpers.fileContents(paths.output.skiAreas).features.map(
+      simplifiedSkiAreaFeatureWithStatistics,
+    ),
+  ).toMatchInlineSnapshot(`
 [
   {
     "activities": [
@@ -2055,14 +2055,11 @@ it("removes an OpenStreetMap ski area that does not contain any runs/lifts as it
 
 it("updates geometry, run convention, and activities for a site based ski area", async () => {
   const paths = TestHelpers.getFilePaths();
-  const siteSkiArea = TestHelpers.mockSkiAreaFeature({
+  const siteSkiArea = TestHelpers.mockSkiAreaSiteFeature({
     id: "1",
+    osmID: 1,
     activities: [],
     sources: [{ type: SourceType.OPENSTREETMAP, id: "1" }],
-    geometry: {
-      type: "Point",
-      coordinates: [360, 360, 1],
-    },
   });
   TestHelpers.mockFeatureFiles(
     [siteSkiArea],
@@ -2134,14 +2131,11 @@ it("updates geometry, run convention, and activities for a site based ski area",
 
 it("adds nearby unassociated runs of same activity to site based ski area", async () => {
   const paths = TestHelpers.getFilePaths();
-  const siteSkiArea = TestHelpers.mockSkiAreaFeature({
+  const siteSkiArea = TestHelpers.mockSkiAreaSiteFeature({
     id: "1",
+    osmID: 1,
     activities: [],
     sources: [{ type: SourceType.OPENSTREETMAP, id: "1" }],
-    geometry: {
-      type: "Point",
-      coordinates: [360, 360, 1],
-    },
   });
   TestHelpers.mockFeatureFiles(
     [siteSkiArea],
@@ -2210,14 +2204,11 @@ it("adds nearby unassociated runs of same activity to site based ski area", asyn
 
 it("does not add nearby unassociated runs of different activity to site based ski area", async () => {
   const paths = TestHelpers.getFilePaths();
-  const siteSkiArea = TestHelpers.mockSkiAreaFeature({
+  const siteSkiArea = TestHelpers.mockSkiAreaSiteFeature({
     id: "1",
+    osmID: 1,
     activities: [],
     sources: [{ type: SourceType.OPENSTREETMAP, id: "1" }],
-    geometry: {
-      type: "Point",
-      coordinates: [360, 360, 1],
-    },
   });
   TestHelpers.mockFeatureFiles(
     [siteSkiArea],
@@ -2286,14 +2277,11 @@ it("does not add nearby unassociated runs of different activity to site based sk
 
 it("removes site based ski area that doesn't have associated lifts and runs", async () => {
   const paths = TestHelpers.getFilePaths();
-  const siteSkiArea = TestHelpers.mockSkiAreaFeature({
+  const siteSkiArea = TestHelpers.mockSkiAreaSiteFeature({
     id: "1",
+    osmID: 1,
     activities: [],
     sources: [{ type: SourceType.OPENSTREETMAP, id: "1" }],
-    geometry: {
-      type: "Point",
-      coordinates: [360, 360, 1],
-    },
   });
   TestHelpers.mockFeatureFiles([siteSkiArea], [], [], paths.intermediate);
 
@@ -2313,14 +2301,11 @@ it("removes site based ski area that doesn't have associated lifts and runs", as
 
 it("removes landuse based ski area when there is a site with sufficient overlap", async () => {
   const paths = TestHelpers.getFilePaths();
-  const siteSkiArea = TestHelpers.mockSkiAreaFeature({
+  const siteSkiArea = TestHelpers.mockSkiAreaSiteFeature({
     id: "1",
+    osmID: 1,
     activities: [],
     sources: [{ type: SourceType.OPENSTREETMAP, id: "1" }],
-    geometry: {
-      type: "Point",
-      coordinates: [360, 360, 1],
-    },
   });
   const landuseSkiArea = TestHelpers.mockSkiAreaFeature({
     sources: [{ type: SourceType.OPENSTREETMAP, id: "2" }],
@@ -2422,14 +2407,11 @@ it("removes landuse based ski area when there is a site with sufficient overlap"
 
 it("keeps landuse based ski area when there is a site with insufficient overlap", async () => {
   const paths = TestHelpers.getFilePaths();
-  const siteSkiArea = TestHelpers.mockSkiAreaFeature({
+  const siteSkiArea = TestHelpers.mockSkiAreaSiteFeature({
     id: "1",
+    osmID: 1,
     activities: [],
     sources: [{ type: SourceType.OPENSTREETMAP, id: "1" }],
-    geometry: {
-      type: "Point",
-      coordinates: [360, 360, 1],
-    },
   });
   const landuseSkiArea = TestHelpers.mockSkiAreaFeature({
     sources: [{ type: SourceType.OPENSTREETMAP, id: "2" }],

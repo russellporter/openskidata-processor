@@ -35,6 +35,7 @@ import {
   GeoJSONOutputPaths,
   InputDataPaths,
 } from "./io/GeoJSONFiles";
+import placeholderSiteGeometry from "./utils/PlaceholderSiteGeometry";
 
 export interface FolderContents extends Map<string, any> {}
 
@@ -225,7 +226,7 @@ export function mockLiftFeature<G extends LiftGeometry>(options: {
   };
 }
 
-export function mockSkiAreaFeature<G extends SkiAreaGeometry>(options: {
+type MockSkiAreaPropertyOptions = {
   id?: string;
   name?: string;
   activities?: SkiAreaActivity[];
@@ -234,8 +235,15 @@ export function mockSkiAreaFeature<G extends SkiAreaGeometry>(options: {
   statistics?: SkiAreaStatistics;
   websites?: string[];
   wikidata_id?: string | null;
+};
+
+type MockSkiAreaGeometryOptions<G extends SkiAreaGeometry> = {
   geometry: G;
-}): GeoJSON.Feature<G, SkiAreaProperties> {
+};
+
+export function mockSkiAreaFeature<G extends SkiAreaGeometry>(
+  options: MockSkiAreaPropertyOptions & MockSkiAreaGeometryOptions<G>,
+): GeoJSON.Feature<G, SkiAreaProperties> {
   return {
     type: "Feature",
     properties: {
@@ -259,6 +267,15 @@ export function mockSkiAreaFeature<G extends SkiAreaGeometry>(options: {
     },
     geometry: options.geometry,
   };
+}
+
+export function mockSkiAreaSiteFeature(
+  options: MockSkiAreaPropertyOptions & { osmID: number },
+) {
+  return mockSkiAreaFeature({
+    geometry: placeholderSiteGeometry(options.osmID),
+    ...options,
+  });
 }
 
 export function simplifiedLiftFeature(feature: LiftFeature) {
