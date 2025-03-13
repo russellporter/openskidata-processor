@@ -217,7 +217,7 @@ export default async function clusterArangoGraph(
           const memberObjects = await getObjects(skiArea.id);
           const activities = getActivitiesBasedOnRunsAndLifts(memberObjects);
 
-          if (activities.length == 0) {
+          if (memberObjects.length == 0) {
             return;
           }
 

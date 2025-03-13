@@ -2537,6 +2537,96 @@ it("keeps landuse based ski area when there is a site with insufficient overlap"
   `);
 });
 
+it("keeps site=piste ski area with only backcountry runs", async () => {
+  const paths = TestHelpers.getFilePaths();
+  const siteSkiArea = TestHelpers.mockSkiAreaSiteFeature({
+    id: "1",
+    activities: [],
+    sources: [{ type: SourceType.OPENSTREETMAP, id: "1" }],
+    osmID: 1,
+  });
+  TestHelpers.mockFeatureFiles(
+    [siteSkiArea],
+    [],
+    [
+      TestHelpers.mockRunFeature({
+        id: "2",
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [0, 0],
+            [1, 1],
+          ],
+        },
+        name: "Run",
+        uses: [RunUse.Downhill],
+        grooming: RunGrooming.Backcountry,
+        skiAreas: [siteSkiArea],
+      }),
+    ],
+    paths.intermediate,
+  );
+
+  await clusterSkiAreas(
+    paths.intermediate,
+    paths.output,
+    "http://localhost:" + container.getMappedPort(8529),
+    null,
+  );
+
+  const skiAreaFeatures: [SkiAreaFeature] = TestHelpers.fileContents(
+    paths.output.skiAreas,
+  ).features;
+  expect(skiAreaFeatures.length).toBe(1);
+  // No activities because currently only downhill and nordic activities are supported.
+  // Only backcountry runs implies a backcountry/touring activity.
+  expect(skiAreaFeatures[0].properties.activities).toEqual([]);
+});
+
+// Keep limited support for other kinds of winter sports areas when explicitly defined with site=piste ski area.
+it("keeps site=piste ski area with only non-skiing activities", async () => {
+  const paths = TestHelpers.getFilePaths();
+  const siteSkiArea = TestHelpers.mockSkiAreaSiteFeature({
+    id: "1",
+    activities: [],
+    sources: [{ type: SourceType.OPENSTREETMAP, id: "1" }],
+    osmID: 1,
+  });
+  TestHelpers.mockFeatureFiles(
+    [siteSkiArea],
+    [],
+    [
+      TestHelpers.mockRunFeature({
+        id: "2",
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [0, 0],
+            [1, 1],
+          ],
+        },
+        name: "Run",
+        uses: [RunUse.Sled],
+        skiAreas: [siteSkiArea],
+      }),
+    ],
+    paths.intermediate,
+  );
+
+  await clusterSkiAreas(
+    paths.intermediate,
+    paths.output,
+    "http://localhost:" + container.getMappedPort(8529),
+    null,
+  );
+
+  const skiAreaFeatures: [SkiAreaFeature] = TestHelpers.fileContents(
+    paths.output.skiAreas,
+  ).features;
+  expect(skiAreaFeatures.length).toBe(1);
+  expect(skiAreaFeatures[0].properties.activities).toEqual([]);
+});
+
 async function sleep(ms: number) {
   return new Promise((resolve) => {
     setTimeout(resolve, ms);
