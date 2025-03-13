@@ -156,7 +156,7 @@ describe("CSVFormatter", () => {
 
         const csv = formatter(FeatureType.Run)(runFeature);
 
-        expect(csv).toMatchInlineSnapshot(`"Test Run,5,,,,Test Ski Area,intermediate,red,yes,yes,no,yes,,downhill,289,200,0,0.96,-0.96,1800,2000,europe,,,https://openskimap.org/?obj=test-run,test-run,LineString,47.312020,11.176431,test-ski-area,https://www.openstreetmap.org/123,"`);
+        expect(csv).toMatchInlineSnapshot(`"Test Run,5,,,,Test Ski Area,intermediate,red,yes,yes,no,yes,,downhill,289,200,0,0.96,0.96,1800,2000,europe,,,https://openskimap.org/?obj=test-run,test-run,LineString,47.312020,11.176431,test-ski-area,https://www.openstreetmap.org/123,"`);
       });
     });
 
