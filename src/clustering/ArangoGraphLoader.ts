@@ -120,9 +120,11 @@ export default async function loadArangoGraph(
 
   function prepareRun(feature: RunFeature): DraftRun {
     const properties = feature.properties;
+    const isInSkiAreaSite = feature.properties.skiAreas.length > 0;
     const activities = (() => {
       // This tagging is ambiguous, but for safety, avoid marking runs as having a ski area activity. As a result they will not be linked to a ski area.
       if (
+        !isInSkiAreaSite &&
         properties.grooming === RunGrooming.Backcountry &&
         properties.patrolled !== true
       ) {
@@ -161,7 +163,7 @@ export default async function loadArangoGraph(
       ),
       isInSkiAreaPolygon: false,
       // all ski areas associated with the feature at this point are site=piste relations.
-      isInSkiAreaSite: feature.properties.skiAreas.length > 0,
+      isInSkiAreaSite: isInSkiAreaSite,
       activities: activities,
       difficulty: feature.properties.difficulty,
     };

@@ -750,6 +750,84 @@ it("generates elevation statistics for run & lift based on lift served skiable v
 `);
 });
 
+it("generates statistics for run with backcountry grooming with site membership", async () => {
+  const paths = TestHelpers.getFilePaths();
+  const skiAreaSite = TestHelpers.mockSkiAreaSiteFeature({
+    id: "1",
+    osmID: 1,
+    activities: [],
+    sources: [{ type: SourceType.OPENSTREETMAP, id: "1" }],
+  });
+  TestHelpers.mockFeatureFiles(
+    [skiAreaSite],
+    [],
+    [
+      TestHelpers.mockRunFeature({
+        id: "3",
+        name: "Downhill Run",
+        uses: [RunUse.Downhill],
+        grooming: RunGrooming.Backcountry,
+        skiAreas: [skiAreaSite],
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [11.1220444, 47.5572422, 150],
+            [11.1160297, 47.5581563, 250],
+          ],
+        },
+      }),
+    ],
+    paths.intermediate,
+  );
+
+  await clusterSkiAreas(
+    paths.intermediate,
+    paths.output,
+    "http://localhost:" + container.getMappedPort(8529),
+    null,
+  );
+
+  expect(
+  TestHelpers.fileContents(paths.output.skiAreas).features.map(
+    simplifiedSkiAreaFeatureWithStatistics
+  )
+).toMatchInlineSnapshot(`
+[
+  {
+    "activities": [
+      "downhill",
+    ],
+    "id": "1",
+    "name": "Name",
+    "statistics": {
+      "lifts": {
+        "byType": {},
+      },
+      "maxElevation": 250,
+      "minElevation": 150,
+      "runs": {
+        "byActivity": {
+          "downhill": {
+            "byDifficulty": {
+              "other": {
+                "combinedElevationChange": 100,
+                "count": 1,
+                "lengthInKm": 0.46264499967438083,
+                "maxElevation": 250,
+                "minElevation": 150,
+              },
+            },
+          },
+        },
+        "maxElevation": 250,
+        "minElevation": 150,
+      },
+    },
+  },
+]
+`);
+});
+
 it("allows point & multilinestring lifts to be processed", async () => {
   const paths = TestHelpers.getFilePaths();
   TestHelpers.mockFeatureFiles(
@@ -2578,9 +2656,10 @@ it("keeps site=piste ski area with only backcountry runs", async () => {
     paths.output.skiAreas,
   ).features;
   expect(skiAreaFeatures.length).toBe(1);
-  // No activities because currently only downhill and nordic activities are supported.
-  // Only backcountry runs implies a backcountry/touring activity.
-  expect(skiAreaFeatures[0].properties.activities).toEqual([]);
+  // Ideally we'd have a separate activity "Backcountry". It's a bit ambiguous though. Maybe it could be based on if a downhill ski area has lifts.
+  expect(skiAreaFeatures[0].properties.activities).toEqual([
+    SkiAreaActivity.Downhill,
+  ]);
 });
 
 // Keep limited support for other kinds of winter sports areas when explicitly defined with site=piste ski area.
