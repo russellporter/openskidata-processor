@@ -12,6 +12,7 @@
   },
   "prettier": {},
   "dependencies": {
+    "@ngageoint/geopackage": "^4.2.6",
     "@turf/along": "^7",
     "@turf/bbox-polygon": "^7",
     "@turf/boolean-contains": "^7",

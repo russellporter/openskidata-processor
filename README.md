@@ -13,7 +13,9 @@ This is a data pipeline that consumes OpenStreetMap & Skimap.org data and produc
 
 To download data for only a specific area, specify a GeoJSON format bounding box in an environment variable: `BBOX="[-13, -90, 65, 90]"`
 
-The output is placed in several `geojson` and `mbtiles` files within the `data` folder. The output location can be overridden by setting `OUTPUT_DIR`.
+The output is placed in several `geojson`, `mbtiles`, and a `gpkg` (GeoPackage) file within the `data` folder. The output location can be overridden by setting `OUTPUT_DIR`.
+
+The GeoPackage file (`openskidata.gpkg`) contains all three layers (ski areas, runs, and lifts) in a single file, making it easy to use with GIS software like QGIS.
 
 The processor is RAM hungry. `MAX_OLD_SPACE_SIZE` can be set to adjust the memory usage of the node process, it defaults to 4GB which is sufficient for most cases.
 

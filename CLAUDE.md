@@ -1,6 +1,7 @@
 # OpenSkiData Processor Guidelines
 
 ## Build & Test Commands
+
 - Build: `npm run build`
 - Test all: `npm test`
 - Test single file: `npx jest path/to/file.test.ts`
@@ -11,7 +12,14 @@
   - `npm run download`
   - `npm run prepare-geojson`
 
+Run processing with a small BBOX for testing:
+
+```bash
+BBOX=[132.34,34.78,132.40,34.84]
+```
+
 ## Code Style & Conventions
+
 - TypeScript with strict mode enabled
 - Interfaces with explicit typing for all data structures
 - PascalCase for classes/interfaces, camelCase for functions/variables

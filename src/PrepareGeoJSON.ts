@@ -1,4 +1,4 @@
-import { createWriteStream } from "fs";
+import { createWriteStream, existsSync, unlinkSync } from "fs";
 import merge from "merge2";
 import { FeatureType } from "openskidata-format";
 import { Readable } from "stream";
@@ -6,6 +6,7 @@ import StreamToPromise from "stream-to-promise";
 import { Config } from "./Config";
 import clusterSkiAreas from "./clustering/ClusterSkiAreas";
 import { DataPaths, getPath } from "./io/GeoJSONFiles";
+import { convertGeoJSONToGeoPackage } from "./io/GeoPackageWriter";
 import { readGeoJSONFeatures } from "./io/GeoJSONReader";
 import * as CSVFormatter from "./transforms/CSVFormatter";
 import addElevation from "./transforms/Elevation";
@@ -141,6 +142,30 @@ export default async function prepare(paths: DataPaths, config: Config) {
       );
     }),
   );
+  
+  console.log("Creating GeoPackage...");
+  
+  // Delete existing GeoPackage if it exists
+  if (existsSync(paths.output.geoPackage)) {
+    unlinkSync(paths.output.geoPackage);
+    console.log("Removed existing GeoPackage file");
+  }
+  
+  // Create a single GeoPackage with all three layers
+  const layerMap = {
+    [FeatureType.SkiArea]: "ski_areas",
+    [FeatureType.Lift]: "lifts",
+    [FeatureType.Run]: "runs",
+  };
+  
+  for (const type of [FeatureType.SkiArea, FeatureType.Lift, FeatureType.Run]) {
+    await convertGeoJSONToGeoPackage(
+      getPath(paths.output, type),
+      paths.output.geoPackage,
+      layerMap[type],
+      type
+    );
+  }
   
   console.log("Done preparing");
 }

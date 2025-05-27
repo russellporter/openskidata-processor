@@ -74,6 +74,7 @@ export class GeoJSONOutputPaths implements CommonGeoJSONPaths {
 
   readonly mapboxGL: CommonGeoJSONPaths;
   readonly csv: string;
+  readonly geoPackage: string;
 
   constructor(folder: string) {
     if (!existsSync(folder)) {
@@ -92,6 +93,7 @@ export class GeoJSONOutputPaths implements CommonGeoJSONPaths {
     if (!existsSync(this.csv)) {
       mkdirSync(this.csv);
     }
+    this.geoPackage = join(folder, "openskidata.gpkg");
   }
 }
 export interface DataPaths {
