@@ -12,6 +12,13 @@ export class GeoPackageWriter {
 
   constructor() {}
 
+  private toSnakeCase(str: string): string {
+    return str
+      .replace(/([A-Z])/g, '_$1')
+      .toLowerCase()
+      .replace(/^_/, '');
+  }
+
   async initialize(filePath: string): Promise<void> {
     // Open existing GeoPackage or create new one
     if (existsSync(filePath)) {
@@ -73,8 +80,11 @@ export class GeoPackageWriter {
         }
       }
       
-      // Rename 'id' column to avoid conflict with GeoPackage's internal primary key
-      const columnName = name.toLowerCase() === 'id' ? 'feature_id' : name;
+      // Convert to snake_case and handle special cases
+      let columnName = this.toSnakeCase(name);
+      if (name.toLowerCase() === 'id') {
+        columnName = 'feature_id';
+      }
       columns.push({name: columnName, dataType});
     });
 
@@ -127,8 +137,11 @@ export class GeoPackageWriter {
         // Set properties
         if (feature.properties) {
           Object.entries(feature.properties).forEach(([key, value]) => {
-            // Use 'feature_id' for 'id' column to avoid conflict
-            const columnName = key.toLowerCase() === 'id' ? 'feature_id' : key;
+            // Convert to snake_case and handle special cases
+            let columnName = this.toSnakeCase(key);
+            if (key.toLowerCase() === 'id') {
+              columnName = 'feature_id';
+            }
             
             // Convert values for SQLite compatibility
             let finalValue = value;
