@@ -44,7 +44,11 @@ export class GeoPackageWriter {
     // Group features by geometry type
     const featuresByGeometryType = new Map<string, Feature[]>();
     features.forEach(feature => {
-      const geomType = feature.geometry.type;
+      let geomType = feature.geometry.type;
+      // Group Polygon features as MultiPolygon
+      if (geomType === 'Polygon') {
+        geomType = 'MultiPolygon';
+      }
       if (!featuresByGeometryType.has(geomType)) {
         featuresByGeometryType.set(geomType, []);
       }
@@ -168,7 +172,17 @@ export class GeoPackageWriter {
       
       try {
         // Set geometry using wkx library to convert from GeoJSON
-        const wkxGeometry = wkx.Geometry.parseGeoJSON(feature.geometry);
+        let geometry = feature.geometry;
+        
+        // Convert Polygon to MultiPolygon
+        if (geometry.type === 'Polygon') {
+          geometry = {
+            type: 'MultiPolygon',
+            coordinates: [geometry.coordinates]
+          };
+        }
+        
+        const wkxGeometry = wkx.Geometry.parseGeoJSON(geometry);
         const geometryData = new GeometryData();
         geometryData.setSrsId(4326);
         geometryData.setGeometry(wkxGeometry);
@@ -271,7 +285,8 @@ export class GeoPackageWriter {
       case 'LineString':
         return 'LINESTRING';
       case 'Polygon':
-        return 'POLYGON';
+        // Convert Polygon to MultiPolygon
+        return 'MULTIPOLYGON';
       case 'MultiPoint':
         return 'MULTIPOINT';
       case 'MultiLineString':
@@ -292,7 +307,8 @@ export class GeoPackageWriter {
       case 'LineString':
         return GeometryType.LINESTRING;
       case 'Polygon':
-        return GeometryType.POLYGON;
+        // Convert Polygon to MultiPolygon
+        return GeometryType.MULTIPOLYGON;
       case 'MultiPoint':
         return GeometryType.MULTIPOINT;
       case 'MultiLineString':

@@ -97,7 +97,7 @@ describe("GeoPackageWriter", () => {
     await geoPackage.close();
   });
 
-  it("should add polygon features to a layer", async () => {
+  it("should convert polygon features to multipolygon", async () => {
     await writer.initialize(testGeoPackagePath);
     
     const features: Feature<Polygon>[] = [
@@ -118,10 +118,51 @@ describe("GeoPackageWriter", () => {
     await writer.addFeatureLayer("test_areas", features, FeatureType.SkiArea);
     await writer.close();
 
-    // Verify the layer was created with geometry type suffix
+    // Verify the layer was created with multipolygon geometry type suffix
     const geoPackage = await GeoPackageAPI.open(testGeoPackagePath);
     const tables = geoPackage.getFeatureTables();
-    expect(tables).toContain("test_areas_polygon");
+    expect(tables).toContain("test_areas_multipolygon");
+    expect(tables).not.toContain("test_areas_polygon");
+    
+    // Verify the geometry was converted to MultiPolygon
+    const featureDao = geoPackage.getFeatureDao("test_areas_multipolygon");
+    const rows = featureDao.queryForAll();
+    expect(rows.length).toBe(1);
+    
+    await geoPackage.close();
+  });
+
+  it("should handle existing multipolygon features", async () => {
+    await writer.initialize(testGeoPackagePath);
+    
+    const features: Feature<any>[] = [
+      {
+        type: "Feature",
+        geometry: {
+          type: "MultiPolygon",
+          coordinates: [
+            [[[0, 0], [10, 0], [10, 10], [0, 10], [0, 0]]],
+            [[[20, 20], [30, 20], [30, 30], [20, 30], [20, 20]]]
+          ]
+        },
+        properties: {
+          name: "Complex Ski Area",
+          area: 100000
+        }
+      }
+    ];
+
+    await writer.addFeatureLayer("test_areas", features, FeatureType.SkiArea);
+    await writer.close();
+
+    // Verify the layer was created with multipolygon geometry type suffix
+    const geoPackage = await GeoPackageAPI.open(testGeoPackagePath);
+    const tables = geoPackage.getFeatureTables();
+    expect(tables).toContain("test_areas_multipolygon");
+    
+    const featureDao = geoPackage.getFeatureDao("test_areas_multipolygon");
+    const rows = featureDao.queryForAll();
+    expect(rows.length).toBe(1);
     
     await geoPackage.close();
   });
@@ -227,18 +268,19 @@ describe("GeoPackageWriter", () => {
     await writer.addFeatureLayer("ski_areas", features, FeatureType.SkiArea);
     await writer.close();
 
-    // Verify that two tables were created
+    // Verify that two tables were created (Polygon should be converted to MultiPolygon)
     const geoPackage = await GeoPackageAPI.open(testGeoPackagePath);
     const tables = geoPackage.getFeatureTables();
     expect(tables).toContain("ski_areas_point");
-    expect(tables).toContain("ski_areas_polygon");
+    expect(tables).toContain("ski_areas_multipolygon");
+    expect(tables).not.toContain("ski_areas_polygon");
     
     // Verify each table has the correct number of features
     const pointDao = geoPackage.getFeatureDao("ski_areas_point");
     expect(pointDao.count()).toBe(2);
     
-    const polygonDao = geoPackage.getFeatureDao("ski_areas_polygon");
-    expect(polygonDao.count()).toBe(1);
+    const multiPolygonDao = geoPackage.getFeatureDao("ski_areas_multipolygon");
+    expect(multiPolygonDao.count()).toBe(1);
     
     await geoPackage.close();
   });
