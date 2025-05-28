@@ -30,20 +30,20 @@ import getStatusAndValue from "./Status";
 
 export function formatRun(
   feature: InputRunFeature,
-): FormattedInputRunFeature | null {
+): FormattedInputRunFeature[] {
   if (feature.geometry.type === "Point") {
-    return null;
+    return [];
   }
 
   const tags = feature.properties.tags;
 
   const { status, uses } = getStatusAndUses(tags);
   if (uses.length === 0) {
-    return null;
+    return [];
   }
 
   if (status !== Status.Operating) {
-    return null;
+    return [];
   }
 
   const ref = mapOSMString(getOrElse(tags, "piste:ref", "ref"));
@@ -71,7 +71,18 @@ export function formatRun(
     wikidata_id: getOSMFirstValue(tags, "wikidata"),
   };
 
-  return buildFeature(feature.geometry, properties);
+  // Handle MultiPolygon by splitting into separate Polygon features
+  if (feature.geometry.type === "MultiPolygon") {
+    return feature.geometry.coordinates.map((polygonCoords) => {
+      const polygonGeometry: GeoJSON.Polygon = {
+        type: "Polygon",
+        coordinates: polygonCoords,
+      };
+      return buildFeature(polygonGeometry, properties);
+    });
+  }
+
+  return [buildFeature(feature.geometry, properties)];
 }
 
 function getStatusAndUses(tags: OSMRunTags) {

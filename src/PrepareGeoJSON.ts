@@ -24,6 +24,7 @@ import {
 import {
   accumulate,
   flatMap,
+  flatMapArray,
   map,
   mapAsync,
 } from "./transforms/StreamTransforms";
@@ -59,7 +60,7 @@ export default async function prepare(paths: DataPaths, config: Config) {
 
   await StreamToPromise(
     readGeoJSONFeatures(paths.input.geoJSON.runs)
-      .pipe(flatMap(formatRun))
+      .pipe(flatMapArray(formatRun))
       .pipe(map(addSkiAreaSites(siteProvider)))
       // write stream here
       // do topo conversion in a separate command

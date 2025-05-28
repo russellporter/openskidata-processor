@@ -5,7 +5,7 @@ import { formatRun } from "./RunFormatter";
 
 describe("RunFormatter", () => {
   it("filters out runs with 'piste:abandoned' tag", () => {
-    const run = formatRun(
+    const runs = formatRun(
       inputRun({
         type: "way",
         id: 1,
@@ -15,25 +15,26 @@ describe("RunFormatter", () => {
         },
       }),
     );
-    expect(run).toBeNull();
+    expect(runs).toEqual([]);
   });
 
   it("filters out runs with lifecycle prefix", () => {
-    const run = formatRun(
+    const runs = formatRun(
       inputRun({
         type: "way",
         id: 1,
         tags: { "proposed:piste:type": "downhill" },
       }),
     );
-    expect(run).toBeNull();
+    expect(runs).toEqual([]);
   });
 
   it("formats simple run", () => {
-    const run = formatRun(
+    const runs = formatRun(
       inputRun({ type: "way", id: 1, tags: { "piste:type": "downhill" } }),
     );
-    expect(run!.properties).toMatchInlineSnapshot(`
+    expect(runs).toHaveLength(1);
+    expect(runs[0]!.properties).toMatchInlineSnapshot(`
 {
   "description": null,
   "difficulty": null,
@@ -65,7 +66,7 @@ describe("RunFormatter", () => {
   });
 
   it("uses piste name instead of other name", () => {
-    const run = formatRun(
+    const runs = formatRun(
       inputRun({
         type: "way",
         id: 1,
@@ -77,13 +78,14 @@ describe("RunFormatter", () => {
         },
       }),
     );
-    expect(run!.properties.name).toMatchInlineSnapshot(
+    expect(runs).toHaveLength(1);
+    expect(runs[0]!.properties.name).toMatchInlineSnapshot(
       `"🇫🇷 Nom de la piste, Run name"`,
     );
   });
 
   it("de-duplicates names", () => {
-    const run = formatRun(
+    const runs = formatRun(
       inputRun({
         type: "way",
         id: 1,
@@ -94,11 +96,12 @@ describe("RunFormatter", () => {
         },
       }),
     );
-    expect(run!.properties.name).toMatchInlineSnapshot(`"Run name"`);
+    expect(runs).toHaveLength(1);
+    expect(runs[0]!.properties.name).toMatchInlineSnapshot(`"Run name"`);
   });
 
   it("adds oneway to downhill run if not specified", () => {
-    const run = formatRun(
+    const runs = formatRun(
       inputRun({
         type: "way",
         id: 1,
@@ -107,11 +110,12 @@ describe("RunFormatter", () => {
         },
       }),
     );
-    expect(run!.properties.oneway).toBe(true);
+    expect(runs).toHaveLength(1);
+    expect(runs[0]!.properties.oneway).toBe(true);
   });
 
   it("preserves oneway value of bidirectional downhill run", () => {
-    const run = formatRun(
+    const runs = formatRun(
       inputRun({
         type: "way",
         id: 1,
@@ -121,11 +125,12 @@ describe("RunFormatter", () => {
         },
       }),
     );
-    expect(run!.properties.oneway).toBe(false);
+    expect(runs).toHaveLength(1);
+    expect(runs[0]!.properties.oneway).toBe(false);
   });
 
   it("distinguishes gladed run", () => {
-    const run = formatRun(
+    const runs = formatRun(
       inputRun({
         type: "way",
         id: 1,
@@ -135,11 +140,12 @@ describe("RunFormatter", () => {
         },
       }),
     );
-    expect(run!.properties.gladed).toBe(true);
+    expect(runs).toHaveLength(1);
+    expect(runs[0]!.properties.gladed).toBe(true);
   });
 
   it("distinguishes forested run as gladed", () => {
-    const run = formatRun(
+    const runs = formatRun(
       inputRun({
         type: "way",
         id: 1,
@@ -149,11 +155,12 @@ describe("RunFormatter", () => {
         },
       }),
     );
-    expect(run!.properties.gladed).toBe(true);
+    expect(runs).toHaveLength(1);
+    expect(runs[0]!.properties.gladed).toBe(true);
   });
 
   it("distinguishes wooded run as gladed", () => {
-    const run = formatRun(
+    const runs = formatRun(
       inputRun({
         type: "way",
         id: 1,
@@ -163,11 +170,12 @@ describe("RunFormatter", () => {
         },
       }),
     );
-    expect(run!.properties.gladed).toBe(true);
+    expect(runs).toHaveLength(1);
+    expect(runs[0]!.properties.gladed).toBe(true);
   });
 
   it("gives gladed tag precedence over woods tag", () => {
-    const run = formatRun(
+    const runs = formatRun(
       inputRun({
         type: "way",
         id: 1,
@@ -178,11 +186,12 @@ describe("RunFormatter", () => {
         },
       }),
     );
-    expect(run!.properties.gladed).toBe(false);
+    expect(runs).toHaveLength(1);
+    expect(runs[0]!.properties.gladed).toBe(false);
   });
 
   it("normalizes piste:grooming=no to backcountry", () => {
-    const run = formatRun(
+    const runs = formatRun(
       inputRun({
         type: "way",
         id: 1,
@@ -192,11 +201,12 @@ describe("RunFormatter", () => {
         },
       }),
     );
-    expect(run!.properties.grooming).toBe(RunGrooming.Backcountry);
+    expect(runs).toHaveLength(1);
+    expect(runs[0]!.properties.grooming).toBe(RunGrooming.Backcountry);
   });
 
   it("supports nordic trails tagged as classic;skating", () => {
-    const run = formatRun(
+    const runs = formatRun(
       inputRun({
         type: "way",
         id: 1,
@@ -206,11 +216,12 @@ describe("RunFormatter", () => {
         },
       }),
     );
-    expect(run!.properties.grooming).toBe(RunGrooming.ClassicAndSkating);
+    expect(runs).toHaveLength(1);
+    expect(runs[0]!.properties.grooming).toBe(RunGrooming.ClassicAndSkating);
   });
 
   it("supports nordic trails tagged as skating;classic", () => {
-    const run = formatRun(
+    const runs = formatRun(
       inputRun({
         type: "way",
         id: 1,
@@ -220,11 +231,12 @@ describe("RunFormatter", () => {
         },
       }),
     );
-    expect(run!.properties.grooming).toBe(RunGrooming.ClassicAndSkating);
+    expect(runs).toHaveLength(1);
+    expect(runs[0]!.properties.grooming).toBe(RunGrooming.ClassicAndSkating);
   });
 
   it("supports nordic trails tagged as classic+skating", () => {
-    const run = formatRun(
+    const runs = formatRun(
       inputRun({
         type: "way",
         id: 1,
@@ -234,11 +246,12 @@ describe("RunFormatter", () => {
         },
       }),
     );
-    expect(run!.properties.grooming).toBe(RunGrooming.ClassicAndSkating);
+    expect(runs).toHaveLength(1);
+    expect(runs[0]!.properties.grooming).toBe(RunGrooming.ClassicAndSkating);
   });
 
   it("supports fatbike trails", () => {
-    const run = formatRun(
+    const runs = formatRun(
       inputRun({
         type: "way",
         id: 1,
@@ -247,7 +260,8 @@ describe("RunFormatter", () => {
         },
       }),
     );
-    expect(run!.properties.uses).toEqual([RunUse.Fatbike]);
+    expect(runs).toHaveLength(1);
+    expect(runs[0]!.properties.uses).toEqual([RunUse.Fatbike]);
   });
 
   it("drops run with unsupported status", () => {
@@ -262,7 +276,7 @@ describe("RunFormatter", () => {
           },
         }),
       ),
-    ).toBeNull();
+    ).toEqual([]);
 
     expect(
       formatRun(
@@ -275,7 +289,53 @@ describe("RunFormatter", () => {
           },
         }),
       ),
-    ).toBeNull();
+    ).toEqual([]);
+  });
+
+  it("splits MultiPolygon runs into separate Polygon features", () => {
+    const multiPolygonFeature: InputRunFeature = {
+      type: "Feature",
+      geometry: {
+        type: "MultiPolygon",
+        coordinates: [
+          // First polygon
+          [
+            [
+              [0, 0],
+              [1, 0],
+              [1, 1],
+              [0, 1],
+              [0, 0],
+            ],
+          ],
+          // Second polygon
+          [
+            [
+              [2, 2],
+              [3, 2],
+              [3, 3],
+              [2, 3],
+              [2, 2],
+            ],
+          ],
+        ],
+      },
+      properties: {
+        type: "way",
+        id: 1,
+        tags: {
+          "piste:type": "downhill",
+          name: "Multi-part run",
+        },
+      },
+    };
+
+    const runs = formatRun(multiPolygonFeature);
+    expect(runs).toHaveLength(2);
+    expect(runs[0]!.geometry.type).toBe("Polygon");
+    expect(runs[1]!.geometry.type).toBe("Polygon");
+    expect(runs[0]!.properties.name).toBe("Multi-part run");
+    expect(runs[1]!.properties.name).toBe("Multi-part run");
   });
 });
 
