@@ -857,8 +857,11 @@ it("allows point & multilinestring lifts to be processed", async () => {
         name: "Gondola",
         liftType: LiftType.Gondola,
         geometry: {
-          type: "Point",
-          coordinates: [12.2447153, 47.5270405, 719.0122680664059],
+          type: "LineString",
+          coordinates: [
+            [12.2447153, 47.5270405, 719.0122680664059],
+            [12.2547153, 47.5370405, 819.0122680664059],
+          ],
         },
       }),
     ],

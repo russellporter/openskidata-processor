@@ -50,8 +50,15 @@ export type MapboxGLLiftProperties = {
   skiAreas: string[];
 };
 
+export type InputLiftGeometry =
+  | GeoJSON.Point
+  | GeoJSON.LineString
+  | GeoJSON.Polygon
+  | GeoJSON.MultiLineString
+  | GeoJSON.MultiPolygon;
+
 export type InputLiftFeature = GeoJSON.Feature<
-  LiftGeometry,
+  InputLiftGeometry,
   OSMGeoJSONProperties<OSMLiftTags>
 >;
 export type MapboxGLLiftFeature = GeoJSON.Feature<

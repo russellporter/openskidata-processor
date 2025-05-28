@@ -25,6 +25,11 @@ type LiftPropertiesWithoutID = Omit<LiftProperties, "id">;
 export function formatLift(feature: InputLiftFeature): LiftFeature | null {
   const tags = feature.properties.tags || {};
 
+  // Filter out geometries that aren't valid for LiftFeature
+  if (feature.geometry.type !== "LineString" && feature.geometry.type !== "MultiLineString") {
+    return null;
+  }
+
   if (
     tags["passenger"] == "no" ||
     tags["access"] == "private" ||
@@ -73,7 +78,7 @@ export function formatLift(feature: InputLiftFeature): LiftFeature | null {
     wikidata_id: getOSMFirstValue(tags, "wikidata"),
   };
 
-  return buildFeature(feature.geometry, properties);
+  return buildFeature(feature.geometry as GeoJSON.LineString | GeoJSON.MultiLineString, properties);
 }
 
 function getStatusAndLiftType(tags: OSMLiftTags) {

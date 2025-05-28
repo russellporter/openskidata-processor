@@ -96,22 +96,20 @@ async function loadElevations(
 
 function getCoordinates(feature: RunFeature | LiftFeature) {
   let coordinates: number[][];
-  switch (feature.geometry.type) {
-    case "Point":
-      coordinates = [feature.geometry.coordinates];
-      break;
+  const geometryType = feature.geometry.type;
+  switch (geometryType) {
     case "LineString":
       coordinates = feature.geometry.coordinates;
       break;
     case "MultiLineString":
+      coordinates = feature.geometry.coordinates.flat();
+      break;
     case "Polygon":
       coordinates = feature.geometry.coordinates.flat();
       break;
-    case "MultiPolygon":
-      coordinates = feature.geometry.coordinates.flat().flat();
-      break;
     default:
-      throw "Geometry type " + feature.geometry.type + " not implemented";
+      const exhaustiveCheck: never = geometryType;
+      throw "Geometry type " + exhaustiveCheck + " not implemented";
   }
 
   // Remove elevation in case it was already added to this point
@@ -123,15 +121,20 @@ function addElevations(
   elevations: number[],
 ) {
   let i = 0;
-  switch (feature.geometry.type) {
-    case "Point":
-      return addElevationToCoords(feature.geometry.coordinates, elevations[i]);
+  const geometryType = feature.geometry.type;
+  switch (geometryType) {
     case "LineString":
       return feature.geometry.coordinates.forEach((coords) => {
         addElevationToCoords(coords, elevations[i]);
         i++;
       });
     case "MultiLineString":
+      return feature.geometry.coordinates.forEach((coordsSet) => {
+        coordsSet.forEach((coords) => {
+          addElevationToCoords(coords, elevations[i]);
+          i++;
+        });
+      });
     case "Polygon":
       return feature.geometry.coordinates.forEach((coordsSet) => {
         coordsSet.forEach((coords) => {
@@ -139,17 +142,9 @@ function addElevations(
           i++;
         });
       });
-    case "MultiPolygon":
-      return feature.geometry.coordinates.forEach((coordsSet) => {
-        coordsSet.forEach((innerCoordsSet) => {
-          innerCoordsSet.forEach((coords) => {
-            addElevationToCoords(coords, elevations[i]);
-            i++;
-          });
-        });
-      });
     default:
-      throw "Geometry type " + feature.geometry.type + " not implemented";
+      const exhaustiveCheck: never = geometryType;
+      throw "Geometry type " + exhaustiveCheck + " not implemented";
   }
 }
 
