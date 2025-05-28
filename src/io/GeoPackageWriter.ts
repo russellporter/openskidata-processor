@@ -6,6 +6,7 @@ import { pipeline } from "stream/promises";
 import { readGeoJSONFeatures } from "./GeoJSONReader";
 import { existsSync } from "fs";
 import wkx from "wkx";
+import centroid from "@turf/centroid";
 
 export class GeoPackageWriter {
   private geoPackage: GeoPackage | null = null;
@@ -39,6 +40,26 @@ export class GeoPackageWriter {
 
     if (features.length === 0) {
       return;
+    }
+
+    // Special handling for ski areas - create point layer with centroids
+    if (featureType === FeatureType.SkiArea) {
+      const pointFeatures = features.map(feature => {
+        // Use turf centroid to get the center point of any geometry
+        const centerPoint = centroid(feature);
+        return {
+          ...feature,
+          geometry: centerPoint.geometry
+        };
+      });
+      
+      // Output all ski areas to a single point layer
+      const pointTableName = `${layerName}_point`;
+      await this.addFeaturesToTable(pointTableName, pointFeatures, featureType);
+      
+      // Filter out point features for the original geometry processing
+      // to avoid duplicating them
+      features = features.filter(f => f.geometry.type !== 'Point');
     }
 
     // Group features by geometry type
