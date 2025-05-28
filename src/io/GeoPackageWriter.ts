@@ -41,6 +41,32 @@ export class GeoPackageWriter {
       return;
     }
 
+    // Group features by geometry type
+    const featuresByGeometryType = new Map<string, Feature[]>();
+    features.forEach(feature => {
+      const geomType = feature.geometry.type;
+      if (!featuresByGeometryType.has(geomType)) {
+        featuresByGeometryType.set(geomType, []);
+      }
+      featuresByGeometryType.get(geomType)!.push(feature);
+    });
+
+    // Create a separate table for each geometry type
+    for (const [geomType, geomFeatures] of featuresByGeometryType) {
+      const tableName = `${layerName}_${geomType.toLowerCase()}`;
+      await this.addFeaturesToTable(tableName, geomFeatures, featureType);
+    }
+  }
+
+  private async addFeaturesToTable(
+    tableName: string,
+    features: Feature[],
+    featureType: FeatureType
+  ): Promise<void> {
+    if (!this.geoPackage || features.length === 0) {
+      return;
+    }
+
     // Get unique properties from all features
     const allProperties = new Map<string, Set<any>>();
     const propertyOrder: string[] = [];
@@ -103,7 +129,7 @@ export class GeoPackageWriter {
 
     // Create geometry columns
     const geometryColumns = new GeometryColumns();
-    geometryColumns.table_name = layerName;
+    geometryColumns.table_name = tableName;
     geometryColumns.column_name = 'geometry';
     geometryColumns.geometry_type_name = this.getGeometryTypeName(features[0]);
     geometryColumns.srs_id = 4326; // WGS84
@@ -112,14 +138,14 @@ export class GeoPackageWriter {
 
     
     // Check if table already exists
-    const tableExists = this.geoPackage.isTable(layerName);
+    const tableExists = this.geoPackage.isTable(tableName);
     
     if (!tableExists) {
       // Create the feature table
-      this.geoPackage.createFeatureTable(layerName, geometryColumns, columns, boundingBox, 4326);
+      this.geoPackage.createFeatureTable(tableName, geometryColumns, columns, boundingBox, 4326);
     }
     
-    const featureDao = this.geoPackage.getFeatureDao(layerName);
+    const featureDao = this.geoPackage.getFeatureDao(tableName);
 
     // Add features to the table
     for (let i = 0; i < features.length; i++) {
@@ -166,7 +192,7 @@ export class GeoPackageWriter {
         
         featureDao.create(featureRow);
       } catch (error) {
-        console.error(`Error processing feature ${i} in layer ${layerName}:`, error);
+        console.error(`Error processing feature ${i} in table ${tableName}:`, error);
         throw error;
       }
     }
