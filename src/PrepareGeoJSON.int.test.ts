@@ -315,6 +315,7 @@ Map {
           "description": null,
           "difficulty": "easy",
           "difficultyConvention": "europe",
+          "elevationProfile": null,
           "gladed": null,
           "grooming": null,
           "id": "6e08a9b5ca97fc7d1fff89f008c987280b3b6b20",

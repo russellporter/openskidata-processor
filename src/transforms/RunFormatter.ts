@@ -6,7 +6,9 @@ import {
   FeatureType,
   RunDifficulty,
   RunDifficultyConvention,
+  RunFeature,
   RunGrooming,
+  RunProperties,
   RunUse,
   SourceType,
   Status,
@@ -15,10 +17,6 @@ import { osmID } from "../features/OSMGeoJSONProperties";
 import { InputRunFeature, OSMRunTags } from "../features/RunFeature";
 import notEmpty from "../utils/notEmpty";
 import buildFeature from "./FeatureBuilder";
-import {
-  FormattedInputRunFeature,
-  FormattedInputRunProperties,
-} from "./FormattedInputRunFeature";
 import { Omit } from "./Omit";
 import {
   getOSMFirstValue,
@@ -28,10 +26,11 @@ import {
 } from "./OSMTransforms";
 import getStatusAndValue from "./Status";
 
-export function formatRun(
-  feature: InputRunFeature,
-): FormattedInputRunFeature[] {
-  if (feature.geometry.type === "Point") {
+export function formatRun(feature: InputRunFeature): RunFeature[] {
+  if (
+    feature.geometry.type === "Point" ||
+    feature.geometry.type === "MultiLineString"
+  ) {
     return [];
   }
 
@@ -47,7 +46,7 @@ export function formatRun(
   }
 
   const ref = mapOSMString(getOrElse(tags, "piste:ref", "ref"));
-  const properties: Omit<FormattedInputRunProperties, "id"> = {
+  const properties: Omit<RunProperties, "id"> = {
     type: FeatureType.Run,
     uses: uses,
     name: getOSMName(tags, "piste:name", "name", ref),
@@ -69,6 +68,7 @@ export function formatRun(
     ],
     websites: [tags.website].filter(notEmpty),
     wikidata_id: getOSMFirstValue(tags, "wikidata"),
+    elevationProfile: null,
   };
 
   // Handle MultiPolygon by splitting into separate Polygon features

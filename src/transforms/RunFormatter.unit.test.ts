@@ -39,6 +39,7 @@ describe("RunFormatter", () => {
   "description": null,
   "difficulty": null,
   "difficultyConvention": "europe",
+  "elevationProfile": null,
   "gladed": null,
   "grooming": null,
   "id": "64e1be16905be0666594b5c433d4aa1aa1a64e5f",
