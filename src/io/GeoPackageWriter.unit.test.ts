@@ -242,4 +242,178 @@ describe("GeoPackageWriter", () => {
     
     await geoPackage.close();
   });
+
+  it("should convert skiAreas to ski_area_ids and ski_area_names columns", async () => {
+    await writer.initialize(testGeoPackagePath);
+    
+    const features: Feature<LineString>[] = [
+      {
+        type: "Feature",
+        geometry: {
+          type: "LineString",
+          coordinates: [[0, 0], [10, 10]]
+        },
+        properties: {
+          name: "Test Lift",
+          skiAreas: [
+            {
+              type: "Feature",
+              geometry: { type: "Point", coordinates: [0, 0] },
+              properties: {
+                id: "123",
+                name: "Mountain Resort"
+              }
+            },
+            {
+              type: "Feature", 
+              geometry: { type: "Point", coordinates: [1, 1] },
+              properties: {
+                id: "456",
+                name: "Ski Valley"
+              }
+            }
+          ]
+        }
+      },
+      {
+        type: "Feature",
+        geometry: {
+          type: "LineString",
+          coordinates: [[20, 20], [30, 30]]
+        },
+        properties: {
+          name: "Another Lift",
+          skiAreas: [
+            {
+              type: "Feature",
+              geometry: { type: "Point", coordinates: [2, 2] },
+              properties: {
+                id: "789",
+                name: "Alpine Center"
+              }
+            }
+          ]
+        }
+      }
+    ];
+
+    await writer.addFeatureLayer("lifts", features, FeatureType.Lift);
+    await writer.close();
+
+    // Verify the layer was created
+    const geoPackage = await GeoPackageAPI.open(testGeoPackagePath);
+    const featureDao = geoPackage.getFeatureDao("lifts_linestring");
+    
+    // Verify the data
+    const rows = featureDao.queryForAll();
+    const firstRow = featureDao.getRow(rows[0]);
+    
+    // Verify ski_area_ids and ski_area_names columns exist and have correct values
+    expect(firstRow.getValueWithColumnName("ski_area_ids")).toBe("123,456");
+    expect(firstRow.getValueWithColumnName("ski_area_names")).toBe("Mountain Resort,Ski Valley");
+    
+    // Verify that the original skiAreas column doesn't exist
+    expect(() => firstRow.getValueWithColumnName("ski_areas")).toThrow();
+    
+    const secondRow = featureDao.getRow(rows[1]);
+    expect(secondRow.getValueWithColumnName("ski_area_ids")).toBe("789");
+    expect(secondRow.getValueWithColumnName("ski_area_names")).toBe("Alpine Center");
+    
+    await geoPackage.close();
+  });
+
+  it("should handle skiAreas with missing ids or names", async () => {
+    await writer.initialize(testGeoPackagePath);
+    
+    const features: Feature<Point>[] = [
+      {
+        type: "Feature",
+        geometry: {
+          type: "Point",
+          coordinates: [10.0, 20.0]
+        },
+        properties: {
+          name: "Test Run",
+          skiAreas: [
+            {
+              type: "Feature",
+              geometry: { type: "Point", coordinates: [0, 0] },
+              properties: {
+                id: "123",
+                // Missing name
+              }
+            },
+            {
+              type: "Feature",
+              geometry: { type: "Point", coordinates: [1, 1] },
+              properties: {
+                // Missing id
+                name: "Unnamed Resort"
+              }
+            },
+            {
+              type: "Feature",
+              geometry: { type: "Point", coordinates: [2, 2] },
+              properties: {
+                id: "456",
+                name: "Complete Resort"
+              }
+            }
+          ]
+        }
+      }
+    ];
+
+    await writer.addFeatureLayer("runs", features, FeatureType.Run);
+    await writer.close();
+
+    // Verify the data handles missing values correctly
+    const geoPackage = await GeoPackageAPI.open(testGeoPackagePath);
+    const featureDao = geoPackage.getFeatureDao("runs_point");
+    
+    const rows = featureDao.queryForAll();
+    const row = featureDao.getRow(rows[0]);
+    
+    // Should skip entries with missing IDs
+    expect(row.getValueWithColumnName("ski_area_ids")).toBe("123,456");
+    // Should skip entries with missing names
+    expect(row.getValueWithColumnName("ski_area_names")).toBe("Unnamed Resort,Complete Resort");
+    
+    await geoPackage.close();
+  });
+
+  it("should handle features without skiAreas", async () => {
+    await writer.initialize(testGeoPackagePath);
+    
+    const features: Feature<LineString>[] = [
+      {
+        type: "Feature",
+        geometry: {
+          type: "LineString",
+          coordinates: [[0, 0], [10, 10]]
+        },
+        properties: {
+          name: "Lift without ski areas",
+          liftType: "chairlift"
+        }
+      }
+    ];
+
+    await writer.addFeatureLayer("lifts", features, FeatureType.Lift);
+    await writer.close();
+
+    // Verify the layer was created without ski area columns
+    const geoPackage = await GeoPackageAPI.open(testGeoPackagePath);
+    const featureDao = geoPackage.getFeatureDao("lifts_linestring");
+    
+    // Verify no ski area columns were created
+    const rows = featureDao.queryForAll();
+    const firstRow = featureDao.getRow(rows[0]);
+    
+    // These columns should not exist
+    expect(() => firstRow.getValueWithColumnName("ski_area_ids")).toThrow();
+    expect(() => firstRow.getValueWithColumnName("ski_area_names")).toThrow();
+    
+    await geoPackage.close();
+  });
 });

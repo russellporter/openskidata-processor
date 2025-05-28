@@ -85,12 +85,20 @@ export class GeoPackageWriter {
     // Create feature columns based on properties - use propertyOrder to maintain order
     const columns: {name: string, dataType: string}[] = [];
     const addedColumns = new Set<string>();
+    let hasSkiAreas = false;
     
     propertyOrder.forEach(name => {
       if (addedColumns.has(name)) {
         console.warn(`Skipping duplicate column: ${name}`);
         return;
       }
+      
+      // Skip skiAreas column - we'll add ski_area_ids and ski_area_names instead
+      if (name === 'skiAreas') {
+        hasSkiAreas = true;
+        return;
+      }
+      
       addedColumns.add(name);
       
       const types = allProperties.get(name)!;
@@ -113,6 +121,12 @@ export class GeoPackageWriter {
       }
       columns.push({name: columnName, dataType});
     });
+    
+    // Add ski_area_ids and ski_area_names columns if skiAreas was present
+    if (hasSkiAreas) {
+      columns.push({name: 'ski_area_ids', dataType: 'TEXT'});
+      columns.push({name: 'ski_area_names', dataType: 'TEXT'});
+    }
 
     // Calculate bounding box
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
@@ -176,6 +190,9 @@ export class GeoPackageWriter {
             } else if (typeof value === 'boolean') {
               // SQLite doesn't have a boolean type, convert to integer
               finalValue = value ? 1 : 0;
+            } else if (key === 'skiAreas' && Array.isArray(value)) {
+              // Skip the original skiAreas field - we'll handle it separately
+              return;
             } else if (typeof value === 'object') {
               // Convert arrays and objects to JSON strings
               finalValue = JSON.stringify(value);
@@ -188,6 +205,30 @@ export class GeoPackageWriter {
               throw error;
             }
           });
+          
+          // Handle skiAreas separately - extract IDs and names
+          if (feature.properties.skiAreas && Array.isArray(feature.properties.skiAreas)) {
+            const skiAreaIds = feature.properties.skiAreas
+              .map((area: any) => area.properties?.id || '')
+              .filter(id => id)
+              .join(',');
+            const skiAreaNames = feature.properties.skiAreas
+              .map((area: any) => area.properties?.name || '')
+              .filter(name => name)
+              .join(',');
+            
+            try {
+              if (skiAreaIds) {
+                featureRow.setValueWithColumnName('ski_area_ids', skiAreaIds);
+              }
+              if (skiAreaNames) {
+                featureRow.setValueWithColumnName('ski_area_names', skiAreaNames);
+              }
+            } catch (error) {
+              console.error('Error setting ski area fields:', error);
+              throw error;
+            }
+          }
         }
         
         featureDao.create(featureRow);
