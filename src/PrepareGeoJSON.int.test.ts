@@ -13,6 +13,7 @@ const config: Config = {
   elevationServerURL: null,
   bbox: null,
   geocodingServer: null,
+  workingDir: "data",
   outputDir: "data",
 };
 
@@ -574,10 +575,10 @@ it("processes OpenStreetMap ski area sites", async () => {
   await prepare(paths, config);
 
   expect(
-  TestHelpers.fileContents(paths.output.skiAreas).features.map(
-    simplifiedSkiAreaFeature
-  )
-).toMatchInlineSnapshot(`
+    TestHelpers.fileContents(paths.output.skiAreas).features.map(
+      simplifiedSkiAreaFeature,
+    ),
+  ).toMatchInlineSnapshot(`
 [
   {
     "activities": [],
@@ -588,10 +589,10 @@ it("processes OpenStreetMap ski area sites", async () => {
 `);
 
   expect(
-  TestHelpers.fileContents(paths.output.lifts).features.map(
-    simplifiedLiftFeature
-  )
-).toMatchInlineSnapshot(`
+    TestHelpers.fileContents(paths.output.lifts).features.map(
+      simplifiedLiftFeature,
+    ),
+  ).toMatchInlineSnapshot(`
 [
   {
     "id": "fa8b7321d15e0f111786a467e69c7b8e1d4f9431",
@@ -604,10 +605,10 @@ it("processes OpenStreetMap ski area sites", async () => {
 `);
 
   expect(
-  TestHelpers.fileContents(paths.output.runs).features.map(
-    simplifiedRunFeature
-  )
-).toMatchInlineSnapshot(`
+    TestHelpers.fileContents(paths.output.runs).features.map(
+      simplifiedRunFeature,
+    ),
+  ).toMatchInlineSnapshot(`
 [
   {
     "id": "ab2c973773eabc9757213f2e917575286f7e6c7e",

@@ -12,7 +12,7 @@ if (!arangoDBURL) {
 }
 
 clusterSkiAreas(
-  new GeoJSONIntermediatePaths("data"),
+  new GeoJSONIntermediatePaths(config.workingDir),
   new GeoJSONOutputPaths(config.outputDir),
   arangoDBURL,
   config.geocodingServer,

@@ -10,8 +10,8 @@ const config = configFromEnvironment();
 
 prepare(
   {
-    input: new InputDataPaths("data"),
-    intermediate: new GeoJSONIntermediatePaths("data"),
+    input: new InputDataPaths(config.workingDir),
+    intermediate: new GeoJSONIntermediatePaths(config.workingDir),
     output: new GeoJSONOutputPaths(config.outputDir),
   },
   config,
