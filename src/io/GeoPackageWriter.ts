@@ -55,32 +55,32 @@ function createCommonColumns<
   return [
     {
       name: "feature_id",
-      dataType: "TEXT" as const,
+      dataType: "TEXT",
       getValue: (p) => p.id,
     },
     {
       name: "name",
-      dataType: "TEXT" as const,
+      dataType: "TEXT",
       getValue: (p) => p.name,
     },
     {
       name: "status",
-      dataType: "TEXT" as const,
+      dataType: "TEXT",
       getValue: (p) => p.status,
     },
     {
       name: "sources",
-      dataType: "TEXT" as const,
+      dataType: "TEXT",
       getValue: (p) => toJSON(p.sources),
     },
     {
       name: "websites",
-      dataType: "TEXT" as const,
+      dataType: "TEXT",
       getValue: (p) => toJSON(p.websites),
     },
     {
       name: "wikidata_id",
-      dataType: "TEXT" as const,
+      dataType: "TEXT",
       getValue: (p) => p.wikidata_id,
     },
   ];
@@ -165,24 +165,16 @@ const LIFT_SCHEMA: ColumnDefinition<LiftProperties>[] = [
   {
     name: "ski_area_ids",
     dataType: "TEXT",
-    getValue: (p) =>
-      p.skiAreas
-        ? p.skiAreas
-            .map((area) => area.properties?.id || "")
-            .filter((id) => id)
-            .join(",")
-        : "",
+    getValue: (p) => p.skiAreas.map((area) => area.properties.id).join(","),
   },
   {
     name: "ski_area_names",
     dataType: "TEXT",
     getValue: (p) =>
       p.skiAreas
-        ? p.skiAreas
-            .map((area) => area.properties?.name || "")
-            .filter((name) => name)
-            .join(",")
-        : "",
+        .map((area) => area.properties.name)
+        .filter((name) => name)
+        .join(","),
   },
 ];
 
@@ -251,7 +243,11 @@ const RUN_SCHEMA: ColumnDefinition<RunProperties>[] = [
   {
     name: "ski_area_names",
     dataType: "TEXT",
-    getValue: (p) => p.skiAreas.map((area) => area.properties.name).join(","),
+    getValue: (p) =>
+      p.skiAreas
+        .map((area) => area.properties.name)
+        .filter((name) => name)
+        .join(","),
   },
 ];
 
@@ -275,10 +271,10 @@ export class GeoPackageWriter {
     }
   }
 
-  async addFeatureLayer(
+  async addFeatureLayer<T extends FeatureType>(
     layerName: string,
-    features: Feature[],
-    featureType: FeatureType,
+    features: Feature<GeoJSON.Geometry, FeaturePropertiesMap[T]>[],
+    featureType: T,
   ): Promise<void> {
     if (!this.geoPackage) {
       throw new Error("GeoPackage not initialized");
@@ -309,7 +305,10 @@ export class GeoPackageWriter {
     }
 
     // Group features by geometry type
-    const featuresByGeometryType = new Map<string, Feature[]>();
+    const featuresByGeometryType = new Map<
+      string,
+      Feature<GeoJSON.Geometry, FeaturePropertiesMap[T]>[]
+    >();
     features.forEach((feature) => {
       let geomType = feature.geometry.type;
       // Group Polygon features as MultiPolygon
@@ -362,10 +361,10 @@ export class GeoPackageWriter {
     });
   }
 
-  private async addFeaturesToTable(
+  private async addFeaturesToTable<T extends FeatureType>(
     tableName: string,
-    features: Feature[],
-    featureType: FeatureType,
+    features: Feature<GeoJSON.Geometry, FeaturePropertiesMap[T]>[],
+    featureType: T,
   ): Promise<void> {
     if (!this.geoPackage || features.length === 0) {
       return;
@@ -520,12 +519,12 @@ export class GeoPackageWriter {
   }
 }
 
-export function createGeoPackageWriteStream(
+export function createGeoPackageWriteStream<T extends FeatureType>(
   geoPackagePath: string,
   layerName: string,
-  featureType: FeatureType,
+  featureType: T,
 ): Transform {
-  let features: Feature[] = [];
+  let features: Feature<GeoJSON.Geometry, FeaturePropertiesMap[T]>[] = [];
   let writer: GeoPackageWriter | null = null;
 
   return new Transform({
@@ -562,19 +561,23 @@ export function createGeoPackageWriteStream(
   });
 }
 
-export async function convertGeoJSONToGeoPackage(
+export async function convertGeoJSONToGeoPackage<T extends FeatureType>(
   geoJSONPath: string,
   geoPackagePath: string,
   layerName: string,
-  featureType: FeatureType,
+  featureType: T,
 ): Promise<void> {
-  const features: Feature[] = [];
+  const features: Feature<GeoJSON.Geometry, FeaturePropertiesMap[T]>[] = [];
 
   await pipeline(
     readGeoJSONFeatures(geoJSONPath),
     new Transform({
       objectMode: true,
-      transform(feature: Feature, encoding, callback) {
+      transform(
+        feature: Feature<GeoJSON.Geometry, FeaturePropertiesMap[T]>,
+        encoding,
+        callback,
+      ) {
         features.push(feature);
         callback();
       },

@@ -1,5 +1,10 @@
 import { GeoPackageWriter } from "./GeoPackageWriter";
-import { FeatureType } from "openskidata-format";
+import { 
+  FeatureType, 
+  LiftProperties, 
+  RunProperties, 
+  SkiAreaProperties 
+} from "openskidata-format";
 import { Feature, Point, LineString, Polygon } from "geojson";
 import { promises as fs } from "fs";
 import { GeoPackageAPI } from "@ngageoint/geopackage";
@@ -38,7 +43,7 @@ describe("GeoPackageWriter", () => {
   it("should add point features to a layer", async () => {
     await writer.initialize(testGeoPackagePath);
     
-    const features: Feature<Point>[] = [
+    const features: Feature<Point, LiftProperties>[] = [
       {
         type: "Feature",
         geometry: {
@@ -46,9 +51,24 @@ describe("GeoPackageWriter", () => {
           coordinates: [10.0, 20.0]
         },
         properties: {
+          type: FeatureType.Lift,
+          id: "test-lift-1",
+          liftType: "chair_lift" as any,
+          status: "operating" as any,
           name: "Test Point",
-          elevation: 1500.5,
-          active: true
+          ref: null,
+          description: null,
+          oneway: null,
+          occupancy: null,
+          capacity: null,
+          duration: null,
+          detachable: null,
+          bubble: null,
+          heating: null,
+          skiAreas: [],
+          sources: [],
+          websites: [],
+          wikidata_id: null
         }
       }
     ];
@@ -71,7 +91,7 @@ describe("GeoPackageWriter", () => {
   it("should add line features to a layer", async () => {
     await writer.initialize(testGeoPackagePath);
     
-    const features: Feature<LineString>[] = [
+    const features: Feature<LineString, RunProperties>[] = [
       {
         type: "Feature",
         geometry: {
@@ -79,9 +99,25 @@ describe("GeoPackageWriter", () => {
           coordinates: [[0, 0], [10, 10], [20, 20]]
         },
         properties: {
+          type: FeatureType.Run,
+          uses: ["downhill" as any],
+          id: "test-run-1",
           name: "Test Run",
-          difficulty: "intermediate",
-          length: 2500
+          ref: null,
+          status: "operating" as any,
+          description: null,
+          difficulty: "intermediate" as any,
+          difficultyConvention: "europe" as any,
+          oneway: null,
+          lit: null,
+          gladed: null,
+          patrolled: null,
+          grooming: null,
+          skiAreas: [],
+          elevationProfile: null,
+          sources: [],
+          websites: [],
+          wikidata_id: null
         }
       }
     ];
@@ -100,7 +136,7 @@ describe("GeoPackageWriter", () => {
   it("should output ski areas to both point and multipolygon layers", async () => {
     await writer.initialize(testGeoPackagePath);
     
-    const features: Feature<Polygon>[] = [
+    const features: Feature<Polygon, SkiAreaProperties>[] = [
       {
         type: "Feature",
         geometry: {
@@ -108,9 +144,17 @@ describe("GeoPackageWriter", () => {
           coordinates: [[[0, 0], [10, 0], [10, 10], [0, 10], [0, 0]]]
         },
         properties: {
+          type: FeatureType.SkiArea,
+          id: "test-area-1",
           name: "Test Ski Area",
-          area: 50000,
-          website: "https://example.com"
+          activities: ["downhill" as any],
+          status: "operating" as any,
+          location: null,
+          sources: [],
+          statistics: undefined,
+          runConvention: "europe" as any,
+          websites: ["https://example.com"],
+          wikidata_id: null
         }
       }
     ];
@@ -141,7 +185,7 @@ describe("GeoPackageWriter", () => {
   it("should handle existing multipolygon ski area features", async () => {
     await writer.initialize(testGeoPackagePath);
     
-    const features: Feature<any>[] = [
+    const features: Feature<any, SkiAreaProperties>[] = [
       {
         type: "Feature",
         geometry: {
@@ -152,8 +196,17 @@ describe("GeoPackageWriter", () => {
           ]
         },
         properties: {
+          type: FeatureType.SkiArea,
+          id: "test-area-2",
           name: "Complex Ski Area",
-          area: 100000
+          activities: ["downhill" as any],
+          status: "operating" as any,
+          location: null,
+          sources: [],
+          statistics: undefined,
+          runConvention: "europe" as any,
+          websites: [],
+          wikidata_id: null
         }
       }
     ];
@@ -180,7 +233,7 @@ describe("GeoPackageWriter", () => {
   it("should only convert polygons to multipolygons for non-ski area features", async () => {
     await writer.initialize(testGeoPackagePath);
     
-    const features: Feature<Polygon>[] = [
+    const features: Feature<Polygon, RunProperties>[] = [
       {
         type: "Feature",
         geometry: {
@@ -188,8 +241,25 @@ describe("GeoPackageWriter", () => {
           coordinates: [[[0, 0], [10, 0], [10, 10], [0, 10], [0, 0]]]
         },
         properties: {
+          type: FeatureType.Run,
+          uses: ["downhill" as any],
+          id: "test-run-2",
           name: "Test Run",
-          difficulty: "easy"
+          ref: null,
+          status: "operating" as any,
+          description: null,
+          difficulty: "easy" as any,
+          difficultyConvention: "europe" as any,
+          oneway: null,
+          lit: null,
+          gladed: null,
+          patrolled: null,
+          grooming: null,
+          skiAreas: [],
+          elevationProfile: null,
+          sources: [],
+          websites: [],
+          wikidata_id: null
         }
       }
     ];
@@ -210,7 +280,7 @@ describe("GeoPackageWriter", () => {
   it("should handle mixed property types", async () => {
     await writer.initialize(testGeoPackagePath);
     
-    const features: Feature<Point>[] = [
+    const features: Feature<Point, LiftProperties>[] = [
       {
         type: "Feature",
         geometry: {
@@ -218,9 +288,24 @@ describe("GeoPackageWriter", () => {
           coordinates: [10.0, 20.0]
         },
         properties: {
+          type: FeatureType.Lift,
+          id: "test-lift-2",
+          liftType: "chair_lift" as any,
+          status: "operating" as any,
           name: "Feature 1",
-          value: 123,
-          optional: "yes"
+          ref: null,
+          description: null,
+          oneway: null,
+          occupancy: null,
+          capacity: null,
+          duration: null,
+          detachable: null,
+          bubble: null,
+          heating: null,
+          skiAreas: [],
+          sources: [],
+          websites: [],
+          wikidata_id: null
         }
       },
       {
@@ -230,9 +315,24 @@ describe("GeoPackageWriter", () => {
           coordinates: [20.0, 30.0]
         },
         properties: {
+          type: FeatureType.Lift,
+          id: "test-lift-3",
+          liftType: "chair_lift" as any,
+          status: "operating" as any,
           name: "Feature 2",
-          value: "456", // Different type for same property
-          optional: null
+          ref: null,
+          description: null,
+          oneway: null,
+          occupancy: null,
+          capacity: null,
+          duration: null,
+          detachable: null,
+          bubble: null,
+          heating: null,
+          skiAreas: [],
+          sources: [],
+          websites: [],
+          wikidata_id: null
         }
       }
     ];
@@ -250,14 +350,33 @@ describe("GeoPackageWriter", () => {
   });
 
   it("should throw error when not initialized", async () => {
-    const features: Feature<Point>[] = [
+    const features: Feature<Point, LiftProperties>[] = [
       {
         type: "Feature",
         geometry: {
           type: "Point",
           coordinates: [10.0, 20.0]
         },
-        properties: {}
+        properties: {
+          type: FeatureType.Lift,
+          id: "test-lift-4",
+          liftType: "chair_lift" as any,
+          status: "operating" as any,
+          name: null,
+          ref: null,
+          description: null,
+          oneway: null,
+          occupancy: null,
+          capacity: null,
+          duration: null,
+          detachable: null,
+          bubble: null,
+          heating: null,
+          skiAreas: [],
+          sources: [],
+          websites: [],
+          wikidata_id: null
+        }
       }
     ];
 
@@ -269,7 +388,7 @@ describe("GeoPackageWriter", () => {
   it("should handle mixed geometry types by creating separate tables", async () => {
     await writer.initialize(testGeoPackagePath);
     
-    const features: Feature<any>[] = [
+    const features: Feature<any, SkiAreaProperties>[] = [
       {
         type: "Feature",
         geometry: {
@@ -277,8 +396,17 @@ describe("GeoPackageWriter", () => {
           coordinates: [10.0, 20.0]
         },
         properties: {
+          type: FeatureType.SkiArea,
+          id: "test-area-3",
           name: "Point Ski Area",
-          type: "skiArea"
+          activities: ["downhill" as any],
+          status: "operating" as any,
+          location: null,
+          sources: [],
+          statistics: undefined,
+          runConvention: "europe" as any,
+          websites: [],
+          wikidata_id: null
         }
       },
       {
@@ -288,8 +416,17 @@ describe("GeoPackageWriter", () => {
           coordinates: [[[0, 0], [10, 0], [10, 10], [0, 10], [0, 0]]]
         },
         properties: {
+          type: FeatureType.SkiArea,
+          id: "test-area-4",
           name: "Polygon Ski Area",
-          type: "skiArea"
+          activities: ["downhill" as any],
+          status: "operating" as any,
+          location: null,
+          sources: [],
+          statistics: undefined,
+          runConvention: "europe" as any,
+          websites: [],
+          wikidata_id: null
         }
       },
       {
@@ -299,8 +436,17 @@ describe("GeoPackageWriter", () => {
           coordinates: [15.0, 25.0]
         },
         properties: {
+          type: FeatureType.SkiArea,
+          id: "test-area-5",
           name: "Another Point Ski Area",
-          type: "skiArea"
+          activities: ["downhill" as any],
+          status: "operating" as any,
+          location: null,
+          sources: [],
+          statistics: undefined,
+          runConvention: "europe" as any,
+          websites: [],
+          wikidata_id: null
         }
       }
     ];
@@ -329,7 +475,7 @@ describe("GeoPackageWriter", () => {
   it("should convert skiAreas to ski_area_ids and ski_area_names columns", async () => {
     await writer.initialize(testGeoPackagePath);
     
-    const features: Feature<LineString>[] = [
+    const features: Feature<LineString, LiftProperties>[] = [
       {
         type: "Feature",
         geometry: {
@@ -337,25 +483,49 @@ describe("GeoPackageWriter", () => {
           coordinates: [[0, 0], [10, 10]]
         },
         properties: {
+          type: FeatureType.Lift,
+          id: "test-lift-5",
+          liftType: "chair_lift" as any,
+          status: "operating" as any,
           name: "Test Lift",
+          ref: null,
+          description: null,
+          oneway: null,
+          occupancy: null,
+          capacity: null,
+          duration: null,
+          detachable: null,
+          bubble: null,
+          heating: null,
           skiAreas: [
             {
               type: "Feature",
               geometry: { type: "Point", coordinates: [0, 0] },
               properties: {
+                type: FeatureType.SkiArea,
                 id: "123",
-                name: "Mountain Resort"
+                name: "Mountain Resort",
+                activities: [],
+                status: null,
+                location: null
               }
             },
             {
               type: "Feature", 
               geometry: { type: "Point", coordinates: [1, 1] },
               properties: {
+                type: FeatureType.SkiArea,
                 id: "456",
-                name: "Ski Valley"
+                name: "Ski Valley",
+                activities: [],
+                status: null,
+                location: null
               }
             }
-          ]
+          ],
+          sources: [],
+          websites: [],
+          wikidata_id: null
         }
       },
       {
@@ -365,17 +535,37 @@ describe("GeoPackageWriter", () => {
           coordinates: [[20, 20], [30, 30]]
         },
         properties: {
+          type: FeatureType.Lift,
+          id: "test-lift-6",
+          liftType: "chair_lift" as any,
+          status: "operating" as any,
           name: "Another Lift",
+          ref: null,
+          description: null,
+          oneway: null,
+          occupancy: null,
+          capacity: null,
+          duration: null,
+          detachable: null,
+          bubble: null,
+          heating: null,
           skiAreas: [
             {
               type: "Feature",
               geometry: { type: "Point", coordinates: [2, 2] },
               properties: {
+                type: FeatureType.SkiArea,
                 id: "789",
-                name: "Alpine Center"
+                name: "Alpine Center",
+                activities: [],
+                status: null,
+                location: null
               }
             }
-          ]
+          ],
+          sources: [],
+          websites: [],
+          wikidata_id: null
         }
       }
     ];
@@ -408,7 +598,7 @@ describe("GeoPackageWriter", () => {
   it("should handle skiAreas with missing ids or names", async () => {
     await writer.initialize(testGeoPackagePath);
     
-    const features: Feature<Point>[] = [
+    const features: Feature<Point, RunProperties>[] = [
       {
         type: "Feature",
         geometry: {
@@ -416,33 +606,62 @@ describe("GeoPackageWriter", () => {
           coordinates: [10.0, 20.0]
         },
         properties: {
+          type: FeatureType.Run,
+          uses: ["downhill" as any],
+          id: "test-run-3",
           name: "Test Run",
+          ref: null,
+          status: "operating" as any,
+          description: null,
+          difficulty: null,
+          difficultyConvention: "europe" as any,
+          oneway: null,
+          lit: null,
+          gladed: null,
+          patrolled: null,
+          grooming: null,
           skiAreas: [
             {
               type: "Feature",
               geometry: { type: "Point", coordinates: [0, 0] },
               properties: {
+                type: FeatureType.SkiArea,
                 id: "123",
-                // Missing name
+                name: null,
+                activities: [],
+                status: null,
+                location: null
               }
             },
             {
               type: "Feature",
               geometry: { type: "Point", coordinates: [1, 1] },
               properties: {
-                // Missing id
-                name: "Unnamed Resort"
-              }
+                type: FeatureType.SkiArea,
+                // id is completely missing from this object
+                name: "Unnamed Resort",
+                activities: [],
+                status: null,
+                location: null
+              } as any  // Need to cast since id is required in type
             },
             {
               type: "Feature",
               geometry: { type: "Point", coordinates: [2, 2] },
               properties: {
+                type: FeatureType.SkiArea,
                 id: "456",
-                name: "Complete Resort"
+                name: "Complete Resort",
+                activities: [],
+                status: null,
+                location: null
               }
             }
-          ]
+          ],
+          elevationProfile: null,
+          sources: [],
+          websites: [],
+          wikidata_id: null
         }
       }
     ];
@@ -457,9 +676,9 @@ describe("GeoPackageWriter", () => {
     const rows = featureDao.queryForAll();
     const row = featureDao.getRow(rows[0]);
     
-    // Should skip entries with missing IDs
-    expect(row.getValueWithColumnName("ski_area_ids")).toBe("123,456");
-    // Should skip entries with missing names
+    // IDs include empty strings for missing ids
+    expect(row.getValueWithColumnName("ski_area_ids")).toBe("123,,456");
+    // Names filter out empty values, but include non-empty names even if id is missing
     expect(row.getValueWithColumnName("ski_area_names")).toBe("Unnamed Resort,Complete Resort");
     
     await geoPackage.close();
@@ -468,7 +687,7 @@ describe("GeoPackageWriter", () => {
   it("should handle features without skiAreas", async () => {
     await writer.initialize(testGeoPackagePath);
     
-    const features: Feature<LineString>[] = [
+    const features: Feature<LineString, LiftProperties>[] = [
       {
         type: "Feature",
         geometry: {
@@ -476,8 +695,24 @@ describe("GeoPackageWriter", () => {
           coordinates: [[0, 0], [10, 10]]
         },
         properties: {
+          type: FeatureType.Lift,
+          id: "test-lift-7",
+          liftType: "chair_lift" as any,
+          status: "operating" as any,
           name: "Lift without ski areas",
-          liftType: "chairlift"
+          ref: null,
+          description: null,
+          oneway: null,
+          occupancy: null,
+          capacity: null,
+          duration: null,
+          detachable: null,
+          bubble: null,
+          heating: null,
+          skiAreas: [],
+          sources: [],
+          websites: [],
+          wikidata_id: null
         }
       }
     ];
