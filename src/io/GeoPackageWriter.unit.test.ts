@@ -1,11 +1,10 @@
 import { GeoPackageWriter } from "./GeoPackageWriter";
 import { 
   FeatureType, 
-  LiftProperties, 
-  RunProperties, 
-  SkiAreaProperties 
+  LiftFeature,
+  RunFeature,
+  SkiAreaFeature
 } from "openskidata-format";
-import { Feature, Point, LineString, Polygon } from "geojson";
 import { promises as fs } from "fs";
 import { GeoPackageAPI } from "@ngageoint/geopackage";
 
@@ -40,15 +39,15 @@ describe("GeoPackageWriter", () => {
     expect(stats.isFile()).toBe(true);
   });
 
-  it("should add point features to a layer", async () => {
+  it("should add lift features to a layer", async () => {
     await writer.initialize(testGeoPackagePath);
     
-    const features: Feature<Point, LiftProperties>[] = [
+    const features: LiftFeature[] = [
       {
         type: "Feature",
         geometry: {
-          type: "Point",
-          coordinates: [10.0, 20.0]
+          type: "LineString",
+          coordinates: [[10.0, 20.0], [11.0, 21.0]]
         },
         properties: {
           type: FeatureType.Lift,
@@ -73,15 +72,15 @@ describe("GeoPackageWriter", () => {
       }
     ];
 
-    await writer.addFeatureLayer("test_points", features, FeatureType.Lift);
+    await writer.addFeatureLayer("test_lifts", features, FeatureType.Lift);
     await writer.close();
 
     // Verify the layer was created with geometry type suffix
     const geoPackage = await GeoPackageAPI.open(testGeoPackagePath);
     const tables = geoPackage.getFeatureTables();
-    expect(tables).toContain("test_points_point");
+    expect(tables).toContain("test_lifts_linestring");
     
-    const featureDao = geoPackage.getFeatureDao("test_points_point");
+    const featureDao = geoPackage.getFeatureDao("test_lifts_linestring");
     const count = featureDao.count();
     expect(count).toBe(1);
     
@@ -91,7 +90,7 @@ describe("GeoPackageWriter", () => {
   it("should add line features to a layer", async () => {
     await writer.initialize(testGeoPackagePath);
     
-    const features: Feature<LineString, RunProperties>[] = [
+    const features: RunFeature[] = [
       {
         type: "Feature",
         geometry: {
@@ -136,7 +135,7 @@ describe("GeoPackageWriter", () => {
   it("should output ski areas to both point and multipolygon layers", async () => {
     await writer.initialize(testGeoPackagePath);
     
-    const features: Feature<Polygon, SkiAreaProperties>[] = [
+    const features: SkiAreaFeature[] = [
       {
         type: "Feature",
         geometry: {
@@ -185,7 +184,7 @@ describe("GeoPackageWriter", () => {
   it("should handle existing multipolygon ski area features", async () => {
     await writer.initialize(testGeoPackagePath);
     
-    const features: Feature<any, SkiAreaProperties>[] = [
+    const features: SkiAreaFeature[] = [
       {
         type: "Feature",
         geometry: {
@@ -233,7 +232,7 @@ describe("GeoPackageWriter", () => {
   it("should only convert polygons to multipolygons for non-ski area features", async () => {
     await writer.initialize(testGeoPackagePath);
     
-    const features: Feature<Polygon, RunProperties>[] = [
+    const features: RunFeature[] = [
       {
         type: "Feature",
         geometry: {
@@ -280,12 +279,12 @@ describe("GeoPackageWriter", () => {
   it("should handle mixed property types", async () => {
     await writer.initialize(testGeoPackagePath);
     
-    const features: Feature<Point, LiftProperties>[] = [
+    const features: LiftFeature[] = [
       {
         type: "Feature",
         geometry: {
-          type: "Point",
-          coordinates: [10.0, 20.0]
+          type: "LineString",
+          coordinates: [[10.0, 20.0], [11.0, 21.0]]
         },
         properties: {
           type: FeatureType.Lift,
@@ -311,8 +310,8 @@ describe("GeoPackageWriter", () => {
       {
         type: "Feature",
         geometry: {
-          type: "Point",
-          coordinates: [20.0, 30.0]
+          type: "LineString",
+          coordinates: [[20.0, 30.0], [21.0, 31.0]]
         },
         properties: {
           type: FeatureType.Lift,
@@ -342,7 +341,7 @@ describe("GeoPackageWriter", () => {
 
     // Verify the layer was created with correct number of features
     const geoPackage = await GeoPackageAPI.open(testGeoPackagePath);
-    const featureDao = geoPackage.getFeatureDao("mixed_types_point");
+    const featureDao = geoPackage.getFeatureDao("mixed_types_linestring");
     const count = featureDao.count();
     expect(count).toBe(2);
     
@@ -350,12 +349,12 @@ describe("GeoPackageWriter", () => {
   });
 
   it("should throw error when not initialized", async () => {
-    const features: Feature<Point, LiftProperties>[] = [
+    const features: LiftFeature[] = [
       {
         type: "Feature",
         geometry: {
-          type: "Point",
-          coordinates: [10.0, 20.0]
+          type: "LineString",
+          coordinates: [[10.0, 20.0], [11.0, 21.0]]
         },
         properties: {
           type: FeatureType.Lift,
@@ -388,7 +387,7 @@ describe("GeoPackageWriter", () => {
   it("should handle mixed geometry types by creating separate tables", async () => {
     await writer.initialize(testGeoPackagePath);
     
-    const features: Feature<any, SkiAreaProperties>[] = [
+    const features: SkiAreaFeature[] = [
       {
         type: "Feature",
         geometry: {
@@ -475,7 +474,7 @@ describe("GeoPackageWriter", () => {
   it("should convert skiAreas to ski_area_ids and ski_area_names columns", async () => {
     await writer.initialize(testGeoPackagePath);
     
-    const features: Feature<LineString, LiftProperties>[] = [
+    const features: LiftFeature[] = [
       {
         type: "Feature",
         geometry: {
@@ -598,12 +597,12 @@ describe("GeoPackageWriter", () => {
   it("should handle skiAreas with missing ids or names", async () => {
     await writer.initialize(testGeoPackagePath);
     
-    const features: Feature<Point, RunProperties>[] = [
+    const features: RunFeature[] = [
       {
         type: "Feature",
         geometry: {
-          type: "Point",
-          coordinates: [10.0, 20.0]
+          type: "LineString",
+          coordinates: [[10.0, 20.0], [11.0, 21.0]]
         },
         properties: {
           type: FeatureType.Run,
@@ -671,7 +670,7 @@ describe("GeoPackageWriter", () => {
 
     // Verify the data handles missing values correctly
     const geoPackage = await GeoPackageAPI.open(testGeoPackagePath);
-    const featureDao = geoPackage.getFeatureDao("runs_point");
+    const featureDao = geoPackage.getFeatureDao("runs_linestring");
     
     const rows = featureDao.queryForAll();
     const row = featureDao.getRow(rows[0]);
@@ -687,7 +686,7 @@ describe("GeoPackageWriter", () => {
   it("should handle features without skiAreas", async () => {
     await writer.initialize(testGeoPackagePath);
     
-    const features: Feature<LineString, LiftProperties>[] = [
+    const features: LiftFeature[] = [
       {
         type: "Feature",
         geometry: {
