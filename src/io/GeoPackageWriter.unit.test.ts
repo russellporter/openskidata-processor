@@ -485,17 +485,17 @@ describe("GeoPackageWriter", () => {
     await writer.addFeatureLayer("lifts", features, FeatureType.Lift);
     await writer.close();
 
-    // Verify the layer was created without ski area columns
+    // Verify the layer was created with empty ski area columns
     const geoPackage = await GeoPackageAPI.open(testGeoPackagePath);
     const featureDao = geoPackage.getFeatureDao("lifts_linestring");
     
-    // Verify no ski area columns were created
+    // Verify ski area columns exist with empty values
     const rows = featureDao.queryForAll();
     const firstRow = featureDao.getRow(rows[0]);
     
-    // These columns should not exist
-    expect(() => firstRow.getValueWithColumnName("ski_area_ids")).toThrow();
-    expect(() => firstRow.getValueWithColumnName("ski_area_names")).toThrow();
+    // These columns should exist but be empty
+    expect(firstRow.getValueWithColumnName("ski_area_ids")).toBe("");
+    expect(firstRow.getValueWithColumnName("ski_area_names")).toBe("");
     
     await geoPackage.close();
   });

@@ -21,6 +21,7 @@ BBOX=[132.34,34.78,132.40,34.84]
 ## Code Style & Conventions
 
 - TypeScript with strict mode enabled
+- Don't use `any` type. Be explicit with types.
 - Interfaces with explicit typing for all data structures
 - PascalCase for classes/interfaces, camelCase for functions/variables
 - Test files named with patterns: `.unit.test.ts` or `.int.test.ts`
