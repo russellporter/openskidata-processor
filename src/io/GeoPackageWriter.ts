@@ -23,7 +23,7 @@ import { readGeoJSONFeatures } from "./GeoJSONReader";
 interface ColumnDefinition<T> {
   name: string;
   dataType: "TEXT" | "REAL" | "BOOLEAN";
-  getValue: (properties: T) => string | number | boolean | null;
+  getValue: (properties: T) => string | number | boolean | null | undefined;
 }
 
 // Type helper to ensure type safety
@@ -91,12 +91,42 @@ const SKI_AREA_SCHEMA: ColumnDefinition<SkiAreaProperties>[] = [
   {
     name: "activities",
     dataType: "TEXT",
-    getValue: (p) => toJSON(p.activities),
+    getValue: (p) => p.activities.join(","),
   },
   {
-    name: "location",
+    name: "location_country_code",
     dataType: "TEXT",
-    getValue: (p) => toJSON(p.location),
+    getValue: (p) => p.location?.iso3166_1Alpha2,
+  },
+  {
+    name: "location_region_code",
+    dataType: "TEXT",
+    getValue: (p) => p.location?.iso3166_2,
+  },
+  {
+    name: "location_country",
+    dataType: "TEXT",
+    getValue: (p) => p.location?.localized.en.country,
+  },
+  {
+    name: "location_region",
+    dataType: "TEXT",
+    getValue: (p) => p.location?.localized.en.region,
+  },
+  {
+    name: "location_locality",
+    dataType: "TEXT",
+    getValue: (p) => p.location?.localized.en.locality,
+  },
+  {
+    name: "min_elevation",
+    dataType: "REAL",
+    getValue: (p) => p.statistics?.minElevation,
+  },
+  {
+    name: "max_elevation",
+    dataType: "REAL",
+    getValue: (p) => p.statistics?.maxElevation,
   },
   {
     name: "statistics",
@@ -183,7 +213,7 @@ const RUN_SCHEMA: ColumnDefinition<RunProperties>[] = [
   {
     name: "uses",
     dataType: "TEXT",
-    getValue: (p) => toJSON(p.uses),
+    getValue: (p) => p.uses.join(","),
   },
   {
     name: "ref",
@@ -231,9 +261,14 @@ const RUN_SCHEMA: ColumnDefinition<RunProperties>[] = [
     getValue: (p) => p.grooming,
   },
   {
-    name: "elevation_profile",
+    name: "elevation_profile_heights",
     dataType: "TEXT",
-    getValue: (p) => toJSON(p.elevationProfile),
+    getValue: (p) => p.elevationProfile?.heights.join(","),
+  },
+  {
+    name: "elevation_profile_resolution",
+    dataType: "REAL",
+    getValue: (p) => p.elevationProfile?.resolution,
   },
   {
     name: "ski_area_ids",
@@ -357,7 +392,11 @@ export class GeoPackageWriter {
 
     schema.forEach((column) => {
       const value = column.getValue(properties);
-      featureRow.setValueWithColumnName(column.name, value);
+      // Convert undefined to null for SQLite compatibility
+      featureRow.setValueWithColumnName(
+        column.name,
+        value === undefined ? null : value,
+      );
     });
   }
 
