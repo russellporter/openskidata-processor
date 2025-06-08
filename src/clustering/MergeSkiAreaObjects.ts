@@ -1,6 +1,7 @@
 import { SkiAreaProperties, SourceType } from "openskidata-format";
 import uniquedSources from "../transforms/UniqueSources";
 import mergedAndUniqued from "../utils/mergedAndUniqued";
+import { VIIRSPixel } from "../utils/VIIRSPixelExtractor";
 import { SkiAreaObject } from "./MapObject";
 
 export default function mergeSkiAreaObjects(
@@ -12,6 +13,12 @@ export default function mergeSkiAreaObjects(
   }
 
   return otherSkiAreas.reduce((primarySkiArea, otherSkiArea) => {
+    // Merge and unique VIIRS pixels from both ski areas
+    const allPixels = [...primarySkiArea.viirsPixels, ...otherSkiArea.viirsPixels];
+    const uniquePixels = Array.from(
+      new Set(allPixels.map((pixel) => pixel.join(","))),
+    ).map((pixelString) => pixelString.split(",").map(Number) as VIIRSPixel);
+
     return {
       _id: primarySkiArea._id,
       _key: primarySkiArea._key,
@@ -25,6 +32,7 @@ export default function mergeSkiAreaObjects(
         primarySkiArea.activities,
         otherSkiArea.activities,
       ),
+      viirsPixels: uniquePixels,
       properties: mergeSkiAreaProperties(
         primarySkiArea.properties,
         otherSkiArea.properties,

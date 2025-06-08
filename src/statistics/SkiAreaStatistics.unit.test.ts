@@ -28,6 +28,7 @@ describe("SkiAreaStatistics", () => {
       isBasisForNewSkiArea: true,
       isInSkiAreaPolygon: false,
       isInSkiAreaSite: false,
+      viirsPixels: [],
     };
 
     const statistics = skiAreaStatistics([run]);
@@ -131,6 +132,7 @@ describe("SkiAreaStatistics", () => {
       isBasisForNewSkiArea: true,
       isInSkiAreaPolygon: false,
       isInSkiAreaSite: false,
+      viirsPixels: [],
     };
 
     const statistics = skiAreaStatistics([run]);

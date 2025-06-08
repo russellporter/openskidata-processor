@@ -7,6 +7,7 @@ import {
   SkiAreaSummaryFeature,
   SourceType,
 } from "openskidata-format";
+import { VIIRSPixel } from "../utils/VIIRSPixelExtractor";
 
 export type MapObject = RunObject | LiftObject | SkiAreaObject;
 export type RunObject = DraftRun & { _id: string };
@@ -23,6 +24,7 @@ export interface DraftRun extends BaseDraftMapObject {
   isInSkiAreaPolygon: boolean;
   isInSkiAreaSite: boolean;
   difficulty: RunDifficulty | null;
+  viirsPixels: VIIRSPixel[];
 }
 
 export type RunGeometry =
@@ -46,6 +48,7 @@ export interface DraftSkiArea extends BaseDraftMapObject {
   source: SourceType;
   isPolygon: boolean;
   properties: SkiAreaProperties;
+  viirsPixels: VIIRSPixel[];
 }
 
 export type SkiAreaGeometry =

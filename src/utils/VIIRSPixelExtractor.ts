@@ -26,15 +26,7 @@ const SPHERE_RADIUS = 6371007.181; // Official VIIRS sphere radius in meters
 const GLOBAL_WIDTH = 20015109.354 * 2; // Full global extent horizontally
 const GLOBAL_HEIGHT = 10007554.677 * 2; // Full global extent vertically
 
-export interface VIIRSPixel {
-  tile: string;
-  hTile: number;
-  vTile: number;
-  pixelCol: number;
-  pixelRow: number;
-  sinusoidalX: number;
-  sinusoidalY: number;
-}
+export type VIIRSPixel = [number, number, number, number]; // [hTile, vTile, column, row]
 
 export interface SinusoidalCoordinate {
   x: number;
@@ -63,7 +55,7 @@ export class VIIRSPixelExtractor {
   /**
    * Convert sinusoidal coordinates to VIIRS tile and pixel coordinates.
    */
-  private sinusoidalToTileAndPixel(x: number, y: number): VIIRSPixel {
+  private sinusoidalToTileAndPixel(x: number, y: number): { hTile: number; vTile: number; pixelCol: number; pixelRow: number } {
     // Calculate which tile this falls in using standard MODIS/VIIRS grid
     const hTile = Math.max(0, Math.min(35, Math.floor((x + GLOBAL_WIDTH / 2) / TILE_SIZE_METERS)));
     const vTile = Math.max(0, Math.min(17, Math.floor((GLOBAL_HEIGHT / 2 - y) / TILE_SIZE_METERS)));
@@ -77,13 +69,10 @@ export class VIIRSPixelExtractor {
     const row = Math.max(0, Math.min(PIXELS_PER_TILE - 1, Math.floor((tileTop - y) / PIXEL_SIZE)));
     
     return {
-      tile: `h${hTile.toString().padStart(2, '0')}v${vTile.toString().padStart(2, '0')}`,
       hTile,
       vTile,
       pixelCol: col,
       pixelRow: row,
-      sinusoidalX: x,
-      sinusoidalY: y,
     };
   }
 
@@ -278,15 +267,7 @@ export class VIIRSPixelExtractor {
               
               if (!processedPixels.has(pixelKey)) {
                 processedPixels.add(pixelKey);
-                pixelCoords.push({
-                  tile: tileName,
-                  hTile,
-                  vTile,
-                  pixelCol: col,
-                  pixelRow: row,
-                  sinusoidalX: pixelX,
-                  sinusoidalY: pixelY,
-                });
+                pixelCoords.push([hTile, vTile, col, row]);
               }
             }
           }
@@ -298,15 +279,7 @@ export class VIIRSPixelExtractor {
     if (pixelCoords.length === 0) {
       const centroid = this.getGeometryCentroid(geometryTransformed);
       const centroidInfo = this.sinusoidalToTileAndPixel(centroid.x, centroid.y);
-      pixelCoords.push({
-        tile: centroidInfo.tile,
-        hTile: centroidInfo.hTile,
-        vTile: centroidInfo.vTile,
-        pixelCol: centroidInfo.pixelCol,
-        pixelRow: centroidInfo.pixelRow,
-        sinusoidalX: centroid.x,
-        sinusoidalY: centroid.y,
-      });
+      pixelCoords.push([centroidInfo.hTile, centroidInfo.vTile, centroidInfo.pixelCol, centroidInfo.pixelRow]);
     }
     
     return pixelCoords;
@@ -326,7 +299,9 @@ export class VIIRSPixelExtractor {
     if (geometry.type === "Polygon" || geometry.type === "LineString") {
       const pixels = this.getGeometryPixelCoordinates(geometry);
       pixels.forEach(pixel => {
-        uniquePixels.add(`${pixel.tile}_${pixel.pixelRow}_${pixel.pixelCol}`);
+        const [hTile, vTile, col, row] = pixel;
+        const tileName = `h${hTile.toString().padStart(2, '0')}v${vTile.toString().padStart(2, '0')}`;
+        uniquePixels.add(`${tileName}_${row}_${col}`);
       });
     } else if (geometry.type === "MultiPolygon" || geometry.type === "MultiLineString") {
       // Handle multi-geometries by processing each sub-geometry
@@ -335,7 +310,9 @@ export class VIIRSPixelExtractor {
           const subGeometry: Polygon = { type: "Polygon", coordinates: polygonCoords };
           const pixels = this.getGeometryPixelCoordinates(subGeometry);
           pixels.forEach(pixel => {
-            uniquePixels.add(`${pixel.tile}_${pixel.pixelRow}_${pixel.pixelCol}`);
+            const [hTile, vTile, col, row] = pixel;
+            const tileName = `h${hTile.toString().padStart(2, '0')}v${vTile.toString().padStart(2, '0')}`;
+            uniquePixels.add(`${tileName}_${row}_${col}`);
           });
         });
       } else {
@@ -343,7 +320,9 @@ export class VIIRSPixelExtractor {
           const subGeometry: LineString = { type: "LineString", coordinates: lineStringCoords };
           const pixels = this.getGeometryPixelCoordinates(subGeometry);
           pixels.forEach(pixel => {
-            uniquePixels.add(`${pixel.tile}_${pixel.pixelRow}_${pixel.pixelCol}`);
+            const [hTile, vTile, col, row] = pixel;
+            const tileName = `h${hTile.toString().padStart(2, '0')}v${vTile.toString().padStart(2, '0')}`;
+            uniquePixels.add(`${tileName}_${row}_${col}`);
           });
         });
       }

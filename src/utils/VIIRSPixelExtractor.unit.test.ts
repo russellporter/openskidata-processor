@@ -26,16 +26,13 @@ describe("VIIRSPixelExtractor", () => {
       const pixels = extractor.getGeometryPixelCoordinates(polygon);
       
       expect(pixels.length).toBeGreaterThan(0);
-      expect(pixels[0]).toHaveProperty("tile");
-      expect(pixels[0]).toHaveProperty("hTile");
-      expect(pixels[0]).toHaveProperty("vTile");
-      expect(pixels[0]).toHaveProperty("pixelCol");
-      expect(pixels[0]).toHaveProperty("pixelRow");
-      expect(pixels[0]).toHaveProperty("sinusoidalX");
-      expect(pixels[0]).toHaveProperty("sinusoidalY");
       
-      // Verify tile format
-      expect(pixels[0].tile).toMatch(/^h\d{2}v\d{2}$/);
+      // Verify tuple format: [hTile, vTile, column, row]
+      const [hTile, vTile, col, row] = pixels[0];
+      expect(typeof hTile).toBe('number');
+      expect(typeof vTile).toBe('number');
+      expect(typeof col).toBe('number');
+      expect(typeof row).toBe('number');
     });
 
     it("should extract pixels from a line string", () => {
@@ -50,7 +47,13 @@ describe("VIIRSPixelExtractor", () => {
       const pixels = extractor.getGeometryPixelCoordinates(lineString);
       
       expect(pixels.length).toBeGreaterThan(0);
-      expect(pixels[0].tile).toMatch(/^h\d{2}v\d{2}$/);
+      
+      // Verify tuple format: [hTile, vTile, column, row]
+      const [hTile, vTile, col, row] = pixels[0];
+      expect(typeof hTile).toBe('number');
+      expect(typeof vTile).toBe('number');
+      expect(typeof col).toBe('number');
+      expect(typeof row).toBe('number');
     });
 
     it("should handle very small geometries with centroid fallback", () => {
@@ -143,17 +146,19 @@ describe("VIIRSPixelExtractor", () => {
       const pixels = extractor.getGeometryPixelCoordinates(polygon);
       
       pixels.forEach(pixel => {
+        const [hTile, vTile, col, row] = pixel;
+        
         // h tiles should be 0-35, v tiles should be 0-17
-        expect(pixel.hTile).toBeGreaterThanOrEqual(0);
-        expect(pixel.hTile).toBeLessThanOrEqual(35);
-        expect(pixel.vTile).toBeGreaterThanOrEqual(0);
-        expect(pixel.vTile).toBeLessThanOrEqual(17);
+        expect(hTile).toBeGreaterThanOrEqual(0);
+        expect(hTile).toBeLessThanOrEqual(35);
+        expect(vTile).toBeGreaterThanOrEqual(0);
+        expect(vTile).toBeLessThanOrEqual(17);
         
         // Pixel coordinates should be within tile bounds
-        expect(pixel.pixelCol).toBeGreaterThanOrEqual(0);
-        expect(pixel.pixelCol).toBeLessThan(3000);
-        expect(pixel.pixelRow).toBeGreaterThanOrEqual(0);
-        expect(pixel.pixelRow).toBeLessThan(3000);
+        expect(col).toBeGreaterThanOrEqual(0);
+        expect(col).toBeLessThan(3000);
+        expect(row).toBeGreaterThanOrEqual(0);
+        expect(row).toBeLessThan(3000);
       });
     });
   });

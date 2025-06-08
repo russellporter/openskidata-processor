@@ -87,10 +87,13 @@ describe("extractVIIRSPixels utilities", () => {
       const pixels = extractVIIRSPixelsFromFeature(feature);
       
       expect(pixels.length).toBeGreaterThan(0);
-      expect(pixels[0]).toHaveProperty("tile");
-      expect(pixels[0]).toHaveProperty("pixelRow");
-      expect(pixels[0]).toHaveProperty("pixelCol");
-      expect(pixels[0].tile).toMatch(/^h\d{2}v\d{2}$/);
+      
+      // Verify tuple format: [hTile, vTile, column, row]
+      const [hTile, vTile, col, row] = pixels[0];
+      expect(typeof hTile).toBe('number');
+      expect(typeof vTile).toBe('number');
+      expect(typeof col).toBe('number');
+      expect(typeof row).toBe('number');
     });
 
     it("should handle feature with no geometry", () => {

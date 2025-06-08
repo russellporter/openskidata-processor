@@ -28,6 +28,7 @@ import {
 import { getRunDifficultyConvention } from "../transforms/RunFormatter";
 import notEmpty from "../utils/notEmpty";
 import { isPlaceholderGeometry } from "../utils/PlaceholderSiteGeometry";
+import { VIIRSPixel } from "../utils/VIIRSPixelExtractor";
 import { arangoGeometry, isArangoInvalidGeometryError } from "./ArangoHelpers";
 import {
   DraftSkiArea,
@@ -735,6 +736,7 @@ export default async function clusterArangoGraph(
       geometry: geometry,
       isPolygon: true,
       source: SourceType.OPENSTREETMAP,
+      viirsPixels: [],
       properties: {
         type: FeatureType.SkiArea,
         id: id,
@@ -821,6 +823,17 @@ export default async function clusterArangoGraph(
     skiArea.properties.runConvention = getRunDifficultyConvention(
       skiArea.geometry,
     );
+
+    // Collect and unique VIIRS pixels from all runs
+    const runObjects = memberObjects.filter(
+      (object): object is RunObject => object.type === MapObjectType.Run,
+    );
+    const allPixels = runObjects.flatMap((run) => run.viirsPixels);
+    const uniquePixels = Array.from(
+      new Set(allPixels.map((pixel) => pixel.join(","))),
+    ).map((pixelString) => pixelString.split(",").map(Number) as VIIRSPixel);
+    
+    skiArea.viirsPixels = uniquePixels;
 
     if (geocoder) {
       const coordinates = centroid(skiArea.geometry).geometry.coordinates;

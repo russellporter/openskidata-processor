@@ -14,6 +14,7 @@ import {
 import StreamToPromise from "stream-to-promise";
 import { readGeoJSONFeatures } from "../io/GeoJSONReader";
 import { mapAsync } from "../transforms/StreamTransforms";
+import { VIIRSPixelExtractor } from "../utils/VIIRSPixelExtractor";
 import { allSkiAreaActivities } from "./ArangoGraphClusterer";
 import {
   DraftLift,
@@ -32,11 +33,13 @@ export default async function loadArangoGraph(
   const objectsCollection = database.collection("objects");
   await objectsCollection.create();
 
+  const viirsExtractor = new VIIRSPixelExtractor();
+
   await Promise.all(
     [
       load(skiAreasPath, prepareSkiArea),
       load(liftsPath, prepareLift),
-      load(runsPath, prepareRun),
+      load(runsPath, (feature) => prepareRun(feature, viirsExtractor)),
     ].map<Promise<Buffer>>(StreamToPromise),
   );
 
@@ -94,6 +97,7 @@ export default async function loadArangoGraph(
       skiAreas: [],
       activities: properties.activities,
       properties: properties,
+      viirsPixels: [],
     };
   }
 
@@ -118,7 +122,7 @@ export default async function loadArangoGraph(
     };
   }
 
-  function prepareRun(feature: RunFeature): DraftRun {
+  function prepareRun(feature: RunFeature, viirsExtractor: VIIRSPixelExtractor): DraftRun {
     const properties = feature.properties;
     const isInSkiAreaSite = feature.properties.skiAreas.length > 0;
     const activities = (() => {
@@ -146,6 +150,8 @@ export default async function loadArangoGraph(
       });
     })();
 
+    const viirsPixels = viirsExtractor.getGeometryPixelCoordinates(feature.geometry);
+
     return {
       _key: properties.id,
       type: MapObjectType.Run,
@@ -166,6 +172,7 @@ export default async function loadArangoGraph(
       isInSkiAreaSite: isInSkiAreaSite,
       activities: activities,
       difficulty: feature.properties.difficulty,
+      viirsPixels: viirsPixels,
     };
   }
 }
