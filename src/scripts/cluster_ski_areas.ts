@@ -16,4 +16,5 @@ clusterSkiAreas(
   new GeoJSONOutputPaths(config.outputDir),
   arangoDBURL,
   config.geocodingServer,
+  config.snowCover,
 );

@@ -163,6 +163,7 @@ export default async function prepare(paths: DataPaths, config: Config) {
       paths.output,
       config.arangoDBURLForClustering,
       config.geocodingServer,
+      config.snowCover,
     );
   }
 

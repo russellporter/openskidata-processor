@@ -1,5 +1,6 @@
 import * as arangojs from "arangojs";
-import { GeocodingServerConfig } from "../Config";
+import { FeatureType } from "openskidata-format";
+import { GeocodingServerConfig, SnowCoverConfig } from "../Config";
 import {
   GeoJSONIntermediatePaths,
   GeoJSONOutputPaths,
@@ -7,7 +8,7 @@ import {
 import Geocoder from "../transforms/Geocoder";
 import clusterArangoGraph from "./ArangoGraphClusterer";
 import loadArangoGraph from "./ArangoGraphLoader";
-import augmentGeoJSONWithSkiAreas from "./ArangoGraphSkiAreaAugmenter";
+import augmentGeoJSONFeatures from "./ArangoGraphSkiAreaAugmenter";
 import exportSkiAreasGeoJSON from "./ArangoSkiAreasExporter";
 
 export default async function clusterSkiAreas(
@@ -15,6 +16,7 @@ export default async function clusterSkiAreas(
   outputPaths: GeoJSONOutputPaths,
   arangoDBURL: string,
   geocoderConfig: GeocodingServerConfig | null,
+  snowCoverConfig: SnowCoverConfig | null,
 ): Promise<void> {
   let client = new arangojs.Database(arangoDBURL);
 
@@ -36,20 +38,25 @@ export default async function clusterSkiAreas(
   await clusterArangoGraph(
     client,
     geocoderConfig ? new Geocoder(geocoderConfig) : null,
+    snowCoverConfig,
   );
 
   console.log("Augmenting runs");
-  await augmentGeoJSONWithSkiAreas(
+  await augmentGeoJSONFeatures(
     intermediatePaths.runs,
     outputPaths.runs,
     client,
+    FeatureType.Run,
+    snowCoverConfig,
   );
 
   console.log("Augmenting lifts");
-  await augmentGeoJSONWithSkiAreas(
+  await augmentGeoJSONFeatures(
     intermediatePaths.lifts,
     outputPaths.lifts,
     client,
+    FeatureType.Lift,
+    null,
   );
 
   console.log("Exporting ski areas");

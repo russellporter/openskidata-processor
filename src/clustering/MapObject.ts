@@ -5,6 +5,7 @@ import {
   SkiAreaActivity,
   SkiAreaProperties,
   SkiAreaSummaryFeature,
+  SnowCoverHistory,
   SourceType,
 } from "openskidata-format";
 import { VIIRSPixel } from "../utils/VIIRSPixelExtractor";
@@ -48,8 +49,6 @@ export interface DraftSkiArea extends BaseDraftMapObject {
   source: SourceType;
   isPolygon: boolean;
   properties: SkiAreaProperties;
-  viirsPixels: VIIRSPixel[];
-  viirsPixelsByActivity: Partial<Record<SkiAreaActivity, VIIRSPixel[]>>;
 }
 
 export type SkiAreaGeometry =
@@ -95,6 +94,7 @@ export type MapFeature<Geometry extends GeoJSON.Geometry = MapObjectGeometry> =
 
 interface AugmentedMapFeatureProperties extends MapFeatureProperties {
   skiAreas: SkiAreaSummaryFeature[];
+  snowCoverHistory?: SnowCoverHistory;
 }
 
 export type AugmentedMapFeature = GeoJSON.Feature<

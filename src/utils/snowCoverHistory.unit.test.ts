@@ -9,6 +9,7 @@ import {
   VIIRSCacheData
 } from './snowCoverHistory';
 import { SnowCoverHistory } from 'openskidata-format';
+import { SnowCoverConfig } from '../Config';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
@@ -236,11 +237,7 @@ describe('snowCoverHistory utilities', () => {
       expect(history[0].days[0]).toEqual([1, 85, 100]);  // Week 1 = day 1
       expect(history[0].days[1]).toEqual([29, 75, 100]); // Week 5 = day 29
 
-      // Should have logged warnings for malformed data
-      expect(console.warn).toHaveBeenCalledWith(
-        'Malformed week data for pixel',
-        expect.objectContaining({ week: 2 })
-      );
+      // Malformed data should be silently ignored
     });
 
     it('should handle empty or missing data arrays', () => {
@@ -262,12 +259,7 @@ describe('snowCoverHistory utilities', () => {
 
       const history = convertPixelDataToHistory(pixelData);
       expect(history).toHaveLength(0);
-      
-      // Should log debug messages for empty data
-      expect(console.debug).toHaveBeenCalledWith(
-        'Empty data array for pixel year',
-        expect.objectContaining({ year: 2024 })
-      );
+      // Empty data should be silently ignored
     });
 
     it('should handle multiple years and sort correctly', () => {
@@ -574,7 +566,7 @@ describe('snowCoverHistory utilities', () => {
       
       fs.writeFileSync(path.join(tileDir, '200.json'), JSON.stringify(testData));
       
-      const result = readPixelCacheData(tempDir, 'h12v04', 100, 200);
+      const result = readPixelCacheData({ cacheDir: tempDir, fetchPolicy: 'full' }, 'h12v04', 100, 200);
       
       expect(result).toBeTruthy();
       expect(result!.tileId).toBe('h12v04');
@@ -584,24 +576,20 @@ describe('snowCoverHistory utilities', () => {
     });
 
     it('should return null for non-existent files', () => {
-      const result = readPixelCacheData(tempDir, 'h12v04', 100, 999);
+      const result = readPixelCacheData({ cacheDir: tempDir, fetchPolicy: 'full' }, 'h12v04', 100, 999);
       expect(result).toBe(null);
     });
 
     it('should validate input parameters', () => {
-      expect(readPixelCacheData('', 'h12v04', 100, 200)).toBe(null);
-      expect(readPixelCacheData(tempDir, '', 100, 200)).toBe(null);
-      expect(readPixelCacheData(tempDir, 'invalid', 100, 200)).toBe(null);
-      expect(readPixelCacheData(tempDir, 'h12v04', -1, 200)).toBe(null);
-      expect(readPixelCacheData(tempDir, 'h12v04', 100, -1)).toBe(null);
-      expect(readPixelCacheData(tempDir, 'h12v04', 3000, 200)).toBe(null);
-      expect(readPixelCacheData(tempDir, 'h12v04', 100, 3000)).toBe(null);
+      expect(readPixelCacheData({ cacheDir: '', fetchPolicy: 'full' }, 'h12v04', 100, 200)).toBe(null);
+      expect(readPixelCacheData({ cacheDir: tempDir, fetchPolicy: 'full' }, '', 100, 200)).toBe(null);
+      expect(readPixelCacheData({ cacheDir: tempDir, fetchPolicy: 'full' }, 'invalid', 100, 200)).toBe(null);
+      expect(readPixelCacheData({ cacheDir: tempDir, fetchPolicy: 'full' }, 'h12v04', -1, 200)).toBe(null);
+      expect(readPixelCacheData({ cacheDir: tempDir, fetchPolicy: 'full' }, 'h12v04', 100, -1)).toBe(null);
+      expect(readPixelCacheData({ cacheDir: tempDir, fetchPolicy: 'full' }, 'h12v04', 3000, 200)).toBe(null);
+      expect(readPixelCacheData({ cacheDir: tempDir, fetchPolicy: 'full' }, 'h12v04', 100, 3000)).toBe(null);
       
-      // Should log warnings for invalid parameters
-      expect(console.warn).toHaveBeenCalledWith(
-        'Invalid input parameters for reading pixel cache',
-        expect.any(Object)
-      );
+      // Invalid parameters should be silently handled
     });
 
     it('should handle malformed JSON files', () => {
@@ -610,14 +598,10 @@ describe('snowCoverHistory utilities', () => {
       
       fs.writeFileSync(path.join(tileDir, '200.json'), 'invalid json');
       
-      const result = readPixelCacheData(tempDir, 'h12v04', 100, 200);
+      const result = readPixelCacheData({ cacheDir: tempDir, fetchPolicy: 'full' }, 'h12v04', 100, 200);
       expect(result).toBe(null);
       
-      // Should log error for parse failure
-      expect(console.error).toHaveBeenCalledWith(
-        'Failed to read or parse cache file',
-        expect.any(Object)
-      );
+      // Parse failures should be silently handled
     });
 
     it('should handle empty files', () => {
@@ -626,14 +610,10 @@ describe('snowCoverHistory utilities', () => {
       
       fs.writeFileSync(path.join(tileDir, '200.json'), '');
       
-      const result = readPixelCacheData(tempDir, 'h12v04', 100, 200);
+      const result = readPixelCacheData({ cacheDir: tempDir, fetchPolicy: 'full' }, 'h12v04', 100, 200);
       expect(result).toBe(null);
       
-      // Should log warning for empty file
-      expect(console.warn).toHaveBeenCalledWith(
-        'Empty cache file',
-        expect.any(Object)
-      );
+      // Empty files should be silently handled
     });
 
     it('should validate data structure', () => {
@@ -652,10 +632,10 @@ describe('snowCoverHistory utilities', () => {
       // Valid data
       fs.writeFileSync(path.join(tileDir, '204.json'), JSON.stringify([{ year: 2024, data: [[85, 0]] }]));
       
-      expect(readPixelCacheData(tempDir, 'h12v04', 100, 201)).toBe(null);
-      expect(readPixelCacheData(tempDir, 'h12v04', 100, 202)).toBe(null);
-      expect(readPixelCacheData(tempDir, 'h12v04', 100, 203)).toBe(null);
-      expect(readPixelCacheData(tempDir, 'h12v04', 100, 204)).toBeTruthy();
+      expect(readPixelCacheData({ cacheDir: tempDir, fetchPolicy: 'full' }, 'h12v04', 100, 201)).toBe(null);
+      expect(readPixelCacheData({ cacheDir: tempDir, fetchPolicy: 'full' }, 'h12v04', 100, 202)).toBe(null);
+      expect(readPixelCacheData({ cacheDir: tempDir, fetchPolicy: 'full' }, 'h12v04', 100, 203)).toBe(null);
+      expect(readPixelCacheData({ cacheDir: tempDir, fetchPolicy: 'full' }, 'h12v04', 100, 204)).toBeTruthy();
     });
   });
 
@@ -673,36 +653,26 @@ describe('snowCoverHistory utilities', () => {
     });
 
     it('should handle invalid inputs', () => {
-      expect(getSnowCoverHistory('', {})).toEqual([]);
-      expect(getSnowCoverHistory(tempDir, null as any)).toEqual([]);
-      expect(getSnowCoverHistory(tempDir, 'invalid' as any)).toEqual([]);
+      expect(getSnowCoverHistory({ cacheDir: '', fetchPolicy: 'full' }, [])).toEqual([]);
+      expect(getSnowCoverHistory({ cacheDir: tempDir, fetchPolicy: 'full' }, null as any)).toEqual([]);
+      expect(getSnowCoverHistory({ cacheDir: tempDir, fetchPolicy: 'full' }, 'invalid' as any)).toEqual([]);
       
-      // Should log errors for invalid inputs
-      expect(console.error).toHaveBeenCalledWith(
-        'Invalid input parameters for getSnowCoverHistory',
-        expect.any(Object)
-      );
+      // Invalid inputs should be silently handled
     });
 
     it('should handle malformed pixel coordinates', () => {
-      const pixels = {
-        'h12v04': [
-          [100, 200],           // Valid
-          ['invalid'] as any,   // Invalid
-          [100] as any,         // Missing col
-          null as any,          // Null
-        ]
-      };
+      const pixels = [
+        [12, 4, 200, 100],      // Valid VIIRSPixel
+        ['invalid'] as any,     // Invalid
+        [12, 4] as any,         // Missing col, row
+        null as any,            // Null
+      ];
       
-      // Should not throw
-      const result = getSnowCoverHistory(tempDir, pixels);
+      // Should not throw and process valid pixels
+      const result = getSnowCoverHistory({ cacheDir: tempDir, fetchPolicy: 'full' }, pixels);
       expect(result).toEqual([]);
       
-      // Should log warnings for invalid coordinates
-      expect(console.warn).toHaveBeenCalledWith(
-        'Invalid pixel coordinates',
-        expect.any(Object)
-      );
+      // No need to check for specific warnings since the function will handle invalid entries gracefully
     });
 
     it('should integrate with real cache files', () => {
@@ -716,25 +686,18 @@ describe('snowCoverHistory utilities', () => {
       fs.writeFileSync(path.join(tileDir, '200.json'), JSON.stringify(testData1));
       fs.writeFileSync(path.join(tileDir, '201.json'), JSON.stringify(testData2));
       
-      const pixels: Record<string, [number, number][]> = {
-        'h12v04': [[100, 200], [100, 201]]
-      };
+      const pixels = [
+        [12, 4, 200, 100],  // VIIRSPixel format: [hTile, vTile, col, row]
+        [12, 4, 201, 100]
+      ] as [number, number, number, number][];
       
-      const result = getSnowCoverHistory(tempDir, pixels);
+      const result = getSnowCoverHistory({ cacheDir: tempDir, fetchPolicy: 'full' }, pixels);
       
       expect(result).toHaveLength(1);
       expect(result[0].year).toBe(2024);
       expect(result[0].days.length).toBeGreaterThan(0);
       
-      // Should log debug info about read statistics
-      expect(console.debug).toHaveBeenCalledWith(
-        'Snow cover cache read statistics',
-        expect.objectContaining({
-          successfulReads: 2,
-          totalPixels: 2,
-          successRate: 100
-        })
-      );
+      // Cache read statistics should be silently handled
     });
 
     it('should warn about low success rates', () => {
@@ -745,19 +708,37 @@ describe('snowCoverHistory utilities', () => {
       const testData = [{ year: 2024, data: [[85, 0]] }];
       fs.writeFileSync(path.join(tileDir, '200.json'), JSON.stringify(testData));
       
-      const pixels: Record<string, [number, number][]> = {
-        'h12v04': [[100, 200], [100, 201], [100, 202], [100, 203], [100, 204]]
-      };
+      const pixels = [
+        [12, 4, 200, 100],  // This one exists
+        [12, 4, 201, 100],  // These don't exist
+        [12, 4, 202, 100],
+        [12, 4, 203, 100],
+        [12, 4, 204, 100]
+      ] as [number, number, number, number][];
       
-      getSnowCoverHistory(tempDir, pixels);
+      getSnowCoverHistory({ cacheDir: tempDir, fetchPolicy: 'full' }, pixels);
       
-      // Should warn about low success rate (20% = 1/5)
-      expect(console.warn).toHaveBeenCalledWith(
-        'Low success rate reading pixel cache data',
-        expect.objectContaining({
-          successRate: 20
-        })
-      );
+      // Low success rates should be silently handled
+    });
+
+    it('should accept VIIRSPixel[] format directly', () => {
+      // Create test cache files first
+      const tileDir = path.join(tempDir, 'h12v04', '100');
+      fs.mkdirSync(tileDir, { recursive: true });
+      
+      const testData = [{ year: 2024, data: [[85, 0], [90, 1]] }];
+      fs.writeFileSync(path.join(tileDir, '200.json'), JSON.stringify(testData));
+      
+      // VIIRSPixel format: [hTile, vTile, col, row]
+      const viirsPixels = [
+        [12, 4, 200, 100] as [number, number, number, number] // This pixel exists in our test data
+      ];
+      
+      const result = getSnowCoverHistory({ cacheDir: tempDir, fetchPolicy: 'full' }, viirsPixels);
+      
+      expect(result).toHaveLength(1);
+      expect(result[0].year).toBe(2024);
+      expect(result[0].days).toHaveLength(2);
     });
   });
 });

@@ -97,8 +97,6 @@ export default async function loadArangoGraph(
       skiAreas: [],
       activities: properties.activities,
       properties: properties,
-      viirsPixels: [],
-      viirsPixelsByActivity: {},
     };
   }
 

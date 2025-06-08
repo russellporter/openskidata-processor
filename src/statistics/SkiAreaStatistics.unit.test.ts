@@ -31,7 +31,7 @@ describe("SkiAreaStatistics", () => {
       viirsPixels: [],
     };
 
-    const statistics = skiAreaStatistics([run]);
+    const statistics = skiAreaStatistics([run], null);
 
     expect(statistics).toMatchInlineSnapshot(`
       {
@@ -80,7 +80,7 @@ describe("SkiAreaStatistics", () => {
       isInSkiAreaSite: false,
     };
 
-    const statistics = skiAreaStatistics([lift]);
+    const statistics = skiAreaStatistics([lift], null);
 
     expect(statistics).toMatchInlineSnapshot(`
       {
@@ -135,7 +135,7 @@ describe("SkiAreaStatistics", () => {
       viirsPixels: [],
     };
 
-    const statistics = skiAreaStatistics([run]);
+    const statistics = skiAreaStatistics([run], null);
 
     expect(statistics).toMatchInlineSnapshot(`
       {

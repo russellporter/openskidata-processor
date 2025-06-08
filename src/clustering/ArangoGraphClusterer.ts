@@ -18,6 +18,7 @@ import {
   Status,
 } from "openskidata-format";
 import { v4 as uuid } from "uuid";
+import { SnowCoverConfig } from "../Config";
 import { skiAreaStatistics } from "../statistics/SkiAreaStatistics";
 import Geocoder from "../transforms/Geocoder";
 import {
@@ -70,6 +71,7 @@ export const allSkiAreaActivities = new Set([
 export default async function clusterArangoGraph(
   database: Database,
   geocoder: Geocoder | null,
+  snowCoverConfig: SnowCoverConfig | null,
 ): Promise<void> {
   const objectsCollection = database.collection("objects");
 
@@ -118,7 +120,7 @@ export default async function clusterArangoGraph(
   await generateSkiAreasForUnassignedObjects();
 
   console.log("Augment ski areas based on assigned lifts and runs");
-  await augmentSkiAreasBasedOnAssignedLiftsAndRuns(geocoder);
+  await augmentSkiAreasBasedOnAssignedLiftsAndRuns(geocoder, snowCoverConfig);
 
   console.log("Remove ski areas without a geometry");
   await removeSkiAreasWithoutGeometry();
@@ -736,8 +738,6 @@ export default async function clusterArangoGraph(
       geometry: geometry,
       isPolygon: true,
       source: SourceType.OPENSTREETMAP,
-      viirsPixels: [],
-      viirsPixelsByActivity: {},
       properties: {
         type: FeatureType.SkiArea,
         id: id,
@@ -781,6 +781,7 @@ export default async function clusterArangoGraph(
 
   async function augmentSkiAreasBasedOnAssignedLiftsAndRuns(
     geocoder: Geocoder | null,
+    snowCoverConfig: SnowCoverConfig | null,
   ): Promise<void> {
     const skiAreasCursor = await getSkiAreas({});
     let skiAreas: SkiAreaObject[];
@@ -794,6 +795,7 @@ export default async function clusterArangoGraph(
             skiArea,
             mapObjects,
             geocoder,
+            snowCoverConfig,
           );
         }),
       );
@@ -804,6 +806,7 @@ export default async function clusterArangoGraph(
     skiArea: SkiAreaObject,
     memberObjects: MapObject[],
     geocoder: Geocoder | null,
+    snowCoverConfig: SnowCoverConfig | null,
   ): Promise<void> {
     const noSkimapOrgSource = !skiArea.properties.sources.some(
       (source) => source.type == SourceType.SKIMAP_ORG,
@@ -820,45 +823,11 @@ export default async function clusterArangoGraph(
       return;
     }
 
-    skiArea.properties.statistics = skiAreaStatistics(memberObjects);
+    skiArea.properties.statistics = skiAreaStatistics(memberObjects, snowCoverConfig);
     skiArea.properties.runConvention = getRunDifficultyConvention(
       skiArea.geometry,
     );
 
-    // Collect and unique VIIRS pixels from all runs, grouped by activity
-    const runObjects = memberObjects.filter(
-      (object): object is RunObject => object.type === MapObjectType.Run,
-    );
-    
-    // Group runs by activity and collect pixels per activity
-    const pixelsByActivity: Partial<Record<SkiAreaActivity, VIIRSPixel[]>> = {};
-    const allPixelsSet = new Set<string>();
-    
-    for (const activity of skiArea.activities) {
-      const runsForActivity = runObjects.filter((run) => 
-        run.activities.includes(activity)
-      );
-      
-      const pixelsForActivity = runsForActivity.flatMap((run) => run.viirsPixels);
-      const uniquePixelsForActivity = Array.from(
-        new Set(pixelsForActivity.map((pixel) => pixel.join(","))),
-      ).map((pixelString) => pixelString.split(",").map(Number) as VIIRSPixel);
-      
-      pixelsByActivity[activity] = uniquePixelsForActivity;
-      
-      // Add to overall set
-      uniquePixelsForActivity.forEach((pixel) => {
-        allPixelsSet.add(pixel.join(","));
-      });
-    }
-    
-    // Overall unique pixels across all activities
-    const uniquePixels = Array.from(allPixelsSet).map(
-      (pixelString) => pixelString.split(",").map(Number) as VIIRSPixel
-    );
-    
-    skiArea.viirsPixels = uniquePixels;
-    skiArea.viirsPixelsByActivity = pixelsByActivity;
 
     if (geocoder) {
       const coordinates = centroid(skiArea.geometry).geometry.coordinates;
