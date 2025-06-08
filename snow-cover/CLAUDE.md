@@ -59,6 +59,9 @@ python src/fetch_snow_data.py data/runs.geojson --from-year 2024 --to-year 2024
 # Enable verbose logging
 python src/fetch_snow_data.py data/runs.geojson --verbose
 
+# Fill missing temporal data for existing cached pixels (no geojson required)
+python src/fetch_snow_data.py --fill-cache
+
 # Debugging tool: Convert HDF to GeoTIFF
 python scripts/hdf-to-geotiff.py input.hdf output.tif
 ```

@@ -212,20 +212,28 @@ class VIIRSSnowDataProcessor:
         self.logger.info(f"  Completed tile {tile}: {stats}")
         return stats
     
-    def run(self, geojson_path: str, max_tiles: Optional[int] = None) -> bool:
+    def run(self, geojson_path: Optional[str] = None, max_tiles: Optional[int] = None, 
+           fill_cache_mode: bool = False) -> bool:
         """
         Run the complete VIIRS snow data fetching process.
         
         Args:
-            geojson_path: Path to runs.geojson file
+            geojson_path: Path to runs.geojson file (optional if fill_cache_mode=True)
             max_tiles: Maximum number of tiles to process (for testing)
+            fill_cache_mode: If True, discover existing pixels instead of processing geojson
         
         Returns:
             True if successful, False otherwise
         """
         try:
-            # Step 1: Extract pixels from runs.geojson
-            pixels_by_tile = self.process_runs_geojson(geojson_path)
+            # Step 1: Get pixels either from runs.geojson or existing cache
+            if fill_cache_mode:
+                self.logger.info("Discovering existing cached pixels")
+                pixels_by_tile = self.cache_manager.discover_existing_pixels()
+            else:
+                if geojson_path is None:
+                    raise ValueError("geojson_path is required when not in fill_cache_mode")
+                pixels_by_tile = self.process_runs_geojson(geojson_path)
             
             if not pixels_by_tile:
                 self.logger.error("No pixels found in GeoJSON file")
@@ -308,7 +316,14 @@ def main():
     
     parser.add_argument(
         'geojson_path',
-        help='Path to runs.geojson file'
+        nargs='?',
+        help='Path to runs.geojson file (optional with --fill-cache)'
+    )
+    
+    parser.add_argument(
+        '--fill-cache',
+        action='store_true',
+        help='Fill missing temporal data for existing cached pixels (no geojson required)'
     )
     
     parser.add_argument(
@@ -379,10 +394,17 @@ def main():
     setup_logging(args.verbose)
     logger = logging.getLogger(__name__)
     
-    # Validate input file
-    if not Path(args.geojson_path).exists():
-        logger.error(f"Input file not found: {args.geojson_path}")
-        sys.exit(1)
+    # Validate input file (only required if not in fill-cache mode)
+    if args.fill_cache:
+        if args.geojson_path:
+            logger.warning("geojson_path ignored when using --fill-cache mode")
+    else:
+        if not args.geojson_path:
+            logger.error("geojson_path is required unless using --fill-cache mode")
+            sys.exit(1)
+        if not Path(args.geojson_path).exists():
+            logger.error(f"Input file not found: {args.geojson_path}")
+            sys.exit(1)
     
     # Validate year arguments
     current_year = datetime.now().year
@@ -420,8 +442,12 @@ def main():
         processor.cleanup_old_errors(args.cleanup_days)
     
     # Run the main processing
-    logger.info("Starting VIIRS snow data fetch process")
-    success = processor.run(args.geojson_path, args.max_tiles)
+    if args.fill_cache:
+        logger.info("Starting VIIRS snow data fill-cache process")
+        success = processor.run(geojson_path=None, max_tiles=args.max_tiles, fill_cache_mode=True)
+    else:
+        logger.info("Starting VIIRS snow data fetch process")
+        success = processor.run(args.geojson_path, args.max_tiles, fill_cache_mode=False)
     
     if success:
         logger.info("Processing completed successfully")

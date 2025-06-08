@@ -318,6 +318,48 @@ class PixelCacheManager:
                         self.logger.warning(f"Error cleaning up {json_file}: {e}")
         
         self.logger.info(f"Cleaned up {files_updated} cache files")
+    
+    def discover_existing_pixels(self) -> Dict[str, List[Tuple[int, int]]]:
+        """
+        Discover all existing pixel cache files and group them by tile.
+        
+        Returns:
+            Dictionary mapping tile names to lists of (pixel_row, pixel_col) tuples
+        """
+        pixels_by_tile = {}
+        
+        if not self.cache_root.exists():
+            return pixels_by_tile
+        
+        for tile_dir in self.cache_root.iterdir():
+            if not tile_dir.is_dir():
+                continue
+                
+            tile = tile_dir.name
+            pixels = []
+            
+            for row_dir in tile_dir.iterdir():
+                if not row_dir.is_dir():
+                    continue
+                    
+                try:
+                    pixel_row = int(row_dir.name)
+                    
+                    for json_file in row_dir.glob('*.json'):
+                        try:
+                            pixel_col = int(json_file.stem)
+                            pixels.append((pixel_row, pixel_col))
+                        except ValueError:
+                            self.logger.warning(f"Invalid pixel column filename: {json_file}")
+                            
+                except ValueError:
+                    self.logger.warning(f"Invalid pixel row directory name: {row_dir}")
+            
+            if pixels:
+                pixels_by_tile[tile] = sorted(pixels)
+                self.logger.debug(f"Found {len(pixels)} pixels in tile {tile}")
+        
+        return pixels_by_tile
 
 
 def main():
