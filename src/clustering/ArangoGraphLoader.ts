@@ -98,6 +98,7 @@ export default async function loadArangoGraph(
       activities: properties.activities,
       properties: properties,
       viirsPixels: [],
+      viirsPixelsByActivity: {},
     };
   }
 

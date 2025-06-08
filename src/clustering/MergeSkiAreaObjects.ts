@@ -12,13 +12,19 @@ export default function mergeSkiAreaObjects(
     return primarySkiArea;
   }
 
-  return otherSkiAreas.reduce((primarySkiArea, otherSkiArea) => {
-    // Merge and unique VIIRS pixels from both ski areas
-    const allPixels = [...primarySkiArea.viirsPixels, ...otherSkiArea.viirsPixels];
-    const uniquePixels = Array.from(
-      new Set(allPixels.map((pixel) => pixel.join(","))),
-    ).map((pixelString) => pixelString.split(",").map(Number) as VIIRSPixel);
+  // Assert that merging is not used for ski areas with pixels set
+  // This should not happen in the current use case
+  if (primarySkiArea.viirsPixels.length > 0 || Object.keys(primarySkiArea.viirsPixelsByActivity || {}).length > 0) {
+    throw new Error("Cannot merge ski areas that have VIIRS pixels set. This operation should happen before pixel extraction.");
+  }
+  
+  for (const skiArea of otherSkiAreas) {
+    if (skiArea.viirsPixels.length > 0 || Object.keys(skiArea.viirsPixelsByActivity || {}).length > 0) {
+      throw new Error("Cannot merge ski areas that have VIIRS pixels set. This operation should happen before pixel extraction.");
+    }
+  }
 
+  return otherSkiAreas.reduce((primarySkiArea, otherSkiArea) => {
     return {
       _id: primarySkiArea._id,
       _key: primarySkiArea._key,
@@ -32,7 +38,8 @@ export default function mergeSkiAreaObjects(
         primarySkiArea.activities,
         otherSkiArea.activities,
       ),
-      viirsPixels: uniquePixels,
+      viirsPixels: [],
+      viirsPixelsByActivity: {},
       properties: mergeSkiAreaProperties(
         primarySkiArea.properties,
         otherSkiArea.properties,

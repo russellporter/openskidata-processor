@@ -49,6 +49,7 @@ export interface DraftSkiArea extends BaseDraftMapObject {
   isPolygon: boolean;
   properties: SkiAreaProperties;
   viirsPixels: VIIRSPixel[];
+  viirsPixelsByActivity: Partial<Record<SkiAreaActivity, VIIRSPixel[]>>;
 }
 
 export type SkiAreaGeometry =

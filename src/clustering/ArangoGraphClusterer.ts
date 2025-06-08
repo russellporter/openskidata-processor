@@ -737,6 +737,7 @@ export default async function clusterArangoGraph(
       isPolygon: true,
       source: SourceType.OPENSTREETMAP,
       viirsPixels: [],
+      viirsPixelsByActivity: {},
       properties: {
         type: FeatureType.SkiArea,
         id: id,
@@ -824,16 +825,40 @@ export default async function clusterArangoGraph(
       skiArea.geometry,
     );
 
-    // Collect and unique VIIRS pixels from all runs
+    // Collect and unique VIIRS pixels from all runs, grouped by activity
     const runObjects = memberObjects.filter(
       (object): object is RunObject => object.type === MapObjectType.Run,
     );
-    const allPixels = runObjects.flatMap((run) => run.viirsPixels);
-    const uniquePixels = Array.from(
-      new Set(allPixels.map((pixel) => pixel.join(","))),
-    ).map((pixelString) => pixelString.split(",").map(Number) as VIIRSPixel);
+    
+    // Group runs by activity and collect pixels per activity
+    const pixelsByActivity: Partial<Record<SkiAreaActivity, VIIRSPixel[]>> = {};
+    const allPixelsSet = new Set<string>();
+    
+    for (const activity of skiArea.activities) {
+      const runsForActivity = runObjects.filter((run) => 
+        run.activities.includes(activity)
+      );
+      
+      const pixelsForActivity = runsForActivity.flatMap((run) => run.viirsPixels);
+      const uniquePixelsForActivity = Array.from(
+        new Set(pixelsForActivity.map((pixel) => pixel.join(","))),
+      ).map((pixelString) => pixelString.split(",").map(Number) as VIIRSPixel);
+      
+      pixelsByActivity[activity] = uniquePixelsForActivity;
+      
+      // Add to overall set
+      uniquePixelsForActivity.forEach((pixel) => {
+        allPixelsSet.add(pixel.join(","));
+      });
+    }
+    
+    // Overall unique pixels across all activities
+    const uniquePixels = Array.from(allPixelsSet).map(
+      (pixelString) => pixelString.split(",").map(Number) as VIIRSPixel
+    );
     
     skiArea.viirsPixels = uniquePixels;
+    skiArea.viirsPixelsByActivity = pixelsByActivity;
 
     if (geocoder) {
       const coordinates = centroid(skiArea.geometry).geometry.coordinates;
