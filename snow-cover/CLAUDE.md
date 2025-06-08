@@ -17,6 +17,7 @@ The system follows a modular pipeline architecture:
 
 2. **Data Fetching Pipeline** (`src/data_fetcher.py`):
    - Downloads VIIRS VNP10A1F HDF files from NASA's NSIDC DAAC
+   - Uses temporary directory for HDF file caching during processing
    - Extracts snow cover percentages and cloud persistence values
    - Handles authentication via .netrc file
    - Implements sophisticated error handling (301/400/401 codes)

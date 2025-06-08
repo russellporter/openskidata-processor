@@ -16,6 +16,7 @@ import * as MapboxGLFormatter from "./transforms/MapboxGLFormatter";
 import { formatRun } from "./transforms/RunFormatter";
 import { InputSkiAreaType, formatSkiArea } from "./transforms/SkiAreaFormatter";
 import { join } from "path";
+import { spawn } from "child_process";
 
 import {
   SkiAreaSiteProvider,
@@ -29,6 +30,45 @@ import {
   mapAsync,
 } from "./transforms/StreamTransforms";
 import { RunNormalizerAccumulator } from "./transforms/accumulator/RunNormalizerAccumulator";
+
+async function fetchSnowCoverIfEnabled(config: Config, runsPath: string): Promise<void> {
+  if (!config.snowCover || config.snowCover.fetchPolicy === 'none') {
+    return;
+  }
+
+  console.log("Processing snow cover data...");
+  
+  const args = ['src/fetch_snow_data.py'];
+  
+  if (config.snowCover.fetchPolicy === 'incremental') {
+    args.push('--fill-cache');
+  } else {
+    // 'full' policy - pass the runs geojson path
+    args.push(runsPath);
+  }
+  
+  args.push('--cache-dir', config.snowCover.cacheDir);
+
+  return new Promise((resolve, reject) => {
+    const pythonProcess = spawn('python', args, {
+      cwd: 'snow-cover',
+      stdio: 'inherit',
+    });
+
+    pythonProcess.on('close', (code) => {
+      if (code === 0) {
+        console.log("Snow cover processing completed successfully");
+        resolve();
+      } else {
+        reject(new Error(`Snow cover processing failed with exit code ${code}`));
+      }
+    });
+
+    pythonProcess.on('error', (error) => {
+      reject(new Error(`Failed to start snow cover processing: ${error.message}`));
+    });
+  });
+}
 
 export default async function prepare(paths: DataPaths, config: Config) {
   const siteProvider = new SkiAreaSiteProvider();
@@ -82,6 +122,14 @@ export default async function prepare(paths: DataPaths, config: Config) {
             : paths.output.runs,
         ),
       ),
+  );
+
+  // Process snow cover data after runs are written
+  await fetchSnowCoverIfEnabled(
+    config,
+    config.arangoDBURLForClustering
+      ? paths.intermediate.runs
+      : paths.output.runs,
   );
 
   console.log("Processing lifts...");

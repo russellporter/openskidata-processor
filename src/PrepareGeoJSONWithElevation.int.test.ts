@@ -11,6 +11,7 @@ const config: Config = {
   geocodingServer: null,
   workingDir: "data",
   outputDir: "data",
+  snowCover: null,
 };
 
 function mockElevationServer(code: number) {

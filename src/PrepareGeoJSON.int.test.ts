@@ -15,6 +15,7 @@ const config: Config = {
   geocodingServer: null,
   workingDir: "data",
   outputDir: "data",
+  snowCover: null,
 };
 
 it("produces empty output for empty input", async () => {

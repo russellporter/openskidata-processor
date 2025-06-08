@@ -8,6 +8,13 @@ export type GeocodingServerConfig = {
   inMemoryCacheSize: number;
 };
 
+export type SnowCoverFetchPolicy = 'full' | 'incremental' | 'none';
+
+export type SnowCoverConfig = {
+  cacheDir: string;
+  fetchPolicy: SnowCoverFetchPolicy;
+};
+
 export interface Config {
   arangoDBURLForClustering: string | null;
   elevationServerURL: string | null;
@@ -19,6 +26,8 @@ export interface Config {
   workingDir: string;
   // Directory where the output files are written to
   outputDir: string;
+  // Snow cover data integration
+  snowCover: SnowCoverConfig | null;
 }
 
 export function configFromEnvironment(): Config {
@@ -32,6 +41,14 @@ export function configFromEnvironment(): Config {
     );
   }
   const geocodingCacheTTL = process.env.GEOCODING_SERVER_URL_TTL;
+  const workingDir = process.env["WORKING_DIR"] ?? "data";
+  
+  // Validate snow cover fetch policy
+  const snowCoverFetchPolicy = process.env.SNOW_COVER_FETCH_POLICY;
+  if (snowCoverFetchPolicy && !['full', 'incremental', 'none'].includes(snowCoverFetchPolicy)) {
+    throw new Error(`Invalid SNOW_COVER_FETCH_POLICY: ${snowCoverFetchPolicy}. Must be one of: full, incremental, none`);
+  }
+  
   return {
     arangoDBURLForClustering: process.env["CLUSTERING_ARANGODB_URL"] || null,
     elevationServerURL: process.env["ELEVATION_SERVER_URL"] || null,
@@ -48,7 +65,14 @@ export function configFromEnvironment(): Config {
           }
         : null,
     bbox: bbox as GeoJSON.BBox,
-    workingDir: process.env["WORKING_DIR"] ?? "data",
+    workingDir: workingDir,
     outputDir: process.env["OUTPUT_DIR"] ?? "data",
+    snowCover:
+      process.env.ENABLE_SNOW_COVER === '1'
+        ? {
+            cacheDir: process.env.SNOW_COVER_CACHE_DIR ?? `${workingDir}/snow-cover`,
+            fetchPolicy: (snowCoverFetchPolicy as SnowCoverFetchPolicy) ?? 'full',
+          }
+        : null,
   };
 }

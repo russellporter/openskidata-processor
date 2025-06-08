@@ -23,20 +23,19 @@ from utils import calculate_week_index, format_cache_stats, create_empty_year_da
 class VIIRSSnowDataProcessor:
     """Main processor for VIIRS snow data integration."""
     
-    def __init__(self, cache_dir: str = "data/snowcover", hdf_cache_dir: str = "viirs_cache", 
+    def __init__(self, cache_dir: str = "data/snowcover", 
                  max_workers: int = 6, from_year: Optional[int] = None, to_year: Optional[int] = None):
         """
         Initialize the processor.
         
         Args:
             cache_dir: Directory for pixel-level JSON cache files
-            hdf_cache_dir: Directory for temporary HDF file caching
             max_workers: Maximum number of parallel workers for downloads
             from_year: Start year (inclusive), defaults to 2012
             to_year: End year (inclusive), defaults to current year
         """
         self.pixel_extractor = VIIRSPixelExtractor()
-        self.data_fetcher = VIIRSDataFetcher(cache_dir=hdf_cache_dir)
+        self.data_fetcher = VIIRSDataFetcher()
         self.cache_manager = PixelCacheManager(cache_root=cache_dir)
         self.max_workers = max_workers
         
@@ -332,11 +331,6 @@ def main():
         help='Directory for pixel-level JSON cache files (default: data/snowcover)'
     )
     
-    parser.add_argument(
-        '--hdf-cache-dir',
-        default='viirs_cache',
-        help='Directory for temporary HDF file caching (default: viirs_cache)'
-    )
     
     parser.add_argument(
         '--max-tiles',
@@ -424,7 +418,6 @@ def main():
     # Initialize processor
     processor = VIIRSSnowDataProcessor(
         cache_dir=args.cache_dir,
-        hdf_cache_dir=args.hdf_cache_dir,
         max_workers=args.max_workers,
         from_year=args.from_year,
         to_year=args.to_year

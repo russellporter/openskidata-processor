@@ -13,6 +13,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 import time
 import logging
+import tempfile
 from typing import List, Tuple, Dict, Optional, Set
 import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -25,15 +26,14 @@ from utils import generate_weekly_dates
 class VIIRSDataFetcher:
     """Fetches and processes VIIRS snow cover data."""
     
-    def __init__(self, cache_dir: str = "viirs_cache"):
+    def __init__(self):
         """
         Initialize the VIIRS data fetcher.
         
-        Args:
-            cache_dir: Directory to cache downloaded HDF files
+        Uses a temporary directory for HDF file caching during processing.
         """
-        self.cache_dir = Path(cache_dir)
-        self.cache_dir.mkdir(exist_ok=True)
+        self.temp_dir = tempfile.mkdtemp(prefix="viirs_")
+        self.cache_dir = Path(self.temp_dir)
         
         # NSIDC DAAC endpoint for VIIRS data
         self.base_url = "https://n5eil01u.ecs.nsidc.org/VIIRS/VNP10A1F.002"
@@ -333,7 +333,15 @@ class VIIRSDataFetcher:
         return all_results
     
     def cleanup(self):
-        """Cleanup resources."""
+        """Cleanup resources and temporary directory."""
+        import shutil
+        try:
+            if self.cache_dir.exists():
+                shutil.rmtree(self.cache_dir)
+                self.logger.debug(f"Cleaned up temporary directory: {self.cache_dir}")
+        except Exception as e:
+            self.logger.warning(f"Could not clean up temporary directory {self.cache_dir}: {e}")
+        
         self.logger.info("VIIRS data fetcher cleanup completed")
 
 
