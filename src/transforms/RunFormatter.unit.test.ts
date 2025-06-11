@@ -338,6 +338,39 @@ describe("RunFormatter", () => {
     expect(runs[0]!.properties.name).toBe("Multi-part run");
     expect(runs[1]!.properties.name).toBe("Multi-part run");
   });
+
+  it("splits MultiLineString run from OSM relation into separate LineString features", () => {
+    const multiLineStringFeature: InputRunFeature = {
+      type: "Feature",
+      geometry: {
+        type: "MultiLineString",
+        coordinates: [
+          [
+            [0, 0],
+            [1, 1],
+          ],
+          [
+            [2, 2],
+            [3, 3],
+          ],
+        ],
+      },
+      properties: {
+        type: "relation",
+        id: 12345,
+        tags: {
+          "piste:type": "nordic",
+          name: "Nordic Trail",
+          route: "piste",
+          type: "route",
+        },
+      },
+    };
+
+    const runs = formatRun(multiLineStringFeature);
+    expect(runs).toHaveLength(2);
+    expect(runs.every((run) => run.geometry.type === "LineString")).toBe(true);
+  });
 });
 
 function inputRun(

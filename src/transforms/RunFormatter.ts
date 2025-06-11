@@ -27,10 +27,7 @@ import {
 import getStatusAndValue from "./Status";
 
 export function formatRun(feature: InputRunFeature): RunFeature[] {
-  if (
-    feature.geometry.type === "Point" ||
-    feature.geometry.type === "MultiLineString"
-  ) {
+  if (feature.geometry.type === "Point") {
     return [];
   }
 
@@ -79,6 +76,14 @@ export function formatRun(feature: InputRunFeature): RunFeature[] {
         coordinates: polygonCoords,
       };
       return buildFeature(polygonGeometry, properties);
+    });
+  } else if (feature.geometry.type === "MultiLineString") {
+    return feature.geometry.coordinates.map((lineCoords) => {
+      const lineGeometry: GeoJSON.LineString = {
+        type: "LineString",
+        coordinates: lineCoords,
+      };
+      return buildFeature(lineGeometry, properties);
     });
   }
 
