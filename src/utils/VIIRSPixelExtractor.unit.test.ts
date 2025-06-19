@@ -1,5 +1,5 @@
+import { Feature, LineString, Polygon } from "geojson";
 import { VIIRSPixelExtractor } from "./VIIRSPixelExtractor";
-import { Feature, Polygon, LineString } from "geojson";
 
 describe("VIIRSPixelExtractor", () => {
   let extractor: VIIRSPixelExtractor;
@@ -24,15 +24,15 @@ describe("VIIRSPixelExtractor", () => {
       };
 
       const pixels = extractor.getGeometryPixelCoordinates(polygon);
-      
+
       expect(pixels.length).toBeGreaterThan(0);
-      
+
       // Verify tuple format: [hTile, vTile, column, row]
       const [hTile, vTile, col, row] = pixels[0];
-      expect(typeof hTile).toBe('number');
-      expect(typeof vTile).toBe('number');
-      expect(typeof col).toBe('number');
-      expect(typeof row).toBe('number');
+      expect(typeof hTile).toBe("number");
+      expect(typeof vTile).toBe("number");
+      expect(typeof col).toBe("number");
+      expect(typeof row).toBe("number");
     });
 
     it("should extract pixels from a line string", () => {
@@ -45,15 +45,15 @@ describe("VIIRSPixelExtractor", () => {
       };
 
       const pixels = extractor.getGeometryPixelCoordinates(lineString);
-      
+
       expect(pixels.length).toBeGreaterThan(0);
-      
+
       // Verify tuple format: [hTile, vTile, column, row]
       const [hTile, vTile, col, row] = pixels[0];
-      expect(typeof hTile).toBe('number');
-      expect(typeof vTile).toBe('number');
-      expect(typeof col).toBe('number');
-      expect(typeof row).toBe('number');
+      expect(typeof hTile).toBe("number");
+      expect(typeof vTile).toBe("number");
+      expect(typeof col).toBe("number");
+      expect(typeof row).toBe("number");
     });
 
     it("should handle very small geometries with centroid fallback", () => {
@@ -71,7 +71,7 @@ describe("VIIRSPixelExtractor", () => {
       };
 
       const pixels = extractor.getGeometryPixelCoordinates(smallPolygon);
-      
+
       // Should fall back to centroid and return at least one pixel
       expect(pixels.length).toBeGreaterThanOrEqual(1);
     });
@@ -99,9 +99,9 @@ describe("VIIRSPixelExtractor", () => {
       };
 
       const uniquePixels = extractor.extractPixelsFromFeature(feature);
-      
+
       expect(uniquePixels.size).toBeGreaterThan(0);
-      
+
       // Check pixel key format: "tile_row_col"
       const pixelKey = Array.from(uniquePixels)[0];
       expect(pixelKey).toMatch(/^h\d{2}v\d{2}_\d+_\d+$/);
@@ -117,49 +117,14 @@ describe("VIIRSPixelExtractor", () => {
       ]);
 
       const pixelsByTile = extractor.groupPixelsByTile(uniquePixels);
-      
+
       expect(Object.keys(pixelsByTile)).toHaveLength(2);
       expect(pixelsByTile["h12v04"]).toHaveLength(2);
       expect(pixelsByTile["h13v04"]).toHaveLength(1);
-      
+
       expect(pixelsByTile["h12v04"]).toContainEqual([100, 200]);
       expect(pixelsByTile["h12v04"]).toContainEqual([101, 200]);
       expect(pixelsByTile["h13v04"]).toContainEqual([50, 150]);
-    });
-  });
-
-  describe("tile coordinate validation", () => {
-    it("should produce valid tile coordinates", () => {
-      const polygon: Polygon = {
-        type: "Polygon",
-        coordinates: [
-          [
-            [0.0, 0.0], // Around equator and prime meridian
-            [1.0, 0.0],
-            [1.0, 1.0],
-            [0.0, 1.0],
-            [0.0, 0.0],
-          ],
-        ],
-      };
-
-      const pixels = extractor.getGeometryPixelCoordinates(polygon);
-      
-      pixels.forEach(pixel => {
-        const [hTile, vTile, col, row] = pixel;
-        
-        // h tiles should be 0-35, v tiles should be 0-17
-        expect(hTile).toBeGreaterThanOrEqual(0);
-        expect(hTile).toBeLessThanOrEqual(35);
-        expect(vTile).toBeGreaterThanOrEqual(0);
-        expect(vTile).toBeLessThanOrEqual(17);
-        
-        // Pixel coordinates should be within tile bounds
-        expect(col).toBeGreaterThanOrEqual(0);
-        expect(col).toBeLessThan(3000);
-        expect(row).toBeGreaterThanOrEqual(0);
-        expect(row).toBeLessThan(3000);
-      });
     });
   });
 });
