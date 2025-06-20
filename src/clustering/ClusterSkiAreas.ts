@@ -1,15 +1,11 @@
-import * as arangojs from "arangojs";
-import { FeatureType } from "openskidata-format";
 import { GeocodingServerConfig, SnowCoverConfig } from "../Config";
 import {
   GeoJSONIntermediatePaths,
   GeoJSONOutputPaths,
 } from "../io/GeoJSONFiles";
 import Geocoder from "../transforms/Geocoder";
-import clusterArangoGraph from "./ArangoGraphClusterer";
-import loadArangoGraph from "./ArangoGraphLoader";
-import augmentGeoJSONFeatures from "./ArangoGraphSkiAreaAugmenter";
-import exportSkiAreasGeoJSON from "./ArangoSkiAreasExporter";
+import { ArangoClusteringDatabase } from "./database/ArangoClusteringDatabase";
+import { SkiAreaClusteringService } from "./SkiAreaClusteringService";
 
 export default async function clusterSkiAreas(
   intermediatePaths: GeoJSONIntermediatePaths,
@@ -18,47 +14,23 @@ export default async function clusterSkiAreas(
   geocoderConfig: GeocodingServerConfig | null,
   snowCoverConfig: SnowCoverConfig | null,
 ): Promise<void> {
-  let client = new arangojs.Database(arangoDBURL);
+  const database = new ArangoClusteringDatabase();
+  const clusteringService = new SkiAreaClusteringService(database);
 
   try {
-    await client.dropDatabase("cluster");
-  } catch (_) {}
+    await database.initialize(arangoDBURL);
 
-  client = await client.createDatabase("cluster");
-
-  console.log("Loading graph into ArangoDB");
-  await loadArangoGraph(
-    intermediatePaths.skiAreas,
-    intermediatePaths.lifts,
-    intermediatePaths.runs,
-    client,
-  );
-
-  console.log("Clustering ski areas");
-  await clusterArangoGraph(
-    client,
-    geocoderConfig ? new Geocoder(geocoderConfig) : null,
-    snowCoverConfig,
-  );
-
-  console.log("Augmenting runs");
-  await augmentGeoJSONFeatures(
-    intermediatePaths.runs,
-    outputPaths.runs,
-    client,
-    FeatureType.Run,
-    snowCoverConfig,
-  );
-
-  console.log("Augmenting lifts");
-  await augmentGeoJSONFeatures(
-    intermediatePaths.lifts,
-    outputPaths.lifts,
-    client,
-    FeatureType.Lift,
-    null,
-  );
-
-  console.log("Exporting ski areas");
-  await exportSkiAreasGeoJSON(outputPaths.skiAreas, client);
+    await clusteringService.clusterSkiAreas(
+      intermediatePaths.skiAreas,
+      intermediatePaths.lifts,
+      intermediatePaths.runs,
+      outputPaths.skiAreas,
+      outputPaths.lifts,
+      outputPaths.runs,
+      geocoderConfig ? new Geocoder(geocoderConfig) : null,
+      snowCoverConfig,
+    );
+  } finally {
+    await database.close();
+  }
 }
