@@ -1,13 +1,13 @@
 import { FeatureType, SkiAreaActivity, SourceType } from "openskidata-format";
 import { SnowCoverConfig } from "../../Config";
 import Geocoder from "../../transforms/Geocoder";
-import { MapObject, MapObjectType, SkiAreaObject } from "../MapObject";
+import { MapObject, MapObjectType, RunObject, SkiAreaObject } from "../MapObject";
 
 export interface ClusteringDatabase {
   /**
    * Initialize the database connection and create necessary collections/tables
    */
-  initialize(connectionString: string): Promise<void>;
+  initialize(): Promise<void>;
 
   /**
    * Clean up and close database connection
@@ -87,19 +87,14 @@ export interface ClusteringDatabase {
   streamSkiAreas(): Promise<AsyncIterable<SkiAreaObject>>;
 
   /**
-   * Augment GeoJSON features with ski area information
+   * Get ski areas associated with a specific object ID
    */
-  augmentGeoJSONFeatures(
-    inputPath: string,
-    outputPath: string,
-    featureType: FeatureType,
-    snowCoverConfig: SnowCoverConfig | null,
-  ): Promise<void>;
+  getSkiAreasForObject(objectId: string): Promise<SkiAreaObject[]>;
 
   /**
-   * Export ski areas to GeoJSON format
+   * Get a run object by ID
    */
-  exportSkiAreasGeoJSON(outputPath: string): Promise<void>;
+  getRunObjectById(runId: string): Promise<RunObject | null>;
 }
 
 export interface GetSkiAreasOptions {

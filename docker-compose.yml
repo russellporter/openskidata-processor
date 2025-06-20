@@ -1,10 +1,4 @@
 services:
-  arangodb:
-    image: arangodb:3.12.1 # keep in sync with the version used in integration tests
-    ports:
-      - 0:8529
-    environment:
-      - ARANGO_NO_AUTH=1d
   tippecanoe:
     build:
       context: https://github.com/felt/tippecanoe.git

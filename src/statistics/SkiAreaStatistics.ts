@@ -4,10 +4,9 @@ import {
   LiftStatistics,
   RunStatistics,
   SkiAreaActivity,
-  SkiAreaStatistics,
   SkiAreaSnowCoverStatistics,
+  SkiAreaStatistics,
 } from "openskidata-format";
-import { allSkiAreaActivities } from "../clustering/ArangoGraphClusterer";
 import {
   LiftObject,
   MapObject,
@@ -15,8 +14,13 @@ import {
   RunObject,
 } from "../clustering/MapObject";
 import { SnowCoverConfig } from "../Config";
-import { VIIRSPixel } from "../utils/VIIRSPixelExtractor";
 import { getSnowCoverHistory } from "../utils/snowCoverHistory";
+import { VIIRSPixel } from "../utils/VIIRSPixelExtractor";
+
+const allSkiAreaActivities = new Set([
+  SkiAreaActivity.Downhill,
+  SkiAreaActivity.Nordic,
+]);
 
 function isRun(object: MapObject): object is RunObject {
   return object.type === MapObjectType.Run;
@@ -35,8 +39,8 @@ type MapObjectStatistics = {
 };
 
 export function skiAreaStatistics(
-  mapObjects: MapObject[], 
-  snowCoverConfig: SnowCoverConfig | null
+  mapObjects: MapObject[],
+  snowCoverConfig: SnowCoverConfig | null,
 ): SkiAreaStatistics {
   const runStats = runStatistics(mapObjects.filter(isRun));
   const liftStats = liftStatistics(mapObjects.filter(isLift));
@@ -55,7 +59,10 @@ export function skiAreaStatistics(
 
   // Generate snow cover statistics if snow cover config is provided
   if (snowCoverConfig) {
-    const snowCoverStats = generateSnowCoverStatistics(mapObjects.filter(isRun), snowCoverConfig);
+    const snowCoverStats = generateSnowCoverStatistics(
+      mapObjects.filter(isRun),
+      snowCoverConfig,
+    );
     if (snowCoverStats) {
       statistics.snowCover = snowCoverStats;
     }
@@ -216,8 +223,8 @@ interface ObjectStatistics extends ObjectElevationStatistics {
 }
 
 function generateSnowCoverStatistics(
-  runs: RunObject[], 
-  snowCoverConfig: SnowCoverConfig
+  runs: RunObject[],
+  snowCoverConfig: SnowCoverConfig,
 ): SkiAreaSnowCoverStatistics | null {
   if (runs.length === 0) {
     return null;
@@ -225,56 +232,62 @@ function generateSnowCoverStatistics(
 
   try {
     // Collect all unique pixels across all runs
-    const allPixels = runs.flatMap(run => run.viirsPixels);
+    const allPixels = runs.flatMap((run) => run.viirsPixels);
     const uniquePixels = Array.from(
-      new Set(allPixels.map(pixel => pixel.join(','))),
-    ).map(pixelString => pixelString.split(',').map(Number) as VIIRSPixel);
+      new Set(allPixels.map((pixel) => pixel.join(","))),
+    ).map((pixelString) => pixelString.split(",").map(Number) as VIIRSPixel);
 
     // Get overall snow cover history for all runs
     const overallHistory = getSnowCoverHistory(snowCoverConfig, uniquePixels);
 
     // Group runs by activity and get snow cover for each activity
-    const runsByActivity: Partial<Record<SkiAreaActivity | 'other', RunObject[]>> = { other: [] };
-    allSkiAreaActivities.forEach(activity => {
+    const runsByActivity: Partial<
+      Record<SkiAreaActivity | "other", RunObject[]>
+    > = { other: [] };
+    allSkiAreaActivities.forEach((activity) => {
       runsByActivity[activity] = [];
     });
 
-    runs.forEach(run => {
-      const skiAreaActivities = run.activities.filter(activity => allSkiAreaActivities.has(activity));
+    runs.forEach((run) => {
+      const skiAreaActivities = run.activities.filter((activity) =>
+        allSkiAreaActivities.has(activity),
+      );
       if (skiAreaActivities.length === 0) {
         runsByActivity.other?.push(run);
       } else {
-        skiAreaActivities.forEach(activity => {
+        skiAreaActivities.forEach((activity) => {
           runsByActivity[activity]?.push(run);
         });
       }
     });
 
     // Generate snow cover history for each activity
-    const byActivity: SkiAreaSnowCoverStatistics['byActivity'] = {};
-    
+    const byActivity: SkiAreaSnowCoverStatistics["byActivity"] = {};
+
     for (const [activity, activityRuns] of Object.entries(runsByActivity)) {
       if (!activityRuns || activityRuns.length === 0) continue;
 
-      const activityPixels = activityRuns.flatMap(run => run.viirsPixels);
+      const activityPixels = activityRuns.flatMap((run) => run.viirsPixels);
       const uniqueActivityPixels = Array.from(
-        new Set(activityPixels.map(pixel => pixel.join(','))),
-      ).map(pixelString => pixelString.split(',').map(Number) as VIIRSPixel);
+        new Set(activityPixels.map((pixel) => pixel.join(","))),
+      ).map((pixelString) => pixelString.split(",").map(Number) as VIIRSPixel);
 
-      const activityHistory = getSnowCoverHistory(snowCoverConfig, uniqueActivityPixels);
-      
+      const activityHistory = getSnowCoverHistory(
+        snowCoverConfig,
+        uniqueActivityPixels,
+      );
+
       if (activityHistory.length > 0) {
-        byActivity[activity as SkiAreaActivity | 'other'] = activityHistory;
+        byActivity[activity as SkiAreaActivity | "other"] = activityHistory;
       }
     }
 
     return {
       overall: overallHistory,
-      byActivity
+      byActivity,
     };
-
   } catch (error) {
-    console.error('Failed to generate snow cover statistics:', error);
+    console.error("Failed to generate snow cover statistics:", error);
     return null;
   }
 }

@@ -4,21 +4,21 @@ import {
   GeoJSONOutputPaths,
 } from "../io/GeoJSONFiles";
 import Geocoder from "../transforms/Geocoder";
-import { ArangoClusteringDatabase } from "./database/ArangoClusteringDatabase";
+import { SQLiteClusteringDatabase } from "./database/SQLiteClusteringDatabase";
 import { SkiAreaClusteringService } from "./SkiAreaClusteringService";
 
 export default async function clusterSkiAreas(
   intermediatePaths: GeoJSONIntermediatePaths,
   outputPaths: GeoJSONOutputPaths,
-  arangoDBURL: string,
   geocoderConfig: GeocodingServerConfig | null,
   snowCoverConfig: SnowCoverConfig | null,
 ): Promise<void> {
-  const database = new ArangoClusteringDatabase();
+  const database = new SQLiteClusteringDatabase();
   const clusteringService = new SkiAreaClusteringService(database);
 
   try {
-    await database.initialize(arangoDBURL);
+    await database.initialize();
+    await database.createIndexes();
 
     await clusteringService.clusterSkiAreas(
       intermediatePaths.skiAreas,

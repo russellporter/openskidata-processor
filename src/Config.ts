@@ -16,7 +16,6 @@ export type SnowCoverConfig = {
 };
 
 export interface Config {
-  arangoDBURLForClustering: string | null;
   elevationServerURL: string | null;
   // Geocoder in https://github.com/komoot/photon format, disk cache TTL in milliseconds
   geocodingServer: GeocodingServerConfig | null;
@@ -50,7 +49,6 @@ export function configFromEnvironment(): Config {
   }
   
   return {
-    arangoDBURLForClustering: process.env["CLUSTERING_ARANGODB_URL"] || null,
     elevationServerURL: process.env["ELEVATION_SERVER_URL"] || null,
     geocodingServer:
       process.env.GEOCODING_SERVER_URL !== undefined

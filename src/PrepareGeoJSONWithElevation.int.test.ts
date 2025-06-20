@@ -5,7 +5,6 @@ import prepare from "./PrepareGeoJSON";
 import * as TestHelpers from "./TestHelpers";
 
 const config: Config = {
-  arangoDBURLForClustering: null,
   elevationServerURL: "http://elevation.example.com",
   bbox: null,
   geocodingServer: null,

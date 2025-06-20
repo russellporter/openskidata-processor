@@ -9,7 +9,6 @@ import {
   SourceType,
   Status,
 } from "openskidata-format";
-import { GenericContainer, StartedTestContainer } from "testcontainers";
 import * as TestHelpers from "../TestHelpers";
 import {
   simplifiedLiftFeature,
@@ -28,29 +27,15 @@ jest.mock("uuid", () => {
   };
 });
 
-// Increase timeout to give time to set up the container
-jest.setTimeout(360 * 1000);
+// Increase timeout to give time to set up SQLite database
+jest.setTimeout(60 * 1000);
 
-let container: StartedTestContainer;
-beforeAll(async () => {
-  console.log("establishing container");
-  // keep version in sync with that used in docker-compose.yml
-  container = await new GenericContainer("arangodb:3.12.1")
-    .withExposedPorts(8529)
-    .withEnvironment({ ARANGO_NO_AUTH: "1d" })
-    .start();
-
-  console.log("done establishing container");
-  // Delay a bit or the DB won't be ready.
-  await sleep(5000);
-});
-
-afterAll(async () => {
-  await container?.stop();
-});
-
-beforeEach(() => {
+beforeEach(async () => {
   mockUuidCount = 0;
+});
+
+afterEach(async () => {
+  // Database cleanup is now handled automatically by SQLiteClusteringDatabase
 });
 
 it("skips generating ski areas for runs with unsupported activity", async () => {
@@ -83,7 +68,6 @@ it("skips generating ski areas for runs with unsupported activity", async () => 
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529),
     null,
     null,
   );
@@ -157,7 +141,6 @@ it("generates ski areas for runs without them", async () => {
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529),
     null,
     null,
   );
@@ -248,7 +231,6 @@ it("does not generate ski area for lone downhill run without lift", async () => 
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529),
     null,
     null,
   );
@@ -338,7 +320,6 @@ it("generates ski areas by activity", async () => {
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529),
     null,
     null,
   );
@@ -437,7 +418,6 @@ it("clusters ski areas", async () => {
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529),
     null,
     null,
   );
@@ -549,7 +529,6 @@ it("clusters ski area activities independently", async () => {
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529),
     null,
     null,
   );
@@ -636,7 +615,6 @@ it("generates a downhill ski area but does not include backcountry runs when clu
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529),
     null,
     null,
   );
@@ -702,7 +680,6 @@ it("generates elevation statistics for run & lift based on lift served skiable v
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529),
     null,
     null,
   );
@@ -791,7 +768,6 @@ it("generates statistics for run with backcountry grooming with site membership"
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529),
     null,
     null,
   );
@@ -881,7 +857,6 @@ it("allows point & multilinestring lifts to be processed", async () => {
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529),
     null,
     null,
   );
@@ -936,7 +911,6 @@ it("does not generate ski area for lone snow park", async () => {
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529),
     null,
     null,
   );
@@ -1006,7 +980,6 @@ it("generates ski area which includes the snow park", async () => {
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529),
     null,
     null,
   );
@@ -1079,7 +1052,6 @@ it("generates ski area which includes the patrolled ungroomed run", async () => 
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529),
     null,
     null,
   );
@@ -1131,7 +1103,6 @@ it("does not generate ski area for ungroomed run", async () => {
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529),
     null,
     null,
   );
@@ -1207,7 +1178,6 @@ it("associates lifts and runs with polygon openstreetmap ski area", async () => 
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529),
     null,
     null,
   );
@@ -1316,7 +1286,6 @@ it("associates lifts and runs adjacent to polygon openstreetmap ski area when no
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529),
     null,
     null,
   );
@@ -1433,7 +1402,6 @@ it("associates lifts correctly to adjacent ski areas based on their polygons", a
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529),
     null,
     null,
   );
@@ -1506,7 +1474,6 @@ it("merges Skimap.org ski area with OpenStreetMap ski area", async () => {
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529),
     null,
     null,
   );
@@ -1635,7 +1602,6 @@ it("merges Skimap.org ski area into adjacent OpenStreetMap ski areas", async () 
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529),
     null,
     null,
   );
@@ -1728,7 +1694,6 @@ it("merges Skimap.org ski area without activities with OpenStreetMap ski area", 
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529),
     null,
     null,
   );
@@ -1793,7 +1758,6 @@ it("prefers OSM sourced websites when merging Skimap.org ski area with OpenStree
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529),
     null,
     null,
   );
@@ -1859,7 +1823,6 @@ it("removes OpenStreetMap ski areas that span across multiple Skimap.org ski are
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529),
     null,
     null,
   );
@@ -1931,7 +1894,6 @@ it("adds activities to OpenStreetMap ski areas based on the associated runs", as
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529),
     null,
     null,
   );
@@ -1983,7 +1945,6 @@ it("removes OpenStreetMap ski area without nearby runs/lifts", async () => {
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529),
     null,
     null,
   );
@@ -2050,7 +2011,6 @@ it("uses runs fully contained in the ski area polygon to determine activities wh
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529),
     null,
     null,
   );
@@ -2122,7 +2082,6 @@ it("removes an OpenStreetMap ski area that does not contain any runs/lifts as it
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529),
     null,
     null,
   );
@@ -2192,7 +2151,6 @@ it("updates geometry, run convention, and activities for a site based ski area",
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529),
     null,
     null,
   );
@@ -2282,7 +2240,6 @@ it("adds nearby unassociated runs of same activity to site based ski area", asyn
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529),
     null,
     null,
   );
@@ -2356,7 +2313,6 @@ it("does not add nearby unassociated runs of different activity to site based sk
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529),
     null,
     null,
   );
@@ -2398,7 +2354,6 @@ it("removes site based ski area that doesn't have associated lifts and runs", as
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529),
     null,
     null,
   );
@@ -2482,7 +2437,6 @@ it("removes landuse based ski area when there is a site with sufficient overlap"
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529),
     null,
     null,
   );
@@ -2599,7 +2553,6 @@ it("keeps landuse based ski area when there is a site with insufficient overlap"
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529),
     null,
     null,
   );
@@ -2683,7 +2636,6 @@ it("keeps site=piste ski area with only backcountry runs", async () => {
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529),
     null,
     null,
   );
@@ -2731,7 +2683,6 @@ it("keeps site=piste ski area with only non-skiing activities", async () => {
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    "http://localhost:" + container.getMappedPort(8529),
     null,
     null,
   );
@@ -2743,11 +2694,6 @@ it("keeps site=piste ski area with only non-skiing activities", async () => {
   expect(skiAreaFeatures[0].properties.activities).toEqual([]);
 });
 
-async function sleep(ms: number) {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-}
 
 function orderedByID(left: { id: string }, right: { id: string }): number {
   return left.id.localeCompare(right.id);

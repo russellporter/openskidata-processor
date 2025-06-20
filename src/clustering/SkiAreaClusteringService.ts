@@ -3,7 +3,6 @@ import centroid from "@turf/centroid";
 import * as turf from "@turf/helpers";
 import length from "@turf/length";
 import nearestPoint from "@turf/nearest-point";
-import union from "@turf/union";
 import { AssertionError } from "assert";
 import * as GeoJSON from "geojson";
 import {
@@ -19,6 +18,7 @@ import {
   SourceType,
   Status,
 } from "openskidata-format";
+import StreamToPromise from "stream-to-promise";
 import { v4 as uuid } from "uuid";
 import { SnowCoverConfig } from "../Config";
 import { readGeoJSONFeatures } from "../io/GeoJSONReader";
@@ -31,11 +31,13 @@ import {
 } from "../transforms/GeoTransforms";
 import { getRunDifficultyConvention } from "../transforms/RunFormatter";
 import { mapAsync } from "../transforms/StreamTransforms";
-import notEmpty from "../utils/notEmpty";
 import { isPlaceholderGeometry } from "../utils/PlaceholderSiteGeometry";
 import { VIIRSPixelExtractor } from "../utils/VIIRSPixelExtractor";
-import StreamToPromise from "stream-to-promise";
-import { ClusteringDatabase, SearchContext } from "./database/ClusteringDatabase";
+import {
+  ClusteringDatabase,
+  SearchContext,
+} from "./database/ClusteringDatabase";
+import augmentGeoJSONFeatures from "./GeoJSONAugmenter";
 import {
   DraftLift,
   DraftMapObject,
@@ -48,6 +50,7 @@ import {
   SkiAreaObject,
 } from "./MapObject";
 import mergeSkiAreaObjects from "./MergeSkiAreaObjects";
+import exportSkiAreasGeoJSON from "./SkiAreasExporter";
 
 const maxDistanceInKilometers = 0.5;
 
@@ -104,9 +107,13 @@ export class SkiAreaClusteringService {
 
     await Promise.all(
       [
-        this.loadFeatures(skiAreasPath, (feature) => this.prepareSkiArea(feature)),
+        this.loadFeatures(skiAreasPath, (feature) =>
+          this.prepareSkiArea(feature),
+        ),
         this.loadFeatures(liftsPath, (feature) => this.prepareLift(feature)),
-        this.loadFeatures(runsPath, (feature) => this.prepareRun(feature, viirsExtractor)),
+        this.loadFeatures(runsPath, (feature) =>
+          this.prepareRun(feature, viirsExtractor),
+        ),
       ].map<Promise<Buffer>>(StreamToPromise),
     );
 
@@ -133,7 +140,8 @@ export class SkiAreaClusteringService {
 
     if (sources.length !== 1) {
       throw new AssertionError({
-        message: "Only ski areas with a single source are supported for clustering.",
+        message:
+          "Only ski areas with a single source are supported for clustering.",
       });
     }
 
@@ -158,7 +166,9 @@ export class SkiAreaClusteringService {
     return {
       _key: properties.id,
       type: MapObjectType.Lift,
-      geometry: this.geometryWithoutElevations(feature.geometry) as LiftGeometry,
+      geometry: this.geometryWithoutElevations(
+        feature.geometry,
+      ) as LiftGeometry,
       geometryWithElevations: feature.geometry,
       activities:
         properties["status"] === Status.Operating
@@ -173,10 +183,13 @@ export class SkiAreaClusteringService {
     };
   }
 
-  private prepareRun(feature: RunFeature, viirsExtractor: VIIRSPixelExtractor): DraftRun {
+  private prepareRun(
+    feature: RunFeature,
+    viirsExtractor: VIIRSPixelExtractor,
+  ): DraftRun {
     const properties = feature.properties;
     const isInSkiAreaSite = feature.properties.skiAreas.length > 0;
-    
+
     const activities = (() => {
       if (
         !isInSkiAreaSite &&
@@ -201,7 +214,9 @@ export class SkiAreaClusteringService {
       });
     })();
 
-    const viirsPixels = viirsExtractor.getGeometryPixelCoordinates(feature.geometry);
+    const viirsPixels = viirsExtractor.getGeometryPixelCoordinates(
+      feature.geometry,
+    );
 
     return {
       _key: properties.id,
@@ -224,7 +239,9 @@ export class SkiAreaClusteringService {
     };
   }
 
-  private geometryWithoutElevations(geometry: GeoJSON.Geometry): GeoJSON.Geometry {
+  private geometryWithoutElevations(
+    geometry: GeoJSON.Geometry,
+  ): GeoJSON.Geometry {
     switch (geometry.type) {
       case "Point":
         return {
@@ -268,7 +285,9 @@ export class SkiAreaClusteringService {
     geocoder: Geocoder | null,
     snowCoverConfig: SnowCoverConfig | null,
   ): Promise<void> {
-    console.log("Assign ski area activities and geometry based on member objects");
+    console.log(
+      "Assign ski area activities and geometry based on member objects",
+    );
     await this.assignSkiAreaActivitiesAndGeometryBasedOnMemberObjects();
 
     console.log("Remove ambiguous duplicate ski areas");
@@ -303,7 +322,10 @@ export class SkiAreaClusteringService {
     await this.generateSkiAreasForUnassignedObjects();
 
     console.log("Augment ski areas based on assigned lifts and runs");
-    await this.augmentSkiAreasBasedOnAssignedLiftsAndRuns(geocoder, snowCoverConfig);
+    await this.augmentSkiAreasBasedOnAssignedLiftsAndRuns(
+      geocoder,
+      snowCoverConfig,
+    );
 
     console.log("Remove ski areas without a geometry");
     await this.removeSkiAreasWithoutGeometry();
@@ -321,8 +343,11 @@ export class SkiAreaClusteringService {
             return;
           }
 
-          const memberObjects = await this.database.getObjectsForSkiArea(skiArea.id);
-          const activities = this.getActivitiesBasedOnRunsAndLifts(memberObjects);
+          const memberObjects = await this.database.getObjectsForSkiArea(
+            skiArea.id,
+          );
+          const activities =
+            this.getActivitiesBasedOnRunsAndLifts(memberObjects);
 
           if (memberObjects.length === 0) {
             return;
@@ -331,6 +356,7 @@ export class SkiAreaClusteringService {
           await this.database.updateObject(skiArea._key, {
             activities: [...activities],
             geometry: this.skiAreaGeometry(memberObjects),
+            isPolygon: false,
             properties: {
               ...skiArea.properties,
               activities: [...activities],
@@ -356,7 +382,8 @@ export class SkiAreaClusteringService {
             skiArea.geometry.type !== "MultiPolygon"
           ) {
             throw new AssertionError({
-              message: "getSkiAreas query should have only returned ski areas with a Polygon geometry.",
+              message:
+                "getSkiAreas query should have only returned ski areas with a Polygon geometry.",
             });
           }
 
@@ -396,16 +423,20 @@ export class SkiAreaClusteringService {
     });
 
     let skiAreas: SkiAreaObject[];
-    while ((skiAreas = (await skiAreasCursor.batches?.next()) as SkiAreaObject[])) {
-      await Promise.all(
-        skiAreas.map(async (skiArea) => {
+    while (
+      (skiAreas = (await skiAreasCursor.batches?.next()) as SkiAreaObject[])
+    ) {
+      // Process ski areas sequentially when onlyIfNotAlreadyAssigned is true
+      // to prevent race conditions where multiple ski areas claim the same objects
+      if (options.objects.onlyIfNotAlreadyAssigned) {
+        for (const skiArea of skiAreas) {
           const memberObjects = await this.processSkiAreaForObjectAssignment(
             skiArea,
             options,
           );
 
           if (memberObjects === null) {
-            return;
+            continue;
           }
 
           await this.database.markObjectsAsPartOfSkiArea(
@@ -416,7 +447,8 @@ export class SkiAreaClusteringService {
 
           const hasKnownSkiAreaActivities = skiArea.activities.length > 0;
           if (!hasKnownSkiAreaActivities) {
-            const activities = this.getActivitiesBasedOnRunsAndLifts(memberObjects);
+            const activities =
+              this.getActivitiesBasedOnRunsAndLifts(memberObjects);
             await this.database.updateObject(skiArea._key, {
               activities: [...activities],
               properties: {
@@ -425,8 +457,41 @@ export class SkiAreaClusteringService {
               },
             });
           }
-        }),
-      );
+        }
+      } else {
+        // Process concurrently when not checking for already assigned objects
+        await Promise.all(
+          skiAreas.map(async (skiArea) => {
+            const memberObjects = await this.processSkiAreaForObjectAssignment(
+              skiArea,
+              options,
+            );
+
+            if (memberObjects === null) {
+              return;
+            }
+
+            await this.database.markObjectsAsPartOfSkiArea(
+              skiArea.id,
+              memberObjects.map((obj) => obj._key),
+              options.objects.onlyInPolygon || false,
+            );
+
+            const hasKnownSkiAreaActivities = skiArea.activities.length > 0;
+            if (!hasKnownSkiAreaActivities) {
+              const activities =
+                this.getActivitiesBasedOnRunsAndLifts(memberObjects);
+              await this.database.updateObject(skiArea._key, {
+                activities: [...activities],
+                properties: {
+                  ...skiArea.properties,
+                  activities: [...activities],
+                },
+              });
+            }
+          }),
+        );
+      }
     }
   }
 
@@ -463,7 +528,8 @@ export class SkiAreaClusteringService {
           searchType: "contains",
           isFixedSearchArea: true,
           alreadyVisited: [skiArea._key],
-          excludeObjectsAlreadyInSkiArea: options.objects.onlyIfNotAlreadyAssigned || false,
+          excludeObjectsAlreadyInSkiArea:
+            options.objects.onlyIfNotAlreadyAssigned || false,
         };
       } else {
         throw new AssertionError({
@@ -477,7 +543,8 @@ export class SkiAreaClusteringService {
         searchType: "intersects",
         isFixedSearchArea: false,
         alreadyVisited: [skiArea._key],
-        excludeObjectsAlreadyInSkiArea: options.objects.onlyIfNotAlreadyAssigned || false,
+        excludeObjectsAlreadyInSkiArea:
+          options.objects.onlyIfNotAlreadyAssigned || false,
       };
     }
 
@@ -528,10 +595,10 @@ export class SkiAreaClusteringService {
     context: SearchContext,
     object: MapObject,
   ): Promise<MapObject[]> {
-    let searchArea = 
-      context.searchPolygon || 
+    let searchArea =
+      context.searchPolygon ||
       bufferGeometry(object.geometry, maxDistanceInKilometers);
-    
+
     let foundObjects: MapObject[] = [object];
     if (searchArea === null) {
       return foundObjects;
@@ -540,11 +607,12 @@ export class SkiAreaClusteringService {
     const filteredActivities = context.activities.filter((activity) =>
       object.activities.includes(activity),
     );
-    
+
     const objectContext: SearchContext = {
       ...context,
       searchPolygon: context.isFixedSearchArea ? context.searchPolygon : null,
-      activities: filteredActivities.length > 0 ? filteredActivities : context.activities,
+      activities:
+        filteredActivities.length > 0 ? filteredActivities : context.activities,
     };
 
     switch (searchArea.type) {
@@ -563,7 +631,9 @@ export class SkiAreaClusteringService {
         }
         return foundObjects;
       default:
-        throw new Error("Unexpected visit area geometry type " + (searchArea as any).type);
+        throw new Error(
+          "Unexpected visit area geometry type " + (searchArea as any).type,
+        );
     }
   }
 
@@ -592,27 +662,52 @@ export class SkiAreaClusteringService {
       onlySource: SourceType.SKIMAP_ORG,
     });
 
+    const processedSkimapOrgIds = new Set<string>();
     let skiArea: SkiAreaObject | null;
+    
     while ((skiArea = await skiAreasCursor.next())) {
       if (!skiArea) break;
+      
+      // Skip if this Skimap.org ski area has already been processed (merged)
+      if (processedSkimapOrgIds.has(skiArea.id)) {
+        continue;
+      }
+
       const hasKnownSkiAreaActivities = skiArea.activities.length > 0;
       const activitiesForClustering = hasKnownSkiAreaActivities
         ? skiArea.activities
         : [...allSkiAreaActivities];
 
-      const skiAreasToMerge = await this.getSkiAreasToMergeInto(
-        { ...skiArea, activities: activitiesForClustering }
-      );
+      const skiAreasToMerge = await this.getSkiAreasToMergeInto({
+        ...skiArea,
+        activities: activitiesForClustering,
+      });
 
       if (skiAreasToMerge.length > 0) {
+        // Before merging, check if any of the target ski areas already contain
+        // sources from other Skimap.org ski areas. If so, we need to merge 
+        // all related Skimap.org areas together.
+        const allRelatedSkimapOrgIds = await this.findAllRelatedSkimapOrgIds(
+          skiArea, 
+          skiAreasToMerge
+        );
+        
+        // Mark all related Skimap.org IDs as processed
+        allRelatedSkimapOrgIds.forEach(id => processedSkimapOrgIds.add(id));
+        
         await this.mergeIntoSkiAreas(skiArea, skiAreasToMerge);
       }
     }
   }
 
-  private async getSkiAreasToMergeInto(skiArea: SkiAreaObject): Promise<SkiAreaObject[]> {
+  private async getSkiAreasToMergeInto(
+    skiArea: SkiAreaObject,
+  ): Promise<SkiAreaObject[]> {
     const maxMergeDistanceInKilometers = 0.25;
-    const buffer = bufferGeometry(skiArea.geometry, maxMergeDistanceInKilometers);
+    const buffer = bufferGeometry(
+      skiArea.geometry,
+      maxMergeDistanceInKilometers,
+    );
     if (!buffer) {
       return [];
     }
@@ -625,7 +720,10 @@ export class SkiAreaClusteringService {
       isFixedSearchArea: true,
     };
 
-    const nearbyObjects = await this.database.findNearbyObjects(buffer, context);
+    const nearbyObjects = await this.database.findNearbyObjects(
+      buffer,
+      context,
+    );
     const otherSkiAreaIDs = new Set(
       nearbyObjects.flatMap((object) => object.skiAreas),
     );
@@ -638,6 +736,26 @@ export class SkiAreaClusteringService {
     return otherSkiAreas.filter(
       (otherSkiArea) => otherSkiArea.source !== skiArea.source,
     );
+  }
+
+  private async findAllRelatedSkimapOrgIds(
+    currentSkimapOrgSkiArea: SkiAreaObject,
+    targetSkiAreas: SkiAreaObject[]
+  ): Promise<string[]> {
+    const relatedIds = new Set<string>([currentSkimapOrgSkiArea.id]);
+    
+    // Check if any target ski areas already have sources from other Skimap.org ski areas
+    for (const targetSkiArea of targetSkiAreas) {
+      const skimapOrgSources = targetSkiArea.properties.sources.filter(
+        source => source.type === SourceType.SKIMAP_ORG
+      );
+      
+      for (const source of skimapOrgSources) {
+        relatedIds.add(source.id.toString());
+      }
+    }
+    
+    return Array.from(relatedIds);
   }
 
   private async mergeIntoSkiAreas(
@@ -729,7 +847,7 @@ export class SkiAreaClusteringService {
       skiAreas: [id],
       activities: activities,
       geometry: geometry,
-      isPolygon: true,
+      isPolygon: false,
       source: SourceType.OPENSTREETMAP,
       properties: {
         type: FeatureType.SkiArea,
@@ -765,10 +883,14 @@ export class SkiAreaClusteringService {
   ): Promise<void> {
     const skiAreasCursor = await this.database.getSkiAreas({});
     let skiAreas: SkiAreaObject[];
-    while ((skiAreas = (await skiAreasCursor.batches?.next()) as SkiAreaObject[])) {
+    while (
+      (skiAreas = (await skiAreasCursor.batches?.next()) as SkiAreaObject[])
+    ) {
       await Promise.all(
         skiAreas.map(async (skiArea) => {
-          const mapObjects = await this.database.getObjectsForSkiArea(skiArea.id);
+          const mapObjects = await this.database.getObjectsForSkiArea(
+            skiArea.id,
+          );
           await this.augmentSkiAreaBasedOnAssignedLiftsAndRuns(
             skiArea,
             mapObjects,
@@ -791,7 +913,9 @@ export class SkiAreaClusteringService {
     );
 
     if (memberObjects.length === 0 && noSkimapOrgSource) {
-      console.log("Removing OpenStreetMap ski area without associated runs/lifts.");
+      console.log(
+        "Removing OpenStreetMap ski area without associated runs/lifts.",
+      );
       await this.database.removeObject(skiArea._key);
       return;
     }
@@ -823,9 +947,13 @@ export class SkiAreaClusteringService {
     });
 
     let skiAreas: SkiAreaObject[];
+    let removeCount = 0;
+    let totalCount = 0;
+
     while ((skiAreas = (await cursor.batches?.next()) as SkiAreaObject[])) {
       await Promise.all(
         skiAreas.map(async (skiArea) => {
+          totalCount++;
           if (
             skiArea.geometry.type === "Point" &&
             isPlaceholderGeometry(skiArea.geometry)
@@ -834,6 +962,7 @@ export class SkiAreaClusteringService {
               "Removing OpenStreetMap ski area as it doesn't have a geometry.",
             );
             await this.database.removeObject(skiArea._key);
+            removeCount++;
           }
         }),
       );
@@ -869,7 +998,9 @@ export class SkiAreaClusteringService {
     }
   }
 
-  private getActivitiesBasedOnRunsAndLifts(mapObjects: MapObject[]): SkiAreaActivity[] {
+  private getActivitiesBasedOnRunsAndLifts(
+    mapObjects: MapObject[],
+  ): SkiAreaActivity[] {
     return Array.from(
       mapObjects
         .filter((object) => object.type !== MapObjectType.SkiArea)
@@ -890,12 +1021,20 @@ export class SkiAreaClusteringService {
     featureType: FeatureType,
     snowCoverConfig: SnowCoverConfig | null,
   ): Promise<void> {
-    console.log(`Augmenting ${featureType} features from ${inputPath} to ${outputPath}`);
-    await this.database.augmentGeoJSONFeatures(inputPath, outputPath, featureType, snowCoverConfig);
+    console.log(
+      `Augmenting ${featureType} features from ${inputPath} to ${outputPath}`,
+    );
+    await augmentGeoJSONFeatures(
+      inputPath,
+      outputPath,
+      this.database,
+      featureType,
+      snowCoverConfig,
+    );
   }
 
   private async exportSkiAreasGeoJSON(outputPath: string): Promise<void> {
     console.log(`Exporting ski areas to ${outputPath}`);
-    await this.database.exportSkiAreasGeoJSON(outputPath);
+    await exportSkiAreasGeoJSON(outputPath, this.database);
   }
 }

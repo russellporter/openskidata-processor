@@ -104,11 +104,7 @@ export default async function prepare(paths: DataPaths, config: Config) {
     ])
       .pipe(toFeatureCollection())
       .pipe(
-        createWriteStream(
-          config.arangoDBURLForClustering
-            ? paths.intermediate.skiAreas
-            : paths.output.skiAreas,
-        ),
+        createWriteStream(paths.intermediate.skiAreas),
       ),
   );
 
@@ -132,21 +128,12 @@ export default async function prepare(paths: DataPaths, config: Config) {
       )
       .pipe(toFeatureCollection())
       .pipe(
-        createWriteStream(
-          config.arangoDBURLForClustering
-            ? paths.intermediate.runs
-            : paths.output.runs,
-        ),
+        createWriteStream(paths.intermediate.runs),
       ),
   );
 
   // Process snow cover data after runs are written
-  await fetchSnowCoverIfEnabled(
-    config,
-    config.arangoDBURLForClustering
-      ? paths.intermediate.runs
-      : paths.output.runs,
-  );
+  await fetchSnowCoverIfEnabled(config, paths.intermediate.runs);
 
   console.log("Processing lifts...");
 
@@ -164,24 +151,17 @@ export default async function prepare(paths: DataPaths, config: Config) {
       )
       .pipe(toFeatureCollection())
       .pipe(
-        createWriteStream(
-          config.arangoDBURLForClustering
-            ? paths.intermediate.lifts
-            : paths.output.lifts,
-        ),
+        createWriteStream(paths.intermediate.lifts),
       ),
   );
 
-  if (config.arangoDBURLForClustering) {
-    console.log("Clustering ski areas...");
-    await clusterSkiAreas(
-      paths.intermediate,
-      paths.output,
-      config.arangoDBURLForClustering,
-      config.geocodingServer,
-      config.snowCover,
-    );
-  }
+  console.log("Clustering ski areas...");
+  await clusterSkiAreas(
+    paths.intermediate,
+    paths.output,
+    config.geocodingServer,
+    config.snowCover,
+  );
 
   console.log("Formatting for maps...");
 

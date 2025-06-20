@@ -14,12 +14,28 @@ export default function mergeSkiAreaObjects(
 
 
   return otherSkiAreas.reduce((primarySkiArea, otherSkiArea) => {
+    // Check if either ski area has placeholder geometry [360,360,...]
+    const primaryHasPlaceholder = primarySkiArea.geometry.type === "Point" && 
+      primarySkiArea.geometry.coordinates[0] === 360 && 
+      primarySkiArea.geometry.coordinates[1] === 360;
+    const otherHasPlaceholder = otherSkiArea.geometry.type === "Point" && 
+      otherSkiArea.geometry.coordinates[0] === 360 && 
+      otherSkiArea.geometry.coordinates[1] === 360;
+    
+    // Prefer geometry from the ski area that doesn't have placeholder coordinates
+    const mergedGeometry = primaryHasPlaceholder && !otherHasPlaceholder 
+      ? otherSkiArea.geometry 
+      : primarySkiArea.geometry;
+    const mergedIsPolygon = primaryHasPlaceholder && !otherHasPlaceholder 
+      ? otherSkiArea.isPolygon 
+      : primarySkiArea.isPolygon;
+    
     return {
       _id: primarySkiArea._id,
       _key: primarySkiArea._key,
       id: primarySkiArea.id,
-      geometry: primarySkiArea.geometry,
-      isPolygon: primarySkiArea.isPolygon,
+      geometry: mergedGeometry,
+      isPolygon: mergedIsPolygon,
       skiAreas: primarySkiArea.skiAreas,
       source: primarySkiArea.source,
       type: primarySkiArea.type,

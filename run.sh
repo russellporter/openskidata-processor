@@ -31,18 +31,8 @@ if [ "$DOWNLOAD" = true ]; then
     npm run download
 fi
 
-if [ -z "$CLUSTERING_ARANGODB_URL" ]; then
-    echo "Starting clustering DB..."
-    docker compose up -d
-    CLUSTERING_ARANGODB_URL="http://$(docker compose port arangodb 8529)"
-fi
-
 echo "Converting to GeoJSON..."
-CLUSTERING_ARANGODB_URL=$CLUSTERING_ARANGODB_URL npm run prepare-geojson
-
-if [ -z "$CLUSTERING_ARANGODB_URL" ]; then
-    docker compose down
-fi
+npm run prepare-geojson
 
 if [ "$GENERATE_MBTILES" = true ]; then
     echo "Convert to MBTiles..."

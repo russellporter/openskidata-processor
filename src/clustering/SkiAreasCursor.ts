@@ -1,10 +1,11 @@
-import { BatchedArrayCursor } from "arangojs/cursor";
 import { SkiAreaObject } from "./MapObject";
 
 export interface SkiAreasCursor {
   all(): Promise<SkiAreaObject[]>;
-  next(): Promise<SkiAreaObject | undefined>;
-  batches?: BatchedArrayCursor<SkiAreaObject>;
+  next(): Promise<SkiAreaObject | null>;
+  batches?: {
+    next(): Promise<SkiAreaObject[] | null>;
+  };
 }
 
 export function emptySkiAreasCursor(): SkiAreasCursor {
@@ -13,7 +14,7 @@ export function emptySkiAreasCursor(): SkiAreasCursor {
       return [];
     },
     next: async () => {
-      return undefined;
+      return null;
     },
   };
 }

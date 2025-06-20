@@ -48,7 +48,7 @@ Ski areas and runs can be augmented with VIIRS satellite snow cover data.
 2. Set up NASA Earthdata authentication (see snow-cover README)
 3. Enable with `ENABLE_SNOW_COVER=1` when running the processor
 
-Note: ArangoDB clustering must be enabled for snow cover data to be included in the output. This is on by default when using `run.sh`.
+Note: Snow cover data is included in the output when enabled.
 
 **Fetch policies** (`SNOW_COVER_FETCH_POLICY`):
 

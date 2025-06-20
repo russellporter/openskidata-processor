@@ -9,7 +9,6 @@ import {
 } from "./TestHelpers";
 
 const config: Config = {
-  arangoDBURLForClustering: null,
   elevationServerURL: null,
   bbox: null,
   geocodingServer: null,
