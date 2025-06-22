@@ -12,7 +12,7 @@ import { DataPaths, getPath } from "./io/GeoJSONFiles";
 import { readGeoJSONFeatures } from "./io/GeoJSONReader";
 import { convertGeoJSONToGeoPackage } from "./io/GeoPackageWriter";
 import * as CSVFormatter from "./transforms/CSVFormatter";
-import addElevation from "./transforms/Elevation";
+import { createElevationProcessor, ElevationProcessor } from "./transforms/Elevation";
 import toFeatureCollection from "./transforms/FeatureCollection";
 import { formatLift } from "./transforms/LiftFormatter";
 import * as MapboxGLFormatter from "./transforms/MapboxGLFormatter";
@@ -31,6 +31,18 @@ import {
   mapAsync,
 } from "./transforms/StreamTransforms";
 import { RunNormalizerAccumulator } from "./transforms/accumulator/RunNormalizerAccumulator";
+
+async function createElevationTransform(elevationServerURL: string | null) {
+  if (!elevationServerURL) {
+    return null;
+  }
+  
+  const processor = await createElevationProcessor(elevationServerURL);
+  return {
+    processor,
+    transform: processor.processFeature,
+  };
+}
 
 async function fetchSnowCoverIfEnabled(
   config: Config,
@@ -108,52 +120,57 @@ export default async function prepare(paths: DataPaths, config: Config) {
       ),
   );
 
-  console.log("Processing runs...");
+  // Create shared elevation processor for both runs and lifts
+  const elevationTransform = await createElevationTransform(config.elevationServerURL);
 
-  await StreamToPromise(
-    readGeoJSONFeatures(paths.input.geoJSON.runs)
-      .pipe(flatMapArray(formatRun))
-      .pipe(map(addSkiAreaSites(siteProvider)))
-      // write stream here
-      // do topo conversion in a separate command
-      // then open the topojson separately and normalize
-      .pipe(accumulate(new RunNormalizerAccumulator()))
-      .pipe(
-        mapAsync(
-          config.elevationServerURL
-            ? addElevation(config.elevationServerURL)
-            : null,
-          10,
+  try {
+    console.log("Processing runs...");
+
+    await StreamToPromise(
+      readGeoJSONFeatures(paths.input.geoJSON.runs)
+        .pipe(flatMapArray(formatRun))
+        .pipe(map(addSkiAreaSites(siteProvider)))
+        // write stream here
+        // do topo conversion in a separate command
+        // then open the topojson separately and normalize
+        .pipe(accumulate(new RunNormalizerAccumulator()))
+        .pipe(
+          mapAsync(
+            elevationTransform?.transform || null,
+            10,
+          ),
+        )
+        .pipe(toFeatureCollection())
+        .pipe(
+          createWriteStream(paths.intermediate.runs),
         ),
-      )
-      .pipe(toFeatureCollection())
-      .pipe(
-        createWriteStream(paths.intermediate.runs),
-      ),
-  );
+    );
 
-  // Process snow cover data after runs are written
-  await fetchSnowCoverIfEnabled(config, paths.intermediate.runs);
+    // Process snow cover data after runs are written
+    await fetchSnowCoverIfEnabled(config, paths.intermediate.runs);
 
-  console.log("Processing lifts...");
+    console.log("Processing lifts...");
 
-  await StreamToPromise(
-    readGeoJSONFeatures(paths.input.geoJSON.lifts)
-      .pipe(flatMap(formatLift))
-      .pipe(map(addSkiAreaSites(siteProvider)))
-      .pipe(
-        mapAsync(
-          config.elevationServerURL
-            ? addElevation(config.elevationServerURL)
-            : null,
-          10,
+    await StreamToPromise(
+      readGeoJSONFeatures(paths.input.geoJSON.lifts)
+        .pipe(flatMap(formatLift))
+        .pipe(map(addSkiAreaSites(siteProvider)))
+        .pipe(
+          mapAsync(
+            elevationTransform?.transform || null,
+            10,
+          ),
+        )
+        .pipe(toFeatureCollection())
+        .pipe(
+          createWriteStream(paths.intermediate.lifts),
         ),
-      )
-      .pipe(toFeatureCollection())
-      .pipe(
-        createWriteStream(paths.intermediate.lifts),
-      ),
-  );
+    );
+  } finally {
+    if (elevationTransform) {
+      await elevationTransform.processor.close();
+    }
+  }
 
   console.log("Clustering ski areas...");
   await clusterSkiAreas(

@@ -4,13 +4,24 @@ import {
   LiftFeature,
   RunFeature,
 } from "openskidata-format";
+import { SQLiteCache } from "../utils/SQLiteCache";
+import * as geohash from "ngeohash";
 
 const elevationProfileResolution = 25;
+const ELEVATION_CACHE_TTL_MS = 365 * 24 * 60 * 60 * 1000; // 1 year
 
-export default function addElevation(
+export interface ElevationProcessor {
+  processFeature: (feature: RunFeature | LiftFeature) => Promise<RunFeature | LiftFeature>;
+  close: () => Promise<void>;
+}
+
+export async function createElevationProcessor(
   elevationServerURL: string,
-): (feature: RunFeature | LiftFeature) => Promise<RunFeature | LiftFeature> {
-  return async (feature: RunFeature | LiftFeature) => {
+): Promise<ElevationProcessor> {
+  const cache = new SQLiteCache<number>("./cache/elevation-cache.db", ELEVATION_CACHE_TTL_MS);
+  await cache.initialize();
+
+  const processFeature = async (feature: RunFeature | LiftFeature): Promise<RunFeature | LiftFeature> => {
     const coordinates: number[][] = getCoordinates(feature);
     const geometry = feature.geometry;
     const elevationProfileCoordinates: number[][] =
@@ -27,6 +38,7 @@ export default function addElevation(
           .concat(elevationProfileCoordinates)
           .map(([lng, lat]) => [lat, lng]),
         elevationServerURL,
+        cache,
       );
     } catch (error) {
       console.log("Failed to load elevations", error);
@@ -52,46 +64,93 @@ export default function addElevation(
     addElevations(feature, coordinateElevations);
     return feature;
   };
+
+  const close = async (): Promise<void> => {
+    await cache.close();
+  };
+
+  return {
+    processFeature,
+    close,
+  };
 }
+
 
 async function loadElevations(
   coordinates: number[][],
   elevationServerURL: string,
+  cache: SQLiteCache<number>,
 ): Promise<number[]> {
+  const results: number[] = new Array(coordinates.length);
+  const uncachedIndices: number[] = [];
+  const uncachedCoordinates: number[][] = [];
+
+  // Check cache for each coordinate using geohash precision 9
+  for (let i = 0; i < coordinates.length; i++) {
+    const [lat, lng] = coordinates[i];
+    const cacheKey = geohash.encode(lat, lng, 9);
+    const cachedElevation = await cache.get(cacheKey);
+    
+    if (cachedElevation !== null) {
+      results[i] = cachedElevation;
+    } else {
+      uncachedIndices.push(i);
+      uncachedCoordinates.push(coordinates[i]);
+    }
+  }
+
+  // If all coordinates were cached, return results
+  if (uncachedCoordinates.length === 0) {
+    return results;
+  }
+
+  // Fetch elevations for uncached coordinates
   const response = await fetch(elevationServerURL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(coordinates),
+    body: JSON.stringify(uncachedCoordinates),
   });
 
   if (!response.ok) {
     throw new Error("Failed status code: " + response.status);
   }
 
-  const elevations: (number | null)[] = await response.json();
+  const fetchedElevations: (number | null)[] = await response.json();
 
-  if (coordinates.length !== elevations.length) {
+  if (uncachedCoordinates.length !== fetchedElevations.length) {
     throw new Error(
-      "Number of coordinates (" +
-        coordinates.length +
-        ") is different than number of elevations (" +
-        elevations.length +
+      "Number of uncached coordinates (" +
+        uncachedCoordinates.length +
+        ") is different than number of fetched elevations (" +
+        fetchedElevations.length +
         ")",
     );
   }
 
-  // If there is a data hole, missing elevation data is represented as null.
+  // Check for nulls in fetched data
   if (
-    elevations.some((elevation) => {
-      elevation === null;
+    fetchedElevations.some((elevation) => {
+      return elevation === null;
     })
   ) {
     throw new Error("Elevation data contains nulls");
   }
 
-  return elevations as number[];
+  // Cache and assign fetched elevations
+  for (let i = 0; i < uncachedIndices.length; i++) {
+    const originalIndex = uncachedIndices[i];
+    const elevation = fetchedElevations[i] as number;
+    const [lat, lng] = coordinates[originalIndex];
+    const cacheKey = geohash.encode(lat, lng, 9);
+    
+    // Cache the elevation for this coordinate
+    await cache.set(cacheKey, elevation);
+    results[originalIndex] = elevation;
+  }
+
+  return results;
 }
 
 function getCoordinates(feature: RunFeature | LiftFeature) {
