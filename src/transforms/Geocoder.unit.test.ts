@@ -5,6 +5,24 @@ import Geocoder, { PhotonGeocode } from "./Geocoder";
 const geocoderURL = "http://geocoder.example.com";
 
 describe("Geocoder", () => {
+  let geocoder: Geocoder;
+
+  afterEach(async () => {
+    if (geocoder) {
+      await geocoder.close();
+    }
+  });
+
+  async function setupDefaultGeocoder() {
+    geocoder = new Geocoder({
+      url: geocoderURL + "/reverse",
+      cacheDir: tmp.dirSync().name,
+      diskTTL: 0,
+      inMemoryCacheSize: 0,
+    });
+    await geocoder.initialize();
+    return geocoder;
+  }
   it("caches in memory", async () => {
     let requestCount = 0;
     nock(geocoderURL)
@@ -17,12 +35,14 @@ describe("Geocoder", () => {
           .response;
       });
 
-    const geocoder = new Geocoder({
+    geocoder = new Geocoder({
       cacheDir: tmp.dirSync().name,
       diskTTL: 0,
       inMemoryCacheSize: 10,
       url: geocoderURL + "/reverse",
     });
+
+    await geocoder.initialize();
 
     const result = await geocoder.geocode([0, 0]);
 
@@ -47,12 +67,14 @@ describe("Geocoder", () => {
           .response;
       });
 
-    const geocoder = new Geocoder({
+    geocoder = new Geocoder({
       cacheDir: tmp.dirSync().name,
       diskTTL: 60 * 1000,
       inMemoryCacheSize: 0,
       url: geocoderURL + "/reverse",
     });
+
+    await geocoder.initialize();
 
     const result = await geocoder.geocode([0, 0]);
 
@@ -67,17 +89,17 @@ describe("Geocoder", () => {
 
   it("handles geocode with no data", async () => {
     mockHTTPResponse(mockPhotonNoDataGeocode());
+    await setupDefaultGeocoder();
 
-    const result = await defaultGeocoder().geocode([0, 0]);
-
+    const result = await geocoder.geocode([0, 0]);
     expect(result).toMatchInlineSnapshot(`null`);
   });
 
   it("handles geocode with only country", async () => {
     mockHTTPResponse(mockPhotonGeocode("DE", undefined, undefined, undefined));
+    await setupDefaultGeocoder();
 
-    const result = await defaultGeocoder().geocode([0, 0]);
-
+    const result = await geocoder.geocode([0, 0]);
     expect(result).toMatchInlineSnapshot(`
       {
         "iso3166_1Alpha2": "DE",
@@ -102,9 +124,9 @@ describe("Geocoder", () => {
         undefined,
       ),
     );
+    await setupDefaultGeocoder();
 
-    const result = await defaultGeocoder().geocode([0, 0]);
-
+    const result = await geocoder.geocode([0, 0]);
     expect(result).toMatchInlineSnapshot(`
       {
         "iso3166_1Alpha2": "DE",
@@ -130,9 +152,9 @@ describe("Geocoder", () => {
         "Mittenwald",
       ),
     );
+    await setupDefaultGeocoder();
 
-    const result = await defaultGeocoder().geocode([0, 0]);
-
+    const result = await geocoder.geocode([0, 0]);
     expect(result).toMatchInlineSnapshot(`
       {
         "iso3166_1Alpha2": "DE",
@@ -153,9 +175,9 @@ describe("Geocoder", () => {
     mockHTTPResponse(
       mockPhotonGeocode("US", "California", "Placer County", "Alpine Meadows"),
     );
+    await setupDefaultGeocoder();
 
-    const result = await defaultGeocoder().geocode([0, 0]);
-
+    const result = await geocoder.geocode([0, 0]);
     expect(result).toMatchInlineSnapshot(`
       {
         "iso3166_1Alpha2": "US",
@@ -181,9 +203,9 @@ describe("Geocoder", () => {
         "Municipality of Štrpce",
       ),
     );
+    await setupDefaultGeocoder();
 
-    const result = await defaultGeocoder().geocode([0, 0]);
-
+    const result = await geocoder.geocode([0, 0]);
     expect(result).toMatchInlineSnapshot(`
       {
         "iso3166_1Alpha2": "XK",
@@ -204,9 +226,9 @@ describe("Geocoder", () => {
     mockHTTPResponse(
       mockPhotonGeocode("CZ", "Northeast", "Liberec Region", "Vítkovice"),
     );
+    await setupDefaultGeocoder();
 
-    const result = await defaultGeocoder().geocode([0, 0]);
-
+    const result = await geocoder.geocode([0, 0]);
     expect(result).toMatchInlineSnapshot(`
       {
         "iso3166_1Alpha2": "CZ",
@@ -227,9 +249,9 @@ describe("Geocoder", () => {
     mockHTTPResponse(
       mockPhotonGeocode("JP", "Shimane Prefecture", undefined, "Hamada"),
     );
+    await setupDefaultGeocoder();
 
-    const result = await defaultGeocoder().geocode([0, 0]);
-
+    const result = await geocoder.geocode([0, 0]);
     expect(result).toMatchInlineSnapshot(`
       {
         "iso3166_1Alpha2": "JP",
@@ -249,9 +271,9 @@ describe("Geocoder", () => {
     mockHTTPResponse(
       mockPhotonGeocode("DEUS", undefined, undefined, undefined),
     );
+    await setupDefaultGeocoder();
 
-    const result = await defaultGeocoder().geocode([0, 0]);
-
+    const result = await geocoder.geocode([0, 0]);
     expect(result).toMatchInlineSnapshot(`null`);
   });
 
@@ -259,9 +281,9 @@ describe("Geocoder", () => {
     mockHTTPResponse(
       mockPhotonGeocode("DE", "British Columbia", undefined, undefined),
     );
+    await setupDefaultGeocoder();
 
-    const result = await defaultGeocoder().geocode([0, 0]);
-
+    const result = await geocoder.geocode([0, 0]);
     expect(result).toMatchInlineSnapshot(`
       {
         "iso3166_1Alpha2": "DE",
@@ -277,15 +299,6 @@ describe("Geocoder", () => {
     `);
   });
 });
-
-function defaultGeocoder() {
-  return new Geocoder({
-    url: geocoderURL + "/reverse",
-    cacheDir: tmp.dirSync().name,
-    diskTTL: 0,
-    inMemoryCacheSize: 0,
-  });
-}
 
 function mockHTTPResponse(geocode: PhotonGeocode) {
   nock(geocoderURL)

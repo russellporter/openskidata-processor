@@ -20,7 +20,7 @@ import {
 } from "openskidata-format";
 import StreamToPromise from "stream-to-promise";
 import { v4 as uuid } from "uuid";
-import { SnowCoverConfig } from "../Config";
+import { GeocodingServerConfig, SnowCoverConfig } from "../Config";
 import { readGeoJSONFeatures } from "../io/GeoJSONReader";
 import { skiAreaStatistics } from "../statistics/SkiAreaStatistics";
 import Geocoder from "../transforms/Geocoder";
@@ -69,14 +69,14 @@ export class SkiAreaClusteringService {
     outputSkiAreasPath: string,
     outputLiftsPath: string,
     outputRunsPath: string,
-    geocoder: Geocoder | null,
+    geocoderConfig: GeocodingServerConfig | null,
     snowCoverConfig: SnowCoverConfig | null,
   ): Promise<void> {
     console.log("Loading graph into database");
     await this.loadGraphData(skiAreasPath, liftsPath, runsPath);
 
     console.log("Clustering ski areas");
-    await this.performClustering(geocoder, snowCoverConfig);
+    await this.performClustering(geocoderConfig, snowCoverConfig);
 
     console.log("Augmenting runs");
     await this.augmentGeoJSONFeatures(
@@ -282,7 +282,7 @@ export class SkiAreaClusteringService {
   }
 
   private async performClustering(
-    geocoder: Geocoder | null,
+    geocoderConfig: GeocodingServerConfig | null,
     snowCoverConfig: SnowCoverConfig | null,
   ): Promise<void> {
     console.log(
@@ -323,7 +323,7 @@ export class SkiAreaClusteringService {
 
     console.log("Augment ski areas based on assigned lifts and runs");
     await this.augmentSkiAreasBasedOnAssignedLiftsAndRuns(
-      geocoder,
+      geocoderConfig,
       snowCoverConfig,
     );
 
@@ -878,27 +878,42 @@ export class SkiAreaClusteringService {
   }
 
   private async augmentSkiAreasBasedOnAssignedLiftsAndRuns(
-    geocoder: Geocoder | null,
+    geocoderConfig: GeocodingServerConfig | null,
     snowCoverConfig: SnowCoverConfig | null,
   ): Promise<void> {
-    const skiAreasCursor = await this.database.getSkiAreas({});
-    let skiAreas: SkiAreaObject[];
-    while (
-      (skiAreas = (await skiAreasCursor.batches?.next()) as SkiAreaObject[])
-    ) {
-      await Promise.all(
-        skiAreas.map(async (skiArea) => {
-          const mapObjects = await this.database.getObjectsForSkiArea(
-            skiArea.id,
-          );
-          await this.augmentSkiAreaBasedOnAssignedLiftsAndRuns(
-            skiArea,
-            mapObjects,
-            geocoder,
-            snowCoverConfig,
-          );
-        }),
-      );
+    let geocoder: Geocoder | null = null;
+    
+    // Initialize geocoder once for all geocoding operations
+    if (geocoderConfig) {
+      geocoder = new Geocoder(geocoderConfig);
+      await geocoder.initialize();
+    }
+
+    try {
+      const skiAreasCursor = await this.database.getSkiAreas({});
+      let skiAreas: SkiAreaObject[];
+      while (
+        (skiAreas = (await skiAreasCursor.batches?.next()) as SkiAreaObject[])
+      ) {
+        await Promise.all(
+          skiAreas.map(async (skiArea) => {
+            const mapObjects = await this.database.getObjectsForSkiArea(
+              skiArea.id,
+            );
+            await this.augmentSkiAreaBasedOnAssignedLiftsAndRuns(
+              skiArea,
+              mapObjects,
+              geocoder,
+              snowCoverConfig,
+            );
+          }),
+        );
+      }
+    } finally {
+      // Clean up geocoder
+      if (geocoder) {
+        await geocoder.close();
+      }
     }
   }
 

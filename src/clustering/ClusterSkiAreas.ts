@@ -3,7 +3,6 @@ import {
   GeoJSONIntermediatePaths,
   GeoJSONOutputPaths,
 } from "../io/GeoJSONFiles";
-import Geocoder from "../transforms/Geocoder";
 import { SQLiteClusteringDatabase } from "./database/SQLiteClusteringDatabase";
 import { SkiAreaClusteringService } from "./SkiAreaClusteringService";
 
@@ -27,7 +26,7 @@ export default async function clusterSkiAreas(
       outputPaths.skiAreas,
       outputPaths.lifts,
       outputPaths.runs,
-      geocoderConfig ? new Geocoder(geocoderConfig) : null,
+      geocoderConfig,
       snowCoverConfig,
     );
   } finally {

@@ -36,6 +36,8 @@ async function debugGeocode() {
   const geocoder = new Geocoder(config.geocodingServer);
 
   try {
+    await geocoder.initialize();
+    
     const result = await geocoder.rawGeocode([longitude, latitude]);
     let readableResult: any = result;
     readableResult.date = new Date(result.timestamp).toISOString();
@@ -45,6 +47,8 @@ async function debugGeocode() {
   } catch (error) {
     console.error("Geocoding failed:", error);
     process.exit(1);
+  } finally {
+    await geocoder.close();
   }
 }
 

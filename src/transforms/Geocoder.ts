@@ -1,12 +1,13 @@
 import { Mutex } from "async-mutex";
-import cacache from "cacache";
 import DataLoader from "dataloader";
 import fetchRetry from "fetch-retry";
 import * as iso3166_2 from "iso3166-2-db";
 import { Region } from "iso3166-2-db";
 import { LRUMap } from "lru_map";
 import * as ngeohash from "ngeohash";
+import path from "path";
 import * as Config from "../Config";
+import { SQLiteCache } from "../utils/SQLiteCache";
 
 export type PhotonGeocode = {
   url: string;
@@ -46,9 +47,15 @@ export default class Geocoder {
   private remoteErrorCount = 0;
   private maxRemoteErrors = 10;
   private mutex = new Mutex();
+  private diskCache: SQLiteCache<PhotonGeocode>;
 
   constructor(config: Config.GeocodingServerConfig) {
     this.config = config;
+    
+    // Initialize SQLite disk cache
+    const cacheFile = path.join(config.cacheDir, "geocode.db");
+    this.diskCache = new SQLiteCache<PhotonGeocode>(cacheFile, config.diskTTL);
+    
     this.loader = new DataLoader<string, PhotonGeocode>(
       async (loadForKeys) => {
         return [await this.rawGeocodeLocalOrRemote(loadForKeys[0])];
@@ -58,6 +65,14 @@ export default class Geocoder {
         cacheMap: new LRUMap(config.inMemoryCacheSize),
       },
     );
+  }
+
+  async initialize(): Promise<void> {
+    await this.diskCache.initialize();
+  }
+
+  async close(): Promise<void> {
+    await this.diskCache.close();
   }
 
   geocode = async (position: GeoJSON.Position): Promise<Geocode | null> => {
@@ -75,32 +90,28 @@ export default class Geocoder {
     geohash: string,
   ): Promise<PhotonGeocode> => {
     try {
-      let content = await this.rawGeocodeLocal(geohash);
-      if (content.timestamp + this.config.diskTTL < currentTimestamp()) {
-        throw "Cache expired, need to refetch";
+      const content = await this.rawGeocodeLocal(geohash);
+      if (content) {
+        return content;
       }
-      return content;
-    } catch {
-      if (this.remoteErrorCount >= this.maxRemoteErrors) {
-        throw "Too many errors, not trying remote";
-      }
+    } catch (error) {
+      console.warn(`Local cache lookup failed for ${geohash}:`, error);
+    }
 
-      try {
-        return await this.rawGeocodeRemote(geohash);
-      } catch (error) {
-        this.remoteErrorCount++;
-        throw error;
-      }
+    if (this.remoteErrorCount >= this.maxRemoteErrors) {
+      throw new Error("Too many errors, not trying remote");
+    }
+
+    try {
+      return await this.rawGeocodeRemote(geohash);
+    } catch (error) {
+      this.remoteErrorCount++;
+      throw error;
     }
   };
 
-  private rawGeocodeLocal = async (geohash: string): Promise<PhotonGeocode> => {
-    // Promise is rejected if cached object is not found
-    const cacheObject = await cacache.get(
-      this.config.cacheDir,
-      cacheKey(geohash),
-    );
-    return JSON.parse(cacheObject.data.toString());
+  private rawGeocodeLocal = async (geohash: string): Promise<PhotonGeocode | null> => {
+    return await this.diskCache.get(cacheKey(geohash));
   };
 
   private rawGeocodeRemote = async (
@@ -131,11 +142,7 @@ export default class Geocoder {
         timestamp: currentTimestamp(),
       };
 
-      await cacache.put(
-        this.config.cacheDir,
-        cacheKey(geohash),
-        JSON.stringify(data),
-      );
+      await this.diskCache.set(cacheKey(geohash), data);
       return data;
     });
   };
