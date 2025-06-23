@@ -75,12 +75,12 @@ it("adds elevations to lift geometry", async () => {
           [
             11.1223444,
             47.5572422,
-            0,
+            2,
           ],
           [
             11.1164297,
-            47.55815630000001,
-            1,
+            47.558156300000014,
+            21,
           ],
         ],
         "type": "LineString",
@@ -186,8 +186,8 @@ it("adds elevations to run geometry & elevation profile", async () => {
   "coordinates": [
     [
       11.1164229,
-      47.558125000000004,
-      0,
+      47.55812500000001,
+      3,
     ],
     [
       11.116365499999999,
@@ -197,7 +197,7 @@ it("adds elevations to run geometry & elevation profile", async () => {
     [
       11.1171866,
       47.5556413,
-      2,
+      15,
     ],
   ],
   "type": "LineString",
@@ -250,10 +250,12 @@ it("completes without adding elevations when elevation server fails", async () =
           [
             11.1223444,
             47.5572422,
+            2,
           ],
           [
             11.1164297,
-            47.55815630000001,
+            47.558156300000014,
+            21,
           ],
         ],
         "type": "LineString",
@@ -338,37 +340,37 @@ it("adds elevations to run polygons", async () => {
 
   await prepare(paths, config);
 
-  expect(TestHelpers.fileContents(paths.output.runs).features[0].geometry)
-    .toMatchInlineSnapshot(`
+  expect(TestHelpers.fileContents(paths.output.runs).features[0].geometry).
+toMatchInlineSnapshot(`
 {
   "coordinates": [
     [
       [
-        6.544500899999997,
+        6.544500899999996,
         45.3230511,
-        0,
+        3,
       ],
       [
-        6.543409400000002,
+        6.5434094000000025,
         45.32317370000001,
         1,
       ],
       [
-        6.544500899999997,
+        6.544500899999996,
         45.3230511,
-        2,
+        3,
       ],
       [
-        6.544500899999997,
+        6.544500899999996,
         45.3230511,
-        0,
+        3,
       ],
     ],
     [
       [
         6.5502579,
         45.3224134,
-        4,
+        7,
       ],
       [
         6.550612,
@@ -378,12 +380,12 @@ it("adds elevations to run polygons", async () => {
       [
         6.5502579,
         45.3224134,
-        6,
+        7,
       ],
       [
         6.5502579,
         45.3224134,
-        4,
+        7,
       ],
     ],
   ],

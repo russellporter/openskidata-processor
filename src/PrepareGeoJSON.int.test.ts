@@ -153,7 +153,7 @@ Map {
             ],
             [
               11.1164297,
-              47.55815630000001,
+              47.558156300000014,
             ],
           ],
           "type": "LineString",
@@ -171,7 +171,28 @@ Map {
           "occupancy": null,
           "oneway": null,
           "ref": null,
-          "skiAreas": [],
+          "skiAreas": [
+            {
+              "geometry": {
+                "coordinates": [
+                  11.122066084534,
+                  47.557111836837,
+                ],
+                "type": "Point",
+              },
+              "properties": {
+                "activities": [
+                  "downhill",
+                ],
+                "id": "02911313f405ef0415188ceb357b415f02af5d64",
+                "location": null,
+                "name": "Rabenkopflift Oberau",
+                "status": null,
+                "type": "skiArea",
+              },
+              "type": "Feature",
+            },
+          ],
           "sources": [
             {
               "id": "way/227407273",
@@ -199,7 +220,7 @@ Map {
             ],
             [
               11.1164297,
-              47.558156300000014,
+              47.55815630000002,
             ],
           ],
           "type": "LineString",
@@ -208,7 +229,9 @@ Map {
           "color": "hsl(0, 82%, 42%)",
           "id": "4d07b91974c5a5b3a0ad9e1928c0a6d433c5093b",
           "name_and_type": "Skilift Oberau (T-bar)",
-          "skiAreas": [],
+          "skiAreas": [
+            "02911313f405ef0415188ceb357b415f02af5d64",
+          ],
           "status": "operating",
         },
         "type": "Feature",
@@ -232,7 +255,7 @@ Map {
               ],
               [
                 11.1171866,
-                47.557641299999986,
+                47.55764129999998,
               ],
               [
                 11.1164229,
@@ -254,7 +277,9 @@ Map {
           "name": "Oberauer Skiabfahrt",
           "oneway": true,
           "patrolled": null,
-          "skiAreas": [],
+          "skiAreas": [
+            "02911313f405ef0415188ceb357b415f02af5d64",
+          ],
         },
         "type": "Feature",
       },
@@ -294,7 +319,7 @@ Map {
             [
               [
                 11.1164229,
-                47.558125000000004,
+                47.55812500000001,
               ],
               [
                 11.116365499999999,
@@ -302,11 +327,11 @@ Map {
               ],
               [
                 11.1171866,
-                47.55764129999999,
+                47.557641299999986,
               ],
               [
                 11.1164229,
-                47.558125000000004,
+                47.55812500000001,
               ],
             ],
           ],
@@ -325,7 +350,28 @@ Map {
           "oneway": true,
           "patrolled": null,
           "ref": null,
-          "skiAreas": [],
+          "skiAreas": [
+            {
+              "geometry": {
+                "coordinates": [
+                  11.122066084534,
+                  47.557111836837,
+                ],
+                "type": "Point",
+              },
+              "properties": {
+                "activities": [
+                  "downhill",
+                ],
+                "id": "02911313f405ef0415188ceb357b415f02af5d64",
+                "location": null,
+                "name": "Rabenkopflift Oberau",
+                "status": null,
+                "type": "skiArea",
+              },
+              "type": "Feature",
+            },
+          ],
           "sources": [
             {
               "id": "way/227407268",
@@ -369,6 +415,19 @@ Map {
               "type": "skimap.org",
             },
           ],
+          "statistics": {
+            "lifts": {
+              "byType": {
+                "t-bar": {
+                  "count": 1,
+                  "lengthInKm": 0.45532735536212093,
+                },
+              },
+            },
+            "runs": {
+              "byActivity": {},
+            },
+          },
           "status": null,
           "type": "skiArea",
           "websites": [],
@@ -462,54 +521,10 @@ it("processes OpenStreetMap ski areas", async () => {
 
   await prepare(paths, config);
 
-  expect(TestHelpers.fileContents(paths.output.skiAreas))
-    .toMatchInlineSnapshot(`
+  expect(TestHelpers.fileContents(paths.output.skiAreas)).
+toMatchInlineSnapshot(`
 {
-  "features": [
-    {
-      "geometry": {
-        "coordinates": [
-          [
-            [
-              0,
-              0,
-            ],
-            [
-              0,
-              1,
-            ],
-            [
-              1,
-              0,
-            ],
-            [
-              0,
-              0,
-            ],
-          ],
-        ],
-        "type": "Polygon",
-      },
-      "properties": {
-        "activities": [],
-        "id": "c638251d70817a3d3ad227cce5d353d3abff6abb",
-        "location": null,
-        "name": null,
-        "runConvention": "europe",
-        "sources": [
-          {
-            "id": "way/13666",
-            "type": "openstreetmap",
-          },
-        ],
-        "status": "operating",
-        "type": "skiArea",
-        "websites": [],
-        "wikidata_id": null,
-      },
-      "type": "Feature",
-    },
-  ],
+  "features": [],
   "type": "FeatureCollection",
 }
 `);
@@ -575,13 +590,15 @@ it("processes OpenStreetMap ski area sites", async () => {
   await prepare(paths, config);
 
   expect(
-    TestHelpers.fileContents(paths.output.skiAreas).features.map(
-      simplifiedSkiAreaFeature,
-    ),
-  ).toMatchInlineSnapshot(`
+  TestHelpers.fileContents(paths.output.skiAreas).features.map(
+    simplifiedSkiAreaFeature
+  )
+).toMatchInlineSnapshot(`
 [
   {
-    "activities": [],
+    "activities": [
+      "downhill",
+    ],
     "id": "2033ab9be8698fcd4794c24e42782bf33c124e8d",
     "name": "Wendelstein",
   },

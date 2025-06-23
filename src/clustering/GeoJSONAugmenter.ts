@@ -7,6 +7,8 @@ import toFeatureCollection from "../transforms/FeatureCollection";
 import { mapAsync } from "../transforms/StreamTransforms";
 import { toSkiAreaSummary } from "../transforms/toSkiAreaSummary";
 import { getSnowCoverHistory } from "../utils/snowCoverHistory";
+import { SQLiteCache } from "../utils/SQLiteCache";
+import { VIIRSCacheData } from "../utils/snowCoverHistory";
 import {
   AugmentedMapFeature,
   MapFeature,
@@ -22,6 +24,7 @@ export default async function augmentGeoJSONFeatures(
   database: ClusteringDatabase,
   featureType: FeatureType,
   snowCoverConfig: SnowCoverConfig | null,
+  snowCoverArchive?: SQLiteCache<VIIRSCacheData[]>,
 ) {
   await streamToPromise(
     readGeoJSONFeatures(inputPath)
@@ -34,12 +37,12 @@ export default async function augmentGeoJSONFeatures(
             .map(toSkiAreaSummary);
 
           // Add snow cover history for runs if snow cover config is provided
-          if (snowCoverConfig && featureType === FeatureType.Run) {
+          if (snowCoverConfig && snowCoverArchive && featureType === FeatureType.Run) {
             const runObject = await database.getRunObjectById(feature.properties.id);
             if (runObject) {
-              const snowCoverHistory = generateRunSnowCoverHistory(
+              const snowCoverHistory = await generateRunSnowCoverHistory(
                 runObject,
-                snowCoverConfig,
+                snowCoverArchive,
               );
               if (snowCoverHistory && snowCoverHistory.length > 0) {
                 feature.properties.snowCoverHistory = snowCoverHistory;
@@ -55,12 +58,12 @@ export default async function augmentGeoJSONFeatures(
   );
 }
 
-function generateRunSnowCoverHistory(
+async function generateRunSnowCoverHistory(
   runObject: RunObject,
-  snowCoverConfig: SnowCoverConfig,
+  snowCoverArchive: SQLiteCache<VIIRSCacheData[]>,
 ) {
   try {
-    return getSnowCoverHistory(snowCoverConfig, runObject.viirsPixels);
+    return await getSnowCoverHistory(snowCoverArchive, runObject.viirsPixels);
   } catch (error) {
     console.error(
       `Failed to generate snow cover history for run ${runObject._key}:`,

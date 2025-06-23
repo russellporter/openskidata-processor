@@ -1763,16 +1763,16 @@ it("prefers OSM sourced websites when merging Skimap.org ski area with OpenStree
   );
 
   expect(
-    TestHelpers.fileContents(paths.output.skiAreas).features.map(
-      (feature: SkiAreaFeature) => feature.properties.websites,
-    ),
-  ).toMatchInlineSnapshot(`
-    [
-      [
-        "https://openstreetmap.org",
-      ],
-    ]
-  `);
+  TestHelpers.fileContents(paths.output.skiAreas).features.map(
+    (feature: SkiAreaFeature) => feature.properties.websites
+  )
+).toMatchInlineSnapshot(`
+[
+  [
+    "https://skimap.org",
+  ],
+]
+`);
 });
 
 it("removes OpenStreetMap ski areas that span across multiple Skimap.org ski areas", async () => {

@@ -15,7 +15,7 @@ from typing import Dict, List, Tuple, Set, Optional
 
 from pixel_extractor import VIIRSPixelExtractor
 from data_fetcher import VIIRSDataFetcher
-from cache_manager import PixelCacheManager
+from snow_cover_sqlite_archive import SnowCoverSQLiteArchive
 from constants import ERROR_OLD_MISSING, ERROR_RECENT_MISSING, ERROR_OTHER
 from utils import calculate_week_index, format_cache_stats, create_empty_year_data
 
@@ -23,20 +23,21 @@ from utils import calculate_week_index, format_cache_stats, create_empty_year_da
 class VIIRSSnowDataProcessor:
     """Main processor for VIIRS snow data integration."""
     
-    def __init__(self, cache_dir: str = "data/snowcover", 
+    def __init__(self, archive_file: str = "./cache/snow-cover-archive.db", 
                  max_workers: int = 6, from_year: Optional[int] = None, to_year: Optional[int] = None):
         """
         Initialize the processor.
         
         Args:
-            cache_dir: Directory for pixel-level JSON cache files
+            archive_file: Path to SQLite archive database file
             max_workers: Maximum number of parallel workers for downloads
             from_year: Start year (inclusive), defaults to 2012
             to_year: End year (inclusive), defaults to current year
         """
         self.pixel_extractor = VIIRSPixelExtractor()
         self.data_fetcher = VIIRSDataFetcher()
-        self.cache_manager = PixelCacheManager(cache_root=cache_dir)
+        self.archive_manager = SnowCoverSQLiteArchive(archive_file)
+        self.archive_manager.initialize()
         self.max_workers = max_workers
         
         self.logger = logging.getLogger(__name__)
@@ -93,7 +94,7 @@ class VIIRSSnowDataProcessor:
         
         for tile, pixels in pixels_by_tile.items():
             for pixel_row, pixel_col in pixels:
-                missing_weeks = self.cache_manager.get_missing_weeks_for_pixel(
+                missing_weeks = self.archive_manager.get_missing_weeks_for_pixel(
                     tile, pixel_row, pixel_col, self.start_date, self.end_date
                 )
                 missing_weeks_count += len(missing_weeks)
@@ -123,7 +124,7 @@ class VIIRSSnowDataProcessor:
         pixel_missing_weeks = {}
         
         for pixel_row, pixel_col in pixels:
-            missing_weeks = self.cache_manager.get_missing_weeks_for_pixel(
+            missing_weeks = self.archive_manager.get_missing_weeks_for_pixel(
                 tile, pixel_row, pixel_col, self.start_date, self.end_date
             )
             pixel_missing_weeks[(pixel_row, pixel_col)] = missing_weeks
@@ -174,7 +175,7 @@ class VIIRSSnowDataProcessor:
         for (pixel_row, pixel_col), updates in pixel_updates.items():
             try:
                 # Load existing data once
-                pixel_data = self.cache_manager.load_pixel_data(tile, pixel_row, pixel_col)
+                pixel_data = self.archive_manager.load_pixel_data(tile, pixel_row, pixel_col)
                 
                 # Apply all updates for this pixel
                 for date, value, cloud_persistence in updates:
@@ -202,7 +203,7 @@ class VIIRSSnowDataProcessor:
                     stats['updated_pixels'] += 1
                 
                 # Save updated data once per pixel
-                self.cache_manager.save_pixel_data(tile, pixel_row, pixel_col, pixel_data)
+                self.archive_manager.save_pixel_data(tile, pixel_row, pixel_col, pixel_data)
                 
             except Exception as e:
                 self.logger.error(f"Error updating cache for pixel {tile}:{pixel_row},{pixel_col}: {e}")
@@ -228,7 +229,7 @@ class VIIRSSnowDataProcessor:
             # Step 1: Get pixels either from runs.geojson or existing cache
             if fill_cache_mode:
                 self.logger.info("Discovering existing cached pixels")
-                pixels_by_tile = self.cache_manager.discover_existing_pixels()
+                pixels_by_tile = self.archive_manager.discover_existing_pixels()
             else:
                 if geojson_path is None:
                     raise ValueError("geojson_path is required when not in fill_cache_mode")
@@ -271,8 +272,8 @@ class VIIRSSnowDataProcessor:
             self.logger.info(f"Total statistics: {total_stats}")
             
             # Show cache statistics
-            cache_stats = self.cache_manager.get_cache_stats()
-            self.logger.info(f"Cache statistics: {cache_stats}")
+            archive_stats = self.archive_manager.get_archive_stats()
+            self.logger.info(f"Archive statistics: {archive_stats}")
             
             return total_stats['errors'] == 0
             
@@ -283,6 +284,7 @@ class VIIRSSnowDataProcessor:
         finally:
             # Cleanup
             self.data_fetcher.cleanup()
+            self.archive_manager.close()
     
     def cleanup_old_errors(self, days: int = 7):
         """
@@ -293,7 +295,7 @@ class VIIRSSnowDataProcessor:
         """
         cutoff_date = datetime.now() - timedelta(days=days)
         self.logger.info(f"Cleaning up error codes older than {cutoff_date}")
-        self.cache_manager.cleanup_old_error_codes(cutoff_date)
+        self.archive_manager.cleanup_old_error_codes(cutoff_date)
 
 
 def setup_logging(verbose: bool = False):
@@ -322,13 +324,13 @@ def main():
     parser.add_argument(
         '--fill-cache',
         action='store_true',
-        help='Fill missing temporal data for existing cached pixels (no geojson required)'
+        help='Fill missing temporal data for existing archived pixels (no geojson required)'
     )
     
     parser.add_argument(
-        '--cache-dir',
-        default='data/snowcover',
-        help='Directory for pixel-level JSON cache files (default: data/snowcover)'
+        '--archive-file',
+        default='./cache/snow-cover-archive.db',
+        help='Path to SQLite archive database file (default: ./cache/snow-cover-archive.db)'
     )
     
     
@@ -360,7 +362,7 @@ def main():
     parser.add_argument(
         '--stats-only',
         action='store_true',
-        help='Only show cache statistics, do not process'
+        help='Only show archive statistics, do not process'
     )
     
     parser.add_argument(
@@ -417,7 +419,7 @@ def main():
     
     # Initialize processor
     processor = VIIRSSnowDataProcessor(
-        cache_dir=args.cache_dir,
+        archive_file=args.archive_file,
         max_workers=args.max_workers,
         from_year=args.from_year,
         to_year=args.to_year
@@ -425,9 +427,9 @@ def main():
     
     if args.stats_only:
         # Show statistics only
-        cache_stats = processor.cache_manager.get_cache_stats()
-        print("Cache Statistics:")
-        print(format_cache_stats(cache_stats))
+        archive_stats = processor.archive_manager.get_archive_stats()
+        print("Archive Statistics:")
+        print(format_cache_stats(archive_stats))
         sys.exit(0)
     
     # Clean up old errors if requested

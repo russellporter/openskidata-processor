@@ -1,9 +1,7 @@
 import { addWeeks, getDayOfYear, startOfYear, subDays } from "date-fns";
-import * as fs from "fs";
 import { SnowCoverHistory } from "openskidata-format";
-import * as path from "path";
-import { SnowCoverConfig } from "../Config";
 import { VIIRSPixel } from "./VIIRSPixelExtractor";
+import { SQLiteCache } from "./SQLiteCache";
 
 export interface VIIRSCacheData {
   year: number;
@@ -256,22 +254,21 @@ export function aggregatePixelHistories(
 }
 
 /**
- * Read VIIRS cache data for a single pixel.
+ * Read VIIRS cache data for a single pixel from SQLite cache.
  *
- * @param snowCoverConfig Snow cover configuration
+ * @param cache SQLite cache instance
  * @param tileId Tile identifier (e.g., "h12v04")
  * @param row Pixel row
  * @param col Pixel column
- * @returns Pixel data or null if file doesn't exist or is invalid
+ * @returns Pixel data or null if not found or invalid
  */
-export function readPixelCacheData(
-  snowCoverConfig: SnowCoverConfig | null,
+async function readPixelCacheData(
+  cache: SQLiteCache<VIIRSCacheData[]>,
   tileId: string,
   row: number,
   col: number,
-): VIIRSPixelData | null {
+): Promise<VIIRSPixelData | null> {
   if (
-    !snowCoverConfig?.cacheDir ||
     !tileId ||
     typeof row !== "number" ||
     typeof col !== "number" ||
@@ -284,16 +281,11 @@ export function readPixelCacheData(
     return null;
   }
 
-  const filePath = path.join(snowCoverConfig.cacheDir, tileId, row.toString(), `${col}.json`);
-
-  if (!fs.existsSync(filePath)) return null;
-
+  const cacheKey = `snow_cover:${tileId}:${row}:${col}`;
+  
   try {
-    const fileContent = fs.readFileSync(filePath, "utf-8");
-    if (!fileContent.trim()) return null;
-
-    const data: VIIRSCacheData[] = JSON.parse(fileContent);
-    if (!Array.isArray(data)) return null;
+    const data = await cache.get(cacheKey);
+    if (!data || !Array.isArray(data)) return null;
 
     const validData = data.filter((yearData) => {
       return (
@@ -321,17 +313,17 @@ export function readPixelCacheData(
 }
 
 /**
- * Get snow cover history for the given VIIRS pixels.
+ * Get snow cover history for the given VIIRS pixels using SQLite cache.
  *
- * @param snowCoverConfig Snow cover configuration
+ * @param cache SQLite cache instance 
  * @param pixels Array of VIIRS pixels in format [hTile, vTile, col, row]
  * @returns Aggregated snow cover history across all pixels
  */
-export function getSnowCoverHistory(
-  snowCoverConfig: SnowCoverConfig | null,
+export async function getSnowCoverHistory(
+  cache: SQLiteCache<VIIRSCacheData[]>,
   pixels: VIIRSPixel[],
-): SnowCoverHistory {
-  if (!snowCoverConfig?.cacheDir || !Array.isArray(pixels)) return [];
+): Promise<SnowCoverHistory> {
+  if (!Array.isArray(pixels)) return [];
 
   // Convert VIIRS pixels to tile-based format for internal processing
   const pixelsByTile: Record<string, Array<[number, number]>> = {};
@@ -358,24 +350,35 @@ export function getSnowCoverHistory(
   });
 
   const pixelsData: VIIRSPixelData[] = [];
-  let totalPixels = 0;
-  let successfulReads = 0;
-  let failedReads = 0;
 
   for (const [tileId, tilePixels] of Object.entries(pixelsByTile)) {
     for (const [row, col] of tilePixels) {
-      totalPixels++;
-
-      const pixelData = readPixelCacheData(snowCoverConfig, tileId, row, col);
+      const pixelData = await readPixelCacheData(cache, tileId, row, col);
       if (pixelData) {
         pixelsData.push(pixelData);
-        successfulReads++;
-      } else {
-        failedReads++;
       }
     }
   }
 
-
   return aggregatePixelHistories(pixelsData);
+}
+
+/**
+ * Create a snow cover archive instance and get history for given pixels.
+ *
+ * @param snowCoverArchiveFile Path to SQLite archive file
+ * @param pixels Array of VIIRS pixels in format [hTile, vTile, col, row]
+ * @returns Aggregated snow cover history across all pixels
+ */
+export async function getSnowCoverHistoryFromFile(
+  snowCoverArchiveFile: string,
+  pixels: VIIRSPixel[],
+): Promise<SnowCoverHistory> {
+  const archive = new SQLiteCache<VIIRSCacheData[]>(snowCoverArchiveFile, 0);
+  try {
+    await archive.initialize();
+    return await getSnowCoverHistory(archive, pixels);
+  } finally {
+    await archive.close();
+  }
 }
