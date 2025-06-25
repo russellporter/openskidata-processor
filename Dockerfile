@@ -51,14 +51,17 @@ FROM base AS production
 # Copy package files
 COPY package.json package-lock.json ./
 
-# Install production dependencies only
-RUN npm ci --omit=dev
+# Install all dependencies (including dev dependencies for build)
+RUN npm ci
 
 # Copy application source
 COPY . .
 
 # Build the application
 RUN npm run build
+
+# Clean up dev dependencies after build
+RUN npm prune --omit=dev
 
 # Create data directory
 RUN mkdir -p data
