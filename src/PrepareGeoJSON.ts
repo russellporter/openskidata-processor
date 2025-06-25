@@ -1,4 +1,3 @@
-import { spawn } from "child_process";
 import { createWriteStream, existsSync, unlinkSync } from "fs";
 import merge from "merge2";
 import { FeatureType } from "openskidata-format";
@@ -18,6 +17,8 @@ import { formatLift } from "./transforms/LiftFormatter";
 import * as MapboxGLFormatter from "./transforms/MapboxGLFormatter";
 import { formatRun } from "./transforms/RunFormatter";
 import { InputSkiAreaType, formatSkiArea } from "./transforms/SkiAreaFormatter";
+import { generateTiles } from "./transforms/TilesGenerator";
+import { runCommand } from "./utils/ProcessRunner";
 
 import {
   SkiAreaSiteProvider,
@@ -40,10 +41,7 @@ async function createElevationTransform(
   }
 
   const processor = await createElevationProcessor(elevationServerConfig);
-  return {
-    processor,
-    transform: processor.processFeature,
-  };
+  return { processor, transform: processor.processFeature };
 }
 
 async function fetchSnowCoverIfEnabled(
@@ -76,28 +74,12 @@ async function fetchSnowCoverIfEnabled(
     pythonExecutable = "snow-cover/venv/bin/python";
   }
 
-  return new Promise((resolve, reject) => {
-    const pythonProcess = spawn(pythonExecutable, args, {
-      stdio: "inherit",
-    });
-
-    pythonProcess.on("close", (code) => {
-      if (code === 0) {
-        console.log("Snow cover processing completed successfully");
-        resolve();
-      } else {
-        reject(
-          new Error(`Snow cover processing failed with exit code ${code}`),
-        );
-      }
-    });
-
-    pythonProcess.on("error", (error) => {
-      reject(
-        new Error(`Failed to start snow cover processing: ${error.message}`),
-      );
-    });
-  });
+  try {
+    await runCommand(pythonExecutable, args);
+    console.log("Snow cover processing completed successfully");
+  } catch (error) {
+    throw new Error(`Snow cover processing failed: ${error}`);
+  }
 }
 
 export default async function prepare(paths: DataPaths, config: Config) {
@@ -220,6 +202,11 @@ export default async function prepare(paths: DataPaths, config: Config) {
       layerMap[type],
       type,
     );
+  }
+
+  // Generate tiles if enabled
+  if (config.tiles) {
+    await generateTiles(paths.output.mapboxGL, config.workingDir, config.tiles);
   }
 
   console.log("Done preparing");

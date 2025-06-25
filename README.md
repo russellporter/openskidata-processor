@@ -2,18 +2,45 @@
 
 This is a data pipeline that consumes OpenStreetMap & Skimap.org data and produces GeoJSON & Mapbox GL tiles for usage on [OpenSkiMap.org](https://github.com/russellporter/openskimap.org).
 
-## Installation
+## Installation & Usage
 
-1. Install Docker
+### Docker (Recommended)
+
+**Production:**
+
+```bash
+# Build and run the processor
+docker build -t openskidata-processor .
+docker run -v $(pwd)/data:/app/data openskidata-processor
+```
+
+**Development:**
+
+```bash
+# Start development environment
+docker compose up -d
+
+# Run commands
+docker compose exec app npm test
+docker compose exec app npm run check-types
+docker compose exec app ./run.sh
+
+# Or get a shell
+docker compose exec app bash
+```
+
+### Local Installation
+
+1. Install dependencies:
+   - Node.js 22+
+   - SQLite with SpatialLite extension
+   - [Tippecanoe](https://github.com/felt/tippecanoe) v2.78.0
 2. `npm install`
-
-## Usage
-
-`./run.sh`
+3. `./run.sh`
 
 To download data for only a specific area, specify a GeoJSON format bounding box in an environment variable: `BBOX="[-13, -90, 65, 90]"`
 
-The output is placed in several `geojson`, `mbtiles`, and a `gpkg` (GeoPackage) file within the `data` folder. The output location can be overridden by setting `OUTPUT_DIR`.
+The output is placed in files within the `data` folder. The output location can be overridden by setting `OUTPUT_DIR`.
 
 The GeoPackage file (`openskidata.gpkg`) contains all three layers (ski areas, runs, and lifts) in a single file, making it easy to use with GIS software like QGIS.
 
@@ -65,6 +92,10 @@ Incremental fetching is useful for long term deployments where you want to keep 
 Note: uses of this data must cite the [source](https://nsidc.org/data/vnp10a1/versions/2) as follows:
 
 Riggs, G. A. & Hall, D. K. (2023). VIIRS/NPP Snow Cover Daily L3 Global 375m SIN Grid. (VNP10A1, Version 2). Boulder, Colorado USA. NASA National Snow and Ice Data Center Distributed Active Archive Center. https://doi.org/10.5067/45VDCKJBXWEE.
+
+### Mapbox Vector Tiles
+
+Pass `GENERATE_TILES=1` to enable generation of Mapbox Vector Tiles (MVT) output. This will an `.mbtiles` file in the output directory and an equivalent tile directory structure.
 
 ## Issue reporting
 

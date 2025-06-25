@@ -100,6 +100,8 @@ export class SQLiteClusteringDatabase implements ClusteringDatabase {
       "mod_spatialite",
       "libspatialite",
       "/usr/lib/x86_64-linux-gnu/mod_spatialite.so",
+      "/usr/lib/aarch64-linux-gnu/libspatialite.so",
+      "/usr/lib/aarch64-linux-gnu/libspatialite.so.7",
       "/usr/local/lib/mod_spatialite.dylib",
       "/opt/homebrew/lib/mod_spatialite.dylib",
     ];

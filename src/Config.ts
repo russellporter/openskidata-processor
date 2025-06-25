@@ -16,10 +16,9 @@ export type SnowCoverConfig = {
   fetchPolicy: SnowCoverFetchPolicy;
 };
 
-export type ElevationServerConfig = {
-  url: string;
-  databasePath: string;
-};
+export type ElevationServerConfig = { url: string; databasePath: string };
+
+export type TilesConfig = { mbTilesPath: string; tilesDir: string };
 
 export interface Config {
   elevationServer: ElevationServerConfig | null;
@@ -33,6 +32,8 @@ export interface Config {
   outputDir: string;
   // Snow cover data integration
   snowCover: SnowCoverConfig | null;
+  // Tiles generation configuration
+  tiles: TilesConfig | null;
 }
 
 export function configFromEnvironment(): Config {
@@ -61,6 +62,7 @@ export function configFromEnvironment(): Config {
   }
 
   const elevationServerURL = process.env["ELEVATION_SERVER_URL"] || null;
+  const outputDir = process.env["OUTPUT_DIR"] ?? "data";
 
   return {
     elevationServer: elevationServerURL
@@ -83,13 +85,20 @@ export function configFromEnvironment(): Config {
         : null,
     bbox: bbox as GeoJSON.BBox,
     workingDir: workingDir,
-    outputDir: process.env["OUTPUT_DIR"] ?? "data",
+    outputDir: outputDir,
     snowCover:
       process.env.ENABLE_SNOW_COVER === "1"
         ? {
             databasePath: path.join(persistentCacheDir, "snow-cover.db"),
             fetchPolicy:
               (snowCoverFetchPolicy as SnowCoverFetchPolicy) ?? "full",
+          }
+        : null,
+    tiles:
+      process.env.GENERATE_TILES === "1"
+        ? {
+            mbTilesPath: path.join(outputDir, "openskimap.mbtiles"),
+            tilesDir: path.join(outputDir, "openskimap"),
           }
         : null,
   };

@@ -2,7 +2,7 @@ import { existsSync, mkdirSync } from "fs";
 import { FeatureType } from "openskidata-format";
 import { join } from "path";
 
-interface CommonGeoJSONPaths {
+export interface CommonGeoJSONPaths {
   readonly skiAreas: string;
   readonly runs: string;
   readonly lifts: string;
