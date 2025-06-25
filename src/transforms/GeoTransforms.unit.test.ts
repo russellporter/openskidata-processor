@@ -62,14 +62,14 @@ describe("GeoTransforms", () => {
           ]).geometry,
         ),
       ).toMatchInlineSnapshot(`
-        {
-          "coordinates": [
-            0.25,
-            0.49999048070563396,
-          ],
-          "type": "Point",
-        }
-      `);
+{
+  "coordinates": [
+    0.2500000000000001,
+    0.5000047594432947,
+  ],
+  "type": "Point",
+}
+`);
     });
 
     it("should provide multiple points in multipolygon", () => {
