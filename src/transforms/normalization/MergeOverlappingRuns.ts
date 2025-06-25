@@ -22,9 +22,10 @@ interface RunArc {
 
 // Finds overlapping run segments and merges them
 export function mergeOverlappingRuns(data: RunTopology) {
+  const geometries = data.objects.runs.geometries as any;
   const lines = _.remove(
-    data.objects.runs.geometries,
-    function (geometry: TopoJSON.GeometryObject) {
+    geometries,
+    function (geometry: TopoJSON.GeometryObject<RunProperties>) {
       return (
         geometry.type === "LineString" || geometry.type === "MultiLineString"
       );

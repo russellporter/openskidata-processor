@@ -15,6 +15,7 @@ const config: Config = {
   workingDir: "data",
   outputDir: "data",
   snowCover: null,
+  tiles: null,
 };
 
 function mockElevationServer(code: number) {
