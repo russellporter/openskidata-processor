@@ -23,8 +23,6 @@ import { v4 as uuid } from "uuid";
 import { GeocodingServerConfig, SnowCoverConfig } from "../Config";
 import { readGeoJSONFeatures } from "../io/GeoJSONReader";
 import { skiAreaStatistics } from "../statistics/SkiAreaStatistics";
-import { SQLiteCache } from "../utils/SQLiteCache";
-import { VIIRSCacheData } from "../utils/snowCoverHistory";
 import Geocoder from "../transforms/Geocoder";
 import {
   bufferGeometry,
@@ -34,6 +32,8 @@ import {
 import { getRunDifficultyConvention } from "../transforms/RunFormatter";
 import { mapAsync } from "../transforms/StreamTransforms";
 import { isPlaceholderGeometry } from "../utils/PlaceholderSiteGeometry";
+import { VIIRSCacheData } from "../utils/snowCoverHistory";
+import { SQLiteCache } from "../utils/SQLiteCache";
 import { VIIRSPixelExtractor } from "../utils/VIIRSPixelExtractor";
 import {
   ClusteringDatabase,
@@ -666,10 +666,10 @@ export class SkiAreaClusteringService {
 
     const processedSkimapOrgIds = new Set<string>();
     let skiArea: SkiAreaObject | null;
-    
+
     while ((skiArea = await skiAreasCursor.next())) {
       if (!skiArea) break;
-      
+
       // Skip if this Skimap.org ski area has already been processed (merged)
       if (processedSkimapOrgIds.has(skiArea.id)) {
         continue;
@@ -687,16 +687,16 @@ export class SkiAreaClusteringService {
 
       if (skiAreasToMerge.length > 0) {
         // Before merging, check if any of the target ski areas already contain
-        // sources from other Skimap.org ski areas. If so, we need to merge 
+        // sources from other Skimap.org ski areas. If so, we need to merge
         // all related Skimap.org areas together.
         const allRelatedSkimapOrgIds = await this.findAllRelatedSkimapOrgIds(
-          skiArea, 
-          skiAreasToMerge
+          skiArea,
+          skiAreasToMerge,
         );
-        
+
         // Mark all related Skimap.org IDs as processed
-        allRelatedSkimapOrgIds.forEach(id => processedSkimapOrgIds.add(id));
-        
+        allRelatedSkimapOrgIds.forEach((id) => processedSkimapOrgIds.add(id));
+
         await this.mergeIntoSkiAreas(skiArea, skiAreasToMerge);
       }
     }
@@ -742,21 +742,21 @@ export class SkiAreaClusteringService {
 
   private async findAllRelatedSkimapOrgIds(
     currentSkimapOrgSkiArea: SkiAreaObject,
-    targetSkiAreas: SkiAreaObject[]
+    targetSkiAreas: SkiAreaObject[],
   ): Promise<string[]> {
     const relatedIds = new Set<string>([currentSkimapOrgSkiArea.id]);
-    
+
     // Check if any target ski areas already have sources from other Skimap.org ski areas
     for (const targetSkiArea of targetSkiAreas) {
       const skimapOrgSources = targetSkiArea.properties.sources.filter(
-        source => source.type === SourceType.SKIMAP_ORG
+        (source) => source.type === SourceType.SKIMAP_ORG,
       );
-      
+
       for (const source of skimapOrgSources) {
         relatedIds.add(source.id.toString());
       }
     }
-    
+
     return Array.from(relatedIds);
   }
 
@@ -885,7 +885,7 @@ export class SkiAreaClusteringService {
   ): Promise<void> {
     let geocoder: Geocoder | null = null;
     let snowCoverArchive: SQLiteCache<VIIRSCacheData[]> | undefined;
-    
+
     // Initialize geocoder once for all geocoding operations
     if (geocoderConfig) {
       geocoder = new Geocoder(geocoderConfig);
@@ -894,7 +894,10 @@ export class SkiAreaClusteringService {
 
     // Initialize snow cover archive once for all snow cover operations
     if (snowCoverConfig) {
-      snowCoverArchive = new SQLiteCache<VIIRSCacheData[]>(snowCoverConfig.cacheDir, 0);
+      snowCoverArchive = new SQLiteCache<VIIRSCacheData[]>(
+        snowCoverConfig.databasePath,
+        0,
+      );
       await snowCoverArchive.initialize();
     }
 
@@ -924,7 +927,7 @@ export class SkiAreaClusteringService {
       if (geocoder) {
         await geocoder.close();
       }
-      
+
       // Clean up snow cover archive
       if (snowCoverArchive) {
         await snowCoverArchive.close();
@@ -951,7 +954,11 @@ export class SkiAreaClusteringService {
       return;
     }
 
-    const statistics = await skiAreaStatistics(memberObjects, snowCoverConfig, snowCoverArchive);
+    const statistics = await skiAreaStatistics(
+      memberObjects,
+      snowCoverConfig,
+      snowCoverArchive,
+    );
     const updatedProperties = {
       ...skiArea.properties,
       statistics,
@@ -1061,7 +1068,10 @@ export class SkiAreaClusteringService {
 
     // Initialize snow cover archive if needed for runs
     if (snowCoverConfig && featureType === FeatureType.Run) {
-      snowCoverArchive = new SQLiteCache<VIIRSCacheData[]>(snowCoverConfig.cacheDir, 0);
+      snowCoverArchive = new SQLiteCache<VIIRSCacheData[]>(
+        snowCoverConfig.databasePath,
+        0,
+      );
       await snowCoverArchive.initialize();
     }
 

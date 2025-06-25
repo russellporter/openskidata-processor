@@ -1,27 +1,35 @@
+import * as geohash from "ngeohash";
 import {
   extractPointsForElevationProfile,
   FeatureType,
   LiftFeature,
   RunFeature,
 } from "openskidata-format";
+import { ElevationServerConfig } from "../Config";
 import { SQLiteCache } from "../utils/SQLiteCache";
-import * as geohash from "ngeohash";
 
 const elevationProfileResolution = 25;
 const ELEVATION_CACHE_TTL_MS = 365 * 24 * 60 * 60 * 1000; // 1 year
 
 export interface ElevationProcessor {
-  processFeature: (feature: RunFeature | LiftFeature) => Promise<RunFeature | LiftFeature>;
+  processFeature: (
+    feature: RunFeature | LiftFeature,
+  ) => Promise<RunFeature | LiftFeature>;
   close: () => Promise<void>;
 }
 
 export async function createElevationProcessor(
-  elevationServerURL: string,
+  elevationServerConfig: ElevationServerConfig,
 ): Promise<ElevationProcessor> {
-  const cache = new SQLiteCache<number>("./cache/elevation-cache.db", ELEVATION_CACHE_TTL_MS);
+  const cache = new SQLiteCache<number>(
+    elevationServerConfig.databasePath,
+    ELEVATION_CACHE_TTL_MS,
+  );
   await cache.initialize();
 
-  const processFeature = async (feature: RunFeature | LiftFeature): Promise<RunFeature | LiftFeature> => {
+  const processFeature = async (
+    feature: RunFeature | LiftFeature,
+  ): Promise<RunFeature | LiftFeature> => {
     const coordinates: number[][] = getCoordinates(feature);
     const geometry = feature.geometry;
     const elevationProfileCoordinates: number[][] =
@@ -37,7 +45,7 @@ export async function createElevationProcessor(
         Array.from(coordinates)
           .concat(elevationProfileCoordinates)
           .map(([lng, lat]) => [lat, lng]),
-        elevationServerURL,
+        elevationServerConfig.url,
         cache,
       );
     } catch (error) {
@@ -75,7 +83,6 @@ export async function createElevationProcessor(
   };
 }
 
-
 async function loadElevations(
   coordinates: number[][],
   elevationServerURL: string,
@@ -90,7 +97,7 @@ async function loadElevations(
     const [lat, lng] = coordinates[i];
     const cacheKey = geohash.encode(lat, lng, 9);
     const cachedElevation = await cache.get(cacheKey);
-    
+
     if (cachedElevation !== null) {
       results[i] = cachedElevation;
     } else {
@@ -144,7 +151,7 @@ async function loadElevations(
     const elevation = fetchedElevations[i] as number;
     const [lat, lng] = coordinates[originalIndex];
     const cacheKey = geohash.encode(lat, lng, 9);
-    
+
     // Cache the elevation for this coordinate
     await cache.set(cacheKey, elevation);
     results[originalIndex] = elevation;

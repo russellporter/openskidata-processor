@@ -16,7 +16,7 @@ describe("Geocoder", () => {
   async function setupDefaultGeocoder() {
     geocoder = new Geocoder({
       url: geocoderURL + "/reverse",
-      cacheDir: tmp.dirSync().name,
+      databasePath: tmp.fileSync().name,
       diskTTL: 0,
       inMemoryCacheSize: 0,
     });
@@ -36,7 +36,7 @@ describe("Geocoder", () => {
       });
 
     geocoder = new Geocoder({
-      cacheDir: tmp.dirSync().name,
+      databasePath: tmp.fileSync().name,
       diskTTL: 0,
       inMemoryCacheSize: 10,
       url: geocoderURL + "/reverse",
@@ -68,7 +68,7 @@ describe("Geocoder", () => {
       });
 
     geocoder = new Geocoder({
-      cacheDir: tmp.dirSync().name,
+      databasePath: tmp.fileSync().name,
       diskTTL: 60 * 1000,
       inMemoryCacheSize: 0,
       url: geocoderURL + "/reverse",

@@ -1,11 +1,15 @@
 import nock from "nock";
 import { RunFeature } from "openskidata-format";
+import tmp from "tmp";
 import { Config } from "./Config";
 import prepare from "./PrepareGeoJSON";
 import * as TestHelpers from "./TestHelpers";
 
 const config: Config = {
-  elevationServerURL: "http://elevation.example.com",
+  elevationServer: {
+    url: "http://elevation.example.com",
+    databasePath: tmp.fileSync().name,
+  },
   bbox: null,
   geocodingServer: null,
   workingDir: "data",
@@ -75,12 +79,12 @@ it("adds elevations to lift geometry", async () => {
           [
             11.1223444,
             47.5572422,
-            2,
+            0,
           ],
           [
             11.1164297,
             47.558156300000014,
-            21,
+            1,
           ],
         ],
         "type": "LineString",
@@ -187,7 +191,7 @@ it("adds elevations to run geometry & elevation profile", async () => {
     [
       11.1164229,
       47.55812500000001,
-      3,
+      0,
     ],
     [
       11.116365499999999,
@@ -197,7 +201,7 @@ it("adds elevations to run geometry & elevation profile", async () => {
     [
       11.1171866,
       47.5556413,
-      15,
+      2,
     ],
   ],
   "type": "LineString",
@@ -348,7 +352,7 @@ toMatchInlineSnapshot(`
       [
         6.544500899999996,
         45.3230511,
-        3,
+        0,
       ],
       [
         6.5434094000000025,
@@ -358,19 +362,19 @@ toMatchInlineSnapshot(`
       [
         6.544500899999996,
         45.3230511,
-        3,
+        2,
       ],
       [
         6.544500899999996,
         45.3230511,
-        3,
+        0,
       ],
     ],
     [
       [
         6.5502579,
         45.3224134,
-        7,
+        4,
       ],
       [
         6.550612,
@@ -380,12 +384,12 @@ toMatchInlineSnapshot(`
       [
         6.5502579,
         45.3224134,
-        7,
+        6,
       ],
       [
         6.5502579,
         45.3224134,
-        7,
+        4,
       ],
     ],
   ],

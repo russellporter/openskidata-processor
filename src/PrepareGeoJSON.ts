@@ -6,13 +6,13 @@ import * as path from "path";
 import { join } from "path";
 import { Readable } from "stream";
 import StreamToPromise from "stream-to-promise";
-import { Config } from "./Config";
+import { Config, ElevationServerConfig } from "./Config";
 import clusterSkiAreas from "./clustering/ClusterSkiAreas";
 import { DataPaths, getPath } from "./io/GeoJSONFiles";
 import { readGeoJSONFeatures } from "./io/GeoJSONReader";
 import { convertGeoJSONToGeoPackage } from "./io/GeoPackageWriter";
 import * as CSVFormatter from "./transforms/CSVFormatter";
-import { createElevationProcessor, ElevationProcessor } from "./transforms/Elevation";
+import { createElevationProcessor } from "./transforms/Elevation";
 import toFeatureCollection from "./transforms/FeatureCollection";
 import { formatLift } from "./transforms/LiftFormatter";
 import * as MapboxGLFormatter from "./transforms/MapboxGLFormatter";
@@ -32,12 +32,14 @@ import {
 } from "./transforms/StreamTransforms";
 import { RunNormalizerAccumulator } from "./transforms/accumulator/RunNormalizerAccumulator";
 
-async function createElevationTransform(elevationServerURL: string | null) {
-  if (!elevationServerURL) {
+async function createElevationTransform(
+  elevationServerConfig: ElevationServerConfig | null,
+) {
+  if (!elevationServerConfig) {
     return null;
   }
-  
-  const processor = await createElevationProcessor(elevationServerURL);
+
+  const processor = await createElevationProcessor(elevationServerConfig);
   return {
     processor,
     transform: processor.processFeature,
@@ -63,7 +65,7 @@ async function fetchSnowCoverIfEnabled(
     args.push(runsPath);
   }
 
-  args.push("--cache-dir", config.snowCover.cacheDir);
+  args.push("--archive-file", config.snowCover.databasePath);
 
   // Determine which Python executable to use
   let pythonExecutable = "python3"; // Default fallback
@@ -115,13 +117,13 @@ export default async function prepare(paths: DataPaths, config: Config) {
       ),
     ])
       .pipe(toFeatureCollection())
-      .pipe(
-        createWriteStream(paths.intermediate.skiAreas),
-      ),
+      .pipe(createWriteStream(paths.intermediate.skiAreas)),
   );
 
   // Create shared elevation processor for both runs and lifts
-  const elevationTransform = await createElevationTransform(config.elevationServerURL);
+  const elevationTransform = await createElevationTransform(
+    config.elevationServer,
+  );
 
   try {
     console.log("Processing runs...");
@@ -134,16 +136,9 @@ export default async function prepare(paths: DataPaths, config: Config) {
         // do topo conversion in a separate command
         // then open the topojson separately and normalize
         .pipe(accumulate(new RunNormalizerAccumulator()))
-        .pipe(
-          mapAsync(
-            elevationTransform?.transform || null,
-            10,
-          ),
-        )
+        .pipe(mapAsync(elevationTransform?.transform || null, 10))
         .pipe(toFeatureCollection())
-        .pipe(
-          createWriteStream(paths.intermediate.runs),
-        ),
+        .pipe(createWriteStream(paths.intermediate.runs)),
     );
 
     // Process snow cover data after runs are written
@@ -155,16 +150,9 @@ export default async function prepare(paths: DataPaths, config: Config) {
       readGeoJSONFeatures(paths.input.geoJSON.lifts)
         .pipe(flatMap(formatLift))
         .pipe(map(addSkiAreaSites(siteProvider)))
-        .pipe(
-          mapAsync(
-            elevationTransform?.transform || null,
-            10,
-          ),
-        )
+        .pipe(mapAsync(elevationTransform?.transform || null, 10))
         .pipe(toFeatureCollection())
-        .pipe(
-          createWriteStream(paths.intermediate.lifts),
-        ),
+        .pipe(createWriteStream(paths.intermediate.lifts)),
     );
   } finally {
     if (elevationTransform) {

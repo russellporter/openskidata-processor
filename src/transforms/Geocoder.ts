@@ -51,11 +51,11 @@ export default class Geocoder {
 
   constructor(config: Config.GeocodingServerConfig) {
     this.config = config;
-    
+
     // Initialize SQLite disk cache
-    const cacheFile = path.join(config.cacheDir, "geocode.db");
+    const cacheFile = path.join(config.databasePath);
     this.diskCache = new SQLiteCache<PhotonGeocode>(cacheFile, config.diskTTL);
-    
+
     this.loader = new DataLoader<string, PhotonGeocode>(
       async (loadForKeys) => {
         return [await this.rawGeocodeLocalOrRemote(loadForKeys[0])];
@@ -110,7 +110,9 @@ export default class Geocoder {
     }
   };
 
-  private rawGeocodeLocal = async (geohash: string): Promise<PhotonGeocode | null> => {
+  private rawGeocodeLocal = async (
+    geohash: string,
+  ): Promise<PhotonGeocode | null> => {
     return await this.diskCache.get(cacheKey(geohash));
   };
 

@@ -25,6 +25,10 @@ For quick development iterations, `./run.sh --skip-download` uses the previously
 
 ## Optional Features
 
+### Caching
+
+To speed up subsequent runs of the processor, some data (elevations, geocodes, snow cover) is cached. The default directory for caches is `data`. This can be overridden with the `CACHE_DIR` environment variable.
+
 ### Elevation data
 
 Features will be augmented with elevation data.

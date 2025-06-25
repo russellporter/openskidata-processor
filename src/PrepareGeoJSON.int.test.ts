@@ -9,7 +9,7 @@ import {
 } from "./TestHelpers";
 
 const config: Config = {
-  elevationServerURL: null,
+  elevationServer: null,
   bbox: null,
   geocodingServer: null,
   workingDir: "data",
@@ -521,8 +521,8 @@ it("processes OpenStreetMap ski areas", async () => {
 
   await prepare(paths, config);
 
-  expect(TestHelpers.fileContents(paths.output.skiAreas)).
-toMatchInlineSnapshot(`
+  expect(TestHelpers.fileContents(paths.output.skiAreas))
+    .toMatchInlineSnapshot(`
 {
   "features": [],
   "type": "FeatureCollection",
@@ -590,10 +590,10 @@ it("processes OpenStreetMap ski area sites", async () => {
   await prepare(paths, config);
 
   expect(
-  TestHelpers.fileContents(paths.output.skiAreas).features.map(
-    simplifiedSkiAreaFeature
-  )
-).toMatchInlineSnapshot(`
+    TestHelpers.fileContents(paths.output.skiAreas).features.map(
+      simplifiedSkiAreaFeature,
+    ),
+  ).toMatchInlineSnapshot(`
 [
   {
     "activities": [
