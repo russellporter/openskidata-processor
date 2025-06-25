@@ -9,9 +9,18 @@ This is a data pipeline that consumes OpenStreetMap & Skimap.org data and produc
 **Production:**
 
 ```bash
-# Build and run the processor
+# Build the processor
 docker build -t openskidata-processor .
-docker run -v $(pwd)/data:/app/data openskidata-processor
+
+# Run the processor (container stays running for external commands)
+docker run -d --name openskidata-processor -v $(pwd)/data:/app/data openskidata-processor
+
+# Execute the processing pipeline
+docker exec openskidata-processor ./run.sh
+
+# Or run specific commands
+docker exec openskidata-processor npm run download
+docker exec openskidata-processor npm run prepare-geojson
 ```
 
 **Development:**
@@ -28,6 +37,8 @@ docker compose exec app ./run.sh
 # Or get a shell
 docker compose exec app bash
 ```
+
+**Note:** The Docker container runs in daemon mode and stays running to allow external command execution. Use `docker exec` or `docker compose exec` to run processing commands inside the container.
 
 ### Local Installation
 

@@ -66,5 +66,5 @@ RUN npm prune --omit=dev
 # Create data directory
 RUN mkdir -p data
 
-# Default command for production
-CMD ["./run.sh"]
+# Keep container running for external commands
+CMD ["sleep", "infinity"]
