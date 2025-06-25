@@ -1,6 +1,14 @@
 # OpenSkiData Processor Guidelines
 
-## Build & Test Commands
+## Docker Development Environment
+
+This project runs in a containerized environment. All commands should be executed within the Docker container.
+
+### Setup
+- Start development environment: `docker compose up -d`
+- Access container shell: `docker compose exec app bash`
+
+### Build & Test Commands (run inside container)
 
 - Build: `npm run build`
 - Test all: `npm test`
@@ -11,6 +19,11 @@
 - Processing scripts:
   - `npm run download`
   - `npm run prepare-geojson`
+
+### Quick Docker Commands
+- Run tests: `docker compose exec app npm test`
+- Type check: `docker compose exec app npm run check-types`
+- Build: `docker compose exec app npm run build`
 
 Run processing with a small BBOX for testing:
 
