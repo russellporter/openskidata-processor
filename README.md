@@ -106,7 +106,7 @@ Riggs, G. A. & Hall, D. K. (2023). VIIRS/NPP Snow Cover Daily L3 Global 375m SIN
 
 ### Mapbox Vector Tiles
 
-Pass `GENERATE_TILES=1` to enable generation of Mapbox Vector Tiles (MVT) output. This will an `.mbtiles` file in the output directory and an equivalent tile directory structure.
+Pass `GENERATE_TILES=1` to enable generation of Mapbox Vector Tiles (MVT) output. This will output an `.mbtiles` file in the output directory.
 
 ## Issue reporting
 

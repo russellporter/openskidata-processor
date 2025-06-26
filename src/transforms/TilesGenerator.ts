@@ -1,4 +1,3 @@
-import { existsSync } from "fs";
 import path from "path";
 import { TilesConfig } from "../Config";
 import { CommonGeoJSONPaths } from "../io/GeoJSONFiles";
@@ -65,14 +64,6 @@ export async function generateTiles(
     path.join(workingDir, "runs.mbtiles"),
     path.join(workingDir, "lifts.mbtiles"),
   ]);
-
-  // Extract as directory structure
-  const tilesDir = tilesConfig.tilesDir;
-  if (existsSync(tilesDir)) {
-    await runCommand("rm", ["-rf", tilesDir]);
-  }
-
-  await runCommand("tile-join", ["-e", tilesDir, tilesConfig.mbTilesPath]);
 
   console.log("Tiles generation complete");
 }
