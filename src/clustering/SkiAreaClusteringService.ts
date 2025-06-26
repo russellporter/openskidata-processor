@@ -781,13 +781,39 @@ export class SkiAreaClusteringService {
     ]);
   }
 
+  private lastProcessedRunKey: string | null = null;
+
   private async generateSkiAreasForUnassignedObjects(): Promise<void> {
     let unassignedRun: MapObject | null;
     while ((unassignedRun = await this.database.getNextUnassignedRun())) {
+      // Detect repeated processing attempts
+      if (this.lastProcessedRunKey === unassignedRun._key) {
+        console.log(`WARNING: Run ${unassignedRun._key} selected again - marking as processed to prevent infinite loop`);
+        try {
+          await this.database.updateObject(unassignedRun._key, {
+            isBasisForNewSkiArea: false,
+          });
+        } catch (updateException) {
+          console.log("Failed to mark repeated run as processed:", updateException);
+        }
+        continue;
+      }
+      
+      this.lastProcessedRunKey = unassignedRun._key;
+      console.log(`Processing run ${unassignedRun._key}`);
+      
       try {
         await this.generateSkiAreaForRun(unassignedRun as RunObject);
       } catch (exception) {
         console.log("Processing unassigned run failed.", exception);
+        // Mark run as processed to prevent infinite loop
+        try {
+          await this.database.updateObject(unassignedRun._key, {
+            isBasisForNewSkiArea: false,
+          });
+        } catch (updateException) {
+          console.log("Failed to mark run as processed after error:", updateException);
+        }
       }
     }
   }
