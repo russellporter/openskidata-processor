@@ -146,8 +146,7 @@ export default async function prepare(paths: DataPaths, config: Config) {
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    config.geocodingServer,
-    config.snowCover,
+    config,
   );
 
   console.log("Formatting for maps...");

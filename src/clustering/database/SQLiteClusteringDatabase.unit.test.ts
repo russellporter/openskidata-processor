@@ -1,12 +1,13 @@
 import { SQLiteClusteringDatabase } from "./SQLiteClusteringDatabase";
 import { MapObjectType } from "../MapObject";
 import { SkiAreaActivity } from "openskidata-format";
+import * as TestHelpers from "../../TestHelpers";
 
 describe("SQLiteClusteringDatabase", () => {
   let database: SQLiteClusteringDatabase;
 
   beforeEach(async () => {
-    database = new SQLiteClusteringDatabase();
+    database = new SQLiteClusteringDatabase(TestHelpers.getTempWorkingDir());
     await database.initialize();
   });
 

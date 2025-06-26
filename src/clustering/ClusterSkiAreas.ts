@@ -1,4 +1,4 @@
-import { GeocodingServerConfig, SnowCoverConfig } from "../Config";
+import { Config, GeocodingServerConfig, SnowCoverConfig } from "../Config";
 import {
   GeoJSONIntermediatePaths,
   GeoJSONOutputPaths,
@@ -9,10 +9,9 @@ import { SkiAreaClusteringService } from "./SkiAreaClusteringService";
 export default async function clusterSkiAreas(
   intermediatePaths: GeoJSONIntermediatePaths,
   outputPaths: GeoJSONOutputPaths,
-  geocoderConfig: GeocodingServerConfig | null,
-  snowCoverConfig: SnowCoverConfig | null,
+  config: Config,
 ): Promise<void> {
-  const database = new SQLiteClusteringDatabase();
+  const database = new SQLiteClusteringDatabase(config.workingDir);
   const clusteringService = new SkiAreaClusteringService(database);
 
   try {
@@ -26,8 +25,8 @@ export default async function clusterSkiAreas(
       outputPaths.skiAreas,
       outputPaths.lifts,
       outputPaths.runs,
-      geocoderConfig,
-      snowCoverConfig,
+      config.geocodingServer,
+      config.snowCover,
     );
   } finally {
     await database.close();

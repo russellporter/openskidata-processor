@@ -48,6 +48,14 @@ export function getFilePaths(): DataPaths {
   };
 }
 
+/**
+ * Creates a unique temporary working directory for tests.
+ * Each call returns a new, isolated directory to prevent test interference.
+ */
+export function getTempWorkingDir(): string {
+  return tmp.dirSync().name;
+}
+
 export function mockInputFiles(
   input: {
     skiMapSkiAreas: InputSkiMapOrgSkiAreaFeature[];

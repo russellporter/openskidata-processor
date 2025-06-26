@@ -10,6 +10,5 @@ const config = configFromEnvironment();
 clusterSkiAreas(
   new GeoJSONIntermediatePaths(config.workingDir),
   new GeoJSONOutputPaths(config.outputDir),
-  config.geocodingServer,
-  config.snowCover,
+  config,
 );

@@ -31,7 +31,11 @@ export class SQLiteClusteringDatabase implements ClusteringDatabase {
   private db: Database.Database | null = null;
   private spatialLiteEnabled = false;
   private stmtCache = new Map<string, Database.Statement>();
-  private tempDbPath: string | null = null;
+  private dbPath: string;
+
+  constructor(workingDir: string) {
+    this.dbPath = path.join(workingDir, "clustering.db");
+  }
 
   // Optimized batch sizes for better performance
   private static readonly DEFAULT_BATCH_SIZE = 1000;
@@ -47,12 +51,19 @@ export class SQLiteClusteringDatabase implements ClusteringDatabase {
   `;
 
   async initialize(): Promise<void> {
-    // Create a temporary database file
-    this.tempDbPath = path.join(
-      os.tmpdir(),
-      `clustering-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.sqlite`,
-    );
-    this.db = new Database(this.tempDbPath);
+    // Create working directory if it doesn't exist
+    const workingDir = path.dirname(this.dbPath);
+    if (!fs.existsSync(workingDir)) {
+      fs.mkdirSync(workingDir, { recursive: true });
+    }
+    
+    // Remove existing database file if it exists
+    if (fs.existsSync(this.dbPath)) {
+      fs.unlinkSync(this.dbPath);
+    }
+    
+    // Create the database file
+    this.db = new Database(this.dbPath);
 
     // Configure SQLite for optimal performance
     this.configureSQLitePerformance();
@@ -163,17 +174,6 @@ export class SQLiteClusteringDatabase implements ClusteringDatabase {
     }
     // Clear statement cache
     this.stmtCache.clear();
-
-    // Clean up temporary database file
-    if (this.tempDbPath && fs.existsSync(this.tempDbPath)) {
-      try {
-        fs.unlinkSync(this.tempDbPath);
-        console.log(`✅ Cleaned up temporary database: ${this.tempDbPath}`);
-      } catch (error) {
-        console.warn(`Failed to clean up temporary database: ${error}`);
-      }
-      this.tempDbPath = null;
-    }
   }
 
   private ensureInitialized(): Database.Database {

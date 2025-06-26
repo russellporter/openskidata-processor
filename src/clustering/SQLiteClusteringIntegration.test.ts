@@ -14,6 +14,7 @@ import {
   simplifiedSkiAreaFeature,
 } from "../TestHelpers";
 import clusterSkiAreas from "./ClusterSkiAreas";
+import { Config } from "../Config";
 
 let mockUuidCount = 0;
 jest.mock("uuid", () => {
@@ -94,12 +95,22 @@ it("correctly associates lifts and runs with ski areas", async () => {
     paths.intermediate,
   );
 
-  // Use SQLite database (in-memory for testing)
+  // Create test config
+  const testConfig: Config = {
+    workingDir: TestHelpers.getTempWorkingDir(),
+    outputDir: TestHelpers.getTempWorkingDir(),
+    bbox: null,
+    elevationServer: null,
+    geocodingServer: null,
+    snowCover: null,
+    tiles: null,
+  };
+
+  // Use SQLite database
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    null,
-    null,
+    testConfig,
   );
 
   const lifts = TestHelpers.fileContents(paths.output.lifts).features.map(
@@ -191,12 +202,22 @@ it("verifies ski area associations persist through clustering and augmentation",
     paths.intermediate,
   );
 
+  // Create test config
+  const testConfig: Config = {
+    workingDir: TestHelpers.getTempWorkingDir(),
+    outputDir: TestHelpers.getTempWorkingDir(),
+    bbox: null,
+    elevationServer: null,
+    geocodingServer: null,
+    snowCover: null,
+    tiles: null,
+  };
+
   // Use SQLite database
   await clusterSkiAreas(
     paths.intermediate,
     paths.output,
-    null,
-    null,
+    testConfig,
   );
 
   const outputRuns = TestHelpers.fileContents(paths.output.runs).features;

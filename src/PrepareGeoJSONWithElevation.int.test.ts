@@ -12,8 +12,8 @@ const config: Config = {
   },
   bbox: null,
   geocodingServer: null,
-  workingDir: "data",
-  outputDir: "data",
+  workingDir: TestHelpers.getTempWorkingDir(),
+  outputDir: TestHelpers.getTempWorkingDir(),
   snowCover: null,
   tiles: null,
 };
