@@ -485,9 +485,13 @@ export class SQLiteClusteringDatabase implements ClusteringDatabase {
 
     // Find all objects that reference this ski area
     const stmt = this.getStatement(
-      "SELECT key, ski_areas FROM objects WHERE ski_areas LIKE ?",
+      `SELECT key, ski_areas FROM objects 
+       WHERE EXISTS (
+         SELECT 1 FROM json_each(ski_areas) 
+         WHERE json_each.value = ?
+       )`,
     );
-    const affectedObjects = stmt.all(`%"${skiAreaId}"%`);
+    const affectedObjects = stmt.all(skiAreaId);
 
     const updateStmt = this.getStatement(
       "UPDATE objects SET ski_areas = ? WHERE key = ?",
@@ -608,8 +612,11 @@ export class SQLiteClusteringDatabase implements ClusteringDatabase {
 
     // Filter out objects that already belong to this ski area
     query +=
-      " AND (ski_areas NOT LIKE ? OR ski_areas = '[]' OR ski_areas IS NULL)";
-    params.push(`%"${context.id}"%`);
+      ` AND (NOT EXISTS (
+         SELECT 1 FROM json_each(ski_areas) 
+         WHERE json_each.value = ?
+       ) OR ski_areas = '[]' OR ski_areas IS NULL)`;
+    params.push(context.id);
 
     if (context.excludeObjectsAlreadyInSkiArea) {
       // Exclude objects that are already assigned to any ski area
@@ -634,9 +641,13 @@ export class SQLiteClusteringDatabase implements ClusteringDatabase {
     if (!this.db) throw new Error("Database not initialized");
 
     const query =
-      "SELECT * FROM objects WHERE ski_areas LIKE ? AND type != 'SKI_AREA'";
+      `SELECT * FROM objects 
+       WHERE EXISTS (
+         SELECT 1 FROM json_each(ski_areas) 
+         WHERE json_each.value = ?
+       ) AND type != 'SKI_AREA'`;
     const stmt = this.getStatement(query);
-    const rows = stmt.all(`%"${skiAreaId}"%`);
+    const rows = stmt.all(skiAreaId);
 
     return rows.map(this.rowToMapObject);
   }
