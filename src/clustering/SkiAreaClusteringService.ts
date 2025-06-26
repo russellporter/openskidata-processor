@@ -360,10 +360,7 @@ export class SkiAreaClusteringService {
             activities: [...activities],
             geometry: this.skiAreaGeometry(memberObjects),
             isPolygon: false,
-            properties: {
-              ...skiArea.properties,
-              activities: [...activities],
-            },
+            properties: { ...skiArea.properties, activities: [...activities] },
           });
         }),
       );
@@ -415,10 +412,7 @@ export class SkiAreaClusteringService {
       removeIfNoObjectsFound?: boolean;
       removeIfSubstantialNumberOfObjectsInSkiAreaSite?: boolean;
     };
-    objects: {
-      onlyIfNotAlreadyAssigned?: boolean;
-      onlyInPolygon?: boolean;
-    };
+    objects: { onlyIfNotAlreadyAssigned?: boolean; onlyInPolygon?: boolean };
   }): Promise<void> {
     const skiAreasCursor = await this.database.getSkiAreas({
       onlyPolygons: options.objects.onlyInPolygon || false,
@@ -506,10 +500,7 @@ export class SkiAreaClusteringService {
         removeIfNoObjectsFound?: boolean;
         removeIfSubstantialNumberOfObjectsInSkiAreaSite?: boolean;
       };
-      objects: {
-        onlyIfNotAlreadyAssigned?: boolean;
-        onlyInPolygon?: boolean;
-      };
+      objects: { onlyIfNotAlreadyAssigned?: boolean; onlyInPolygon?: boolean };
     },
   ): Promise<MapObject[] | null> {
     const id = skiArea.properties.id;
@@ -789,20 +780,25 @@ export class SkiAreaClusteringService {
     while ((unassignedRun = await this.database.getNextUnassignedRun())) {
       // Detect repeated processing attempts
       if (this.lastProcessedRunKey === unassignedRun._key) {
-        console.log(`WARNING: Run ${unassignedRun._key} selected again - marking as processed to prevent infinite loop`);
+        console.log(
+          `WARNING: Run ${unassignedRun._key} selected again - marking as processed to prevent infinite loop`,
+        );
         try {
           await this.database.updateObject(unassignedRun._key, {
             isBasisForNewSkiArea: false,
           });
         } catch (updateException) {
-          console.log("Failed to mark repeated run as processed:", updateException);
+          console.log(
+            "Failed to mark repeated run as processed:",
+            updateException,
+          );
         }
         continue;
       }
-      
+
       this.lastProcessedRunKey = unassignedRun._key;
       console.log(`Processing run ${unassignedRun._key}`);
-      
+
       try {
         await this.generateSkiAreaForRun(unassignedRun as RunObject);
       } catch (exception) {
@@ -813,7 +809,10 @@ export class SkiAreaClusteringService {
             isBasisForNewSkiArea: false,
           });
         } catch (updateException) {
-          console.log("Failed to mark run as processed after error:", updateException);
+          console.log(
+            "Failed to mark run as processed after error:",
+            updateException,
+          );
         }
       }
     }
