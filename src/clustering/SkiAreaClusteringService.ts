@@ -119,6 +119,7 @@ export class SkiAreaClusteringService {
       ].map<Promise<Buffer>>(StreamToPromise),
     );
 
+    // Create indices after loading all features for better insert performance
     await this.database.createIndexes();
   }
 

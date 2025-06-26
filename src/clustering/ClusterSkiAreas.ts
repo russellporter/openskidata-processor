@@ -1,4 +1,4 @@
-import { Config, GeocodingServerConfig, SnowCoverConfig } from "../Config";
+import { Config } from "../Config";
 import {
   GeoJSONIntermediatePaths,
   GeoJSONOutputPaths,
@@ -16,7 +16,6 @@ export default async function clusterSkiAreas(
 
   try {
     await database.initialize();
-    await database.createIndexes();
 
     await clusteringService.clusterSkiAreas(
       intermediatePaths.skiAreas,
