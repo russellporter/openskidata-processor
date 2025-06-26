@@ -3,17 +3,21 @@
     "sourceMap": true,
     "strict": true,
     "moduleResolution": "node",
-    "noEmit": true,
+    "outDir": "dist",
     "esModuleInterop": true,
-    "target": "esnext",
-    "importHelpers": true,
+    "target": "es2022",
+    "module": "commonjs",
     "lib": ["es5", "es2015.promise", "esnext", "dom"],
     "types": ["node", "jest"],
     "typeRoots": ["./node_modules/@types"],
     "baseUrl": ".",
     "paths": {
       "*": ["types/*"]
-    }
+    },
+    "declaration": false,
+    "removeComments": true,
+    "skipLibCheck": true
   },
-  "include": ["./src/**/*"]
+  "include": ["./src/**/*"],
+  "exclude": ["**/*.test.ts", "**/*.unit.test.ts", "**/*.int.test.ts", "dist"]
 }
