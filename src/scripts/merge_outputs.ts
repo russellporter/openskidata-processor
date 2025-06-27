@@ -3,6 +3,8 @@ import path from "path";
 import { spawn } from "child_process";
 import { runCommand } from "../utils/ProcessRunner";
 import Database from "better-sqlite3";
+import { createReadStream, createWriteStream } from "fs";
+import { createInterface } from "readline";
 
 interface MergeStats {
   geoJsonFiles: number;
@@ -220,28 +222,118 @@ async function mergeGeoJsonFiles(inputDirs: string[], outputDir: string): Promis
         mergeCount++;
       }
 
-      // Read input file and extract features (skip first and last lines)
-      const content = fs.readFileSync(inputPath, 'utf8');
-      const lines = content.split('\n');
-      
-      // Skip the first line (header) and last line (closing)
-      const featureLines = lines.slice(1, -1);
-      fs.appendFileSync(outputPath, featureLines.join('\n'));
-      fs.appendFileSync(outputPath, ',\n');
+      // Stream the input file line by line
+      await streamGeoJsonFeatures(inputPath, outputPath);
     }
   }
 
-  // Finalize all GeoJSON files
+  // Finalize all GeoJSON files by removing the trailing comma and adding closing
   for (const relativePath of processedFiles) {
     const outputPath = path.join(outputDir, relativePath);
-    
-    // Remove the last comma and add closing
-    const content = fs.readFileSync(outputPath, 'utf8');
-    const trimmedContent = content.slice(0, -2); // Remove ",\n"
-    fs.writeFileSync(outputPath, trimmedContent + '\n]}\n');
+    await finalizeGeoJsonFile(outputPath);
   }
 
   return mergeCount;
+}
+
+async function streamGeoJsonFeatures(inputPath: string, outputPath: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const readStream = createReadStream(inputPath, { encoding: 'utf8' });
+    const writeStream = createWriteStream(outputPath, { flags: 'a' });
+    const rl = createInterface({
+      input: readStream,
+      crlfDelay: Infinity
+    });
+
+    let lineNumber = 0;
+    let totalLines = 0;
+    const featureLines: string[] = [];
+
+    // First pass: count total lines
+    const countRL = createInterface({
+      input: createReadStream(inputPath, { encoding: 'utf8' }),
+      crlfDelay: Infinity
+    });
+
+    countRL.on('line', () => {
+      totalLines++;
+    });
+
+    countRL.on('close', () => {
+      // Second pass: process features
+      rl.on('line', (line) => {
+        lineNumber++;
+        
+        // Skip first line (header) and last line (closing bracket)
+        if (lineNumber > 1 && lineNumber < totalLines) {
+          featureLines.push(line);
+          
+          // Write in batches to avoid memory buildup
+          if (featureLines.length >= 1000) {
+            writeStream.write(featureLines.join('\n') + ',\n');
+            featureLines.length = 0;
+          }
+        }
+      });
+
+      rl.on('close', () => {
+        // Write remaining features
+        if (featureLines.length > 0) {
+          writeStream.write(featureLines.join('\n') + ',\n');
+        }
+        
+        writeStream.end();
+        resolve();
+      });
+
+      rl.on('error', reject);
+    });
+
+    countRL.on('error', reject);
+  });
+}
+
+async function finalizeGeoJsonFile(outputPath: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const readStream = createReadStream(outputPath, { encoding: 'utf8' });
+    const tempPath = outputPath + '.tmp';
+    const writeStream = createWriteStream(tempPath, { encoding: 'utf8' });
+    
+    let buffer = '';
+    let lastChunk = '';
+
+    readStream.on('data', (chunk: string | Buffer) => {
+      // Keep the last few characters to find the trailing comma
+      const chunkStr = chunk.toString();
+      buffer += chunkStr;
+      
+      // If buffer is getting large, write most of it but keep the end
+      if (buffer.length > 10000) {
+        const keepSize = 100;
+        const writeSize = buffer.length - keepSize;
+        writeStream.write(buffer.slice(0, writeSize));
+        buffer = buffer.slice(writeSize);
+      }
+    });
+
+    readStream.on('end', () => {
+      // Remove trailing comma and newline, then add proper closing
+      let finalContent = buffer.replace(/,\s*$/, '');
+      finalContent += '\n]}\n';
+      
+      writeStream.write(finalContent);
+      writeStream.end();
+    });
+
+    writeStream.on('finish', () => {
+      // Replace original with finalized version
+      fs.renameSync(tempPath, outputPath);
+      resolve();
+    });
+
+    readStream.on('error', reject);
+    writeStream.on('error', reject);
+  });
 }
 
 async function mergeCsvFiles(inputDirs: string[], outputDir: string): Promise<number> {
