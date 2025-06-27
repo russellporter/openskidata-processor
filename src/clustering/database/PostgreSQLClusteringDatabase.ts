@@ -132,11 +132,30 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
     // Log performance summary before closing
     performanceMonitor.logSummary();
 
+    // Gracefully close the main connection pool
     if (this.pool) {
-      await this.pool.end();
-      this.pool = null;
+      try {
+        // Wait a bit for any pending operations to complete
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Check if there are any active connections
+        const activeConnections = this.pool.totalCount - this.pool.idleCount;
+        if (activeConnections > 0) {
+          console.warn(`Warning: ${activeConnections} active connections during close, waiting for completion...`);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+        
+        await this.pool.end();
+        this.pool = null;
+      } catch (error) {
+        console.warn(`Warning during pool cleanup: ${error}`);
+        this.pool = null;
+      }
     }
     this.initialized = false;
+
+    // Wait a bit more to ensure all connections are properly closed
+    await new Promise(resolve => setTimeout(resolve, 200));
 
     // Delete the temporary database
     const adminPool = new Pool({
@@ -153,12 +172,18 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
       const adminClient = await adminPool.connect();
       try {
         // Terminate any existing connections to the database before dropping it
-        await adminClient.query(`
-          SELECT pg_terminate_backend(pg_stat_activity.pid)
-          FROM pg_stat_activity
-          WHERE pg_stat_activity.datname = '${this.databaseName}'
-            AND pid <> pg_backend_pid()
-        `);
+        // Wrap in try-catch to handle connection termination errors gracefully
+        try {
+          await adminClient.query(`
+            SELECT pg_terminate_backend(pg_stat_activity.pid)
+            FROM pg_stat_activity
+            WHERE pg_stat_activity.datname = '${this.databaseName}'
+              AND pid <> pg_backend_pid()
+          `);
+        } catch (terminateError) {
+          // Connection termination errors are expected during shutdown
+          console.debug(`Connection termination completed: ${terminateError}`);
+        }
 
         await adminClient.query(
           `DROP DATABASE IF EXISTS "${this.databaseName}"`,
@@ -172,7 +197,12 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
         `Failed to delete temporary database ${this.databaseName}: ${error}`,
       );
     } finally {
-      await adminPool.end();
+      try {
+        await adminPool.end();
+      } catch (poolError) {
+        // Ignore pool cleanup errors during shutdown
+        console.debug(`Admin pool cleanup: ${poolError}`);
+      }
     }
   }
 
