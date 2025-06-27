@@ -21,7 +21,13 @@ while [[ "$#" -gt 0 ]]; do
     shift
 done
 
-npm run build
+# Only build in development mode or if dist doesn't exist
+if [ "$NODE_ENV" != "production" ] || [ ! -d "dist" ]; then
+    echo "Building..."
+    npm run build
+else
+    echo "Skipping build (production mode and dist exists)"
+fi
 
 if [ "$DOWNLOAD" = true ]; then
     echo "Downloading..."

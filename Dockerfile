@@ -54,6 +54,9 @@ CMD ["sh", "-c", "npm install && exec /usr/local/bin/init-postgres.sh"]
 # Production stage
 FROM base AS production
 
+# Set production environment
+ENV NODE_ENV=production
+
 # Copy package files
 COPY package.json package-lock.json ./
 
