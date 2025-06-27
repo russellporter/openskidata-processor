@@ -411,12 +411,20 @@ async function streamGeoJsonFeatures(
           return;
         }
 
-        // This is a feature line - add it to the batch
-        featureLines.push(line);
+        // Skip empty lines
+        if (trimmedLine === "" || trimmedLine === ",") {
+          return;
+        }
+
+        // This is a feature line - remove any trailing comma and add it to the batch
+        const cleanLine = line.replace(/,\s*$/, "");
+        if (cleanLine.trim() !== "") {
+          featureLines.push(cleanLine);
+        }
 
         // Write in batches to avoid memory buildup
         if (featureLines.length >= 1000) {
-          const batchContent = featureLines.join("\n") + ",\n";
+          const batchContent = featureLines.join(",\n") + ",\n";
           featureLines.length = 0;
           writeBatch(batchContent);
         }
@@ -431,7 +439,7 @@ async function streamGeoJsonFeatures(
 
         // Write remaining features
         if (featureLines.length > 0) {
-          const finalContent = featureLines.join("\n") + ",\n";
+          const finalContent = featureLines.join(",\n") + ",\n";
           writeBatch(finalContent);
         } else if (pendingWrites === 0) {
           // No pending writes and no remaining features
@@ -510,9 +518,21 @@ async function finalizeGeoJsonFile(outputPath: string): Promise<void> {
 
       readStream.on("end", () => {
         try {
-          // Remove trailing comma and newline, then add proper closing
-          let finalContent = buffer.replace(/,\s*$/, "");
-          finalContent += "\n]}\n";
+          // More robust comma removal - handle multiple trailing commas and whitespace
+          let finalContent = buffer
+            .replace(/,+\s*$/, "")  // Remove one or more trailing commas and whitespace
+            .replace(/,(\s*,)+/g, ",")  // Remove duplicate commas within content
+            .replace(/\n\s*,\s*\n/g, ",\n")  // Clean up comma formatting
+            .trim();
+          
+          // Ensure we end with proper JSON structure
+          if (!finalContent.endsWith("]")) {
+            finalContent += "\n]";
+          }
+          if (!finalContent.endsWith("]}")) {
+            finalContent += "}";
+          }
+          finalContent += "\n";
 
           writeStream!.write(finalContent, (err) => {
             if (err) {
