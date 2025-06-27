@@ -96,8 +96,8 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
       database: this.databaseName,
       user: "postgres",
       max: 10, // Reasonable pool size for clustering workload
-      idleTimeoutMillis: 60000, // Close idle clients after 60 seconds
-      connectionTimeoutMillis: 10000, // Return an error after 10 seconds if connection could not be established
+      idleTimeoutMillis: 120000, // Close idle clients after 60 seconds
+      connectionTimeoutMillis: 60000, // Return an error after 60 seconds if connection could not be established
       allowExitOnIdle: true, // Allow process to exit even if pool has idle connections
     });
 
