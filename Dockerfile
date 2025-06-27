@@ -9,7 +9,13 @@ RUN apt-get update && apt-get install -y \
     zlib1g-dev \
     && rm -rf /var/lib/apt/lists/*
 
-RUN git clone --branch 2.78.0 --single-branch https://github.com/felt/tippecanoe.git /tmp/tippecanoe
+# Use specific commit for better caching
+ENV TIPPECANOE_VERSION=2.78.0
+RUN if [ ! -d "/tmp/tippecanoe" ]; then \
+        git clone --branch ${TIPPECANOE_VERSION} --single-branch --depth 1 \
+        https://github.com/felt/tippecanoe.git /tmp/tippecanoe; \
+    fi
+
 WORKDIR /tmp/tippecanoe
 RUN make -j$(nproc) && make install
 
@@ -35,16 +41,14 @@ WORKDIR /app
 # Development stage
 FROM base AS development
 
-# Install build dependencies for native modules
+# Install build dependencies for native modules and create data directory
 RUN apt-get update && apt-get install -y \
     build-essential \
     python3 \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p data
 
-# Create data directory
-RUN mkdir -p data
-
-# Copy PostgreSQL initialization script
+# Copy PostgreSQL initialization script (done early as it rarely changes)
 COPY scripts/init-postgres.sh /usr/local/bin/init-postgres.sh
 RUN chmod +x /usr/local/bin/init-postgres.sh
 
@@ -57,27 +61,21 @@ FROM base AS production
 # Set production environment
 ENV NODE_ENV=production
 
-# Copy package files
-COPY package.json package-lock.json ./
+# Create data directory and copy scripts first (rarely change)
+RUN mkdir -p data
+COPY scripts/init-postgres.sh /usr/local/bin/init-postgres.sh
+RUN chmod +x /usr/local/bin/init-postgres.sh
 
-# Install all dependencies (including dev dependencies for build)
+# Copy package files and install dependencies (cache when package.json unchanged)
+COPY package.json package-lock.json ./
 RUN npm ci
 
-# Copy application source
+# Copy application source and build (only invalidated when source changes)
 COPY . .
-
-# Build the application
 RUN npm run build
 
 # Clean up dev dependencies after build
 RUN npm prune --omit=dev
-
-# Create data directory
-RUN mkdir -p data
-
-# Copy PostgreSQL initialization script
-COPY scripts/init-postgres.sh /usr/local/bin/init-postgres.sh
-RUN chmod +x /usr/local/bin/init-postgres.sh
 
 # Initialize PostgreSQL as main process
 CMD ["sh", "-c", "exec /usr/local/bin/init-postgres.sh"]

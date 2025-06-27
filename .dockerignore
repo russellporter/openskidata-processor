@@ -1,2 +1,13 @@
 data/
 node_modules/
+dist/
+.git/
+*.log
+.env*
+*.md
+.DS_Store
+.vscode/
+.idea/
+coverage/
+*.tmp
+*.temp
