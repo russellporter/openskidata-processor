@@ -447,13 +447,6 @@ async function streamGeoJsonFeatures(
     rl.on("error", handleError);
     readStream.on("error", handleError);
     writeStream.on("error", handleError);
-
-    // Set a timeout to prevent hanging
-    setTimeout(() => {
-      if (isProcessing) {
-        handleError(new Error(`Timeout processing file: ${inputPath}`));
-      }
-    }, 300000); // 5 minute timeout
   });
 }
 
@@ -546,11 +539,6 @@ async function finalizeGeoJsonFile(outputPath: string): Promise<void> {
 
       readStream.on("error", handleError);
       writeStream.on("error", handleError);
-
-      // Set a timeout for finalization
-      setTimeout(() => {
-        handleError(new Error(`Timeout finalizing file: ${outputPath}`));
-      }, 180000); // 3 minute timeout
     } catch (error) {
       handleError(error as Error);
     }
