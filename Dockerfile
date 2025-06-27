@@ -68,7 +68,8 @@ RUN chmod +x /usr/local/bin/init-postgres.sh
 
 # Copy package files and install dependencies (cache when package.json unchanged)
 COPY package.json package-lock.json ./
-RUN npm ci
+# Install dev dependencies as well in order to build the application
+RUN npm --production=false  ci
 
 # Copy application source and build (only invalidated when source changes)
 COPY . .
