@@ -26,19 +26,24 @@ function mergeGeoPackageWithSQLite(
   const sourceDb = new Database(sourcePath, { readonly: true });
 
   try {
-    // Get all table names from source database
+    // Get all table names from source database, excluding GeoPackage metadata tables
     const tables = sourceDb
       .prepare(
         `
       SELECT name FROM sqlite_master 
-      WHERE type='table' AND name NOT LIKE 'sqlite_%'
+      WHERE type='table' 
+      AND name NOT LIKE 'sqlite_%'
+      AND name NOT LIKE 'gpkg_%'
+      AND name NOT LIKE 'rtree_%'
     `,
       )
       .all() as { name: string }[];
 
+    console.log(`  Found ${tables.length} data tables to merge (excluding metadata)`);
+
     for (const table of tables) {
       const tableName = table.name;
-      console.log(`  Merging table: ${tableName}`);
+      console.log(`  Merging data table: ${tableName}`);
 
       // Check if table exists in target
       const targetTableExists = targetDb
@@ -51,93 +56,164 @@ function mergeGeoPackageWithSQLite(
         .get(tableName);
 
       if (targetTableExists) {
-        // Table exists - get column info and insert data
-        const sourceColumns = sourceDb
-          .prepare(`PRAGMA table_info(${tableName})`)
-          .all() as any[];
-        const columnNames = sourceColumns
-          .filter((col) => col.pk === 0) // Exclude primary key columns to avoid conflicts
-          .map((col) => col.name);
-
-        if (columnNames.length > 0) {
-          const columnList = columnNames.join(", ");
-          const placeholders = columnNames.map(() => "?").join(", ");
-
-          // Prepare insert statement for target
-          const insertStmt = targetDb.prepare(`
-            INSERT INTO ${tableName} (${columnList}) 
-            VALUES (${placeholders})
-          `);
-
-          // Get all rows from source table
-          const sourceRows = sourceDb
-            .prepare(`SELECT ${columnList} FROM ${tableName}`)
-            .all();
-
-          // Insert each row into target
-          const insertMany = targetDb.transaction((rows: any[]) => {
-            for (const row of rows) {
-              const values = columnNames.map((col) => row[col]);
-              insertStmt.run(...values);
-            }
-          });
-
-          insertMany(sourceRows);
-        }
-      } else {
-        // Table doesn't exist - copy entire table structure and data
-        // Get CREATE TABLE statement from source
-        const createTableSql = sourceDb
-          .prepare(
-            `
-          SELECT sql FROM sqlite_master 
-          WHERE type='table' AND name = ?
-        `,
-          )
-          .get(tableName) as { sql: string } | undefined;
-
-        if (createTableSql?.sql) {
-          // Create table in target
-          targetDb.exec(createTableSql.sql);
-
-          // Copy all data
+        // Table exists - merge data using INSERT OR IGNORE to handle duplicates
+        try {
           const sourceRows = sourceDb
             .prepare(`SELECT * FROM ${tableName}`)
             .all();
 
           if (sourceRows.length > 0) {
-            // Get column names for the new table
+            console.log(`    Inserting ${sourceRows.length} rows into existing table`);
+            
+            // Get column info to build proper INSERT statement
             const columns = targetDb
               .prepare(`PRAGMA table_info(${tableName})`)
               .all() as any[];
             const allColumnNames = columns.map((col) => col.name);
-            const nonPkColumns = columns
-              .filter((col) => col.pk === 0)
-              .map((col) => col.name);
+            
+            const columnList = allColumnNames.join(", ");
+            const placeholders = allColumnNames.map(() => "?").join(", ");
 
-            const columnList = nonPkColumns.join(", ");
-            const placeholders = nonPkColumns.map(() => "?").join(", ");
-
+            // Use INSERT OR IGNORE to handle primary key conflicts gracefully
             const insertStmt = targetDb.prepare(`
-              INSERT INTO ${tableName} (${columnList}) 
+              INSERT OR IGNORE INTO ${tableName} (${columnList}) 
               VALUES (${placeholders})
             `);
 
             const insertMany = targetDb.transaction((rows: any[]) => {
               for (const row of rows) {
-                const values = nonPkColumns.map((col) => row[col]);
+                const values = allColumnNames.map((col) => row[col]);
                 insertStmt.run(...values);
               }
             });
 
             insertMany(sourceRows);
           }
+        } catch (error) {
+          console.warn(`    Warning: Could not merge data into ${tableName}:`, (error as Error).message);
+          // Continue with other tables rather than failing completely
+        }
+      } else {
+        // Table doesn't exist - copy entire table structure and data
+        try {
+          const createTableSql = sourceDb
+            .prepare(
+              `
+            SELECT sql FROM sqlite_master 
+            WHERE type='table' AND name = ?
+          `,
+            )
+            .get(tableName) as { sql: string } | undefined;
+
+          if (createTableSql?.sql) {
+            console.log(`    Creating new table: ${tableName}`);
+            // Create table in target
+            targetDb.exec(createTableSql.sql);
+
+            // Copy all data
+            const sourceRows = sourceDb
+              .prepare(`SELECT * FROM ${tableName}`)
+              .all();
+
+            if (sourceRows.length > 0) {
+              console.log(`    Copying ${sourceRows.length} rows to new table`);
+              
+              const columns = targetDb
+                .prepare(`PRAGMA table_info(${tableName})`)
+                .all() as any[];
+              const allColumnNames = columns.map((col) => col.name);
+
+              const columnList = allColumnNames.join(", ");
+              const placeholders = allColumnNames.map(() => "?").join(", ");
+
+              const insertStmt = targetDb.prepare(`
+                INSERT INTO ${tableName} (${columnList}) 
+                VALUES (${placeholders})
+              `);
+
+              const insertMany = targetDb.transaction((rows: any[]) => {
+                for (const row of rows) {
+                  const values = allColumnNames.map((col) => row[col]);
+                  insertStmt.run(...values);
+                }
+              });
+
+              insertMany(sourceRows);
+            }
+
+            // Update gpkg_contents if this table contains geographic data
+            updateGeoPackageMetadata(targetDb, sourceDb, tableName);
+          }
+        } catch (error) {
+          console.warn(`    Warning: Could not create table ${tableName}:`, (error as Error).message);
         }
       }
     }
   } finally {
     targetDb.close();
     sourceDb.close();
+  }
+}
+
+function updateGeoPackageMetadata(
+  targetDb: any,
+  sourceDb: any,
+  tableName: string,
+): void {
+  try {
+    // Check if this table has an entry in gpkg_contents in the source
+    const sourceContent = sourceDb
+      .prepare(`SELECT * FROM gpkg_contents WHERE table_name = ?`)
+      .get(tableName);
+
+    if (sourceContent) {
+      console.log(`    Updating GeoPackage metadata for ${tableName}`);
+      
+      // Insert or update gpkg_contents entry
+      const upsertContent = targetDb.prepare(`
+        INSERT OR REPLACE INTO gpkg_contents 
+        (table_name, data_type, identifier, description, last_change, min_x, min_y, max_x, max_y, srs_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+
+      upsertContent.run(
+        sourceContent.table_name,
+        sourceContent.data_type,
+        sourceContent.identifier,
+        sourceContent.description,
+        sourceContent.last_change,
+        sourceContent.min_x,
+        sourceContent.min_y,
+        sourceContent.max_x,
+        sourceContent.max_y,
+        sourceContent.srs_id
+      );
+
+      // Copy geometry_columns entry if it exists
+      const sourceGeomCol = sourceDb
+        .prepare(`SELECT * FROM gpkg_geometry_columns WHERE table_name = ?`)
+        .get(tableName);
+
+      if (sourceGeomCol) {
+        const upsertGeomCol = targetDb.prepare(`
+          INSERT OR REPLACE INTO gpkg_geometry_columns 
+          (table_name, column_name, geometry_type_name, srs_id, z, m)
+          VALUES (?, ?, ?, ?, ?, ?)
+        `);
+
+        upsertGeomCol.run(
+          sourceGeomCol.table_name,
+          sourceGeomCol.column_name,
+          sourceGeomCol.geometry_type_name,
+          sourceGeomCol.srs_id,
+          sourceGeomCol.z,
+          sourceGeomCol.m
+        );
+      }
+    }
+  } catch (error) {
+    console.warn(`    Warning: Could not update metadata for ${tableName}:`, (error as Error).message);
+    // Don't fail the entire operation for metadata issues
   }
 }
 
