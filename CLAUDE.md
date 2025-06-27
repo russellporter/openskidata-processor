@@ -5,25 +5,21 @@
 This project runs in a containerized environment. All commands should be executed within the Docker container.
 
 ### Setup
+
 - Start development environment: `docker compose up -d`
 - Access container shell: `docker compose exec app bash`
 
 ### Build & Test Commands (run inside container)
 
-- Build: `npm run build`
-- Test all: `npm test`
-- Test single file: `npx jest path/to/file.test.ts`
-- Type check: `npm run check-types`
-- Update test snapshots: `npm run record-tests`
-- Run processor: `./run.sh`
-- Processing scripts:
-  - `npm run download`
-  - `npm run prepare-geojson`
-
-### Quick Docker Commands
-- Run tests: `docker compose exec app npm test`
-- Type check: `docker compose exec app npm run check-types`
 - Build: `docker compose exec app npm run build`
+- Test all: `docker compose exec app npm test`
+- Test single file: `docker compose exec app npx jest path/to/file.test.ts`
+- Type check: `docker compose exec app npm run check-types`
+- Update test snapshots: `docker compose exec app npm run record-tests`
+- Run processor: `docker compose exec app ./run.sh`
+- Processing scripts:
+  - `docker compose exec app npm run download`
+  - `docker compose exec app npm run prepare-geojson`
 
 Run processing with a small BBOX for testing:
 

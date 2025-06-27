@@ -23,8 +23,10 @@ COPY --from=tippecanoe-builder /usr/local/bin/tile-join /usr/local/bin/tile-join
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     libsqlite3-dev \
-    libsqlite3-mod-spatialite \
     sqlite3 \
+    postgresql-15 \
+    postgresql-15-postgis-3 \
+    postgresql-client-15 \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
@@ -42,8 +44,12 @@ RUN apt-get update && apt-get install -y \
 # Create data directory
 RUN mkdir -p data
 
-# Install dependencies on startup and keep container running
-CMD ["sh", "-c", "npm install && exec sleep infinity"]
+# Copy PostgreSQL initialization script
+COPY scripts/init-postgres.sh /usr/local/bin/init-postgres.sh
+RUN chmod +x /usr/local/bin/init-postgres.sh
+
+# Install dependencies on startup and initialize PostgreSQL as main process
+CMD ["sh", "-c", "npm install && exec /usr/local/bin/init-postgres.sh"]
 
 # Production stage
 FROM base AS production
@@ -66,5 +72,9 @@ RUN npm prune --omit=dev
 # Create data directory
 RUN mkdir -p data
 
-# Keep container running for external commands
-CMD ["sleep", "infinity"]
+# Copy PostgreSQL initialization script
+COPY scripts/init-postgres.sh /usr/local/bin/init-postgres.sh
+RUN chmod +x /usr/local/bin/init-postgres.sh
+
+# Initialize PostgreSQL as main process
+CMD ["sh", "-c", "exec /usr/local/bin/init-postgres.sh"]

@@ -9,6 +9,7 @@ import {
   SourceType,
   Status,
 } from "openskidata-format";
+import { Config } from "../Config";
 import * as TestHelpers from "../TestHelpers";
 import {
   simplifiedLiftFeature,
@@ -19,16 +20,13 @@ import {
 } from "../TestHelpers";
 import { toSkiAreaSummary } from "../transforms/toSkiAreaSummary";
 import clusterSkiAreas from "./ClusterSkiAreas";
-import { Config } from "../Config";
 
 let mockUuidCount = 0;
 jest.mock("uuid", () => {
-  return {
-    v4: () => "mock-UUID-" + mockUuidCount++,
-  };
+  return { v4: () => "mock-UUID-" + mockUuidCount++ };
 });
 
-// Increase timeout to give time to set up SQLite database
+// Increase timeout to give time to set up PostgreSQL database
 jest.setTimeout(60 * 1000);
 
 let testConfig: Config;
@@ -44,10 +42,6 @@ beforeEach(async () => {
     snowCover: null,
     tiles: null,
   };
-});
-
-afterEach(async () => {
-  // Database cleanup is now handled automatically by SQLiteClusteringDatabase
 });
 
 it("skips generating ski areas for runs with unsupported activity", async () => {
@@ -77,11 +71,7 @@ it("skips generating ski areas for runs with unsupported activity", async () => 
     paths.intermediate,
   );
 
-  await clusterSkiAreas(
-    paths.intermediate,
-    paths.output,
-    testConfig,
-  );
+  await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
 
   expect(TestHelpers.fileContents(paths.output.skiAreas))
     .toMatchInlineSnapshot(`
@@ -149,11 +139,7 @@ it("generates ski areas for runs without them", async () => {
     paths.intermediate,
   );
 
-  await clusterSkiAreas(
-    paths.intermediate,
-    paths.output,
-    testConfig,
-  );
+  await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
 
   expect(
     TestHelpers.fileContents(paths.output.runs).features.map(
@@ -238,11 +224,7 @@ it("does not generate ski area for lone downhill run without lift", async () => 
     paths.intermediate,
   );
 
-  await clusterSkiAreas(
-    paths.intermediate,
-    paths.output,
-    testConfig,
-  );
+  await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
 
   expect(
     TestHelpers.fileContents(paths.output.runs).features.map(
@@ -326,11 +308,7 @@ it("generates ski areas by activity", async () => {
     paths.intermediate,
   );
 
-  await clusterSkiAreas(
-    paths.intermediate,
-    paths.output,
-    testConfig,
-  );
+  await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
 
   const runs: RunFeature[] = TestHelpers.fileContents(
     paths.output.runs,
@@ -423,11 +401,7 @@ it("clusters ski areas", async () => {
     paths.intermediate,
   );
 
-  await clusterSkiAreas(
-    paths.intermediate,
-    paths.output,
-    testConfig,
-  );
+  await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
 
   expect(
     TestHelpers.fileContents(paths.output.lifts).features.map(
@@ -485,10 +459,7 @@ it("clusters ski area activities independently", async () => {
       TestHelpers.mockSkiAreaFeature({
         id: "1",
         activities: [SkiAreaActivity.Downhill, SkiAreaActivity.Nordic],
-        geometry: {
-          type: "Point",
-          coordinates: [0, 0],
-        },
+        geometry: { type: "Point", coordinates: [0, 0] },
       }),
     ],
     [],
@@ -533,11 +504,7 @@ it("clusters ski area activities independently", async () => {
     paths.intermediate,
   );
 
-  await clusterSkiAreas(
-    paths.intermediate,
-    paths.output,
-    testConfig,
-  );
+  await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
 
   expect(
     TestHelpers.fileContents(paths.output.runs).features.map(
@@ -618,11 +585,7 @@ it("generates a downhill ski area but does not include backcountry runs when clu
     paths.intermediate,
   );
 
-  await clusterSkiAreas(
-    paths.intermediate,
-    paths.output,
-    testConfig,
-  );
+  await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
 
   expect(
     TestHelpers.fileContents(paths.output.runs).features.map(
@@ -682,11 +645,7 @@ it("generates elevation statistics for run & lift based on lift served skiable v
     paths.intermediate,
   );
 
-  await clusterSkiAreas(
-    paths.intermediate,
-    paths.output,
-    testConfig,
-  );
+  await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
 
   expect(
     TestHelpers.fileContents(paths.output.skiAreas).features.map(
@@ -769,17 +728,13 @@ it("generates statistics for run with backcountry grooming with site membership"
     paths.intermediate,
   );
 
-  await clusterSkiAreas(
-    paths.intermediate,
-    paths.output,
-    testConfig,
-  );
+  await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
 
   expect(
-  TestHelpers.fileContents(paths.output.skiAreas).features.map(
-    simplifiedSkiAreaFeatureWithStatistics
-  )
-).toMatchInlineSnapshot(`
+    TestHelpers.fileContents(paths.output.skiAreas).features.map(
+      simplifiedSkiAreaFeatureWithStatistics,
+    ),
+  ).toMatchInlineSnapshot(`
 [
   {
     "activities": [
@@ -857,11 +812,7 @@ it("allows point & multilinestring lifts to be processed", async () => {
     paths.intermediate,
   );
 
-  await clusterSkiAreas(
-    paths.intermediate,
-    paths.output,
-    testConfig,
-  );
+  await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
 
   expect(
     TestHelpers.fileContents(paths.output.lifts).features.map(
@@ -910,11 +861,7 @@ it("does not generate ski area for lone snow park", async () => {
     paths.intermediate,
   );
 
-  await clusterSkiAreas(
-    paths.intermediate,
-    paths.output,
-    testConfig,
-  );
+  await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
 
   expect(TestHelpers.fileContents(paths.output.skiAreas))
     .toMatchInlineSnapshot(`
@@ -978,11 +925,7 @@ it("generates ski area which includes the snow park", async () => {
     paths.intermediate,
   );
 
-  await clusterSkiAreas(
-    paths.intermediate,
-    paths.output,
-    testConfig,
-  );
+  await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
 
   expect(
     TestHelpers.fileContents(paths.output.runs).features.map(
@@ -1049,11 +992,7 @@ it("generates ski area which includes the patrolled ungroomed run", async () => 
     paths.intermediate,
   );
 
-  await clusterSkiAreas(
-    paths.intermediate,
-    paths.output,
-    testConfig,
-  );
+  await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
 
   expect(
     TestHelpers.fileContents(paths.output.runs).features.map(
@@ -1099,11 +1038,7 @@ it("does not generate ski area for ungroomed run", async () => {
     paths.intermediate,
   );
 
-  await clusterSkiAreas(
-    paths.intermediate,
-    paths.output,
-    testConfig,
-  );
+  await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
 
   expect(TestHelpers.fileContents(paths.output.skiAreas))
     .toMatchInlineSnapshot(`
@@ -1173,11 +1108,7 @@ it("associates lifts and runs with polygon openstreetmap ski area", async () => 
     paths.intermediate,
   );
 
-  await clusterSkiAreas(
-    paths.intermediate,
-    paths.output,
-    testConfig,
-  );
+  await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
 
   expect(
     TestHelpers.fileContents(paths.output.lifts).features.map(
@@ -1280,11 +1211,7 @@ it("associates lifts and runs adjacent to polygon openstreetmap ski area when no
     paths.intermediate,
   );
 
-  await clusterSkiAreas(
-    paths.intermediate,
-    paths.output,
-    testConfig,
-  );
+  await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
 
   expect(
     TestHelpers.fileContents(paths.output.lifts).features.map(
@@ -1395,11 +1322,7 @@ it("associates lifts correctly to adjacent ski areas based on their polygons", a
     paths.intermediate,
   );
 
-  await clusterSkiAreas(
-    paths.intermediate,
-    paths.output,
-    testConfig,
-  );
+  await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
 
   expect(
     TestHelpers.fileContents(paths.output.lifts).features.map(
@@ -1433,19 +1356,13 @@ it("merges Skimap.org ski area with OpenStreetMap ski area", async () => {
         id: "1",
         activities: [SkiAreaActivity.Downhill],
         sources: [{ type: SourceType.OPENSTREETMAP, id: "1" }],
-        geometry: {
-          type: "Point",
-          coordinates: [0, 0],
-        },
+        geometry: { type: "Point", coordinates: [0, 0] },
       }),
       TestHelpers.mockSkiAreaFeature({
         id: "2",
         activities: [SkiAreaActivity.Downhill],
         sources: [{ type: SourceType.SKIMAP_ORG, id: "2" }],
-        geometry: {
-          type: "Point",
-          coordinates: [1, 0],
-        },
+        geometry: { type: "Point", coordinates: [1, 0] },
       }),
     ],
     [
@@ -1466,11 +1383,7 @@ it("merges Skimap.org ski area with OpenStreetMap ski area", async () => {
     paths.intermediate,
   );
 
-  await clusterSkiAreas(
-    paths.intermediate,
-    paths.output,
-    testConfig,
-  );
+  await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
 
   expect(
     TestHelpers.fileContents(paths.output.skiAreas).features.map(
@@ -1557,10 +1470,7 @@ it("merges Skimap.org ski area into adjacent OpenStreetMap ski areas", async () 
         id: "3",
         activities: [SkiAreaActivity.Downhill],
         sources: [{ type: SourceType.SKIMAP_ORG, id: "3" }],
-        geometry: {
-          type: "Point",
-          coordinates: [1, 1],
-        },
+        geometry: { type: "Point", coordinates: [1, 1] },
       }),
     ],
     [
@@ -1593,11 +1503,7 @@ it("merges Skimap.org ski area into adjacent OpenStreetMap ski areas", async () 
     paths.intermediate,
   );
 
-  await clusterSkiAreas(
-    paths.intermediate,
-    paths.output,
-    testConfig,
-  );
+  await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
 
   expect(
     TestHelpers.fileContents(paths.output.skiAreas)
@@ -1651,19 +1557,13 @@ it("merges Skimap.org ski area without activities with OpenStreetMap ski area", 
         id: "1",
         activities: [],
         sources: [{ type: SourceType.OPENSTREETMAP, id: "1" }],
-        geometry: {
-          type: "Point",
-          coordinates: [0, 0],
-        },
+        geometry: { type: "Point", coordinates: [0, 0] },
       }),
       TestHelpers.mockSkiAreaFeature({
         id: "2",
         activities: [],
         sources: [{ type: SourceType.SKIMAP_ORG, id: "2" }],
-        geometry: {
-          type: "Point",
-          coordinates: [1, 0],
-        },
+        geometry: { type: "Point", coordinates: [1, 0] },
       }),
     ],
     [
@@ -1684,11 +1584,7 @@ it("merges Skimap.org ski area without activities with OpenStreetMap ski area", 
     paths.intermediate,
   );
 
-  await clusterSkiAreas(
-    paths.intermediate,
-    paths.output,
-    testConfig,
-  );
+  await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
 
   expect(
     TestHelpers.fileContents(paths.output.skiAreas).features.map(
@@ -1726,20 +1622,14 @@ it("prefers OSM sourced websites when merging Skimap.org ski area with OpenStree
         activities: [SkiAreaActivity.Downhill],
         sources: [{ type: SourceType.OPENSTREETMAP, id: "1" }],
         websites: ["https://openstreetmap.org"],
-        geometry: {
-          type: "Point",
-          coordinates: [0, 0],
-        },
+        geometry: { type: "Point", coordinates: [0, 0] },
       }),
       TestHelpers.mockSkiAreaFeature({
         id: "2",
         activities: [SkiAreaActivity.Downhill],
         sources: [{ type: SourceType.SKIMAP_ORG, id: "2" }],
         websites: ["https://skimap.org"],
-        geometry: {
-          type: "Point",
-          coordinates: [0, 0],
-        },
+        geometry: { type: "Point", coordinates: [0, 0] },
       }),
     ],
     [],
@@ -1747,17 +1637,13 @@ it("prefers OSM sourced websites when merging Skimap.org ski area with OpenStree
     paths.intermediate,
   );
 
-  await clusterSkiAreas(
-    paths.intermediate,
-    paths.output,
-    testConfig,
-  );
+  await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
 
   expect(
-  TestHelpers.fileContents(paths.output.skiAreas).features.map(
-    (feature: SkiAreaFeature) => feature.properties.websites
-  )
-).toMatchInlineSnapshot(`
+    TestHelpers.fileContents(paths.output.skiAreas).features.map(
+      (feature: SkiAreaFeature) => feature.properties.websites,
+    ),
+  ).toMatchInlineSnapshot(`
 [
   [
     "https://skimap.org",
@@ -1791,19 +1677,13 @@ it("removes OpenStreetMap ski areas that span across multiple Skimap.org ski are
         id: "2",
         activities: [SkiAreaActivity.Downhill],
         sources: [{ type: SourceType.SKIMAP_ORG, id: "2" }],
-        geometry: {
-          type: "Point",
-          coordinates: [0.25, 0.25],
-        },
+        geometry: { type: "Point", coordinates: [0.25, 0.25] },
       }),
       TestHelpers.mockSkiAreaFeature({
         id: "3",
         activities: [SkiAreaActivity.Downhill],
         sources: [{ type: SourceType.SKIMAP_ORG, id: "2" }],
-        geometry: {
-          type: "Point",
-          coordinates: [0.75, 0.75],
-        },
+        geometry: { type: "Point", coordinates: [0.75, 0.75] },
       }),
     ],
     [],
@@ -1811,11 +1691,7 @@ it("removes OpenStreetMap ski areas that span across multiple Skimap.org ski are
     paths.intermediate,
   );
 
-  await clusterSkiAreas(
-    paths.intermediate,
-    paths.output,
-    testConfig,
-  );
+  await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
 
   expect(
     TestHelpers.fileContents(paths.output.skiAreas)
@@ -1881,11 +1757,7 @@ it("adds activities to OpenStreetMap ski areas based on the associated runs", as
     paths.intermediate,
   );
 
-  await clusterSkiAreas(
-    paths.intermediate,
-    paths.output,
-    testConfig,
-  );
+  await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
 
   expect(
     TestHelpers.fileContents(paths.output.skiAreas).features.map(
@@ -1931,11 +1803,7 @@ it("removes OpenStreetMap ski area without nearby runs/lifts", async () => {
     paths.intermediate,
   );
 
-  await clusterSkiAreas(
-    paths.intermediate,
-    paths.output,
-    testConfig,
-  );
+  await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
 
   expect(
     TestHelpers.fileContents(paths.output.skiAreas).features.map(
@@ -1996,11 +1864,7 @@ it("uses runs fully contained in the ski area polygon to determine activities wh
     paths.intermediate,
   );
 
-  await clusterSkiAreas(
-    paths.intermediate,
-    paths.output,
-    testConfig,
-  );
+  await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
 
   expect(
     TestHelpers.fileContents(paths.output.skiAreas)
@@ -2066,11 +1930,7 @@ it("removes an OpenStreetMap ski area that does not contain any runs/lifts as it
     paths.intermediate,
   );
 
-  await clusterSkiAreas(
-    paths.intermediate,
-    paths.output,
-    testConfig,
-  );
+  await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
 
   expect(
     TestHelpers.fileContents(paths.output.skiAreas).features.map(
@@ -2134,11 +1994,7 @@ it("updates geometry, run convention, and activities for a site based ski area",
     paths.intermediate,
   );
 
-  await clusterSkiAreas(
-    paths.intermediate,
-    paths.output,
-    testConfig,
-  );
+  await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
 
   const skiAreaFeatures: [SkiAreaFeature] = TestHelpers.fileContents(
     paths.output.skiAreas,
@@ -2222,11 +2078,7 @@ it("adds nearby unassociated runs of same activity to site based ski area", asyn
     paths.intermediate,
   );
 
-  await clusterSkiAreas(
-    paths.intermediate,
-    paths.output,
-    testConfig,
-  );
+  await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
 
   expect(
     TestHelpers.fileContents(paths.output.runs).features.map(
@@ -2294,11 +2146,7 @@ it("does not add nearby unassociated runs of different activity to site based sk
     paths.intermediate,
   );
 
-  await clusterSkiAreas(
-    paths.intermediate,
-    paths.output,
-    testConfig,
-  );
+  await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
 
   expect(
     TestHelpers.fileContents(paths.output.runs).features.map(
@@ -2334,11 +2182,7 @@ it("removes site based ski area that doesn't have associated lifts and runs", as
   });
   TestHelpers.mockFeatureFiles([siteSkiArea], [], [], paths.intermediate);
 
-  await clusterSkiAreas(
-    paths.intermediate,
-    paths.output,
-    testConfig,
-  );
+  await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
 
   expect(
     TestHelpers.fileContents(paths.output.runs).features.map(
@@ -2416,11 +2260,7 @@ it("removes landuse based ski area when there is a site with sufficient overlap"
     paths.intermediate,
   );
 
-  await clusterSkiAreas(
-    paths.intermediate,
-    paths.output,
-    testConfig,
-  );
+  await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
 
   const skiAreaFeatures: [SkiAreaFeature] = TestHelpers.fileContents(
     paths.output.skiAreas,
@@ -2531,11 +2371,7 @@ it("keeps landuse based ski area when there is a site with insufficient overlap"
     paths.intermediate,
   );
 
-  await clusterSkiAreas(
-    paths.intermediate,
-    paths.output,
-    testConfig,
-  );
+  await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
 
   const skiAreaFeatures: [SkiAreaFeature] = TestHelpers.fileContents(
     paths.output.skiAreas,
@@ -2613,11 +2449,7 @@ it("keeps site=piste ski area with only backcountry runs", async () => {
     paths.intermediate,
   );
 
-  await clusterSkiAreas(
-    paths.intermediate,
-    paths.output,
-    testConfig,
-  );
+  await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
 
   const skiAreaFeatures: [SkiAreaFeature] = TestHelpers.fileContents(
     paths.output.skiAreas,
@@ -2659,11 +2491,7 @@ it("keeps site=piste ski area with only non-skiing activities", async () => {
     paths.intermediate,
   );
 
-  await clusterSkiAreas(
-    paths.intermediate,
-    paths.output,
-    testConfig,
-  );
+  await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
 
   const skiAreaFeatures: [SkiAreaFeature] = TestHelpers.fileContents(
     paths.output.skiAreas,
@@ -2671,7 +2499,6 @@ it("keeps site=piste ski area with only non-skiing activities", async () => {
   expect(skiAreaFeatures.length).toBe(1);
   expect(skiAreaFeatures[0].properties.activities).toEqual([]);
 });
-
 
 function orderedByID(left: { id: string }, right: { id: string }): number {
   return left.id.localeCompare(right.id);

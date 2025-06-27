@@ -40,6 +40,7 @@
     "openskidata-format": "^5.0.0",
     "osmtogeojson": "3.0.0-beta.5",
     "parallel-transform": "^1",
+    "pg": "^8.12.0",
     "stream-to-promise": "^3",
     "tmp": "^0.2.0",
     "topojson-client": "^3",
@@ -56,6 +57,7 @@
     "@types/node": "^22",
     "@types/object-hash": "^3",
     "@types/parallel-transform": "^1",
+    "@types/pg": "^8.11.10",
     "@types/stream-to-promise": "^2",
     "@types/tmp": "^0.2.0",
     "@types/topojson-client": "^3",
@@ -65,6 +67,7 @@
     "nock": "^14.0.0",
     "prettier": "^3",
     "ts-jest": "^29",
+    "tsx": "^4.20.3",
     "typescript": "^5"
   },
   "scripts": {

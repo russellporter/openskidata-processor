@@ -21,6 +21,8 @@ while [[ "$#" -gt 0 ]]; do
     shift
 done
 
+npm run build
+
 if [ "$DOWNLOAD" = true ]; then
     echo "Downloading..."
     npm run download

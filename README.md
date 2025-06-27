@@ -40,15 +40,6 @@ docker compose exec app bash
 
 **Note:** The Docker container runs in daemon mode and stays running to allow external command execution. Use `docker exec` or `docker compose exec` to run processing commands inside the container.
 
-### Local Installation
-
-1. Install dependencies:
-   - Node.js 22+
-   - SQLite with SpatialLite extension
-   - [Tippecanoe](https://github.com/felt/tippecanoe) v2.78.0
-2. `npm install`
-3. `./run.sh`
-
 To download data for only a specific area, specify a GeoJSON format bounding box in an environment variable: `BBOX="[-13, -90, 65, 90]"`
 
 The output is placed in files within the `data` folder. The output location can be overridden by setting `OUTPUT_DIR`.

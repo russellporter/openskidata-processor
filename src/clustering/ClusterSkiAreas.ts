@@ -3,7 +3,7 @@ import {
   GeoJSONIntermediatePaths,
   GeoJSONOutputPaths,
 } from "../io/GeoJSONFiles";
-import { SQLiteClusteringDatabase } from "./database/SQLiteClusteringDatabase";
+import { PostgreSQLClusteringDatabase } from "./database/PostgreSQLClusteringDatabase";
 import { SkiAreaClusteringService } from "./SkiAreaClusteringService";
 
 export default async function clusterSkiAreas(
@@ -11,7 +11,7 @@ export default async function clusterSkiAreas(
   outputPaths: GeoJSONOutputPaths,
   config: Config,
 ): Promise<void> {
-  const database = new SQLiteClusteringDatabase(config.workingDir);
+  const database = new PostgreSQLClusteringDatabase(config.workingDir);
   const clusteringService = new SkiAreaClusteringService(database);
 
   try {

@@ -8,4 +8,3 @@ services:
     working_dir: /app
     stdin_open: true
     tty: true
-    stop_grace_period: 1s
