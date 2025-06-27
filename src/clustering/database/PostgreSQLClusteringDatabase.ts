@@ -214,23 +214,27 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
         return result;
       } catch (error: any) {
         await client.query("ROLLBACK");
-        
+
         // Check if this is a deadlock error
-        if (error.code === '40P01' && attempt < maxRetries - 1) {
+        if (error.code === "40P01" && attempt < maxRetries - 1) {
           attempt++;
-          console.warn(`Deadlock detected, retrying (attempt ${attempt}/${maxRetries})`);
+          console.warn(
+            `Deadlock detected, retrying (attempt ${attempt}/${maxRetries})`,
+          );
           // Wait a random amount of time before retrying to reduce collision probability
-          await new Promise(resolve => setTimeout(resolve, Math.random() * 100 + 50));
+          await new Promise((resolve) =>
+            setTimeout(resolve, Math.random() * 100 + 50),
+          );
           continue;
         }
-        
+
         throw error;
       } finally {
         client.release();
       }
     }
 
-    throw new Error('Transaction failed after maximum retries');
+    throw new Error("Transaction failed after maximum retries");
   }
 
   private async processBatches<T>(
@@ -541,12 +545,15 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
     } catch (error: any) {
       // Check if this is a geometry/topology error
       if (
-        error.message?.includes('TopologyException') ||
-        error.message?.includes('side location conflict') ||
-        error.message?.includes('invalid geometry') ||
-        error.code === '42804' // PostGIS geometry error code
+        error.message?.includes("TopologyException") ||
+        error.message?.includes("side location conflict") ||
+        error.message?.includes("invalid geometry") ||
+        error.code === "42804" // PostGIS geometry error code
       ) {
-        console.warn(`Geometry error in getSkiAreas query, returning empty result:`, error.message);
+        console.warn(
+          `Geometry error in getSkiAreas query, returning empty result:`,
+          error.message,
+        );
         return new PostgreSQLSkiAreasCursor(
           [],
           PostgreSQLClusteringDatabase.DEFAULT_BATCH_SIZE,
@@ -643,17 +650,22 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
         try {
           const rows = await this.executeQuery<any[]>(query, params);
           const allFound = rows.map(this.rowToMapObject);
-          allFound.forEach((object) => context.alreadyVisited.push(object._key));
+          allFound.forEach((object) =>
+            context.alreadyVisited.push(object._key),
+          );
           return allFound;
         } catch (error: any) {
           // Check if this is a geometry/topology error
           if (
-            error.message?.includes('TopologyException') ||
-            error.message?.includes('side location conflict') ||
-            error.message?.includes('invalid geometry') ||
-            error.code === '42804' // PostGIS geometry error code
+            error.message?.includes("TopologyException") ||
+            error.message?.includes("side location conflict") ||
+            error.message?.includes("invalid geometry") ||
+            error.code === "42804" // PostGIS geometry error code
           ) {
-            console.warn(`Geometry error in spatial query for area ${context.id}, skipping:`, error.message);
+            console.warn(
+              `Geometry error in spatial query for area ${context.id}, skipping:`,
+              error.message,
+            );
             return [];
           }
           // Re-throw all other errors
@@ -690,20 +702,20 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
 
     await this.executeTransaction(async (client) => {
       // Get all objects in a single query to reduce lock time
-      const placeholders = sortedKeys.map((_, i) => `$${i + 1}`).join(',');
+      const placeholders = sortedKeys.map((_, i) => `$${i + 1}`).join(",");
       const selectQuery = `
         SELECT key, ski_areas, is_in_ski_area_polygon 
         FROM objects 
         WHERE key IN (${placeholders})
         ORDER BY key
       `;
-      
+
       const result = await client.query(selectQuery, sortedKeys);
-      
+
       // Batch update all objects in a single query
       for (const row of result.rows) {
         const currentSkiAreas = row.ski_areas || [];
-        
+
         // This prevents duplicate ski area assignments
         if (skiAreaId && !currentSkiAreas.includes(skiAreaId)) {
           currentSkiAreas.push(skiAreaId);
