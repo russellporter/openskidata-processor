@@ -33,7 +33,7 @@ export class PerformanceMonitor {
     this.isEnabled = enabled;
   }
 
-  startOperation(operationId: string, operationType: string): void {
+  startOperation(operationId: string): void {
     if (!this.isEnabled) return;
 
     this.operationStart.set(operationId, {
@@ -44,7 +44,7 @@ export class PerformanceMonitor {
 
   endOperation(
     operationId: string, 
-    operationType: string,
+    operationType?: string,
     poolStats?: any,
     workerStats?: any
   ): PerformanceMetrics | null {
@@ -62,7 +62,7 @@ export class PerformanceMonitor {
     const memoryUsage = process.memoryUsage();
 
     const metric: PerformanceMetrics = {
-      operation: operationType,
+      operation: operationType || operationId,
       startTime: start.startTime,
       endTime,
       duration,
@@ -198,7 +198,7 @@ export class PerformanceMonitor {
     getStats?: () => { poolStats?: any; workerStats?: any }
   ): Promise<T> {
     const operationId = `${operationType}_${Date.now()}_${Math.random()}`;
-    this.startOperation(operationId, operationType);
+    this.startOperation(operationId);
     
     try {
       const result = await operation();
