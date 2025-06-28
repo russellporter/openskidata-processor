@@ -289,12 +289,17 @@ export class SkiAreaClusteringService {
     console.log(
       "Assign ski area activities and geometry based on member objects",
     );
+    performanceMonitor.startOperation("assign_activities_geometry");
     await this.assignSkiAreaActivitiesAndGeometryBasedOnMemberObjects();
+    performanceMonitor.endOperation("assign_activities_geometry");
 
     console.log("Remove ambiguous duplicate ski areas");
+    performanceMonitor.startOperation("remove_duplicate_ski_areas");
     await this.removeAmbiguousDuplicateSkiAreas();
+    performanceMonitor.endOperation("remove_duplicate_ski_areas");
 
     console.log("Assign objects in OSM polygon ski areas");
+    performanceMonitor.startOperation("assign_objects_osm_polygons");
     await this.assignObjectsToSkiAreas({
       skiArea: {
         onlySource: SourceType.OPENSTREETMAP,
@@ -303,30 +308,41 @@ export class SkiAreaClusteringService {
       },
       objects: { onlyInPolygon: true },
     });
+    performanceMonitor.endOperation("assign_objects_osm_polygons");
 
     console.log("Assign nearby objects to OSM ski areas");
+    performanceMonitor.startOperation("assign_nearby_objects_osm");
     await this.assignObjectsToSkiAreas({
       skiArea: { onlySource: SourceType.OPENSTREETMAP },
       objects: { onlyIfNotAlreadyAssigned: true },
     });
+    performanceMonitor.endOperation("assign_nearby_objects_osm");
 
     console.log("Merge skimap.org and OpenStreetMap ski areas");
+    performanceMonitor.startOperation("merge_skimap_osm");
     await this.mergeSkimapOrgWithOpenStreetMapSkiAreas();
+    performanceMonitor.endOperation("merge_skimap_osm");
 
     console.log("Assign nearby objects to Skimap.org ski areas");
+    performanceMonitor.startOperation("assign_nearby_objects_skimap");
     await this.assignObjectsToSkiAreas({
       skiArea: { onlySource: SourceType.SKIMAP_ORG },
       objects: { onlyIfNotAlreadyAssigned: true },
     });
+    performanceMonitor.endOperation("assign_nearby_objects_skimap");
 
     console.log("Generate ski areas for unassigned objects");
+    performanceMonitor.startOperation("generate_unassigned_ski_areas");
     await this.generateSkiAreasForUnassignedObjects();
+    performanceMonitor.endOperation("generate_unassigned_ski_areas");
 
     console.log("Augment ski areas based on assigned lifts and runs");
+    performanceMonitor.startOperation("augment_ski_areas");
     await this.augmentSkiAreasBasedOnAssignedLiftsAndRuns(
       geocoderConfig,
       snowCoverConfig,
     );
+    performanceMonitor.endOperation("augment_ski_areas");
 
     console.log("Remove ski areas without a geometry");
     await this.removeSkiAreasWithoutGeometry();
