@@ -96,11 +96,18 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
       database: this.databaseName,
       user: "postgres",
       max: 5, // Smaller pool size to reduce connection contention
-      idleTimeoutMillis: 60000, // Close idle clients after 60 seconds
-      connectionTimeoutMillis: 30000, // Shorter timeout to fail fast
+      min: 2, // Keep minimum connections to reduce connection overhead
+      idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
+      connectionTimeoutMillis: 5000, // Fast fail on connection timeout
+      maxLifetimeSeconds: 300, // Rotate connections every 5 minutes
       allowExitOnIdle: true, // Allow process to exit even if pool has idle connections
       // Add connection-level deadlock prevention settings
       options: "-c deadlock_timeout=1s -c lock_timeout=10s",
+    });
+
+    // Add error handler to prevent unhandled pool errors
+    this.pool.on('error', (err) => {
+      console.warn('PostgreSQL pool error:', err);
     });
 
     // Test connection
@@ -238,31 +245,46 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
 
     while (attempt < maxRetries) {
       const pool = this.ensureInitialized();
-      const client = await pool.connect();
+      let client: PoolClient | null = null;
+      
       try {
+        client = await pool.connect();
         await client.query("BEGIN");
         const result = await operation(client);
         await client.query("COMMIT");
         return result;
       } catch (error: any) {
-        await client.query("ROLLBACK");
+        // Ensure rollback happens even if client is null
+        if (client) {
+          try {
+            await client.query("ROLLBACK");
+          } catch (rollbackError) {
+            console.warn('Rollback failed:', rollbackError);
+          }
+        }
 
-        // Check if this is a deadlock error
-        if (error.code === "40P01" && attempt < maxRetries - 1) {
+        // Check for retryable errors (deadlock, serialization failure, connection issues)
+        const isRetryable = error.code === "40P01" || // deadlock
+                           error.code === "40001" || // serialization failure  
+                           error.code === "08006" || // connection failure
+                           error.code === "08000";   // connection exception
+
+        if (isRetryable && attempt < maxRetries - 1) {
           attempt++;
           console.warn(
-            `Deadlock detected, retrying (attempt ${attempt}/${maxRetries})`,
+            `Database error ${error.code}, retrying (attempt ${attempt}/${maxRetries}): ${error.message}`,
           );
-          // Wait a random amount of time before retrying to reduce collision probability
-          await new Promise((resolve) =>
-            setTimeout(resolve, Math.random() * 100 + 50),
-          );
+          // Exponential backoff with jitter to reduce collision probability
+          const delay = Math.min(1000 * Math.pow(2, attempt) + Math.random() * 1000, 5000);
+          await new Promise((resolve) => setTimeout(resolve, delay));
           continue;
         }
 
         throw error;
       } finally {
-        client.release();
+        if (client) {
+          client.release();
+        }
       }
     }
 
