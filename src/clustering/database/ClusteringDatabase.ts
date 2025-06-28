@@ -56,11 +56,9 @@ export interface ClusteringDatabase {
 
   /**
    * Find objects near a given geometry
-   * @param geometry - Source geometry to search around
-   * @param context - Search context with filtering options (including optional bufferDistanceKm)
    */
   findNearbyObjects(
-    geometry: GeoJSON.Geometry,
+    area: GeoJSON.Polygon | GeoJSON.MultiPolygon,
     context: SearchContext,
   ): Promise<MapObject[]>;
 
@@ -113,7 +111,6 @@ export interface SearchContext {
   searchType: "contains" | "intersects";
   isFixedSearchArea: boolean;
   alreadyVisited: string[];
-  bufferDistanceKm?: number;
 }
 
 export interface SkiAreasCursor {
