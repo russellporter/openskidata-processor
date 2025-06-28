@@ -402,6 +402,12 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
     `);
     console.log("✅ Created spatial index on geometry column");
 
+    // Create functional index on geography cast for distance queries
+    await pool.query(`
+      CREATE INDEX IF NOT EXISTS idx_objects_geog ON objects USING GIST (geography(geom))
+    `);
+    console.log("✅ Created spatial index on geography cast");
+
     // Create optimized composite indexes for common query patterns
     await pool.query(`
       -- Core filtering indexes
@@ -620,30 +626,57 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
   }
 
   async findNearbyObjects(
-    area: GeoJSON.Polygon | GeoJSON.MultiPolygon,
+    geometry: GeoJSON.Geometry,
     context: SearchContext,
   ): Promise<MapObject[]> {
     this.ensureInitialized();
 
-    const areaWKT = this.geoJSONToWKT(area);
     let query: string;
     let paramIndex = 1;
+    let params: any[];
 
-    if (context.searchType === "contains") {
-      query = `
-        SELECT * FROM objects 
-        WHERE ST_Within(geom, ST_GeomFromText($${paramIndex++}, 4326))
-          AND type != 'SKI_AREA'
-      `;
+    const geometryWKT = this.geoJSONToWKT(geometry);
+    
+    if (context.bufferDistanceKm !== undefined) {
+      // Use geography functional index for optimal performance
+      const bufferMeters = context.bufferDistanceKm * 1000; // Convert km to meters
+
+      if (context.searchType === "contains") {
+        // For contains, use ST_Within with geometry buffer (more precise than distance)
+        query = `
+          SELECT * FROM objects 
+          WHERE ST_Within(geom, ST_Buffer(geography(ST_GeomFromText($${paramIndex++}, 4326)), $${paramIndex++})::geometry)
+            AND type != 'SKI_AREA'
+        `;
+        params = [geometryWKT, bufferMeters];
+      } else {
+        // For intersects, use ST_DWithin with geography index
+        query = `
+          SELECT * FROM objects 
+          WHERE ST_DWithin(geography(geom), geography(ST_GeomFromText($${paramIndex++}, 4326)), $${paramIndex++})
+            AND type != 'SKI_AREA'
+        `;
+        params = [geometryWKT, bufferMeters];
+      }
+      paramIndex = 3; // Reset to 3 since we used parameters 1-2
     } else {
-      query = `
-        SELECT * FROM objects 
-        WHERE ST_Intersects(geom, ST_GeomFromText($${paramIndex++}, 4326))
-          AND type != 'SKI_AREA'
-      `;
+      // Use direct geometry (no buffering)
+      if (context.searchType === "contains") {
+        query = `
+          SELECT * FROM objects 
+          WHERE ST_Within(geom, ST_GeomFromText($${paramIndex++}, 4326))
+            AND type != 'SKI_AREA'
+        `;
+      } else {
+        query = `
+          SELECT * FROM objects 
+          WHERE ST_Intersects(geom, ST_GeomFromText($${paramIndex++}, 4326))
+            AND type != 'SKI_AREA'
+        `;
+      }
+      params = [geometryWKT];
+      paramIndex = 2; // Reset to 2 since we used parameter 1
     }
-
-    const params = [areaWKT];
 
     if (context.activities.length > 0) {
       // Use JSONB operators for activity filtering

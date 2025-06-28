@@ -27,6 +27,9 @@ Run processing with a small BBOX for testing:
 BBOX=[132.34,34.78,132.40,34.84]
 ```
 
+Use a larger BBOX to test performance implications of a change:
+`docker compose exec app bash -c "BBOX=[-125,49,-115,52] ./run.sh`
+
 ## Code Style & Conventions
 
 - TypeScript with strict mode enabled
