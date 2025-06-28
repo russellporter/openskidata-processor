@@ -1,5 +1,4 @@
 import booleanPointInPolygon from "@turf/boolean-point-in-polygon";
-import buffer from "@turf/buffer";
 import centroid from "@turf/centroid";
 import {
   featureCollection,
@@ -10,61 +9,6 @@ import {
 } from "@turf/helpers";
 import nearestPointOnLine from "@turf/nearest-point-on-line";
 
-export function bufferGeometry(
-  geometry:
-    | GeoJSON.Point
-    | GeoJSON.MultiPoint
-    | GeoJSON.LineString
-    | GeoJSON.MultiLineString
-    | GeoJSON.Polygon
-    | GeoJSON.MultiPolygon,
-  radius: number,
-): GeoJSON.Polygon | GeoJSON.MultiPolygon | null {
-  try {
-    const bufferArea = buffer(geometry, radius, {
-      steps: 16,
-    })?.geometry;
-    if (!bufferArea) {
-      console.log(
-        "Failed buffering geometry. This can happen if the geometry is invalid.",
-      );
-      return null;
-    }
-
-    return bufferArea;
-  } catch (exception) {
-    console.log(
-      "Failed buffering geometry. This can happen if the geometry is invalid.",
-      exception,
-    );
-    return null;
-  }
-}
-
-export function bufferFeatureCollection(
-  featureCollection: GeoJSON.FeatureCollection,
-  radius: number,
-) {
-  try {
-    const bufferArea = buffer(featureCollection, radius, {
-      steps: 16,
-    });
-    if (!bufferArea) {
-      console.log(
-        "Failed buffering geometry. This can happen if the geometry is invalid.",
-      );
-      return null;
-    }
-
-    return bufferArea;
-  } catch (exception) {
-    console.log(
-      "Failed buffering geometry. This can happen if the geometry is invalid.",
-      exception,
-    );
-    return null;
-  }
-}
 
 export function centralPointsInFeature(
   geojson: GeoJSON.Point | GeoJSON.Polygon,

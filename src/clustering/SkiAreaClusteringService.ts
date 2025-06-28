@@ -25,7 +25,6 @@ import { readGeoJSONFeatures } from "../io/GeoJSONReader";
 import { skiAreaStatistics } from "../statistics/SkiAreaStatistics";
 import Geocoder from "../transforms/Geocoder";
 import {
-  bufferGeometry,
   getPoints,
   getPositions,
 } from "../transforms/GeoTransforms";
@@ -637,14 +636,7 @@ export class SkiAreaClusteringService {
     context: SearchContext,
     object: MapObject,
   ): Promise<MapObject[]> {
-    let searchArea =
-      context.searchPolygon ||
-      bufferGeometry(object.geometry, maxDistanceInKilometers);
-
     let foundObjects: MapObject[] = [object];
-    if (searchArea === null) {
-      return foundObjects;
-    }
 
     const filteredActivities = context.activities.filter((activity) =>
       object.activities.includes(activity),
@@ -657,16 +649,38 @@ export class SkiAreaClusteringService {
         filteredActivities.length > 0 ? filteredActivities : context.activities,
     };
 
+    // Use database buffering instead of client-side buffering
+    if (context.searchPolygon) {
+      // Use existing polygon search
+      const searchArea = context.searchPolygon;
+      return foundObjects.concat(await this.visitPolygonGeometry(objectContext, searchArea));
+    } else {
+      // Use database ST_Buffer for nearby object search
+      const bufferedContext: SearchContext = {
+        ...objectContext,
+        bufferDistanceKm: maxDistanceInKilometers,
+      };
+      const nearbyObjects = await this.database.findNearbyObjects(
+        object.geometry,
+        bufferedContext
+      );
+      return foundObjects.concat(await this.processFoundObjects(objectContext, nearbyObjects));
+    }
+  }
+
+  private async visitPolygonGeometry(
+    context: SearchContext,
+    searchArea: GeoJSON.Polygon | GeoJSON.MultiPolygon,
+  ): Promise<MapObject[]> {
     switch (searchArea.type) {
       case "Polygon":
-        return foundObjects.concat(
-          await this.visitPolygon(objectContext, searchArea),
-        );
+        return await this.visitPolygon(context, searchArea);
       case "MultiPolygon":
+        let foundObjects: MapObject[] = [];
         for (let i = 0; i < searchArea.coordinates.length; i++) {
           foundObjects = foundObjects.concat(
             await this.visitPolygon(
-              objectContext,
+              context,
               turf.polygon(searchArea.coordinates[i]).geometry,
             ),
           );
@@ -676,6 +690,24 @@ export class SkiAreaClusteringService {
         throw new Error(
           "Unexpected visit area geometry type " + (searchArea as any).type,
         );
+    }
+  }
+
+  private async processFoundObjects(
+    context: SearchContext,
+    objects: MapObject[],
+  ): Promise<MapObject[]> {
+    // Skip further traversal if we are searching a fixed polygon.
+    if (context.isFixedSearchArea) {
+      return objects;
+    } else {
+      let foundObjects: MapObject[] = [];
+      for (let i = 0; i < objects.length; i++) {
+        foundObjects = foundObjects.concat(
+          await this.visitObject(context, objects[i]),
+        );
+      }
+      return foundObjects;
     }
   }
 
@@ -746,13 +778,6 @@ export class SkiAreaClusteringService {
     skiArea: SkiAreaObject,
   ): Promise<SkiAreaObject[]> {
     const maxMergeDistanceInKilometers = 0.25;
-    const buffer = bufferGeometry(
-      skiArea.geometry,
-      maxMergeDistanceInKilometers,
-    );
-    if (!buffer) {
-      return [];
-    }
 
     const context: SearchContext = {
       id: skiArea.id,
@@ -762,9 +787,14 @@ export class SkiAreaClusteringService {
       isFixedSearchArea: true,
     };
 
+    // Use database ST_Buffer for nearby object search
+    const bufferedContext: SearchContext = {
+      ...context,
+      bufferDistanceKm: maxMergeDistanceInKilometers,
+    };
     const nearbyObjects = await this.database.findNearbyObjects(
-      buffer,
-      context,
+      skiArea.geometry,
+      bufferedContext,
     );
     const otherSkiAreaIDs = new Set(
       nearbyObjects.flatMap((object) => object.skiAreas),
