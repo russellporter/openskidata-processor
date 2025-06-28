@@ -751,40 +751,28 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
   ): Promise<void> {
     this.ensureInitialized();
 
+    if (objectKeys.length === 0) {
+      return;
+    }
+
     // Sort object keys to ensure consistent ordering and prevent deadlocks
     const sortedKeys = [...objectKeys].sort();
 
     await this.executeTransaction(async (client) => {
-      // Get all objects in a single query to reduce lock time
-      const placeholders = sortedKeys.map((_, i) => `$${i + 1}`).join(",");
-      const selectQuery = `
-        SELECT key, ski_areas, is_in_ski_area_polygon 
-        FROM objects 
-        WHERE key IN (${placeholders})
-        ORDER BY key
-      `;
-
-      const result = await client.query(selectQuery, sortedKeys);
-
-      // Batch update all objects in a single query
-      for (const row of result.rows) {
-        const currentSkiAreas = row.ski_areas || [];
-
-        // This prevents duplicate ski area assignments
-        if (skiAreaId && !currentSkiAreas.includes(skiAreaId)) {
-          currentSkiAreas.push(skiAreaId);
-        }
-
-        const updatedIsInPolygon =
-          Boolean(row.is_in_ski_area_polygon) || isInSkiAreaPolygon;
-
-        await client.query(
-          `UPDATE objects 
-           SET ski_areas = $1, is_in_ski_area_polygon = $2, is_basis_for_new_ski_area = false
-           WHERE key = $3`,
-          [JSON.stringify(currentSkiAreas), updatedIsInPolygon, row.key],
-        );
-      }
+      // Atomic update using JSONB operators - adds ski area ID only if not already present
+      const skiAreaIdJson = JSON.stringify([skiAreaId]);
+      
+      await client.query(
+        `UPDATE objects 
+         SET ski_areas = CASE 
+           WHEN ski_areas @> $1::jsonb THEN ski_areas
+           ELSE COALESCE(ski_areas, '[]'::jsonb) || $1::jsonb
+         END,
+         is_in_ski_area_polygon = is_in_ski_area_polygon OR $2,
+         is_basis_for_new_ski_area = false
+         WHERE key = ANY($3::text[])`,
+        [skiAreaIdJson, isInSkiAreaPolygon, sortedKeys],
+      );
     });
   }
 
