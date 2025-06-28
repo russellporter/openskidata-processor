@@ -24,21 +24,18 @@ import { GeocodingServerConfig, SnowCoverConfig } from "../Config";
 import { readGeoJSONFeatures } from "../io/GeoJSONReader";
 import { skiAreaStatistics } from "../statistics/SkiAreaStatistics";
 import Geocoder from "../transforms/Geocoder";
-import {
-  getPoints,
-  getPositions,
-} from "../transforms/GeoTransforms";
+import { getPoints, getPositions } from "../transforms/GeoTransforms";
 import { getRunDifficultyConvention } from "../transforms/RunFormatter";
 import { mapAsync } from "../transforms/StreamTransforms";
 import { isPlaceholderGeometry } from "../utils/PlaceholderSiteGeometry";
 import { VIIRSCacheData } from "../utils/snowCoverHistory";
 import { SQLiteCache } from "../utils/SQLiteCache";
 import { VIIRSPixelExtractor } from "../utils/VIIRSPixelExtractor";
-import { performanceMonitor } from "./database/PerformanceMonitor";
 import {
   ClusteringDatabase,
   SearchContext,
 } from "./database/ClusteringDatabase";
+import { performanceMonitor } from "./database/PerformanceMonitor";
 import augmentGeoJSONFeatures from "./GeoJSONAugmenter";
 import {
   DraftLift,
@@ -75,6 +72,7 @@ export class SkiAreaClusteringService {
     snowCoverConfig: SnowCoverConfig | null,
   ): Promise<void> {
     console.log("Loading graph into database");
+
     await this.loadGraphData(skiAreasPath, liftsPath, runsPath);
 
     console.log("Clustering ski areas");
@@ -107,20 +105,24 @@ export class SkiAreaClusteringService {
   ): Promise<void> {
     const viirsExtractor = new VIIRSPixelExtractor();
 
-    await Promise.all(
-      [
-        this.loadFeatures(skiAreasPath, (feature) =>
-          this.prepareSkiArea(feature),
-        ),
-        this.loadFeatures(liftsPath, (feature) => this.prepareLift(feature)),
-        this.loadFeatures(runsPath, (feature) =>
-          this.prepareRun(feature, viirsExtractor),
-        ),
-      ].map<Promise<Buffer>>(StreamToPromise),
-    );
+    await performanceMonitor.measure("graph_data_loading", async () => {
+      await Promise.all(
+        [
+          this.loadFeatures(skiAreasPath, (feature) =>
+            this.prepareSkiArea(feature),
+          ),
+          this.loadFeatures(liftsPath, (feature) => this.prepareLift(feature)),
+          this.loadFeatures(runsPath, (feature) =>
+            this.prepareRun(feature, viirsExtractor),
+          ),
+        ].map<Promise<Buffer>>(StreamToPromise),
+      );
+    });
 
     // Create indices after loading all features for better insert performance
-    await this.database.createIndexes();
+    await performanceMonitor.measure("index_creation", async () => {
+      await this.database.createIndexes();
+    });
   }
 
   private loadFeatures(
@@ -353,61 +355,60 @@ export class SkiAreaClusteringService {
 
   private async assignSkiAreaActivitiesAndGeometryBasedOnMemberObjects(): Promise<void> {
     const skiAreasCursor = await this.database.getSkiAreas({});
-    
+
     // Process multiple batches concurrently for better performance
-    const concurrentBatches = Math.min(4, require('os').cpus().length);
+    const concurrentBatches = Math.min(4, require("os").cpus().length);
     const activeBatches = new Set<Promise<void>>();
 
     let skiAreas: SkiAreaObject[] | null | undefined;
     while ((skiAreas = await skiAreasCursor.batches?.next())) {
       if (!skiAreas) break;
-      
+
       const batchPromise = this.processBatchForActivitiesAndGeometry(skiAreas);
       activeBatches.add(batchPromise);
-      
+
       // Clean up completed batches
       batchPromise.finally(() => activeBatches.delete(batchPromise));
-      
+
       // Limit concurrent batches to prevent overwhelming the system
       if (activeBatches.size >= concurrentBatches) {
         await Promise.race(activeBatches);
       }
     }
-    
+
     // Wait for all remaining batches to complete
     await Promise.all(activeBatches);
   }
 
-  private async processBatchForActivitiesAndGeometry(skiAreas: SkiAreaObject[]): Promise<void> {
-    return performanceMonitor.measure(
-      'batch_activities_geometry',
-      async () => {
-        await Promise.all(
-          skiAreas.map(async (skiArea) => {
-            if (skiArea.activities.length > 0) {
-              return;
-            }
+  private async processBatchForActivitiesAndGeometry(
+    skiAreas: SkiAreaObject[],
+  ): Promise<void> {
+    return performanceMonitor.measure("batch_activities_geometry", async () => {
+      await Promise.all(
+        skiAreas.map(async (skiArea) => {
+          if (skiArea.activities.length > 0) {
+            return;
+          }
 
-            const memberObjects = await this.database.getObjectsForSkiArea(
-              skiArea.id,
-            );
-            const activities =
-              this.getActivitiesBasedOnRunsAndLifts(memberObjects);
+          const memberObjects = await this.database.getObjectsForSkiArea(
+            skiArea.id,
+          );
+          const activities =
+            this.getActivitiesBasedOnRunsAndLifts(memberObjects);
 
-            if (memberObjects.length === 0) {
-              return;
-            }
+          if (memberObjects.length === 0) {
+            return;
+          }
 
-            await this.database.updateObject(skiArea._key, {
-              activities: [...activities],
-              geometry: this.skiAreaGeometry(memberObjects),
-              isPolygon: false,
-              properties: { ...skiArea.properties, activities: [...activities] },
-            });
-          }),
-        );
-      }
-    );
+          await this.database.updateObject(skiArea._key, {
+            activities: [...activities],
+            geometry: this.skiAreaGeometry(memberObjects),
+            isPolygon: false,
+            properties: { ...skiArea.properties, activities: [...activities] },
+          });
+        }),
+      );
+    });
   }
 
   private async removeAmbiguousDuplicateSkiAreas(): Promise<void> {
@@ -417,28 +418,30 @@ export class SkiAreaClusteringService {
     });
 
     // Process multiple batches concurrently for better performance
-    const concurrentBatches = Math.min(3, require('os').cpus().length);
+    const concurrentBatches = Math.min(3, require("os").cpus().length);
     const activeBatches = new Set<Promise<void>>();
 
     let skiAreas: SkiAreaObject[];
     while ((skiAreas = (await cursor.batches?.next()) as SkiAreaObject[])) {
       const batchPromise = this.processBatchForDuplicateRemoval(skiAreas);
       activeBatches.add(batchPromise);
-      
+
       // Clean up completed batches
       batchPromise.finally(() => activeBatches.delete(batchPromise));
-      
+
       // Limit concurrent batches
       if (activeBatches.size >= concurrentBatches) {
         await Promise.race(activeBatches);
       }
     }
-    
+
     // Wait for all remaining batches to complete
     await Promise.all(activeBatches);
   }
 
-  private async processBatchForDuplicateRemoval(skiAreas: SkiAreaObject[]): Promise<void> {
+  private async processBatchForDuplicateRemoval(
+    skiAreas: SkiAreaObject[],
+  ): Promise<void> {
     await Promise.all(
       skiAreas.map(async (skiArea) => {
         if (
@@ -669,7 +672,9 @@ export class SkiAreaClusteringService {
     if (context.searchPolygon) {
       // Use existing polygon search
       const searchArea = context.searchPolygon;
-      return foundObjects.concat(await this.visitPolygonGeometry(objectContext, searchArea));
+      return foundObjects.concat(
+        await this.visitPolygonGeometry(objectContext, searchArea),
+      );
     } else {
       // Use database ST_Buffer for nearby object search
       const bufferedContext: SearchContext = {
@@ -678,9 +683,11 @@ export class SkiAreaClusteringService {
       };
       const nearbyObjects = await this.database.findNearbyObjects(
         object.geometry,
-        bufferedContext
+        bufferedContext,
       );
-      return foundObjects.concat(await this.processFoundObjects(objectContext, nearbyObjects));
+      return foundObjects.concat(
+        await this.processFoundObjects(objectContext, nearbyObjects),
+      );
     }
   }
 
@@ -1023,11 +1030,11 @@ export class SkiAreaClusteringService {
 
     try {
       const skiAreasCursor = await this.database.getSkiAreas({});
-      
+
       // Process multiple batches concurrently for better performance
-      const concurrentBatches = Math.min(3, require('os').cpus().length);
+      const concurrentBatches = Math.min(3, require("os").cpus().length);
       const activeBatches = new Set<Promise<void>>();
-      
+
       let skiAreas: SkiAreaObject[];
       while (
         (skiAreas = (await skiAreasCursor.batches?.next()) as SkiAreaObject[])
@@ -1036,19 +1043,19 @@ export class SkiAreaClusteringService {
           skiAreas,
           geocoder,
           snowCoverConfig,
-          snowCoverArchive
+          snowCoverArchive,
         );
         activeBatches.add(batchPromise);
-        
+
         // Clean up completed batches
         batchPromise.finally(() => activeBatches.delete(batchPromise));
-        
+
         // Limit concurrent batches to prevent overwhelming geocoder/database
         if (activeBatches.size >= concurrentBatches) {
           await Promise.race(activeBatches);
         }
       }
-      
+
       // Wait for all remaining batches to complete
       await Promise.all(activeBatches);
     } finally {
@@ -1068,27 +1075,24 @@ export class SkiAreaClusteringService {
     skiAreas: SkiAreaObject[],
     geocoder: Geocoder | null,
     snowCoverConfig: SnowCoverConfig | null,
-    snowCoverArchive: SQLiteCache<VIIRSCacheData[]> | undefined
+    snowCoverArchive: SQLiteCache<VIIRSCacheData[]> | undefined,
   ): Promise<void> {
-    return performanceMonitor.measure(
-      'batch_augmentation',
-      async () => {
-        await Promise.all(
-          skiAreas.map(async (skiArea) => {
-            const mapObjects = await this.database.getObjectsForSkiArea(
-              skiArea.id,
-            );
-            await this.augmentSkiAreaBasedOnAssignedLiftsAndRuns(
-              skiArea,
-              mapObjects,
-              geocoder,
-              snowCoverConfig,
-              snowCoverArchive,
-            );
-          }),
-        );
-      }
-    );
+    return performanceMonitor.measure("batch_augmentation", async () => {
+      await Promise.all(
+        skiAreas.map(async (skiArea) => {
+          const mapObjects = await this.database.getObjectsForSkiArea(
+            skiArea.id,
+          );
+          await this.augmentSkiAreaBasedOnAssignedLiftsAndRuns(
+            skiArea,
+            mapObjects,
+            geocoder,
+            snowCoverConfig,
+            snowCoverArchive,
+          );
+        }),
+      );
+    });
   }
 
   private async augmentSkiAreaBasedOnAssignedLiftsAndRuns(
