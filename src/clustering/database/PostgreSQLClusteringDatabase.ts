@@ -31,9 +31,9 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
     this.databaseName = `clustering-${timestamp}-${randomString}`;
   }
 
-  // Optimized batch sizes for PostgreSQL
-  private static readonly DEFAULT_BATCH_SIZE = 1000;
-  private static readonly BULK_OPERATION_BATCH_SIZE = 5000;
+  // Optimized batch sizes for PostgreSQL - smaller batches reduce deadlock risk
+  private static readonly DEFAULT_BATCH_SIZE = 100;
+  private static readonly BULK_OPERATION_BATCH_SIZE = 250;
 
   // SQL statements
   private static readonly INSERT_OBJECT_SQL = `
@@ -95,10 +95,12 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
       port: 5432,
       database: this.databaseName,
       user: "postgres",
-      max: 10, // Reasonable pool size for clustering workload
-      idleTimeoutMillis: 120000, // Close idle clients after 60 seconds
-      connectionTimeoutMillis: 60000, // Return an error after 60 seconds if connection could not be established
+      max: 5, // Smaller pool size to reduce connection contention
+      idleTimeoutMillis: 60000, // Close idle clients after 60 seconds
+      connectionTimeoutMillis: 30000, // Shorter timeout to fail fast
       allowExitOnIdle: true, // Allow process to exit even if pool has idle connections
+      // Add connection-level deadlock prevention settings
+      options: "-c deadlock_timeout=1s -c lock_timeout=10s",
     });
 
     // Test connection
@@ -272,12 +274,13 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
     batchSize: number,
     processor: (batch: T[], client: PoolClient) => Promise<void>,
   ): Promise<void> {
-    await this.executeTransaction(async (client) => {
-      for (let i = 0; i < items.length; i += batchSize) {
-        const batch = items.slice(i, i + batchSize);
+    // Process each batch in separate transactions to reduce deadlock risk
+    for (let i = 0; i < items.length; i += batchSize) {
+      const batch = items.slice(i, i + batchSize);
+      await this.executeTransaction(async (client) => {
         await processor(batch, client);
-      }
-    });
+      });
+    }
   }
 
   /**
@@ -757,23 +760,32 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
 
     // Sort object keys to ensure consistent ordering and prevent deadlocks
     const sortedKeys = [...objectKeys].sort();
-
-    await this.executeTransaction(async (client) => {
-      // Atomic update using JSONB operators - adds ski area ID only if not already present
-      const skiAreaIdJson = JSON.stringify([skiAreaId]);
+    
+    // Process in smaller batches to reduce lock contention
+    const BATCH_SIZE = 50;
+    for (let i = 0; i < sortedKeys.length; i += BATCH_SIZE) {
+      const batch = sortedKeys.slice(i, i + BATCH_SIZE);
       
-      await client.query(
-        `UPDATE objects 
-         SET ski_areas = CASE 
-           WHEN ski_areas @> $1::jsonb THEN ski_areas
-           ELSE COALESCE(ski_areas, '[]'::jsonb) || $1::jsonb
-         END,
-         is_in_ski_area_polygon = is_in_ski_area_polygon OR $2,
-         is_basis_for_new_ski_area = false
-         WHERE key = ANY($3::text[])`,
-        [skiAreaIdJson, isInSkiAreaPolygon, sortedKeys],
-      );
-    });
+      await this.executeTransaction(async (client) => {
+        // Use shorter timeout and advisory locks for critical sections
+        await client.query('SET LOCAL lock_timeout = 5000'); // 5 second timeout
+        
+        // Atomic update using JSONB operators - adds ski area ID only if not already present
+        const skiAreaIdJson = JSON.stringify([skiAreaId]);
+        
+        await client.query(
+          `UPDATE objects 
+           SET ski_areas = CASE 
+             WHEN ski_areas @> $1::jsonb THEN ski_areas
+             ELSE COALESCE(ski_areas, '[]'::jsonb) || $1::jsonb
+           END,
+           is_in_ski_area_polygon = is_in_ski_area_polygon OR $2,
+           is_basis_for_new_ski_area = false
+           WHERE key = ANY($3::text[])`,
+          [skiAreaIdJson, isInSkiAreaPolygon, batch],
+        );
+      });
+    }
   }
 
   async getNextUnassignedRun(): Promise<MapObject | null> {
