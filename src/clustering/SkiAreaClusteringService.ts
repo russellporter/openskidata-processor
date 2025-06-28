@@ -73,7 +73,12 @@ export class SkiAreaClusteringService {
   ): Promise<void> {
     console.log("Loading graph into database");
 
-    await this.loadGraphData(skiAreasPath, liftsPath, runsPath);
+    await this.loadGraphData(
+      skiAreasPath,
+      liftsPath,
+      runsPath,
+      snowCoverConfig,
+    );
 
     console.log("Clustering ski areas");
     await this.performClustering(geocoderConfig, snowCoverConfig);
@@ -102,6 +107,7 @@ export class SkiAreaClusteringService {
     skiAreasPath: string,
     liftsPath: string,
     runsPath: string,
+    snowCoverConfig: SnowCoverConfig | null,
   ): Promise<void> {
     const viirsExtractor = new VIIRSPixelExtractor();
 
@@ -113,7 +119,7 @@ export class SkiAreaClusteringService {
           ),
           this.loadFeatures(liftsPath, (feature) => this.prepareLift(feature)),
           this.loadFeatures(runsPath, (feature) =>
-            this.prepareRun(feature, viirsExtractor),
+            this.prepareRun(feature, viirsExtractor, snowCoverConfig),
           ),
         ].map<Promise<Buffer>>(StreamToPromise),
       );
@@ -192,6 +198,7 @@ export class SkiAreaClusteringService {
   private prepareRun(
     feature: RunFeature,
     viirsExtractor: VIIRSPixelExtractor,
+    snowCoverConfig: SnowCoverConfig | null,
   ): DraftRun {
     const properties = feature.properties;
     const isInSkiAreaSite = feature.properties.skiAreas.length > 0;
@@ -220,9 +227,11 @@ export class SkiAreaClusteringService {
       });
     })();
 
-    const viirsPixels = viirsExtractor.getGeometryPixelCoordinates(
-      feature.geometry,
-    );
+    // TODO: optimize
+    const viirsPixels =
+      snowCoverConfig !== null
+        ? viirsExtractor.getGeometryPixelCoordinates(feature.geometry)
+        : [];
 
     return {
       _key: properties.id,
