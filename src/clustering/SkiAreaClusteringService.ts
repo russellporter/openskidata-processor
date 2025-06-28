@@ -313,7 +313,7 @@ export class SkiAreaClusteringService {
     console.log("Merge skimap.org and OpenStreetMap ski areas");
     await this.mergeSkimapOrgWithOpenStreetMapSkiAreas();
 
-    console.log("assign nearby objects to Skimap.org ski areas");
+    console.log("Assign nearby objects to Skimap.org ski areas");
     await this.assignObjectsToSkiAreas({
       skiArea: { onlySource: SourceType.SKIMAP_ORG },
       objects: { onlyIfNotAlreadyAssigned: true },
