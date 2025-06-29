@@ -707,25 +707,8 @@ export class SkiAreaClusteringService {
     context: SearchContext,
     searchArea: GeoJSON.Polygon | GeoJSON.MultiPolygon,
   ): Promise<MapObject[]> {
-    switch (searchArea.type) {
-      case "Polygon":
-        return await this.visitPolygon(context, searchArea);
-      case "MultiPolygon":
-        let foundObjects: MapObject[] = [];
-        for (let i = 0; i < searchArea.coordinates.length; i++) {
-          foundObjects = foundObjects.concat(
-            await this.visitPolygon(
-              context,
-              turf.polygon(searchArea.coordinates[i]).geometry,
-            ),
-          );
-        }
-        return foundObjects;
-      default:
-        throw new Error(
-          "Unexpected visit area geometry type " + (searchArea as any).type,
-        );
-    }
+    const objects = await this.database.findNearbyObjects(searchArea, context);
+    return await this.processFoundObjects(context, objects);
   }
 
   private async processFoundObjects(
@@ -746,25 +729,6 @@ export class SkiAreaClusteringService {
     }
   }
 
-  private async visitPolygon(
-    context: SearchContext,
-    geometry: GeoJSON.Polygon,
-  ): Promise<MapObject[]> {
-    const objects = await this.database.findNearbyObjects(geometry, context);
-
-    // Skip further traversal if we are searching a fixed polygon.
-    if (context.isFixedSearchArea) {
-      return objects;
-    } else {
-      let foundObjects: MapObject[] = [];
-      for (let i = 0; i < objects.length; i++) {
-        foundObjects = foundObjects.concat(
-          await this.visitObject(context, objects[i]),
-        );
-      }
-      return foundObjects;
-    }
-  }
 
   private async mergeSkimapOrgWithOpenStreetMapSkiAreas(): Promise<void> {
     const skiAreasCursor = await this.database.getSkiAreas({
