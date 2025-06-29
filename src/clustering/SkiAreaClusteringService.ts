@@ -598,6 +598,7 @@ export class SkiAreaClusteringService {
           id,
           activities: activitiesForClustering,
           searchType: "contains",
+          searchPolygon: skiArea.geometry,
           isFixedSearchArea: true,
           alreadyVisited: [skiArea._key],
           excludeObjectsAlreadyInSkiArea:
