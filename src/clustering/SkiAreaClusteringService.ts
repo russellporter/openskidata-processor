@@ -531,38 +531,41 @@ export class SkiAreaClusteringService {
           }
         }
       } else {
-        // Process concurrently when not checking for already assigned objects
-        await Promise.all(
-          skiAreas.map(async (skiArea) => {
-            const memberObjects = await this.processSkiAreaForObjectAssignment(
-              skiArea,
-              options,
-            );
+        // Process concurrently in small batches to reduce database contention
+        const chunkSize = 3;
+        for (let i = 0; i < skiAreas.length; i += chunkSize) {
+          const chunk = skiAreas.slice(i, i + chunkSize);
 
-            if (memberObjects === null) {
-              return;
-            }
+          await Promise.all(
+            chunk.map(async (skiArea) => {
+              const memberObjects =
+                await this.processSkiAreaForObjectAssignment(skiArea, options);
 
-            await this.database.markObjectsAsPartOfSkiArea(
-              skiArea.id,
-              memberObjects.map((obj) => obj._key),
-              options.objects.onlyInPolygon || false,
-            );
+              if (memberObjects === null) {
+                return;
+              }
 
-            const hasKnownSkiAreaActivities = skiArea.activities.length > 0;
-            if (!hasKnownSkiAreaActivities) {
-              const activities =
-                this.getActivitiesBasedOnRunsAndLifts(memberObjects);
-              await this.database.updateObject(skiArea._key, {
-                activities: [...activities],
-                properties: {
-                  ...skiArea.properties,
+              await this.database.markObjectsAsPartOfSkiArea(
+                skiArea.id,
+                memberObjects.map((obj) => obj._key),
+                options.objects.onlyInPolygon || false,
+              );
+
+              const hasKnownSkiAreaActivities = skiArea.activities.length > 0;
+              if (!hasKnownSkiAreaActivities) {
+                const activities =
+                  this.getActivitiesBasedOnRunsAndLifts(memberObjects);
+                await this.database.updateObject(skiArea._key, {
                   activities: [...activities],
-                },
-              });
-            }
-          }),
-        );
+                  properties: {
+                    ...skiArea.properties,
+                    activities: [...activities],
+                  },
+                });
+              }
+            }),
+          );
+        }
       }
     }
   }

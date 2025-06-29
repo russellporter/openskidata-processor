@@ -136,15 +136,17 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
     if (this.pool) {
       try {
         // Wait a bit for any pending operations to complete
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
+        await new Promise((resolve) => setTimeout(resolve, 100));
+
         // Check if there are any active connections
         const activeConnections = this.pool.totalCount - this.pool.idleCount;
         if (activeConnections > 0) {
-          console.warn(`Warning: ${activeConnections} active connections during close, waiting for completion...`);
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          console.warn(
+            `Warning: ${activeConnections} active connections during close, waiting for completion...`,
+          );
+          await new Promise((resolve) => setTimeout(resolve, 1000));
         }
-        
+
         await this.pool.end();
         this.pool = null;
       } catch (error) {
@@ -155,7 +157,7 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
     this.initialized = false;
 
     // Wait a bit more to ensure all connections are properly closed
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 200));
 
     // Delete the temporary database
     const adminPool = new Pool({
@@ -231,7 +233,7 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
   private async executeTransaction<T>(
     operation: (client: PoolClient) => Promise<T>,
   ): Promise<T> {
-    const maxRetries = 3;
+    const maxRetries = 5;
     let attempt = 0;
 
     while (attempt < maxRetries) {
@@ -636,7 +638,7 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
     let params: any[];
 
     const geometryWKT = this.geoJSONToWKT(geometry);
-    
+
     if (context.bufferDistanceKm !== undefined) {
       // Use geography functional index for optimal performance
       const bufferMeters = context.bufferDistanceKm * 1000; // Convert km to meters
@@ -770,7 +772,7 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
     await this.executeTransaction(async (client) => {
       // Atomic update using JSONB operators - adds ski area ID only if not already present
       const skiAreaIdJson = JSON.stringify([skiAreaId]);
-      
+
       await client.query(
         `UPDATE objects 
          SET ski_areas = CASE 
