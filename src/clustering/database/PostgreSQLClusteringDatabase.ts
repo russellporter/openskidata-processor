@@ -41,7 +41,7 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
     (key, type, source, geometry, geometry_with_elevations, geom, is_polygon, activities, ski_areas, 
      is_basis_for_new_ski_area, is_in_ski_area_polygon, is_in_ski_area_site, 
      lift_type, difficulty, viirs_pixels, properties) 
-    VALUES ($1, $2, $3, $4, $5, ST_GeomFromText($6, 4326), $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+    VALUES ($1, $2, $3, $4, $5, ST_Force2D(ST_GeomFromGeoJSON($6)), $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
     ON CONFLICT (key) DO UPDATE SET
       type = EXCLUDED.type,
       source = EXCLUDED.source,
@@ -286,7 +286,7 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
    * Converts a MapObject to SQL parameters for insertion/update
    */
   private mapObjectToSQLParams(object: MapObject): any[] {
-    const geometryWKT = this.geoJSONToWKT(object.geometry);
+    const geometryGeoJSON = JSON.stringify(object.geometry);
 
     return [
       object._key,
@@ -294,7 +294,7 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
       (object as any).source || "unknown",
       JSON.stringify(object.geometry),
       JSON.stringify((object as any).geometryWithElevations || object.geometry),
-      geometryWKT,
+      geometryGeoJSON,
       (object as any).isPolygon ? true : false,
       JSON.stringify(object.activities || []),
       JSON.stringify(object.skiAreas || []),
@@ -322,12 +322,12 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
     Object.entries(updates).forEach(([field, value]) => {
       switch (field) {
         case "geometry":
-          const geometryWKT = this.geoJSONToWKT(value as GeoJSON.Geometry);
+          const geometryGeoJSON = JSON.stringify(value);
           setParts.push(
             `geometry = $${paramIndex++}`,
-            `geom = ST_GeomFromText($${paramIndex++}, 4326)`,
+            `geom = ST_Force2D(ST_GeomFromGeoJSON($${paramIndex++}))`,
           );
-          values.push(JSON.stringify(value), geometryWKT);
+          values.push(JSON.stringify(value), geometryGeoJSON);
           break;
         case "skiAreas":
           setParts.push(`ski_areas = $${paramIndex++}`);
@@ -567,9 +567,9 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
     }
 
     if (options.onlyInPolygon) {
-      const polygonWKT = this.geoJSONToWKT(options.onlyInPolygon);
-      query += ` AND ST_CoveredBy(geom, ST_GeomFromText($${paramIndex++}, 4326))`;
-      params.push(polygonWKT);
+      const polygonGeoJSON = JSON.stringify(options.onlyInPolygon);
+      query += ` AND ST_CoveredBy(geom, ST_Force2D(ST_GeomFromGeoJSON($${paramIndex++})))`;
+      params.push(polygonGeoJSON);
     }
 
     try {
@@ -637,7 +637,7 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
     let paramIndex = 1;
     let params: any[];
 
-    const geometryWKT = this.geoJSONToWKT(geometry);
+    const geometryGeoJSON = JSON.stringify(geometry);
 
     if (context.bufferDistanceKm !== undefined) {
       // Use geography functional index for optimal performance
@@ -646,18 +646,18 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
       if (context.searchType === "contains") {
         query = `
           SELECT * FROM objects 
-          WHERE ST_CoveredBy(geom, ST_Buffer(geography(ST_GeomFromText($${paramIndex++}, 4326)), $${paramIndex++})::geometry)
+          WHERE ST_CoveredBy(geom, ST_Buffer(geography(ST_Force2D(ST_GeomFromGeoJSON($${paramIndex++}))), $${paramIndex++})::geometry)
             AND type != 'SKI_AREA'
         `;
-        params = [geometryWKT, bufferMeters];
+        params = [geometryGeoJSON, bufferMeters];
       } else {
         // For intersects, use ST_DWithin with geography index
         query = `
           SELECT * FROM objects 
-          WHERE ST_DWithin(geography(geom), geography(ST_GeomFromText($${paramIndex++}, 4326)), $${paramIndex++})
+          WHERE ST_DWithin(geography(geom), geography(ST_Force2D(ST_GeomFromGeoJSON($${paramIndex++}))), $${paramIndex++})
             AND type != 'SKI_AREA'
         `;
-        params = [geometryWKT, bufferMeters];
+        params = [geometryGeoJSON, bufferMeters];
       }
       paramIndex = 3; // Reset to 3 since we used parameters 1-2
     } else {
@@ -665,17 +665,17 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
       if (context.searchType === "contains") {
         query = `
           SELECT * FROM objects 
-          WHERE ST_CoveredBy(geom, ST_GeomFromText($${paramIndex++}, 4326))
+          WHERE ST_CoveredBy(geom, ST_Force2D(ST_GeomFromGeoJSON($${paramIndex++})))
             AND type != 'SKI_AREA'
         `;
       } else {
         query = `
           SELECT * FROM objects 
-          WHERE ST_Intersects(geom, ST_GeomFromText($${paramIndex++}, 4326))
+          WHERE ST_Intersects(geom, ST_Force2D(ST_GeomFromGeoJSON($${paramIndex++})))
             AND type != 'SKI_AREA'
         `;
       }
-      params = [geometryWKT];
+      params = [geometryGeoJSON];
       paramIndex = 2; // Reset to 2 since we used parameter 1
     }
 
@@ -887,49 +887,6 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
     }
 
     return baseObject as MapObject;
-  }
-
-  private geoJSONToWKT(geometry: GeoJSON.Geometry): string {
-    switch (geometry.type) {
-      case "Point":
-        return `POINT(${geometry.coordinates[0]} ${geometry.coordinates[1]})`;
-
-      case "LineString":
-        const lineCoords = geometry.coordinates
-          .map((coord) => `${coord[0]} ${coord[1]}`)
-          .join(", ");
-        return `LINESTRING(${lineCoords})`;
-
-      case "Polygon":
-        const ringStrings = geometry.coordinates
-          .map((ring) => {
-            const ringCoords = ring
-              .map((coord) => `${coord[0]} ${coord[1]}`)
-              .join(", ");
-            return `(${ringCoords})`;
-          })
-          .join(", ");
-        return `POLYGON(${ringStrings})`;
-
-      case "MultiPolygon":
-        const polygonStrings = geometry.coordinates
-          .map((polygon) => {
-            const ringStrings = polygon
-              .map((ring) => {
-                const ringCoords = ring
-                  .map((coord) => `${coord[0]} ${coord[1]}`)
-                  .join(", ");
-                return `(${ringCoords})`;
-              })
-              .join(", ");
-            return `(${ringStrings})`;
-          })
-          .join(", ");
-        return `MULTIPOLYGON(${polygonStrings})`;
-
-      default:
-        throw new Error(`Unsupported geometry type: ${geometry.type}`);
-    }
   }
 
   async getObjectDerivedSkiAreaGeometry(
