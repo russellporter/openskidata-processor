@@ -568,7 +568,7 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
 
     if (options.onlyInPolygon) {
       const polygonWKT = this.geoJSONToWKT(options.onlyInPolygon);
-      query += ` AND ST_Within(geom, ST_GeomFromText($${paramIndex++}, 4326))`;
+      query += ` AND ST_CoveredBy(geom, ST_GeomFromText($${paramIndex++}, 4326))`;
       params.push(polygonWKT);
     }
 
@@ -644,10 +644,9 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
       const bufferMeters = context.bufferDistanceKm * 1000; // Convert km to meters
 
       if (context.searchType === "contains") {
-        // For contains, use ST_Within with geometry buffer (more precise than distance)
         query = `
           SELECT * FROM objects 
-          WHERE ST_Within(geom, ST_Buffer(geography(ST_GeomFromText($${paramIndex++}, 4326)), $${paramIndex++})::geometry)
+          WHERE ST_CoveredBy(geom, ST_Buffer(geography(ST_GeomFromText($${paramIndex++}, 4326)), $${paramIndex++})::geometry)
             AND type != 'SKI_AREA'
         `;
         params = [geometryWKT, bufferMeters];
@@ -666,7 +665,7 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
       if (context.searchType === "contains") {
         query = `
           SELECT * FROM objects 
-          WHERE ST_Within(geom, ST_GeomFromText($${paramIndex++}, 4326))
+          WHERE ST_CoveredBy(geom, ST_GeomFromText($${paramIndex++}, 4326))
             AND type != 'SKI_AREA'
         `;
       } else {
