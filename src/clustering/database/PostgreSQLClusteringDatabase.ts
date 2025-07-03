@@ -931,6 +931,68 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
         throw new Error(`Unsupported geometry type: ${geometry.type}`);
     }
   }
+
+  async getObjectDerivedSkiAreaGeometry(
+    skiAreaId: string,
+  ): Promise<GeoJSON.Geometry> {
+    this.ensureInitialized();
+
+    try {
+      // Single query to get union of member geometries or fall back to ski area geometry
+      const query = `
+        WITH member_geometries AS (
+          SELECT geom FROM objects 
+          WHERE ski_areas @> $1::jsonb AND type != 'SKI_AREA'
+        ),
+        ski_area_geometry AS (
+          SELECT geom FROM objects 
+          WHERE key = $2 AND type = 'SKI_AREA'
+        ),
+        union_result AS (
+          SELECT 
+            CASE 
+              WHEN COUNT(*) > 0 THEN ST_AsGeoJSON(ST_Union(geom))::jsonb
+              ELSE NULL
+            END as union_geometry
+          FROM member_geometries
+        )
+        SELECT 
+          COALESCE(
+            union_result.union_geometry,
+            ST_AsGeoJSON(ski_area_geometry.geom)::jsonb
+          ) as geometry
+        FROM union_result 
+        CROSS JOIN ski_area_geometry
+      `;
+
+      const rows = await this.executeQuery<any[]>(query, [
+        JSON.stringify([skiAreaId]),
+        skiAreaId,
+      ]);
+
+      if (rows.length === 0 || !rows[0].geometry) {
+        throw new Error(`No geometry found for ski area ${skiAreaId}`);
+      }
+
+      return rows[0].geometry as GeoJSON.Geometry;
+    } catch (error) {
+      console.warn(
+        `Failed to get derived geometry for ski area ${skiAreaId}, querying ski area geometry directly:`,
+        error,
+      );
+
+      // Fallback: just get the ski area's own geometry
+      const fallbackQuery =
+        "SELECT geometry FROM objects WHERE key = $1 AND type = 'SKI_AREA'";
+      const rows = await this.executeQuery<any[]>(fallbackQuery, [skiAreaId]);
+
+      if (rows.length === 0) {
+        throw new Error(`Ski area ${skiAreaId} not found`);
+      }
+
+      return rows[0].geometry as GeoJSON.Geometry;
+    }
+  }
 }
 
 class PostgreSQLSkiAreasCursor implements SkiAreasCursor {

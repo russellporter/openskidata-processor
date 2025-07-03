@@ -97,6 +97,12 @@ export interface ClusteringDatabase {
    * Get a run object by ID
    */
   getRunObjectById(runId: string): Promise<RunObject | null>;
+
+  /**
+   * Get the derived geometry for a ski area based on its member objects
+   * Returns the union of all member object geometries, or the ski area's own geometry if no members
+   */
+  getObjectDerivedSkiAreaGeometry(skiAreaId: string): Promise<GeoJSON.Geometry>;
 }
 
 export interface GetSkiAreasOptions {

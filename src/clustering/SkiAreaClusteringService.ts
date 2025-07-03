@@ -694,8 +694,16 @@ export class SkiAreaClusteringService {
         ...objectContext,
         bufferDistanceKm: maxDistanceInKilometers,
       };
+      
+      let geometryForSearch: GeoJSON.Geometry = object.geometry;
+      
+      // For ski areas, use union of member objects geometries instead of ski area geometry
+      if (object.type === MapObjectType.SkiArea) {
+        geometryForSearch = await this.database.getObjectDerivedSkiAreaGeometry(object.id);
+      }
+      
       const nearbyObjects = await this.database.findNearbyObjects(
-        object.geometry,
+        geometryForSearch,
         bufferedContext,
       );
       return foundObjects.concat(

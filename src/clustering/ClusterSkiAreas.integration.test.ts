@@ -2503,3 +2503,111 @@ it("keeps site=piste ski area with only non-skiing activities", async () => {
 function orderedByID(left: { id: string }, right: { id: string }): number {
   return left.id.localeCompare(right.id);
 }
+
+it("extends site=piste ski area with nearby runs", async () => {
+  const paths = TestHelpers.getFilePaths();
+  const siteSkiArea = TestHelpers.mockSkiAreaSiteFeature({
+    id: "1",
+    activities: [],
+    sources: [{ type: SourceType.OPENSTREETMAP, id: "1" }],
+    osmID: 1,
+  });
+
+  TestHelpers.mockFeatureFiles(
+    [siteSkiArea],
+    [
+      TestHelpers.mockLiftFeature({
+        id: "3",
+        name: "Lift",
+        liftType: LiftType.TBar,
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [0, 0],
+            [1, 0],
+          ],
+        },
+        skiAreas: [siteSkiArea],
+      }),
+    ],
+    [
+      TestHelpers.mockRunFeature({
+        id: "4",
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [0, 0],
+            [1, 1],
+          ],
+        },
+        name: "Run",
+        uses: [RunUse.Downhill],
+        skiAreas: [siteSkiArea],
+      }),
+      TestHelpers.mockRunFeature({
+        id: "5",
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [0, 0.1],
+            [0.9, 0.9],
+          ],
+        },
+        name: "Run",
+        uses: [RunUse.Downhill],
+        skiAreas: [siteSkiArea],
+      }),
+      TestHelpers.mockRunFeature({
+        id: "6",
+        geometry: {
+          type: "Polygon",
+          coordinates: [
+            [
+              [1, 0],
+              [2, 0],
+              [2, 1],
+              [1, 1],
+              [1, 0],
+            ],
+          ],
+        },
+        name: "Unassigned Run",
+        uses: [RunUse.Downhill],
+        skiAreas: [],
+      }),
+    ],
+    paths.intermediate,
+  );
+
+  await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
+
+  expect(
+    TestHelpers.fileContents(paths.output.runs).features.map(
+      simplifiedRunFeature,
+    ),
+  ).toMatchInlineSnapshot(`
+[
+  {
+    "id": "4",
+    "name": "Run",
+    "skiAreas": [
+      "1",
+    ],
+  },
+  {
+    "id": "5",
+    "name": "Run",
+    "skiAreas": [
+      "1",
+    ],
+  },
+  {
+    "id": "6",
+    "name": "Unassigned Run",
+    "skiAreas": [
+      "1",
+    ],
+  },
+]
+`);
+});
