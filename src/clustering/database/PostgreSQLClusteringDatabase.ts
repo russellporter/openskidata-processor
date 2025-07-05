@@ -359,6 +359,19 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
     return { setParts, values };
   }
 
+  /**
+   * Checks if an error is a PostgreSQL geometry/topology error
+   */
+  private isPostgresGeometryError(error: any): boolean {
+    return (
+      error.message?.includes("TopologyException") ||
+      error.message?.includes("side location conflict") ||
+      error.message?.includes("invalid geometry") ||
+      error.message?.includes("geometry could not be converted") ||
+      error.code === "42804" // PostGIS geometry error code
+    );
+  }
+
   private async enablePostGIS(): Promise<void> {
     const pool = this.ensureInitialized();
 
@@ -582,15 +595,13 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
       );
     } catch (error: any) {
       // Check if this is a geometry/topology error
-      if (
-        error.message?.includes("TopologyException") ||
-        error.message?.includes("side location conflict") ||
-        error.message?.includes("invalid geometry") ||
-        error.code === "42804" // PostGIS geometry error code
-      ) {
+      if (this.isPostgresGeometryError(error)) {
         console.warn(
           `Geometry error in getSkiAreas query, returning empty result:`,
           error.message,
+          options.onlyInPolygon
+            ? "in polygon: " + JSON.stringify(options.onlyInPolygon)
+            : "",
         );
         return new PostgreSQLSkiAreasCursor(
           [],
@@ -720,15 +731,11 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
           return allFound;
         } catch (error: any) {
           // Check if this is a geometry/topology error
-          if (
-            error.message?.includes("TopologyException") ||
-            error.message?.includes("side location conflict") ||
-            error.message?.includes("invalid geometry") ||
-            error.code === "42804" // PostGIS geometry error code
-          ) {
+          if (this.isPostgresGeometryError(error)) {
             console.warn(
-              `Geometry error in spatial query for area ${context.id}, skipping:`,
+              `Geometry error in spatial query for id: ${context.id}, skipping:`,
               error.message,
+              geometryGeoJSON,
             );
             return [];
           }
@@ -908,7 +915,7 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
         union_result AS (
           SELECT 
             CASE 
-              WHEN COUNT(*) > 0 THEN ST_AsGeoJSON(ST_Union(geom))::jsonb
+              WHEN COUNT(*) > 0 THEN ST_AsGeoJSON(ST_Union(ST_MakeValid(geom)))::jsonb
               ELSE NULL
             END as union_geometry
           FROM member_geometries
