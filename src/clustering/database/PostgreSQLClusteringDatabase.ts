@@ -129,9 +129,6 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
   }
 
   async close(): Promise<void> {
-    // Log performance summary before closing
-    performanceMonitor.logSummary();
-
     // Gracefully close the main connection pool
     if (this.pool) {
       try {
@@ -720,7 +717,7 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
     }
 
     return performanceMonitor.measure(
-      "findNearbyObjects_spatial",
+      "Find nearby objects",
       async () => {
         try {
           const rows = await this.executeQuery<any[]>(query, params);

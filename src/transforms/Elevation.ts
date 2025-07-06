@@ -1,5 +1,5 @@
-import * as geohash from "ngeohash";
 import DataLoader from "dataloader";
+import * as geohash from "ngeohash";
 import {
   extractPointsForElevationProfile,
   FeatureType,
@@ -32,7 +32,11 @@ export async function createElevationProcessor(
 
   const elevationLoader = new DataLoader<string, number | null>(
     async (geohashes: readonly string[]) => {
-      return await batchLoadElevations(Array.from(geohashes), elevationServerConfig.url, cache);
+      return await batchLoadElevations(
+        Array.from(geohashes),
+        elevationServerConfig.url,
+        cache,
+      );
     },
     {
       batch: true,
@@ -54,17 +58,23 @@ export async function createElevationProcessor(
     let elevations: number[];
     try {
       // Generate geohash keys for all coordinates
-      const allCoordinates = Array.from(coordinates).concat(elevationProfileCoordinates);
-      const geohashes = allCoordinates.map(([lng, lat]) => geohash.encode(lat, lng, 9));
-      
+      const allCoordinates = Array.from(coordinates).concat(
+        elevationProfileCoordinates,
+      );
+      const geohashes = allCoordinates.map(([lng, lat]) =>
+        geohash.encode(lat, lng, 9),
+      );
+
       // Load elevations using DataLoader
-      const elevationResults = await Promise.all(geohashes.map(hash => elevationLoader.load(hash)));
-      
+      const elevationResults = await Promise.all(
+        geohashes.map((hash) => elevationLoader.load(hash)),
+      );
+
       // Filter out nulls
-      if (elevationResults.some(elevation => elevation === null)) {
+      if (elevationResults.some((elevation) => elevation === null)) {
         throw new Error("Elevation data contains nulls");
       }
-      
+
       elevations = elevationResults as number[];
     } catch (error) {
       console.log("Failed to load elevations", error);

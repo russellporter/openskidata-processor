@@ -2,6 +2,7 @@ import bboxPolygon from "@turf/bbox-polygon";
 import booleanContains from "@turf/boolean-contains";
 import { readFile, writeFile } from "node:fs/promises";
 import { Readable } from "node:stream";
+import { performanceMonitor } from "../clustering/database/PerformanceMonitor";
 import { InputSkiMapOrgSkiAreaFeature } from "../features/SkiAreaFeature";
 import {
   OSMDownloadConfig,
@@ -18,45 +19,56 @@ export default async function downloadAndConvertToGeoJSON(
   folder: string,
   bbox: GeoJSON.BBox | null,
 ): Promise<InputDataPaths> {
-  const paths = new InputDataPaths(folder);
+  return await performanceMonitor.withPhase("Phase 1: Download", async () => {
+    const paths = new InputDataPaths(folder);
 
-  // Serialize downloads using the same endpoint so we don't get rate limited by the Overpass API
-  await Promise.all([
-    downloadOSMJSON(
-      OSMEndpoint.Z,
-      runsDownloadConfig,
-      paths.osmJSON.runs,
-      bbox,
-    ),
-    (async () => {
-      await downloadOSMJSON(
-        OSMEndpoint.LZ4,
-        liftsDownloadConfig,
-        paths.osmJSON.lifts,
-        bbox,
-      );
-      await downloadOSMJSON(
-        OSMEndpoint.LZ4,
-        skiAreasDownloadConfig,
+    // Serialize downloads using the same endpoint so we don't get rate limited by the Overpass API
+    await performanceMonitor.withOperation("OSM Data Download", async () => {
+      await Promise.all([
+        downloadOSMJSON(
+          OSMEndpoint.Z,
+          runsDownloadConfig,
+          paths.osmJSON.runs,
+          bbox,
+        ),
+        (async () => {
+          await downloadOSMJSON(
+            OSMEndpoint.LZ4,
+            liftsDownloadConfig,
+            paths.osmJSON.lifts,
+            bbox,
+          );
+          await downloadOSMJSON(
+            OSMEndpoint.LZ4,
+            skiAreasDownloadConfig,
+            paths.osmJSON.skiAreas,
+            bbox,
+          );
+          await downloadOSMJSON(
+            OSMEndpoint.LZ4,
+            skiAreaSitesDownloadConfig,
+            paths.osmJSON.skiAreaSites,
+            bbox,
+          );
+        })(),
+        downloadSkiMapOrgSkiAreas(paths.geoJSON.skiMapSkiAreas, bbox),
+      ]);
+    });
+
+    // Conversions are done serially for lower memory pressure.
+    await performanceMonitor.withOperation("JSON Conversion", async () => {
+      await convertOSMFileToGeoJSON(paths.osmJSON.runs, paths.geoJSON.runs);
+      await convertOSMFileToGeoJSON(paths.osmJSON.lifts, paths.geoJSON.lifts);
+      await convertOSMFileToGeoJSON(
         paths.osmJSON.skiAreas,
-        bbox,
+        paths.geoJSON.skiAreas,
       );
-      await downloadOSMJSON(
-        OSMEndpoint.LZ4,
-        skiAreaSitesDownloadConfig,
-        paths.osmJSON.skiAreaSites,
-        bbox,
-      );
-    })(),
-    downloadSkiMapOrgSkiAreas(paths.geoJSON.skiMapSkiAreas, bbox),
-  ]);
+    });
 
-  // Conversions are done serially for lower memory pressure.
-  await convertOSMFileToGeoJSON(paths.osmJSON.runs, paths.geoJSON.runs);
-  await convertOSMFileToGeoJSON(paths.osmJSON.lifts, paths.geoJSON.lifts);
-  await convertOSMFileToGeoJSON(paths.osmJSON.skiAreas, paths.geoJSON.skiAreas);
+    performanceMonitor.logTimeline();
 
-  return paths;
+    return paths;
+  });
 }
 
 enum OSMEndpoint {

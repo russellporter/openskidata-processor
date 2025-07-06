@@ -69,36 +69,41 @@ export class SkiAreaClusteringService {
     geocoderConfig: GeocodingServerConfig | null,
     snowCoverConfig: SnowCoverConfig | null,
   ): Promise<void> {
-    console.log("Loading graph into database");
-
-    await this.loadGraphData(
-      skiAreasPath,
-      liftsPath,
-      runsPath,
-      snowCoverConfig,
+    await performanceMonitor.withOperation(
+      "Loading graph into database",
+      async () => {
+        await this.loadGraphData(
+          skiAreasPath,
+          liftsPath,
+          runsPath,
+          snowCoverConfig,
+        );
+      },
     );
 
-    console.log("Clustering ski areas");
     await this.performClustering(geocoderConfig, snowCoverConfig);
 
-    console.log("Augmenting runs");
-    await this.augmentGeoJSONFeatures(
-      runsPath,
-      outputRunsPath,
-      FeatureType.Run,
-      snowCoverConfig,
-    );
+    await performanceMonitor.withOperation("Augmenting Runs", async () => {
+      await this.augmentGeoJSONFeatures(
+        runsPath,
+        outputRunsPath,
+        FeatureType.Run,
+        snowCoverConfig,
+      );
+    });
 
-    console.log("Augmenting lifts");
-    await this.augmentGeoJSONFeatures(
-      liftsPath,
-      outputLiftsPath,
-      FeatureType.Lift,
-      null,
-    );
+    await performanceMonitor.withOperation("Augmenting Lifts", async () => {
+      await this.augmentGeoJSONFeatures(
+        liftsPath,
+        outputLiftsPath,
+        FeatureType.Lift,
+        null,
+      );
+    });
 
-    console.log("Exporting ski areas");
-    await this.exportSkiAreasGeoJSON(outputSkiAreasPath);
+    await performanceMonitor.withOperation("Exporting Ski Areas", async () => {
+      await this.exportSkiAreasGeoJSON(outputSkiAreasPath);
+    });
   }
 
   private async loadGraphData(
@@ -109,7 +114,7 @@ export class SkiAreaClusteringService {
   ): Promise<void> {
     const viirsExtractor = new VIIRSPixelExtractor();
 
-    await performanceMonitor.measure("graph_data_loading", async () => {
+    await performanceMonitor.withOperation("Loading Graph Data", async () => {
       await Promise.all(
         [
           this.loadFeatures(skiAreasPath, (feature) =>
@@ -124,7 +129,7 @@ export class SkiAreaClusteringService {
     });
 
     // Create indices after loading all features for better insert performance
-    await performanceMonitor.measure("index_creation", async () => {
+    await performanceMonitor.withOperation("Creating indexes", async () => {
       await this.database.createIndexes();
     });
   }
@@ -298,66 +303,84 @@ export class SkiAreaClusteringService {
     geocoderConfig: GeocodingServerConfig | null,
     snowCoverConfig: SnowCoverConfig | null,
   ): Promise<void> {
-    console.log(
+    await performanceMonitor.withOperation(
       "Assign ski area activities and geometry based on member objects",
-    );
-    performanceMonitor.startOperation("assign_activities_geometry");
-    await this.assignSkiAreaActivitiesAndGeometryBasedOnMemberObjects();
-    performanceMonitor.endOperation("assign_activities_geometry");
-
-    console.log("Remove ambiguous duplicate ski areas");
-    performanceMonitor.startOperation("remove_duplicate_ski_areas");
-    await this.removeAmbiguousDuplicateSkiAreas();
-    performanceMonitor.endOperation("remove_duplicate_ski_areas");
-
-    console.log("Assign objects in OSM polygon ski areas");
-    performanceMonitor.startOperation("assign_objects_osm_polygons");
-    await this.assignObjectsToSkiAreas({
-      skiArea: {
-        onlySource: SourceType.OPENSTREETMAP,
-        removeIfNoObjectsFound: true,
-        removeIfSubstantialNumberOfObjectsInSkiAreaSite: true,
+      async () => {
+        await this.assignSkiAreaActivitiesAndGeometryBasedOnMemberObjects();
       },
-      objects: { onlyInPolygon: true },
-    });
-    performanceMonitor.endOperation("assign_objects_osm_polygons");
-
-    console.log("Assign nearby objects to OSM ski areas");
-    performanceMonitor.startOperation("assign_nearby_objects_osm");
-    await this.assignObjectsToSkiAreas({
-      skiArea: { onlySource: SourceType.OPENSTREETMAP },
-      objects: { onlyIfNotAlreadyAssigned: true },
-    });
-    performanceMonitor.endOperation("assign_nearby_objects_osm");
-
-    console.log("Merge skimap.org and OpenStreetMap ski areas");
-    performanceMonitor.startOperation("merge_skimap_osm");
-    await this.mergeSkimapOrgWithOpenStreetMapSkiAreas();
-    performanceMonitor.endOperation("merge_skimap_osm");
-
-    console.log("Assign nearby objects to Skimap.org ski areas");
-    performanceMonitor.startOperation("assign_nearby_objects_skimap");
-    await this.assignObjectsToSkiAreas({
-      skiArea: { onlySource: SourceType.SKIMAP_ORG },
-      objects: { onlyIfNotAlreadyAssigned: true },
-    });
-    performanceMonitor.endOperation("assign_nearby_objects_skimap");
-
-    console.log("Generate ski areas for unassigned objects");
-    performanceMonitor.startOperation("generate_unassigned_ski_areas");
-    await this.generateSkiAreasForUnassignedObjects();
-    performanceMonitor.endOperation("generate_unassigned_ski_areas");
-
-    console.log("Augment ski areas based on assigned lifts and runs");
-    performanceMonitor.startOperation("augment_ski_areas");
-    await this.augmentSkiAreasBasedOnAssignedLiftsAndRuns(
-      geocoderConfig,
-      snowCoverConfig,
     );
-    performanceMonitor.endOperation("augment_ski_areas");
 
-    console.log("Remove ski areas without a geometry");
-    await this.removeSkiAreasWithoutGeometry();
+    await performanceMonitor.withOperation(
+      "Remove ambiguous duplicate ski areas",
+      async () => {
+        await this.removeAmbiguousDuplicateSkiAreas();
+      },
+    );
+
+    await performanceMonitor.withOperation(
+      "Assign objects in OSM polygon ski areas",
+      async () => {
+        await this.assignObjectsToSkiAreas({
+          skiArea: {
+            onlySource: SourceType.OPENSTREETMAP,
+            removeIfNoObjectsFound: true,
+            removeIfSubstantialNumberOfObjectsInSkiAreaSite: true,
+          },
+          objects: { onlyInPolygon: true },
+        });
+      },
+    );
+
+    await performanceMonitor.withOperation(
+      "Assign nearby objects to OSM ski areas",
+      async () => {
+        await this.assignObjectsToSkiAreas({
+          skiArea: { onlySource: SourceType.OPENSTREETMAP },
+          objects: { onlyIfNotAlreadyAssigned: true },
+        });
+      },
+    );
+
+    await performanceMonitor.withOperation(
+      "Merge skimap.org and OpenStreetMap ski areas",
+      async () => {
+        await this.mergeSkimapOrgWithOpenStreetMapSkiAreas();
+      },
+    );
+
+    await performanceMonitor.withOperation(
+      "Assign nearby objects to Skimap.org ski areas",
+      async () => {
+        await this.assignObjectsToSkiAreas({
+          skiArea: { onlySource: SourceType.SKIMAP_ORG },
+          objects: { onlyIfNotAlreadyAssigned: true },
+        });
+      },
+    );
+
+    await performanceMonitor.withOperation(
+      "Generate ski areas for unassigned objects",
+      async () => {
+        await this.generateSkiAreasForUnassignedObjects();
+      },
+    );
+
+    await performanceMonitor.withOperation(
+      "Augment ski areas based on assigned lifts and runs",
+      async () => {
+        await this.augmentSkiAreasBasedOnAssignedLiftsAndRuns(
+          geocoderConfig,
+          snowCoverConfig,
+        );
+      },
+    );
+
+    await performanceMonitor.withOperation(
+      "Remove ski areas without a geometry",
+      async () => {
+        await this.removeSkiAreasWithoutGeometry();
+      },
+    );
   }
 
   private async assignSkiAreaActivitiesAndGeometryBasedOnMemberObjects(): Promise<void> {
@@ -390,32 +413,38 @@ export class SkiAreaClusteringService {
   private async processBatchForActivitiesAndGeometry(
     skiAreas: SkiAreaObject[],
   ): Promise<void> {
-    return performanceMonitor.measure("batch_activities_geometry", async () => {
-      await Promise.all(
-        skiAreas.map(async (skiArea) => {
-          if (skiArea.activities.length > 0) {
-            return;
-          }
+    return performanceMonitor.measure(
+      "Batch assign ski area activities and geometry based on member objects",
+      async () => {
+        await Promise.all(
+          skiAreas.map(async (skiArea) => {
+            if (skiArea.activities.length > 0) {
+              return;
+            }
 
-          const memberObjects = await this.database.getObjectsForSkiArea(
-            skiArea.id,
-          );
-          const activities =
-            this.getActivitiesBasedOnRunsAndLifts(memberObjects);
+            const memberObjects = await this.database.getObjectsForSkiArea(
+              skiArea.id,
+            );
+            const activities =
+              this.getActivitiesBasedOnRunsAndLifts(memberObjects);
 
-          if (memberObjects.length === 0) {
-            return;
-          }
+            if (memberObjects.length === 0) {
+              return;
+            }
 
-          await this.database.updateObject(skiArea._key, {
-            activities: [...activities],
-            geometry: this.skiAreaGeometry(memberObjects),
-            isPolygon: false,
-            properties: { ...skiArea.properties, activities: [...activities] },
-          });
-        }),
-      );
-    });
+            await this.database.updateObject(skiArea._key, {
+              activities: [...activities],
+              geometry: this.skiAreaGeometry(memberObjects),
+              isPolygon: false,
+              properties: {
+                ...skiArea.properties,
+                activities: [...activities],
+              },
+            });
+          }),
+        );
+      },
+    );
   }
 
   private async removeAmbiguousDuplicateSkiAreas(): Promise<void> {
@@ -1001,7 +1030,6 @@ export class SkiAreaClusteringService {
       await geocoder.initialize();
     }
 
-
     try {
       const skiAreasCursor = await this.database.getSkiAreas({});
 
@@ -1036,7 +1064,6 @@ export class SkiAreaClusteringService {
       if (geocoder) {
         await geocoder.close();
       }
-
     }
   }
 
@@ -1045,21 +1072,24 @@ export class SkiAreaClusteringService {
     geocoder: Geocoder | null,
     snowCoverConfig: SnowCoverConfig | null,
   ): Promise<void> {
-    return performanceMonitor.measure("batch_augmentation", async () => {
-      await Promise.all(
-        skiAreas.map(async (skiArea) => {
-          const mapObjects = await this.database.getObjectsForSkiArea(
-            skiArea.id,
-          );
-          await this.augmentSkiAreaBasedOnAssignedLiftsAndRuns(
-            skiArea,
-            mapObjects,
-            geocoder,
-            snowCoverConfig,
-          );
-        }),
-      );
-    });
+    return performanceMonitor.measure(
+      "Augment batch of ski areas",
+      async () => {
+        await Promise.all(
+          skiAreas.map(async (skiArea) => {
+            const mapObjects = await this.database.getObjectsForSkiArea(
+              skiArea.id,
+            );
+            await this.augmentSkiAreaBasedOnAssignedLiftsAndRuns(
+              skiArea,
+              mapObjects,
+              geocoder,
+              snowCoverConfig,
+            );
+          }),
+        );
+      },
+    );
   }
 
   private async augmentSkiAreaBasedOnAssignedLiftsAndRuns(
@@ -1185,8 +1215,6 @@ export class SkiAreaClusteringService {
     console.log(
       `Augmenting ${featureType} features from ${inputPath} to ${outputPath}`,
     );
-
-
 
     try {
       await augmentGeoJSONFeatures(
