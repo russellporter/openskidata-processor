@@ -146,7 +146,7 @@ export default class Geocoder {
         timestamp: currentTimestamp(),
       };
 
-      await this.diskCache.set(cacheKey(geohash), data);
+      await this.diskCache.set(geohash, data);
       return data;
     });
   };
