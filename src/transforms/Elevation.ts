@@ -21,10 +21,11 @@ export interface ElevationProcessor {
 export async function createElevationProcessor(
   elevationServerConfig: ElevationServerConfig,
 ): Promise<ElevationProcessor> {
-  const cache = new PostgresCache<number>(
+  const cache = new PostgresCache<number | null>(
     "elevation",
     undefined,
     ELEVATION_CACHE_TTL_MS,
+    { valueType: "REAL" },
   );
   await cache.initialize();
 
@@ -87,21 +88,28 @@ export async function createElevationProcessor(
 async function loadElevations(
   coordinates: number[][],
   elevationServerURL: string,
-  cache: PostgresCache<number>,
+  cache: PostgresCache<number | null>,
 ): Promise<number[]> {
-  const results: number[] = new Array(coordinates.length);
+  const results: (number | null)[] = new Array(coordinates.length);
   const uncachedIndices: number[] = [];
   const uncachedCoordinates: number[][] = [];
 
-  // Check cache for each coordinate using geohash precision 9
-  for (let i = 0; i < coordinates.length; i++) {
-    const [lat, lng] = coordinates[i];
-    const cacheKey = geohash.encode(lat, lng, 9);
-    const cachedElevation = await cache.get(cacheKey);
+  // Generate cache keys for all coordinates using geohash precision 9
+  const cacheKeys = coordinates.map(([lat, lng]) =>
+    geohash.encode(lat, lng, 9),
+  );
 
-    if (cachedElevation !== null) {
+  // Batch fetch from cache
+  const cachedElevations = await cache.getMany(cacheKeys);
+
+  // Identify uncached coordinates
+  for (let i = 0; i < coordinates.length; i++) {
+    const cachedElevation = cachedElevations[i];
+    if (cachedElevation !== undefined) {
+      // Found in cache (could be number or null)
       results[i] = cachedElevation;
     } else {
+      // Not found in cache, need to fetch
       uncachedIndices.push(i);
       uncachedCoordinates.push(coordinates[i]);
     }
@@ -109,7 +117,11 @@ async function loadElevations(
 
   // If all coordinates were cached, return results
   if (uncachedCoordinates.length === 0) {
-    return results;
+    // Check for any null values in final results
+    if (results.some((elevation) => elevation === null)) {
+      throw new Error("Elevation data contains nulls");
+    }
+    return results as number[];
   }
 
   // Fetch elevations for uncached coordinates
@@ -137,28 +149,29 @@ async function loadElevations(
     );
   }
 
-  // Check for nulls in fetched data
-  if (
-    fetchedElevations.some((elevation) => {
-      return elevation === null;
-    })
-  ) {
-    throw new Error("Elevation data contains nulls");
-  }
-
   // Cache and assign fetched elevations
+  const cacheEntries: Array<{ key: string; value: number | null }> = [];
+
   for (let i = 0; i < uncachedIndices.length; i++) {
     const originalIndex = uncachedIndices[i];
-    const elevation = fetchedElevations[i] as number;
+    const elevation = fetchedElevations[i]; // Could be number or null
     const [lat, lng] = coordinates[originalIndex];
     const cacheKey = geohash.encode(lat, lng, 9);
 
-    // Cache the elevation for this coordinate
-    await cache.set(cacheKey, elevation);
+    // Cache the elevation (including null values)
+    cacheEntries.push({ key: cacheKey, value: elevation });
     results[originalIndex] = elevation;
   }
 
-  return results;
+  // Batch cache all new elevations (including nulls)
+  await cache.setMany(cacheEntries);
+
+  // Check for any null values in final results (cached or fetched)
+  if (results.some((elevation) => elevation === null)) {
+    throw new Error("Elevation data contains nulls");
+  }
+
+  return results as number[];
 }
 
 function getCoordinates(feature: RunFeature | LiftFeature) {
