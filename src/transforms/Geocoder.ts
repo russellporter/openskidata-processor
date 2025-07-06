@@ -48,13 +48,15 @@ export default class Geocoder {
   private mutex = new Mutex();
   private diskCache: PostgresCache<PhotonGeocode>;
 
-  constructor(
-    config: Config.GeocodingServerConfig
-  ) {
+  constructor(config: Config.GeocodingServerConfig) {
     this.config = config;
 
     // Initialize PostgreSQL disk cache
-    this.diskCache = new PostgresCache<PhotonGeocode>("geocoding", undefined, config.diskTTL);
+    this.diskCache = new PostgresCache<PhotonGeocode>(
+      "geocoding",
+      undefined,
+      config.diskTTL,
+    );
 
     this.loader = new DataLoader<string, PhotonGeocode>(
       async (loadForKeys) => {
@@ -113,7 +115,7 @@ export default class Geocoder {
   private rawGeocodeLocal = async (
     geohash: string,
   ): Promise<PhotonGeocode | null> => {
-    return await this.diskCache.get(cacheKey(geohash));
+    return await this.diskCache.get(geohash);
   };
 
   private rawGeocodeRemote = async (
@@ -215,10 +217,6 @@ export default class Geocoder {
       },
     };
   };
-}
-
-function cacheKey(geohash: string) {
-  return "geocode/" + geohash;
 }
 
 function currentTimestamp() {
