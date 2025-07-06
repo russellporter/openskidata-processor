@@ -4,35 +4,37 @@
 
 set -e
 
-# Initialize PostgreSQL if not already initialized
-if [ ! -f /var/lib/postgresql/data/PG_VERSION ]; then
-    echo "Starting PostgreSQL initialization..."
+echo "Starting PostgreSQL initialization..."
 
-    # Configure PostgreSQL to listen on all addresses
-    echo "Configuring PostgreSQL to listen on all addresses..."
-    sed -i "s/#listen_addresses = 'localhost'/listen_addresses = '*'/" /etc/postgresql/15/main/postgresql.conf
+# Configure PostgreSQL to listen on all addresses
+echo "Configuring PostgreSQL to listen on all addresses..."
+# Needs to be done each time as the data dir doesnt hold this file
+sed -i "s/#listen_addresses = 'localhost'/listen_addresses = '*'/" /etc/postgresql/15/main/postgresql.conf
 
-    # Configure authentication based on whether custom user/password are set
-    if [ -n "$POSTGRES_USER" ] && [ -n "$POSTGRES_PASSWORD" ]; then
-        echo "Configuring PostgreSQL with password authentication..."
-        tee "/etc/postgresql/15/main/pg_hba.conf" > /dev/null << EOF
+# Configure authentication based on whether custom user/password are set
+if [ -n "$POSTGRES_USER" ] && [ -n "$POSTGRES_PASSWORD" ]; then
+    echo "Configuring PostgreSQL with password authentication..."
+    # Needs to be done each time as the data dir doesnt hold this file
+    tee "/etc/postgresql/15/main/pg_hba.conf" > /dev/null << EOF
 # TYPE  DATABASE        USER            ADDRESS                 METHOD
 local   all             all                                     trust
 host    all             all             127.0.0.1/32            md5
 host    all             all             ::1/128                 md5
 host    all             all             0.0.0.0/0               md5
 EOF
-    else
-        echo "Configuring PostgreSQL with trust authentication..."
-        tee "/etc/postgresql/15/main/pg_hba.conf" > /dev/null << EOF
+else
+    echo "Configuring PostgreSQL with trust authentication..."
+    tee "/etc/postgresql/15/main/pg_hba.conf" > /dev/null << EOF
 # TYPE  DATABASE        USER            ADDRESS                 METHOD
 local   all             all                                     trust
 host    all             all             127.0.0.1/32            trust
 host    all             all             ::1/128                 trust
 host    all             all             0.0.0.0/0               trust
 EOF
-    fi
+fi
 
+# Initialize PostgreSQL if not already initialized
+if [ ! -f /var/lib/postgresql/data/PG_VERSION ]; then
     echo "Initializing PostgreSQL database..."
     su - postgres -c "/usr/lib/postgresql/15/bin/initdb -D /var/lib/postgresql/data"
     
