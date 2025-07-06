@@ -6,7 +6,7 @@ import {
   RunFeature,
 } from "openskidata-format";
 import { ElevationServerConfig } from "../Config";
-import { SQLiteCache } from "../utils/SQLiteCache";
+import { PostgresCache } from "../utils/PostgresCache";
 
 const elevationProfileResolution = 25;
 const ELEVATION_CACHE_TTL_MS = 365 * 24 * 60 * 60 * 1000; // 1 year
@@ -21,8 +21,9 @@ export interface ElevationProcessor {
 export async function createElevationProcessor(
   elevationServerConfig: ElevationServerConfig,
 ): Promise<ElevationProcessor> {
-  const cache = new SQLiteCache<number>(
-    elevationServerConfig.databasePath,
+  const cache = new PostgresCache<number>(
+    "elevation",
+    undefined,
     ELEVATION_CACHE_TTL_MS,
   );
   await cache.initialize();
@@ -86,7 +87,7 @@ export async function createElevationProcessor(
 async function loadElevations(
   coordinates: number[][],
   elevationServerURL: string,
-  cache: SQLiteCache<number>,
+  cache: PostgresCache<number>,
 ): Promise<number[]> {
   const results: number[] = new Array(coordinates.length);
   const uncachedIndices: number[] = [];

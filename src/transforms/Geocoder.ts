@@ -5,9 +5,8 @@ import * as iso3166_2 from "iso3166-2-db";
 import { Region } from "iso3166-2-db";
 import { LRUMap } from "lru_map";
 import * as ngeohash from "ngeohash";
-import path from "path";
 import * as Config from "../Config";
-import { SQLiteCache } from "../utils/SQLiteCache";
+import { PostgresCache } from "../utils/PostgresCache";
 
 export type PhotonGeocode = {
   url: string;
@@ -47,14 +46,15 @@ export default class Geocoder {
   private remoteErrorCount = 0;
   private maxRemoteErrors = 10;
   private mutex = new Mutex();
-  private diskCache: SQLiteCache<PhotonGeocode>;
+  private diskCache: PostgresCache<PhotonGeocode>;
 
-  constructor(config: Config.GeocodingServerConfig) {
+  constructor(
+    config: Config.GeocodingServerConfig
+  ) {
     this.config = config;
 
-    // Initialize SQLite disk cache
-    const cacheFile = path.join(config.databasePath);
-    this.diskCache = new SQLiteCache<PhotonGeocode>(cacheFile, config.diskTTL);
+    // Initialize PostgreSQL disk cache
+    this.diskCache = new PostgresCache<PhotonGeocode>("geocoding", undefined, config.diskTTL);
 
     this.loader = new DataLoader<string, PhotonGeocode>(
       async (loadForKeys) => {

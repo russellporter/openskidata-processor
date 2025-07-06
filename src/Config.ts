@@ -5,20 +5,26 @@ export type GeocodingServerConfig = {
   url: string;
   // Used for the disk cache. In memory cache ignores ttl.
   diskTTL: number;
-  databasePath: string;
   inMemoryCacheSize: number;
 };
 
 export type SnowCoverFetchPolicy = "full" | "incremental" | "none";
 
 export type SnowCoverConfig = {
-  databasePath: string;
   fetchPolicy: SnowCoverFetchPolicy;
 };
 
-export type ElevationServerConfig = { url: string; databasePath: string };
+export type ElevationServerConfig = { url: string };
 
 export type TilesConfig = { mbTilesPath: string; tilesDir: string };
+
+export type PostgresCacheConfig = {
+  host: string;
+  port: number;
+  database: string;
+  user: string;
+  maxConnections: number;
+};
 
 export interface Config {
   elevationServer: ElevationServerConfig | null;
@@ -48,7 +54,6 @@ export function configFromEnvironment(): Config {
   }
   const geocodingCacheTTL = process.env.GEOCODING_SERVER_URL_TTL;
   const workingDir = process.env["WORKING_DIR"] ?? "data";
-  const persistentCacheDir = process.env.CACHE_DIR ?? workingDir;
 
   // Validate snow cover fetch policy
   const snowCoverFetchPolicy = process.env.SNOW_COVER_FETCH_POLICY;
@@ -68,7 +73,6 @@ export function configFromEnvironment(): Config {
     elevationServer: elevationServerURL
       ? {
           url: elevationServerURL,
-          databasePath: path.join(persistentCacheDir, "elevation-cache.db"),
         }
       : null,
     geocodingServer:
@@ -79,7 +83,6 @@ export function configFromEnvironment(): Config {
               geocodingCacheTTL !== undefined
                 ? Number.parseInt(geocodingCacheTTL)
                 : 1000 * 60 * 60 * 24 * 365, // 1 year
-            databasePath: path.join(persistentCacheDir, "geocoding-cache.db"),
             inMemoryCacheSize: 1000,
           }
         : null,
@@ -89,7 +92,6 @@ export function configFromEnvironment(): Config {
     snowCover:
       process.env.ENABLE_SNOW_COVER === "1"
         ? {
-            databasePath: path.join(persistentCacheDir, "snow-cover.db"),
             fetchPolicy:
               (snowCoverFetchPolicy as SnowCoverFetchPolicy) ?? "full",
           }
@@ -101,5 +103,18 @@ export function configFromEnvironment(): Config {
             tilesDir: path.join(outputDir, "openskimap"),
           }
         : null,
+  };
+}
+
+export function getPostgresCacheConfig(): PostgresCacheConfig {
+  return {
+    host: "localhost",
+    port: 5432,
+    database:
+      process.env.NODE_ENV === "test"
+        ? "openskidata_cache_test"
+        : "openskidata_cache",
+    user: "postgres",
+    maxConnections: 5,
   };
 }

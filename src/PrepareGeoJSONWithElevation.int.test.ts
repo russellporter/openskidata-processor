@@ -4,11 +4,11 @@ import tmp from "tmp";
 import { Config } from "./Config";
 import prepare from "./PrepareGeoJSON";
 import * as TestHelpers from "./TestHelpers";
+import { PostgresCache } from "./utils/PostgresCache";
 
 const config: Config = {
   elevationServer: {
     url: "http://elevation.example.com",
-    databasePath: tmp.fileSync().name,
   },
   bbox: null,
   geocodingServer: null,
@@ -30,6 +30,14 @@ function mockElevationServer(code: number) {
       }
     });
 }
+
+beforeEach(async () => {
+  // Clear elevation cache before each test to ensure test isolation
+  const elevationCache = new PostgresCache<number>("elevation");
+  await elevationCache.initialize();
+  await elevationCache.clear();
+  await elevationCache.close();
+});
 
 afterEach(() => {
   nock.cleanAll();
@@ -255,12 +263,10 @@ it("completes without adding elevations when elevation server fails", async () =
           [
             11.1223444,
             47.5572422,
-            2,
           ],
           [
             11.1164297,
             47.558156300000014,
-            21,
           ],
         ],
         "type": "LineString",

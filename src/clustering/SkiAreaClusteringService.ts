@@ -28,8 +28,6 @@ import { getPoints, getPositions } from "../transforms/GeoTransforms";
 import { getRunDifficultyConvention } from "../transforms/RunFormatter";
 import { mapAsync } from "../transforms/StreamTransforms";
 import { isPlaceholderGeometry } from "../utils/PlaceholderSiteGeometry";
-import { VIIRSCacheData } from "../utils/snowCoverHistory";
-import { SQLiteCache } from "../utils/SQLiteCache";
 import { VIIRSPixelExtractor } from "../utils/VIIRSPixelExtractor";
 import {
   ClusteringDatabase,
@@ -694,14 +692,16 @@ export class SkiAreaClusteringService {
         ...objectContext,
         bufferDistanceKm: maxDistanceInKilometers,
       };
-      
+
       let geometryForSearch: GeoJSON.Geometry = object.geometry;
-      
+
       // For ski areas, use union of member objects geometries instead of ski area geometry
       if (object.type === MapObjectType.SkiArea) {
-        geometryForSearch = await this.database.getObjectDerivedSkiAreaGeometry(object.id);
+        geometryForSearch = await this.database.getObjectDerivedSkiAreaGeometry(
+          object.id,
+        );
       }
-      
+
       const nearbyObjects = await this.database.findNearbyObjects(
         geometryForSearch,
         bufferedContext,
@@ -737,7 +737,6 @@ export class SkiAreaClusteringService {
       return foundObjects;
     }
   }
-
 
   private async mergeSkimapOrgWithOpenStreetMapSkiAreas(): Promise<void> {
     const skiAreasCursor = await this.database.getSkiAreas({
@@ -883,7 +882,6 @@ export class SkiAreaClusteringService {
       }
 
       this.lastProcessedRunKey = unassignedRun._key;
-      console.log(`Processing run ${unassignedRun._key}`);
 
       try {
         await this.generateSkiAreaForRun(unassignedRun as RunObject);
@@ -996,7 +994,6 @@ export class SkiAreaClusteringService {
     snowCoverConfig: SnowCoverConfig | null,
   ): Promise<void> {
     let geocoder: Geocoder | null = null;
-    let snowCoverArchive: SQLiteCache<VIIRSCacheData[]> | undefined;
 
     // Initialize geocoder once for all geocoding operations
     if (geocoderConfig) {
@@ -1004,14 +1001,6 @@ export class SkiAreaClusteringService {
       await geocoder.initialize();
     }
 
-    // Initialize snow cover archive once for all snow cover operations
-    if (snowCoverConfig) {
-      snowCoverArchive = new SQLiteCache<VIIRSCacheData[]>(
-        snowCoverConfig.databasePath,
-        0,
-      );
-      await snowCoverArchive.initialize();
-    }
 
     try {
       const skiAreasCursor = await this.database.getSkiAreas({});
@@ -1028,7 +1017,6 @@ export class SkiAreaClusteringService {
           skiAreas,
           geocoder,
           snowCoverConfig,
-          snowCoverArchive,
         );
         activeBatches.add(batchPromise);
 
@@ -1049,10 +1037,6 @@ export class SkiAreaClusteringService {
         await geocoder.close();
       }
 
-      // Clean up snow cover archive
-      if (snowCoverArchive) {
-        await snowCoverArchive.close();
-      }
     }
   }
 
@@ -1060,7 +1044,6 @@ export class SkiAreaClusteringService {
     skiAreas: SkiAreaObject[],
     geocoder: Geocoder | null,
     snowCoverConfig: SnowCoverConfig | null,
-    snowCoverArchive: SQLiteCache<VIIRSCacheData[]> | undefined,
   ): Promise<void> {
     return performanceMonitor.measure("batch_augmentation", async () => {
       await Promise.all(
@@ -1073,7 +1056,6 @@ export class SkiAreaClusteringService {
             mapObjects,
             geocoder,
             snowCoverConfig,
-            snowCoverArchive,
           );
         }),
       );
@@ -1085,7 +1067,6 @@ export class SkiAreaClusteringService {
     memberObjects: MapObject[],
     geocoder: Geocoder | null,
     snowCoverConfig: SnowCoverConfig | null,
-    snowCoverArchive: SQLiteCache<VIIRSCacheData[]> | undefined,
   ): Promise<void> {
     const noSkimapOrgSource = !skiArea.properties.sources.some(
       (source) => source.type === SourceType.SKIMAP_ORG,
@@ -1099,11 +1080,7 @@ export class SkiAreaClusteringService {
       return;
     }
 
-    const statistics = await skiAreaStatistics(
-      memberObjects,
-      snowCoverConfig,
-      snowCoverArchive,
-    );
+    const statistics = await skiAreaStatistics(memberObjects, snowCoverConfig);
     const updatedProperties = {
       ...skiArea.properties,
       statistics,
@@ -1209,16 +1186,7 @@ export class SkiAreaClusteringService {
       `Augmenting ${featureType} features from ${inputPath} to ${outputPath}`,
     );
 
-    let snowCoverArchive: SQLiteCache<VIIRSCacheData[]> | undefined;
 
-    // Initialize snow cover archive if needed for runs
-    if (snowCoverConfig && featureType === FeatureType.Run) {
-      snowCoverArchive = new SQLiteCache<VIIRSCacheData[]>(
-        snowCoverConfig.databasePath,
-        0,
-      );
-      await snowCoverArchive.initialize();
-    }
 
     try {
       await augmentGeoJSONFeatures(
@@ -1227,13 +1195,8 @@ export class SkiAreaClusteringService {
         this.database,
         featureType,
         snowCoverConfig,
-        snowCoverArchive,
       );
     } finally {
-      // Clean up snow cover archive
-      if (snowCoverArchive) {
-        await snowCoverArchive.close();
-      }
     }
   }
 

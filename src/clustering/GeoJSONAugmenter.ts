@@ -6,9 +6,7 @@ import { readGeoJSONFeatures } from "../io/GeoJSONReader";
 import toFeatureCollection from "../transforms/FeatureCollection";
 import { mapAsync } from "../transforms/StreamTransforms";
 import { toSkiAreaSummary } from "../transforms/toSkiAreaSummary";
-import { getSnowCoverHistory } from "../utils/snowCoverHistory";
-import { SQLiteCache } from "../utils/SQLiteCache";
-import { VIIRSCacheData } from "../utils/snowCoverHistory";
+import { getSnowCoverHistoryFromCache, VIIRSCacheData } from "../utils/snowCoverHistory";
 import {
   AugmentedMapFeature,
   MapFeature,
@@ -24,7 +22,6 @@ export default async function augmentGeoJSONFeatures(
   database: ClusteringDatabase,
   featureType: FeatureType,
   snowCoverConfig: SnowCoverConfig | null,
-  snowCoverArchive?: SQLiteCache<VIIRSCacheData[]>,
 ) {
   await streamToPromise(
     readGeoJSONFeatures(inputPath)
@@ -37,13 +34,10 @@ export default async function augmentGeoJSONFeatures(
             .map(toSkiAreaSummary);
 
           // Add snow cover history for runs if snow cover config is provided
-          if (snowCoverConfig && snowCoverArchive && featureType === FeatureType.Run) {
+          if (snowCoverConfig && featureType === FeatureType.Run) {
             const runObject = await database.getRunObjectById(feature.properties.id);
             if (runObject) {
-              const snowCoverHistory = await generateRunSnowCoverHistory(
-                runObject,
-                snowCoverArchive,
-              );
+              const snowCoverHistory = await generateRunSnowCoverHistory(runObject);
               if (snowCoverHistory && snowCoverHistory.length > 0) {
                 feature.properties.snowCoverHistory = snowCoverHistory;
               }
@@ -58,12 +52,9 @@ export default async function augmentGeoJSONFeatures(
   );
 }
 
-async function generateRunSnowCoverHistory(
-  runObject: RunObject,
-  snowCoverArchive: SQLiteCache<VIIRSCacheData[]>,
-) {
+async function generateRunSnowCoverHistory(runObject: RunObject) {
   try {
-    return await getSnowCoverHistory(snowCoverArchive, runObject.viirsPixels);
+    return await getSnowCoverHistoryFromCache(runObject.viirsPixels);
   } catch (error) {
     console.error(
       `Failed to generate snow cover history for run ${runObject._key}:`,

@@ -63,7 +63,6 @@ async function fetchSnowCoverIfEnabled(
     args.push(runsPath);
   }
 
-  args.push("--archive-file", config.snowCover.databasePath);
 
   // Determine which Python executable to use
   let pythonExecutable = "python3"; // Default fallback

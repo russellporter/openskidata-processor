@@ -1,7 +1,7 @@
 import { addWeeks, getDayOfYear, startOfYear, subDays } from "date-fns";
 import { SnowCoverHistory } from "openskidata-format";
 import { VIIRSPixel } from "./VIIRSPixelExtractor";
-import { SQLiteCache } from "./SQLiteCache";
+import { PostgresCache } from "./PostgresCache";
 
 export interface VIIRSCacheData {
   year: number;
@@ -254,16 +254,16 @@ export function aggregatePixelHistories(
 }
 
 /**
- * Read VIIRS cache data for a single pixel from SQLite cache.
+ * Read VIIRS cache data for a single pixel from PostgreSQL cache.
  *
- * @param cache SQLite cache instance
+ * @param cache PostgreSQL cache instance
  * @param tileId Tile identifier (e.g., "h12v04")
  * @param row Pixel row
  * @param col Pixel column
  * @returns Pixel data or null if not found or invalid
  */
 async function readPixelCacheData(
-  cache: SQLiteCache<VIIRSCacheData[]>,
+  cache: PostgresCache<VIIRSCacheData[]>,
   tileId: string,
   row: number,
   col: number,
@@ -313,14 +313,14 @@ async function readPixelCacheData(
 }
 
 /**
- * Get snow cover history for the given VIIRS pixels using SQLite cache.
+ * Get snow cover history for the given VIIRS pixels using PostgreSQL cache.
  *
- * @param cache SQLite cache instance 
+ * @param cache PostgreSQL cache instance 
  * @param pixels Array of VIIRS pixels in format [hTile, vTile, col, row]
  * @returns Aggregated snow cover history across all pixels
  */
 export async function getSnowCoverHistory(
-  cache: SQLiteCache<VIIRSCacheData[]>,
+  cache: PostgresCache<VIIRSCacheData[]>,
   pixels: VIIRSPixel[],
 ): Promise<SnowCoverHistory> {
   if (!Array.isArray(pixels)) return [];
@@ -366,15 +366,13 @@ export async function getSnowCoverHistory(
 /**
  * Create a snow cover archive instance and get history for given pixels.
  *
- * @param snowCoverArchiveFile Path to SQLite archive file
  * @param pixels Array of VIIRS pixels in format [hTile, vTile, col, row]
  * @returns Aggregated snow cover history across all pixels
  */
-export async function getSnowCoverHistoryFromFile(
-  snowCoverArchiveFile: string,
+export async function getSnowCoverHistoryFromCache(
   pixels: VIIRSPixel[],
 ): Promise<SnowCoverHistory> {
-  const archive = new SQLiteCache<VIIRSCacheData[]>(snowCoverArchiveFile, 0);
+  const archive = new PostgresCache<VIIRSCacheData[]>("snow_cover", undefined, 0);
   try {
     await archive.initialize();
     return await getSnowCoverHistory(archive, pixels);

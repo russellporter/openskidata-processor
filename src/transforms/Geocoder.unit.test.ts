@@ -1,11 +1,17 @@
 import nock from "nock";
-import * as tmp from "tmp";
 import Geocoder, { PhotonGeocode } from "./Geocoder";
 
 const geocoderURL = "http://geocoder.example.com";
 
 describe("Geocoder", () => {
   let geocoder: Geocoder;
+
+  beforeEach(async () => {
+    // Clear any existing cache data before each test to ensure clean state
+    if (geocoder) {
+      await geocoder.close();
+    }
+  });
 
   afterEach(async () => {
     if (geocoder) {
@@ -16,11 +22,28 @@ describe("Geocoder", () => {
   async function setupDefaultGeocoder() {
     geocoder = new Geocoder({
       url: geocoderURL + "/reverse",
-      databasePath: tmp.fileSync().name,
       diskTTL: 0,
       inMemoryCacheSize: 0,
     });
     await geocoder.initialize();
+
+    // Clear cache to ensure test isolation
+    await (geocoder as any).diskCache.clear();
+
+    return geocoder;
+  }
+
+  async function setupGeocoderWithTTL(ttl: number) {
+    geocoder = new Geocoder({
+      url: geocoderURL + "/reverse",
+      diskTTL: ttl,
+      inMemoryCacheSize: 0,
+    });
+    await geocoder.initialize();
+
+    // Clear cache to ensure test isolation
+    await (geocoder as any).diskCache.clear();
+
     return geocoder;
   }
   it("caches in memory", async () => {
@@ -36,13 +59,15 @@ describe("Geocoder", () => {
       });
 
     geocoder = new Geocoder({
-      databasePath: tmp.fileSync().name,
       diskTTL: 0,
       inMemoryCacheSize: 10,
       url: geocoderURL + "/reverse",
     });
 
     await geocoder.initialize();
+
+    // Clear cache to ensure test isolation
+    await (geocoder as any).diskCache.clear();
 
     const result = await geocoder.geocode([0, 0]);
 
@@ -67,14 +92,7 @@ describe("Geocoder", () => {
           .response;
       });
 
-    geocoder = new Geocoder({
-      databasePath: tmp.fileSync().name,
-      diskTTL: 60 * 1000,
-      inMemoryCacheSize: 0,
-      url: geocoderURL + "/reverse",
-    });
-
-    await geocoder.initialize();
+    await setupGeocoderWithTTL(60 * 1000);
 
     const result = await geocoder.geocode([0, 0]);
 
@@ -101,18 +119,18 @@ describe("Geocoder", () => {
 
     const result = await geocoder.geocode([0, 0]);
     expect(result).toMatchInlineSnapshot(`
-      {
-        "iso3166_1Alpha2": "DE",
-        "iso3166_2": null,
-        "localized": {
-          "en": {
-            "country": "Germany",
-            "locality": null,
-            "region": null,
-          },
-        },
-      }
-    `);
+{
+  "iso3166_1Alpha2": "DE",
+  "iso3166_2": null,
+  "localized": {
+    "en": {
+      "country": "Germany",
+      "locality": null,
+      "region": null,
+    },
+  },
+}
+`);
   });
 
   it("handles geocode without city", async () => {
@@ -128,18 +146,18 @@ describe("Geocoder", () => {
 
     const result = await geocoder.geocode([0, 0]);
     expect(result).toMatchInlineSnapshot(`
-      {
-        "iso3166_1Alpha2": "DE",
-        "iso3166_2": "DE-BY",
-        "localized": {
-          "en": {
-            "country": "Germany",
-            "locality": null,
-            "region": "Bavaria",
-          },
-        },
-      }
-    `);
+{
+  "iso3166_1Alpha2": "DE",
+  "iso3166_2": "DE-BY",
+  "localized": {
+    "en": {
+      "country": "Germany",
+      "locality": null,
+      "region": "Bavaria",
+    },
+  },
+}
+`);
   });
 
   it("handles geocode", async () => {
@@ -156,18 +174,18 @@ describe("Geocoder", () => {
 
     const result = await geocoder.geocode([0, 0]);
     expect(result).toMatchInlineSnapshot(`
-      {
-        "iso3166_1Alpha2": "DE",
-        "iso3166_2": "DE-BY",
-        "localized": {
-          "en": {
-            "country": "Germany",
-            "locality": "Mittenwald",
-            "region": "Bavaria",
-          },
-        },
-      }
-    `);
+{
+  "iso3166_1Alpha2": "DE",
+  "iso3166_2": "DE-BY",
+  "localized": {
+    "en": {
+      "country": "Germany",
+      "locality": "Mittenwald",
+      "region": "Bavaria",
+    },
+  },
+}
+`);
   });
 
   it("can enhance a US geocode", async () => {
@@ -179,18 +197,18 @@ describe("Geocoder", () => {
 
     const result = await geocoder.geocode([0, 0]);
     expect(result).toMatchInlineSnapshot(`
-      {
-        "iso3166_1Alpha2": "US",
-        "iso3166_2": "US-CA",
-        "localized": {
-          "en": {
-            "country": "United States",
-            "locality": "Alpine Meadows",
-            "region": "California",
-          },
-        },
-      }
-    `);
+{
+  "iso3166_1Alpha2": "US",
+  "iso3166_2": "US-CA",
+  "localized": {
+    "en": {
+      "country": "United States",
+      "locality": "Alpine Meadows",
+      "region": "California",
+    },
+  },
+}
+`);
   });
 
   it("can enhance a Kosovo geocode", async () => {
@@ -207,18 +225,18 @@ describe("Geocoder", () => {
 
     const result = await geocoder.geocode([0, 0]);
     expect(result).toMatchInlineSnapshot(`
-      {
-        "iso3166_1Alpha2": "XK",
-        "iso3166_2": null,
-        "localized": {
-          "en": {
-            "country": "Kosovo",
-            "locality": "Municipality of Štrpce",
-            "region": null,
-          },
-        },
-      }
-    `);
+{
+  "iso3166_1Alpha2": "XK",
+  "iso3166_2": null,
+  "localized": {
+    "en": {
+      "country": "Kosovo",
+      "locality": "Municipality of Štrpce",
+      "region": null,
+    },
+  },
+}
+`);
   });
 
   it("can enhance a Czechia geocode", async () => {
@@ -230,18 +248,18 @@ describe("Geocoder", () => {
 
     const result = await geocoder.geocode([0, 0]);
     expect(result).toMatchInlineSnapshot(`
-      {
-        "iso3166_1Alpha2": "CZ",
-        "iso3166_2": "CZ-LI",
-        "localized": {
-          "en": {
-            "country": "Czech Republic",
-            "locality": "Vítkovice",
-            "region": "Liberec Region",
-          },
-        },
-      }
-    `);
+{
+  "iso3166_1Alpha2": "CZ",
+  "iso3166_2": "CZ-LI",
+  "localized": {
+    "en": {
+      "country": "Czech Republic",
+      "locality": "Vítkovice",
+      "region": "Liberec Region",
+    },
+  },
+}
+`);
   });
 
   it("can enhance a Japan geocode", async () => {
@@ -253,18 +271,18 @@ describe("Geocoder", () => {
 
     const result = await geocoder.geocode([0, 0]);
     expect(result).toMatchInlineSnapshot(`
-      {
-        "iso3166_1Alpha2": "JP",
-        "iso3166_2": "JP-32",
-        "localized": {
-          "en": {
-            "country": "Japan",
-            "locality": "Hamada",
-            "region": "Shimane Prefecture",
-          },
-        },
-      }
-    `);
+{
+  "iso3166_1Alpha2": "JP",
+  "iso3166_2": "JP-32",
+  "localized": {
+    "en": {
+      "country": "Japan",
+      "locality": "Hamada",
+      "region": "Shimane Prefecture",
+    },
+  },
+}
+`);
   });
 
   it("does not geocode invalid country", async () => {
@@ -285,18 +303,18 @@ describe("Geocoder", () => {
 
     const result = await geocoder.geocode([0, 0]);
     expect(result).toMatchInlineSnapshot(`
-      {
-        "iso3166_1Alpha2": "DE",
-        "iso3166_2": null,
-        "localized": {
-          "en": {
-            "country": "Germany",
-            "locality": null,
-            "region": null,
-          },
-        },
-      }
-    `);
+{
+  "iso3166_1Alpha2": "DE",
+  "iso3166_2": null,
+  "localized": {
+    "en": {
+      "country": "Germany",
+      "locality": null,
+      "region": null,
+    },
+  },
+}
+`);
   });
 });
 

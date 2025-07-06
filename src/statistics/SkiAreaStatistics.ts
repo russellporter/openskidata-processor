@@ -14,9 +14,7 @@ import {
   RunObject,
 } from "../clustering/MapObject";
 import { SnowCoverConfig } from "../Config";
-import { getSnowCoverHistory } from "../utils/snowCoverHistory";
-import { SQLiteCache } from "../utils/SQLiteCache";
-import { VIIRSCacheData } from "../utils/snowCoverHistory";
+import { getSnowCoverHistoryFromCache, VIIRSCacheData } from "../utils/snowCoverHistory";
 import { VIIRSPixel } from "../utils/VIIRSPixelExtractor";
 
 const allSkiAreaActivities = new Set([
@@ -43,7 +41,6 @@ type MapObjectStatistics = {
 export async function skiAreaStatistics(
   mapObjects: MapObject[],
   snowCoverConfig: SnowCoverConfig | null,
-  snowCoverArchive?: SQLiteCache<VIIRSCacheData[]>,
 ): Promise<SkiAreaStatistics> {
   const runStats = runStatistics(mapObjects.filter(isRun));
   const liftStats = liftStatistics(mapObjects.filter(isLift));
@@ -61,10 +58,9 @@ export async function skiAreaStatistics(
   }
 
   // Generate snow cover statistics if snow cover config is provided
-  if (snowCoverConfig && snowCoverArchive) {
+  if (snowCoverConfig) {
     const snowCoverStats = await generateSnowCoverStatistics(
       mapObjects.filter(isRun),
-      snowCoverArchive,
     );
     if (snowCoverStats) {
       statistics.snowCover = snowCoverStats;
@@ -227,7 +223,6 @@ interface ObjectStatistics extends ObjectElevationStatistics {
 
 async function generateSnowCoverStatistics(
   runs: RunObject[],
-  snowCoverArchive: SQLiteCache<VIIRSCacheData[]>,
 ): Promise<SkiAreaSnowCoverStatistics | null> {
   if (runs.length === 0) {
     return null;
@@ -241,7 +236,7 @@ async function generateSnowCoverStatistics(
     ).map((pixelString) => pixelString.split(",").map(Number) as VIIRSPixel);
 
     // Get overall snow cover history for all runs
-    const overallHistory = await getSnowCoverHistory(snowCoverArchive, uniquePixels);
+    const overallHistory = await getSnowCoverHistoryFromCache(uniquePixels);
 
     // Group runs by activity and get snow cover for each activity
     const runsByActivity: Partial<
@@ -275,8 +270,7 @@ async function generateSnowCoverStatistics(
         new Set(activityPixels.map((pixel) => pixel.join(","))),
       ).map((pixelString) => pixelString.split(",").map(Number) as VIIRSPixel);
 
-      const activityHistory = await getSnowCoverHistory(
-        snowCoverArchive,
+      const activityHistory = await getSnowCoverHistoryFromCache(
         uniqueActivityPixels,
       );
 
