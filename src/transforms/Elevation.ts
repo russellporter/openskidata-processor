@@ -150,7 +150,7 @@ async function loadElevations(
   }
 
   // Cache and assign fetched elevations
-  const cacheEntries: Array<{ key: string; value: number | null }> = [];
+  const cacheEntries = new Map<string, number | null>();
 
   for (let i = 0; i < uncachedIndices.length; i++) {
     const originalIndex = uncachedIndices[i];
@@ -158,13 +158,17 @@ async function loadElevations(
     const [lat, lng] = coordinates[originalIndex];
     const cacheKey = geohash.encode(lat, lng, 9);
 
-    // Cache the elevation (including null values)
-    cacheEntries.push({ key: cacheKey, value: elevation });
+    // Deduplicate cache entries (same coordinate may appear multiple times)
+    cacheEntries.set(cacheKey, elevation);
     results[originalIndex] = elevation;
   }
 
-  // Batch cache all new elevations (including nulls)
-  await cache.setMany(cacheEntries);
+  // Batch cache all unique new elevations (including nulls)
+  if (cacheEntries.size > 0) {
+    await cache.setMany(
+      Array.from(cacheEntries.entries()).map(([key, value]) => ({ key, value }))
+    );
+  }
 
   // Check for any null values in final results (cached or fetched)
   if (results.some((elevation) => elevation === null)) {

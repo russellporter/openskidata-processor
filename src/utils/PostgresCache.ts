@@ -303,6 +303,16 @@ export class PostgresCache<T> {
       return;
     }
 
+    // Deduplicate entries by key (keep last value for each key)
+    const uniqueEntries = new Map<string, T>();
+    for (const entry of entries) {
+      uniqueEntries.set(entry.key, entry.value);
+    }
+
+    if (uniqueEntries.size === 0) {
+      return;
+    }
+
     const pool = this.ensureInitialized();
     const client = await pool.connect();
     
@@ -313,10 +323,10 @@ export class PostgresCache<T> {
       const values: any[] = [];
       const placeholders: string[] = [];
       
-      entries.forEach((entry, i) => {
+      Array.from(uniqueEntries.entries()).forEach(([key, value], i) => {
         const offset = i * 3;
         placeholders.push(`($${offset + 1}, $${offset + 2}, $${offset + 3})`);
-        values.push(entry.key, this.serializeValue(entry.value), timestamp);
+        values.push(key, this.serializeValue(value), timestamp);
       });
       
       const query = `
