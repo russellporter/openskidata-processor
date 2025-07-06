@@ -33,14 +33,14 @@ host    all             all             0.0.0.0/0               trust
 EOF
 fi
 
+# Update PostgreSQL config to use the data directory
+sed -i "s|data_directory = '/var/lib/postgresql/15/main'|data_directory = '/var/lib/postgresql/data'|" /etc/postgresql/15/main/postgresql.conf
+
 # Initialize PostgreSQL if not already initialized
 if [ ! -f /var/lib/postgresql/data/PG_VERSION ]; then
     echo "Initializing PostgreSQL database..."
     su - postgres -c "/usr/lib/postgresql/15/bin/initdb -D /var/lib/postgresql/data"
-    
-    # Update PostgreSQL config to use the data directory
-    sed -i "s|data_directory = '/var/lib/postgresql/15/main'|data_directory = '/var/lib/postgresql/data'|" /etc/postgresql/15/main/postgresql.conf
-    
+
     # Start PostgreSQL temporarily to create user if needed
     su - postgres -c "/usr/lib/postgresql/15/bin/pg_ctl -D /var/lib/postgresql/data -l /var/log/postgresql/postgresql-15-main.log start"
     
