@@ -1,5 +1,5 @@
 import { Pool, PoolClient } from "pg";
-import { PostgresCacheConfig, getPostgresCacheConfig } from "../Config";
+import { PostgresCacheConfig, getPostgresCacheConfig, createPostgresPoolConfig } from "../Config";
 
 export interface CacheEntry<T> {
   key: string;
@@ -39,16 +39,12 @@ export class PostgresCache<T> {
     await this.ensureCacheDatabase();
 
     // Create connection pool to cache database
-    this.pool = new Pool({
-      host: this.config.host,
-      port: this.config.port,
-      database: this.config.database,
-      user: this.config.user,
-      max: this.config.maxConnections,
-      idleTimeoutMillis: 60000,
-      connectionTimeoutMillis: 30000,
-      allowExitOnIdle: true,
-    });
+    const poolConfig = createPostgresPoolConfig(this.config.database, this.config.maxConnections);
+    poolConfig.idleTimeoutMillis = 60000;
+    poolConfig.connectionTimeoutMillis = 30000;
+    poolConfig.allowExitOnIdle = true;
+    
+    this.pool = new Pool(poolConfig);
 
     // Test connection
     try {
@@ -69,15 +65,7 @@ export class PostgresCache<T> {
 
   private async ensureCacheDatabase(): Promise<void> {
     // Connect to postgres database to create cache database
-    const adminPool = new Pool({
-      host: this.config.host,
-      port: this.config.port,
-      database: "postgres",
-      user: this.config.user,
-      max: 2,
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 10000,
-    });
+    const adminPool = new Pool(createPostgresPoolConfig("postgres", 2));
 
     try {
       const client = await adminPool.connect();

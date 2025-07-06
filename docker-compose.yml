@@ -9,8 +9,12 @@ services:
     working_dir: /app
     stdin_open: true
     tty: true
+    ports:
+      - "5433:5432"
     environment:
       - ELEVATION_SERVER_URL=http://elevation-server:3000/points/elevation
+      - POSTGRES_USER=dev
+      - POSTGRES_PASSWORD=dev
 
   elevation-server:
     image: "russellporter/elevation-server:latest"

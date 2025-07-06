@@ -12,6 +12,7 @@ import {
   SkiAreasCursor,
 } from "./ClusteringDatabase";
 import { performanceMonitor } from "./PerformanceMonitor";
+import { createPostgresPoolConfig } from "../../Config";
 
 /**
  * PostgreSQL implementation of ClusteringDatabase using PostGIS for spatial queries.
@@ -62,15 +63,10 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
 
   async initialize(): Promise<void> {
     // First connect to postgres database to create our temporary database
-    const adminPool = new Pool({
-      host: "localhost",
-      port: 5432,
-      database: "postgres", // Connect to default postgres database
-      user: "postgres",
-      max: 5,
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 2000,
-    });
+    const adminPoolConfig = createPostgresPoolConfig("postgres", 5);
+    adminPoolConfig.connectionTimeoutMillis = 2000;
+    
+    const adminPool = new Pool(adminPoolConfig);
 
     try {
       // Create temporary database
@@ -90,16 +86,12 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
     }
 
     // Now create connection pool to our temporary database
-    this.pool = new Pool({
-      host: "localhost",
-      port: 5432,
-      database: this.databaseName,
-      user: "postgres",
-      max: 10, // Reasonable pool size for clustering workload
-      idleTimeoutMillis: 120000, // Close idle clients after 60 seconds
-      connectionTimeoutMillis: 60000, // Return an error after 60 seconds if connection could not be established
-      allowExitOnIdle: true, // Allow process to exit even if pool has idle connections
-    });
+    const poolConfig = createPostgresPoolConfig(this.databaseName, 10);
+    poolConfig.idleTimeoutMillis = 120000; // Close idle clients after 60 seconds
+    poolConfig.connectionTimeoutMillis = 60000; // Return an error after 60 seconds if connection could not be established
+    poolConfig.allowExitOnIdle = true; // Allow process to exit even if pool has idle connections
+    
+    this.pool = new Pool(poolConfig);
 
     // Test connection
     try {
@@ -157,15 +149,10 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
     await new Promise((resolve) => setTimeout(resolve, 200));
 
     // Delete the temporary database
-    const adminPool = new Pool({
-      host: "localhost",
-      port: 5432,
-      database: "postgres", // Connect to default postgres database
-      user: "postgres",
-      max: 5,
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 2000,
-    });
+    const adminPoolConfig = createPostgresPoolConfig("postgres", 5);
+    adminPoolConfig.connectionTimeoutMillis = 2000;
+    
+    const adminPool = new Pool(adminPoolConfig);
 
     try {
       const adminClient = await adminPool.connect();

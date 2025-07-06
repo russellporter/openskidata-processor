@@ -23,6 +23,7 @@ export type PostgresCacheConfig = {
   port: number;
   database: string;
   user: string;
+  password?: string;
   maxConnections: number;
 };
 
@@ -106,6 +107,24 @@ export function configFromEnvironment(): Config {
   };
 }
 
+export function createPostgresPoolConfig(database: string, maxConnections: number = 5): any {
+  const config: any = {
+    host: "localhost",
+    port: 5432,
+    database,
+    user: process.env.POSTGRES_USER || "postgres",
+    max: maxConnections,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 10000,
+  };
+  
+  if (process.env.POSTGRES_PASSWORD) {
+    config.password = process.env.POSTGRES_PASSWORD;
+  }
+  
+  return config;
+}
+
 export function getPostgresCacheConfig(): PostgresCacheConfig {
   return {
     host: "localhost",
@@ -114,7 +133,8 @@ export function getPostgresCacheConfig(): PostgresCacheConfig {
       process.env.NODE_ENV === "test"
         ? "openskidata_cache_test"
         : "openskidata_cache",
-    user: "postgres",
+    user: process.env.POSTGRES_USER || "postgres",
+    password: process.env.POSTGRES_PASSWORD,
     maxConnections: 5,
   };
 }
