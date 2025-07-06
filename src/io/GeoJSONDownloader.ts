@@ -23,7 +23,7 @@ export default async function downloadAndConvertToGeoJSON(
     const paths = new InputDataPaths(folder);
 
     // Serialize downloads using the same endpoint so we don't get rate limited by the Overpass API
-    await performanceMonitor.withOperation("OSM Data Download", async () => {
+    await performanceMonitor.withOperation("Downloading OSM data", async () => {
       await Promise.all([
         downloadOSMJSON(
           OSMEndpoint.Z,
@@ -56,7 +56,7 @@ export default async function downloadAndConvertToGeoJSON(
     });
 
     // Conversions are done serially for lower memory pressure.
-    await performanceMonitor.withOperation("JSON Conversion", async () => {
+    await performanceMonitor.withOperation("Converting to JSON", async () => {
       await convertOSMFileToGeoJSON(paths.osmJSON.runs, paths.geoJSON.runs);
       await convertOSMFileToGeoJSON(paths.osmJSON.lifts, paths.geoJSON.lifts);
       await convertOSMFileToGeoJSON(

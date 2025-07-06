@@ -31,7 +31,7 @@ export class RunNormalizerAccumulator
     this.features = [];
 
     return performanceMonitor.withOperationSync(
-      "Run Topology Normalization",
+      "Normalizing run topology",
       () => {
         const topology = mergeOverlappingRuns(
           topojsonServer.topology({

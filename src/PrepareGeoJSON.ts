@@ -219,7 +219,7 @@ export default async function prepare(paths: DataPaths, config: Config) {
     // Generate tiles if enabled
     const tilesConfig = config.tiles;
     if (tilesConfig) {
-      await performanceMonitor.withOperation("Tiles Generation", async () => {
+      await performanceMonitor.withOperation("Generating tiles", async () => {
         await generateTiles(
           paths.output.mapboxGL,
           config.workingDir,
