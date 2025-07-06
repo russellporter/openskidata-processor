@@ -348,8 +348,8 @@ export class PostgresCache<T> {
     const client = await pool.connect();
     try {
       await client.query(
-        "DELETE FROM cache WHERE cache_type = $1 AND key = $2",
-        [this.cacheType, key]
+        `DELETE FROM ${this.tableName} WHERE key = $1`,
+        [key]
       );
     } finally {
       client.release();

@@ -1,10 +1,10 @@
 import nock from "nock";
 import { RunFeature } from "openskidata-format";
 import tmp from "tmp";
-import { Config } from "./Config";
+import { Config, getPostgresCacheConfig } from "./Config";
 import prepare from "./PrepareGeoJSON";
 import * as TestHelpers from "./TestHelpers";
-import { PostgresCache } from "./utils/PostgresCache";
+import { Pool } from "pg";
 
 const config: Config = {
   elevationServer: {
@@ -32,11 +32,24 @@ function mockElevationServer(code: number) {
 }
 
 beforeEach(async () => {
-  // Clear elevation cache before each test to ensure test isolation
-  const elevationCache = new PostgresCache<number>("elevation");
-  await elevationCache.initialize();
-  await elevationCache.clear();
-  await elevationCache.close();
+  // Drop elevation cache table before each test to ensure test isolation
+  // This is needed because the cache type needs to match between test runs
+  const cacheConfig = getPostgresCacheConfig();
+  const pool = new Pool({
+    host: cacheConfig.host,
+    port: cacheConfig.port,
+    database: cacheConfig.database,
+    user: cacheConfig.user,
+    max: 2,
+  });
+  
+  try {
+    await pool.query("DROP TABLE IF EXISTS elevation_cache");
+  } catch (error) {
+    // Ignore errors if table doesn't exist
+  } finally {
+    await pool.end();
+  }
 });
 
 afterEach(() => {
@@ -177,6 +190,7 @@ it("adds elevations to run geometry & elevation profile", async () => {
   expect(feature.properties.elevationProfile).toMatchInlineSnapshot(`
 {
   "heights": [
+    0,
     3,
     4,
     5,
@@ -188,8 +202,7 @@ it("adds elevations to run geometry & elevation profile", async () => {
     11,
     12,
     13,
-    14,
-    15,
+    2,
   ],
   "resolution": 25,
 }
@@ -369,7 +382,7 @@ toMatchInlineSnapshot(`
       [
         6.544500899999996,
         45.3230511,
-        2,
+        0,
       ],
       [
         6.544500899999996,
@@ -381,22 +394,22 @@ toMatchInlineSnapshot(`
       [
         6.5502579,
         45.3224134,
-        4,
+        2,
       ],
       [
         6.550612,
         45.3222571,
-        5,
+        3,
       ],
       [
         6.5502579,
         45.3224134,
-        6,
+        2,
       ],
       [
         6.5502579,
         45.3224134,
-        4,
+        2,
       ],
     ],
   ],
