@@ -5,6 +5,7 @@ services:
       target: development
     volumes:
       - .:/app
+      - ./data/postgres:/var/lib/postgresql/data
     working_dir: /app
     stdin_open: true
     tty: true
