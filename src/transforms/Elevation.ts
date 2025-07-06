@@ -1,4 +1,5 @@
 import * as geohash from "ngeohash";
+import DataLoader from "dataloader";
 import {
   extractPointsForElevationProfile,
   FeatureType,
@@ -29,6 +30,16 @@ export async function createElevationProcessor(
   );
   await cache.initialize();
 
+  const elevationLoader = new DataLoader<string, number | null>(
+    async (geohashes: readonly string[]) => {
+      return await batchLoadElevations(Array.from(geohashes), elevationServerConfig.url, cache);
+    },
+    {
+      batch: true,
+      maxBatchSize: 10000,
+    },
+  );
+
   const processFeature = async (
     feature: RunFeature | LiftFeature,
   ): Promise<RunFeature | LiftFeature> => {
@@ -42,14 +53,19 @@ export async function createElevationProcessor(
 
     let elevations: number[];
     try {
-      elevations = await loadElevations(
-        // Elevation service expects lat,lng order instead of lng,lat of GeoJSON
-        Array.from(coordinates)
-          .concat(elevationProfileCoordinates)
-          .map(([lng, lat]) => [lat, lng]),
-        elevationServerConfig.url,
-        cache,
-      );
+      // Generate geohash keys for all coordinates
+      const allCoordinates = Array.from(coordinates).concat(elevationProfileCoordinates);
+      const geohashes = allCoordinates.map(([lng, lat]) => geohash.encode(lat, lng, 9));
+      
+      // Load elevations using DataLoader
+      const elevationResults = await Promise.all(geohashes.map(hash => elevationLoader.load(hash)));
+      
+      // Filter out nulls
+      if (elevationResults.some(elevation => elevation === null)) {
+        throw new Error("Elevation data contains nulls");
+      }
+      
+      elevations = elevationResults as number[];
     } catch (error) {
       console.log("Failed to load elevations", error);
       return feature;
@@ -85,43 +101,33 @@ export async function createElevationProcessor(
   };
 }
 
-async function loadElevations(
-  coordinates: number[][],
+async function batchLoadElevations(
+  geohashes: string[],
   elevationServerURL: string,
   cache: PostgresCache<number | null>,
-): Promise<number[]> {
-  const results: (number | null)[] = new Array(coordinates.length);
+): Promise<(number | null)[]> {
+  const results: (number | null)[] = new Array(geohashes.length);
   const uncachedIndices: number[] = [];
   const uncachedCoordinates: number[][] = [];
 
-  // Generate cache keys for all coordinates using geohash precision 9
-  const cacheKeys = coordinates.map(([lat, lng]) =>
-    geohash.encode(lat, lng, 9),
-  );
-
   // Batch fetch from cache
-  const cachedElevations = await cache.getMany(cacheKeys);
+  const cachedElevations = await cache.getMany(geohashes);
 
   // Identify uncached coordinates
-  for (let i = 0; i < coordinates.length; i++) {
+  for (let i = 0; i < geohashes.length; i++) {
     const cachedElevation = cachedElevations[i];
     if (cachedElevation !== undefined) {
-      // Found in cache (could be number or null)
       results[i] = cachedElevation;
     } else {
-      // Not found in cache, need to fetch
       uncachedIndices.push(i);
-      uncachedCoordinates.push(coordinates[i]);
+      const decoded = geohash.decode(geohashes[i]);
+      uncachedCoordinates.push([decoded.latitude, decoded.longitude]);
     }
   }
 
   // If all coordinates were cached, return results
   if (uncachedCoordinates.length === 0) {
-    // Check for any null values in final results
-    if (results.some((elevation) => elevation === null)) {
-      throw new Error("Elevation data contains nulls");
-    }
-    return results as number[];
+    return results;
   }
 
   // Fetch elevations for uncached coordinates
@@ -149,33 +155,24 @@ async function loadElevations(
     );
   }
 
-  // Cache and assign fetched elevations
-  const cacheEntries = new Map<string, number | null>();
+  // Cache fetched elevations
+  const cacheEntries: Array<{ key: string; value: number | null }> = [];
 
   for (let i = 0; i < uncachedIndices.length; i++) {
     const originalIndex = uncachedIndices[i];
-    const elevation = fetchedElevations[i]; // Could be number or null
-    const [lat, lng] = coordinates[originalIndex];
-    const cacheKey = geohash.encode(lat, lng, 9);
+    const elevation = fetchedElevations[i];
+    const geohash = geohashes[originalIndex];
 
-    // Deduplicate cache entries (same coordinate may appear multiple times)
-    cacheEntries.set(cacheKey, elevation);
+    cacheEntries.push({ key: geohash, value: elevation });
     results[originalIndex] = elevation;
   }
 
-  // Batch cache all unique new elevations (including nulls)
-  if (cacheEntries.size > 0) {
-    await cache.setMany(
-      Array.from(cacheEntries.entries()).map(([key, value]) => ({ key, value }))
-    );
+  // Batch cache new elevations
+  if (cacheEntries.length > 0) {
+    await cache.setMany(cacheEntries);
   }
 
-  // Check for any null values in final results (cached or fetched)
-  if (results.some((elevation) => elevation === null)) {
-    throw new Error("Elevation data contains nulls");
-  }
-
-  return results as number[];
+  return results;
 }
 
 function getCoordinates(feature: RunFeature | LiftFeature) {
