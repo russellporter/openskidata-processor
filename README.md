@@ -60,7 +60,7 @@ To speed up subsequent runs of the processor, some data (elevations, geocodes, s
 
 ### Elevation data
 
-Features will be augmented with elevation data.
+Features will be augmented with elevation data. Enabled out of the box when the docker compose file is used.
 
 To enable, set `ELEVATION_SERVER_URL` to an endpoint that can receive POST requests in the format of https://github.com/racemap/elevation-service.
 You should use a local instance of the elevation server because a large number of requests will be performed.

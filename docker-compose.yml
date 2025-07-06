@@ -8,3 +8,14 @@ services:
     working_dir: /app
     stdin_open: true
     tty: true
+    environment:
+      - ELEVATION_SERVER_URL=http://elevation-server:3000/points/elevation
+
+  elevation-server:
+    image: "russellporter/elevation-server:latest"
+    ports:
+      - "3000"
+    volumes:
+      - ./data/elevation-tiles:/var/cache/elevation-tiles
+    user: root
+    command: bash -c "chown node:node /var/cache/elevation-tiles && /bin/su -c \"NODE_ENV=production ELEVATION_TILE_CACHE_DIR=/var/cache/elevation-tiles node /usr/src/app/dist/server.js\" - node"
