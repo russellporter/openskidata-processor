@@ -17,7 +17,15 @@ jobs:
         run: docker compose up -d
 
       - name: Wait for PostgreSQL to be ready
-        run: timeout 240 docker compose exec -T app pg_isready -h localhost -p 5432
+        run: |
+          for i in {1..60}; do
+            if docker compose exec -T app pg_isready -U postgres 2>/dev/null; then
+              echo "PostgreSQL is ready"
+              break
+            fi
+            echo "Waiting for PostgreSQL... ($i/60)"
+            sleep 2
+          done
 
       - name: Build project
         run: docker compose exec -T app npm run build
