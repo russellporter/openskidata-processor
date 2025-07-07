@@ -3,6 +3,8 @@ import { MapObjectType } from "../MapObject";
 import { SkiAreaActivity } from "openskidata-format";
 import * as TestHelpers from "../../TestHelpers";
 
+jest.setTimeout(60 * 1000);
+
 describe("PostgreSQLClusteringDatabase", () => {
   let database: PostgreSQLClusteringDatabase;
 

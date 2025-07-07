@@ -4,29 +4,26 @@ import { promises as fs } from "fs";
 import { FeatureType, LiftType } from "openskidata-format";
 import { GeoPackageAPI } from "@ngageoint/geopackage";
 import { mockLiftFeature } from "../TestHelpers";
+import tmp from "tmp";
 
 describe("GeoPackageMerger", () => {
   let merger: GeoPackageMerger;
   let targetWriter: GeoPackageWriter;
   let sourceWriter: GeoPackageWriter;
   
-  const testDir = "/tmp/geopackage-merger-integration-test";
-  const targetGpkgPath = `${testDir}/target.gpkg`;
-  const sourceGpkgPath = `${testDir}/source.gpkg`;
+  let testDir: string;
+  let targetGpkgPath: string;
+  let sourceGpkgPath: string;
 
   beforeEach(async () => {
     merger = new GeoPackageMerger();
     targetWriter = new GeoPackageWriter();
     sourceWriter = new GeoPackageWriter();
     
-    // Create test directory
-    await fs.mkdir(testDir, { recursive: true });
-    
-    // Clean up any existing test files
-    await Promise.all([
-      fs.unlink(targetGpkgPath).catch(() => {}),
-      fs.unlink(sourceGpkgPath).catch(() => {}),
-    ]);
+    // Generate unique test directory for each test
+    testDir = tmp.dirSync().name;
+    targetGpkgPath = `${testDir}/target.gpkg`;
+    sourceGpkgPath = `${testDir}/source.gpkg`;
   });
 
   afterEach(async () => {

@@ -7,19 +7,16 @@ import {
 } from "openskidata-format";
 import { promises as fs } from "fs";
 import { GeoPackageAPI } from "@ngageoint/geopackage";
+import tmp from "tmp";
 
 describe("GeoPackageWriter", () => {
-  const testGeoPackagePath = "/tmp/test.gpkg";
+  let testGeoPackagePath: string;
   let writer: GeoPackageWriter;
 
   beforeEach(async () => {
     writer = new GeoPackageWriter();
-    // Clean up any existing test file
-    try {
-      await fs.unlink(testGeoPackagePath);
-    } catch (error) {
-      // File doesn't exist, that's fine
-    }
+    // Generate unique test file path for each test
+    testGeoPackagePath = tmp.tmpNameSync({ postfix: '.gpkg' });
   });
 
   afterEach(async () => {

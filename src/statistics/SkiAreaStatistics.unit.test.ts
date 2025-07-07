@@ -3,7 +3,7 @@ import { LiftObject, MapObjectType, RunObject } from "../clustering/MapObject";
 import { skiAreaStatistics } from "./SkiAreaStatistics";
 
 describe("SkiAreaStatistics", () => {
-  it("should count a run", () => {
+  it("should count a run", async () => {
     const run: RunObject = {
       _id: "1",
       _key: "1",
@@ -31,12 +31,30 @@ describe("SkiAreaStatistics", () => {
       viirsPixels: [],
     };
 
-    const statistics = skiAreaStatistics([run], null);
+    const statistics = await skiAreaStatistics([run], null);
 
-    expect(statistics).toMatchInlineSnapshot(`Promise {}`);
+    expect(statistics).toMatchInlineSnapshot(`
+{
+  "lifts": {
+    "byType": {},
+  },
+  "runs": {
+    "byActivity": {
+      "downhill": {
+        "byDifficulty": {
+          "easy": {
+            "count": 1,
+            "lengthInKm": 111.1950802335329,
+          },
+        },
+      },
+    },
+  },
+}
+`);
   });
 
-  it("should count a lift", () => {
+  it("should count a lift", async () => {
     const lift: LiftObject = {
       _id: "1",
       _key: "1",
@@ -62,12 +80,26 @@ describe("SkiAreaStatistics", () => {
       isInSkiAreaSite: false,
     };
 
-    const statistics = skiAreaStatistics([lift], null);
+    const statistics = await skiAreaStatistics([lift], null);
 
-    expect(statistics).toMatchInlineSnapshot(`Promise {}`);
+    expect(statistics).toMatchInlineSnapshot(`
+{
+  "lifts": {
+    "byType": {
+      "gondola": {
+        "count": 1,
+        "lengthInKm": 111.1950802335329,
+      },
+    },
+  },
+  "runs": {
+    "byActivity": {},
+  },
+}
+`);
   });
 
-  it("should not count run polygons in length calculation", () => {
+  it("should not count run polygons in length calculation", async () => {
     const run: RunObject = {
       _id: "1",
       _key: "1",
@@ -103,8 +135,17 @@ describe("SkiAreaStatistics", () => {
       viirsPixels: [],
     };
 
-    const statistics = skiAreaStatistics([run], null);
+    const statistics = await skiAreaStatistics([run], null);
 
-    expect(statistics).toMatchInlineSnapshot(`Promise {}`);
+    expect(statistics).toMatchInlineSnapshot(`
+{
+  "lifts": {
+    "byType": {},
+  },
+  "runs": {
+    "byActivity": {},
+  },
+}
+`);
   });
 });

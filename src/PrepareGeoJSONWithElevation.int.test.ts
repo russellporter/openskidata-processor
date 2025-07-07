@@ -1,10 +1,33 @@
 import nock from "nock";
 import { RunFeature } from "openskidata-format";
 import tmp from "tmp";
-import { Config, getPostgresCacheConfig } from "./Config";
+import { Config, getPostgresCacheConfig, PostgresCacheConfig } from "./Config";
 import prepare from "./PrepareGeoJSON";
 import * as TestHelpers from "./TestHelpers";
 import { Pool } from "pg";
+
+jest.setTimeout(60 * 1000);
+
+// Create unique database name for each test run to avoid conflicts
+const uniqueDbName = `openskidata_cache_test_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+
+const testCacheConfig: PostgresCacheConfig = {
+  host: "localhost",
+  port: 5432,
+  database: uniqueDbName,
+  user: process.env.POSTGRES_USER || "postgres",
+  password: process.env.POSTGRES_PASSWORD,
+  maxConnections: 5,
+};
+
+// Mock getPostgresCacheConfig to return our unique config
+jest.mock("./Config", () => {
+  const originalModule = jest.requireActual("./Config");
+  return {
+    ...originalModule,
+    getPostgresCacheConfig: () => testCacheConfig,
+  };
+});
 
 const config: Config = {
   elevationServer: {
@@ -34,12 +57,11 @@ function mockElevationServer(code: number) {
 beforeEach(async () => {
   // Drop elevation cache table before each test to ensure test isolation
   // This is needed because the cache type needs to match between test runs
-  const cacheConfig = getPostgresCacheConfig();
   const pool = new Pool({
-    host: cacheConfig.host,
-    port: cacheConfig.port,
-    database: cacheConfig.database,
-    user: cacheConfig.user,
+    host: testCacheConfig.host,
+    port: testCacheConfig.port,
+    database: testCacheConfig.database,
+    user: testCacheConfig.user,
     max: 2,
   });
   

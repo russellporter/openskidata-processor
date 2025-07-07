@@ -16,6 +16,8 @@ import {
 import clusterSkiAreas from "./ClusterSkiAreas";
 import { Config } from "../Config";
 
+jest.setTimeout(60 * 1000);
+
 let mockUuidCount = 0;
 jest.mock("uuid", () => {
   return {

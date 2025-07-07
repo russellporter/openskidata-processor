@@ -1,11 +1,24 @@
 import { PostgresCache } from "./PostgresCache";
+import { PostgresCacheConfig } from "../Config";
 
 describe("PostgresCache", () => {
   let cache: PostgresCache<any>;
   const cacheType = "test_cache";
+  
+  // Create unique database name for each test run to avoid conflicts
+  const uniqueDbName = `openskidata_cache_test_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+  
+  const testConfig: PostgresCacheConfig = {
+    host: "localhost",
+    port: 5432,
+    database: uniqueDbName,
+    user: process.env.POSTGRES_USER || "postgres",
+    password: process.env.POSTGRES_PASSWORD,
+    maxConnections: 5,
+  };
 
   beforeEach(async () => {
-    cache = new PostgresCache(cacheType, undefined, 0); // No TTL for basic tests
+    cache = new PostgresCache(cacheType, testConfig, 0); // No TTL for basic tests
     await cache.initialize();
   });
 
@@ -119,7 +132,7 @@ describe("PostgresCache", () => {
     const shortTTL = 100; // 100ms TTL
 
     beforeEach(async () => {
-      ttlCache = new PostgresCache("test_ttl_cache", undefined, shortTTL);
+      ttlCache = new PostgresCache("test_ttl_cache", testConfig, shortTTL);
       await ttlCache.initialize();
     });
 
@@ -199,8 +212,8 @@ describe("PostgresCache", () => {
     let cache2: PostgresCache<string>;
 
     beforeEach(async () => {
-      cache1 = new PostgresCache("cache_type_1", undefined, 0);
-      cache2 = new PostgresCache("cache_type_2", undefined, 0);
+      cache1 = new PostgresCache("cache_type_1", testConfig, 0);
+      cache2 = new PostgresCache("cache_type_2", testConfig, 0);
       await cache1.initialize();
       await cache2.initialize();
     });
@@ -266,7 +279,7 @@ describe("PostgresCache", () => {
     });
 
     it("should throw error when not initialized", async () => {
-      const uninitializedCache = new PostgresCache("uninitialized", undefined, 0);
+      const uninitializedCache = new PostgresCache("uninitialized", testConfig, 0);
 
       await expect(uninitializedCache.get("key")).rejects.toThrow(
         "Cache not initialized"
