@@ -16,6 +16,9 @@ jobs:
       - name: Set up Docker Compose
         run: docker compose up -d
 
+      - name: Wait for dependencies installation complete
+        run: docker compose exec -T app npm list --depth=0
+
       - name: Build project
         run: docker compose exec -T app npm run build
 
