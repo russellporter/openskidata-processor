@@ -39,6 +39,9 @@ sed -i "s|data_directory = '/var/lib/postgresql/15/main'|data_directory = '/var/
 # Initialize PostgreSQL if not already initialized
 if [ ! -f /var/lib/postgresql/data/PG_VERSION ]; then
     echo "Initializing PostgreSQL database..."
+    echo "Setting up data directory permissions..."
+    chown -R postgres:postgres /var/lib/postgresql/data
+    chmod 700 /var/lib/postgresql/data
     su - postgres -c "/usr/lib/postgresql/15/bin/initdb -D /var/lib/postgresql/data"
 
     # Start PostgreSQL temporarily to create user if needed
