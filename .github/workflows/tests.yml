@@ -18,13 +18,19 @@ jobs:
 
       - name: Wait for PostgreSQL to be ready
         run: |
+          echo "Waiting for app container to be ready..."
           for i in {1..100}; do
-            if docker compose exec -T app pg_isready -U postgres 2>/dev/null; then
+            if docker compose exec -T app pg_isready -h localhost -p 5432 -U dev 2>/dev/null; then
               echo "PostgreSQL is ready"
               break
             fi
             echo "Waiting for PostgreSQL... ($i/100)"
-            sleep 4
+            sleep 2
+            if [ $i -eq 100 ]; then
+              echo "PostgreSQL failed to start after 100 attempts"
+              docker compose logs app
+              exit 1
+            fi
           done
 
       - name: Build project
