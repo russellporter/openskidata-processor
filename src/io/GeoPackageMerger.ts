@@ -29,9 +29,15 @@ interface GpkgGeometryColumnsRow {
 }
 
 export class GeoPackageMerger {
+  private readonly BATCH_SIZE = 1000;
+
   mergeGeoPackages(targetPath: string, sourcePath: string): MergeResult {
     const targetDb = new Database(targetPath);
     const sourceDb = new Database(sourcePath, { readonly: true });
+    
+    // Enable performance optimizations
+    this.optimizeDatabase(targetDb);
+    this.optimizeReadonlyDatabase(sourceDb);
     
     const result: MergeResult = {
       tablesProcessed: 0,
@@ -95,11 +101,12 @@ export class GeoPackageMerger {
   }
 
   private mergeDataIntoExistingTable(targetDb: Database.Database, sourceDb: Database.Database, tableName: string): number {
-    const sourceRows = sourceDb
-      .prepare(`SELECT * FROM ${tableName}`)
-      .all();
+    // Get total row count for batching
+    const totalRows = sourceDb
+      .prepare(`SELECT COUNT(*) as count FROM ${tableName}`)
+      .get() as { count: number };
 
-    if (sourceRows.length === 0) {
+    if (totalRows.count === 0) {
       return 0;
     }
 
@@ -128,8 +135,17 @@ export class GeoPackageMerger {
       placeholders = allColumnNames.map(() => "?").join(", ");
     }
 
-    // Check if feature_id column exists and add duplicate detection
+    // Check if feature_id column exists and create set of existing feature_ids
     const hasFeatureId = columnsToInsert.includes('feature_id');
+    let existingFeatureIds: Set<string> = new Set();
+    
+    if (hasFeatureId) {
+      // Build a set of existing feature_ids for fast lookup
+      const existingIds = targetDb
+        .prepare(`SELECT feature_id FROM ${tableName} WHERE feature_id IS NOT NULL`)
+        .all() as { feature_id: string }[];
+      existingFeatureIds = new Set(existingIds.map(row => row.feature_id));
+    }
     
     // Use INSERT OR IGNORE to handle conflicts on unique constraints other than auto-increment PK
     const insertStmt = targetDb.prepare(`
@@ -140,13 +156,9 @@ export class GeoPackageMerger {
     let insertedCount = 0;
     const insertMany = targetDb.transaction((rows: any[]) => {
       for (const row of rows) {
-        // Check for semantic duplicates based on feature_id before attempting insert
-        if (hasFeatureId && row['feature_id']) {
-          const featureId = row['feature_id'];
-          const existing = targetDb.prepare(`SELECT COUNT(*) as count FROM ${tableName} WHERE feature_id = ?`).get(featureId) as { count: number };
-          if (existing.count > 0) {
-            continue; // Skip this row silently
-          }
+        // Check for semantic duplicates based on feature_id using the set
+        if (hasFeatureId && row['feature_id'] && existingFeatureIds.has(row['feature_id'])) {
+          continue; // Skip this row silently
         }
         
         const values = columnsToInsert.map((col) => row[col]);
@@ -154,6 +166,10 @@ export class GeoPackageMerger {
           const result = insertStmt.run(...values);
           if (result.changes > 0) {
             insertedCount++;
+            // Add to existing set to avoid duplicates within the same batch
+            if (hasFeatureId && row['feature_id']) {
+              existingFeatureIds.add(row['feature_id']);
+            }
           }
         } catch (error) {
           // Continue with other rows even if one fails
@@ -161,7 +177,18 @@ export class GeoPackageMerger {
       }
     });
 
-    insertMany(sourceRows);
+    // Process in batches to avoid memory issues
+    const sourceStmt = sourceDb.prepare(`
+      SELECT * FROM ${tableName} 
+      ORDER BY ROWID 
+      LIMIT ? OFFSET ?
+    `);
+
+    for (let offset = 0; offset < totalRows.count; offset += this.BATCH_SIZE) {
+      const batch = sourceStmt.all(this.BATCH_SIZE, offset);
+      insertMany(batch);
+    }
+
     return insertedCount;
   }
 
@@ -182,12 +209,12 @@ export class GeoPackageMerger {
     // Create table in target
     targetDb.exec(createTableSql.sql);
 
-    // Copy all data
-    const sourceRows = sourceDb
-      .prepare(`SELECT * FROM ${tableName}`)
-      .all();
+    // Get total row count for batching
+    const totalRows = sourceDb
+      .prepare(`SELECT COUNT(*) as count FROM ${tableName}`)
+      .get() as { count: number };
 
-    if (sourceRows.length === 0) {
+    if (totalRows.count === 0) {
       return 0;
     }
 
@@ -211,8 +238,19 @@ export class GeoPackageMerger {
       }
     });
 
-    insertMany(sourceRows);
-    return sourceRows.length;
+    // Process in batches to avoid memory issues
+    const sourceStmt = sourceDb.prepare(`
+      SELECT * FROM ${tableName} 
+      ORDER BY ROWID 
+      LIMIT ? OFFSET ?
+    `);
+
+    for (let offset = 0; offset < totalRows.count; offset += this.BATCH_SIZE) {
+      const batch = sourceStmt.all(this.BATCH_SIZE, offset);
+      insertMany(batch);
+    }
+
+    return totalRows.count;
   }
 
   private updateGeoPackageMetadata(targetDb: Database.Database, sourceDb: Database.Database, tableName: string): void {
@@ -269,5 +307,38 @@ export class GeoPackageMerger {
       // Don't fail the entire operation for metadata issues
       // Error will be logged by the caller
     }
+  }
+
+  private optimizeDatabase(db: Database.Database): void {
+    // Enable WAL mode for better concurrency and performance
+    db.pragma('journal_mode = WAL');
+    
+    // Increase cache size (default is 2MB, increase to 64MB)
+    db.pragma('cache_size = -65536');
+    
+    // Disable synchronous writes for better performance (less safe but faster)
+    db.pragma('synchronous = NORMAL');
+    
+    // Increase page size for better performance with large data
+    db.pragma('page_size = 4096');
+    
+    // Optimize memory usage
+    db.pragma('temp_store = MEMORY');
+    
+    // Optimize for bulk operations
+    db.pragma('mmap_size = 268435456'); // 256MB
+  }
+
+  private optimizeReadonlyDatabase(db: Database.Database): void {
+    // Read-only optimizations that don't require write access
+    
+    // Increase cache size (default is 2MB, increase to 64MB)
+    db.pragma('cache_size = -65536');
+    
+    // Optimize memory usage
+    db.pragma('temp_store = MEMORY');
+    
+    // Optimize for bulk operations
+    db.pragma('mmap_size = 268435456'); // 256MB
   }
 }
