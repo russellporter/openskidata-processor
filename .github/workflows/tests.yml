@@ -12,24 +12,21 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set up Docker Compose
         run: docker compose up -d
-      
-      - name: Install dependencies
-        run: docker compose exec -T app npm install
-      
+
       - name: Build project
         run: docker compose exec -T app npm run build
-      
+
       - name: Type check
         run: docker compose exec -T app npm run check-types
-      
+
       - name: Run tests
         run: docker compose exec -T app npm test
         env:
           CI: true
-      
+
       - name: Cleanup
         if: always()
         run: docker compose down
