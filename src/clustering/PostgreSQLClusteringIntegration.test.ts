@@ -14,7 +14,7 @@ import {
   simplifiedSkiAreaFeature,
 } from "../TestHelpers";
 import clusterSkiAreas from "./ClusterSkiAreas";
-import { Config } from "../Config";
+import { Config, getPostgresTestConfig } from "../Config";
 
 jest.setTimeout(60 * 1000);
 
@@ -106,6 +106,7 @@ it("correctly associates lifts and runs with ski areas", async () => {
     geocodingServer: null,
     snowCover: null,
     tiles: null,
+    postgresCache: getPostgresTestConfig(),
   };
 
   // Use SQLite database
@@ -213,6 +214,7 @@ it("verifies ski area associations persist through clustering and augmentation",
     geocodingServer: null,
     snowCover: null,
     tiles: null,
+    postgresCache: getPostgresTestConfig(),
   };
 
   // Use SQLite database

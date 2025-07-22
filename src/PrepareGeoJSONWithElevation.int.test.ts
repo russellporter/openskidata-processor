@@ -1,49 +1,21 @@
 import nock from "nock";
 import { RunFeature } from "openskidata-format";
-import tmp from "tmp";
-import { Config, getPostgresCacheConfig, PostgresCacheConfig } from "./Config";
+import { Config, getPostgresTestConfig } from "./Config";
 import prepare from "./PrepareGeoJSON";
 import * as TestHelpers from "./TestHelpers";
-import { Pool } from "pg";
 
 jest.setTimeout(60 * 1000);
 
-// Create unique database name for each test run to avoid conflicts
-const uniqueDbName = `openskidata_cache_test_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+// Configure nock to work with fetch/undici
+nock.disableNetConnect();
 
-const testCacheConfig: PostgresCacheConfig = {
-  host: "localhost",
-  port: 5432,
-  database: uniqueDbName,
-  user: process.env.POSTGRES_USER || "postgres",
-  password: process.env.POSTGRES_PASSWORD,
-  maxConnections: 5,
-};
-
-// Mock getPostgresCacheConfig to return our unique config
-jest.mock("./Config", () => {
-  const originalModule = jest.requireActual("./Config");
-  return {
-    ...originalModule,
-    getPostgresCacheConfig: () => testCacheConfig,
-  };
-});
-
-const config: Config = {
-  elevationServer: {
-    url: "http://elevation.example.com",
-  },
-  bbox: null,
-  geocodingServer: null,
-  workingDir: TestHelpers.getTempWorkingDir(),
-  outputDir: TestHelpers.getTempWorkingDir(),
-  snowCover: null,
-  tiles: null,
-};
+// Create unique database name for each test to ensure isolation
+let testConfig: Config;
 
 function mockElevationServer(code: number) {
   nock("http://elevation.example.com")
     .post("/")
+    .times(10) // Allow multiple requests but not persistent across tests
     .reply(code, (_, requestBody) => {
       if (code === 200) {
         const coordinates = requestBody as number[][];
@@ -54,24 +26,20 @@ function mockElevationServer(code: number) {
     });
 }
 
-beforeEach(async () => {
-  // Drop elevation cache table before each test to ensure test isolation
-  // This is needed because the cache type needs to match between test runs
-  const pool = new Pool({
-    host: testCacheConfig.host,
-    port: testCacheConfig.port,
-    database: testCacheConfig.database,
-    user: testCacheConfig.user,
-    max: 2,
-  });
-  
-  try {
-    await pool.query("DROP TABLE IF EXISTS elevation_cache");
-  } catch (error) {
-    // Ignore errors if table doesn't exist
-  } finally {
-    await pool.end();
-  }
+beforeEach(() => {
+  // Create unique config for each test with isolated database
+  testConfig = {
+    elevationServer: {
+      url: "http://elevation.example.com",
+    },
+    bbox: null,
+    geocodingServer: null,
+    workingDir: TestHelpers.getTempWorkingDir(),
+    outputDir: TestHelpers.getTempWorkingDir(),
+    snowCover: null,
+    tiles: null,
+    postgresCache: getPostgresTestConfig(),
+  };
 });
 
 afterEach(() => {
@@ -112,7 +80,7 @@ it("adds elevations to lift geometry", async () => {
     paths.input,
   );
 
-  await prepare(paths, config);
+  await prepare(paths, testConfig);
 
   expect(TestHelpers.fileContents(paths.output.lifts)).toMatchInlineSnapshot(`
 {
@@ -204,7 +172,7 @@ it("adds elevations to run geometry & elevation profile", async () => {
     paths.input,
   );
 
-  await prepare(paths, config);
+  await prepare(paths, testConfig);
 
   const feature: RunFeature = TestHelpers.fileContents(paths.output.runs)
     .features[0];
@@ -287,7 +255,7 @@ it("completes without adding elevations when elevation server fails", async () =
     paths.input,
   );
 
-  await prepare(paths, config);
+  await prepare(paths, testConfig);
 
   expect(TestHelpers.fileContents(paths.output.lifts)).toMatchInlineSnapshot(`
 {
@@ -384,10 +352,10 @@ it("adds elevations to run polygons", async () => {
     paths.input,
   );
 
-  await prepare(paths, config);
+  await prepare(paths, testConfig);
 
-  expect(TestHelpers.fileContents(paths.output.runs).features[0].geometry).
-toMatchInlineSnapshot(`
+  expect(TestHelpers.fileContents(paths.output.runs).features[0].geometry)
+    .toMatchInlineSnapshot(`
 {
   "coordinates": [
     [

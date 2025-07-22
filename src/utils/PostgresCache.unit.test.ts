@@ -1,24 +1,12 @@
+import { getPostgresTestConfig } from "../Config";
 import { PostgresCache } from "./PostgresCache";
-import { PostgresCacheConfig } from "../Config";
 
 describe("PostgresCache", () => {
   let cache: PostgresCache<any>;
-  const cacheType = "test_cache";
-  
-  // Create unique database name for each test run to avoid conflicts
-  const uniqueDbName = `openskidata_cache_test_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
-  
-  const testConfig: PostgresCacheConfig = {
-    host: "localhost",
-    port: 5432,
-    database: uniqueDbName,
-    user: process.env.POSTGRES_USER || "postgres",
-    password: process.env.POSTGRES_PASSWORD,
-    maxConnections: 5,
-  };
+  let cacheType = "test_cache";
 
   beforeEach(async () => {
-    cache = new PostgresCache(cacheType, testConfig, 0); // No TTL for basic tests
+    cache = new PostgresCache(cacheType, getPostgresTestConfig(), 0); // No TTL for basic tests
     await cache.initialize();
   });
 
@@ -132,7 +120,7 @@ describe("PostgresCache", () => {
     const shortTTL = 100; // 100ms TTL
 
     beforeEach(async () => {
-      ttlCache = new PostgresCache("test_ttl_cache", testConfig, shortTTL);
+      ttlCache = new PostgresCache("test_ttl_cache", getPostgresTestConfig(), shortTTL);
       await ttlCache.initialize();
     });
 
@@ -212,8 +200,8 @@ describe("PostgresCache", () => {
     let cache2: PostgresCache<string>;
 
     beforeEach(async () => {
-      cache1 = new PostgresCache("cache_type_1", testConfig, 0);
-      cache2 = new PostgresCache("cache_type_2", testConfig, 0);
+      cache1 = new PostgresCache("cache_type_1", getPostgresTestConfig(), 0);
+      cache2 = new PostgresCache("cache_type_2", getPostgresTestConfig(), 0);
       await cache1.initialize();
       await cache2.initialize();
     });
@@ -279,29 +267,33 @@ describe("PostgresCache", () => {
     });
 
     it("should throw error when not initialized", async () => {
-      const uninitializedCache = new PostgresCache("uninitialized", testConfig, 0);
+      const uninitializedCache = new PostgresCache(
+        "uninitialized",
+        getPostgresTestConfig(),
+        0,
+      );
 
       await expect(uninitializedCache.get("key")).rejects.toThrow(
-        "Cache not initialized"
+        "Cache not initialized",
       );
       await expect(uninitializedCache.set("key", "value")).rejects.toThrow(
-        "Cache not initialized"
+        "Cache not initialized",
       );
       await expect(uninitializedCache.delete("key")).rejects.toThrow(
-        "Cache not initialized"
+        "Cache not initialized",
       );
       await expect(uninitializedCache.size()).rejects.toThrow(
-        "Cache not initialized"
+        "Cache not initialized",
       );
       await expect(uninitializedCache.clear()).rejects.toThrow(
-        "Cache not initialized"
+        "Cache not initialized",
       );
     });
   });
 
   describe("multiple initialization", () => {
     it("should handle multiple initialization calls gracefully", async () => {
-      const multiInitCache = new PostgresCache("multi_init", undefined, 0);
+      const multiInitCache = new PostgresCache("multi_init", getPostgresTestConfig(), 0);
 
       await multiInitCache.initialize();
       await multiInitCache.initialize(); // Should not throw

@@ -9,7 +9,7 @@ import {
   SourceType,
   Status,
 } from "openskidata-format";
-import { Config } from "../Config";
+import { Config, getPostgresTestConfig } from "../Config";
 import * as TestHelpers from "../TestHelpers";
 import {
   simplifiedLiftFeature,
@@ -41,6 +41,7 @@ beforeEach(async () => {
     geocodingServer: null,
     snowCover: null,
     tiles: null,
+    postgresCache: getPostgresTestConfig(),
   };
 });
 

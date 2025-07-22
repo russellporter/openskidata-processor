@@ -1,6 +1,7 @@
 import { PostgreSQLClusteringDatabase } from "./PostgreSQLClusteringDatabase";
 import { MapObjectType } from "../MapObject";
 import { SkiAreaActivity } from "openskidata-format";
+import { getPostgresTestConfig } from "../../Config";
 import * as TestHelpers from "../../TestHelpers";
 
 jest.setTimeout(60 * 1000);
@@ -9,7 +10,7 @@ describe("PostgreSQLClusteringDatabase", () => {
   let database: PostgreSQLClusteringDatabase;
 
   beforeEach(async () => {
-    database = new PostgreSQLClusteringDatabase(TestHelpers.getTempWorkingDir());
+    database = new PostgreSQLClusteringDatabase(getPostgresTestConfig());
     try {
       await database.initialize();
       // Clean up any existing test data

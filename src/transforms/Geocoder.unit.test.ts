@@ -1,4 +1,5 @@
 import nock from "nock";
+import { getPostgresTestConfig } from "../Config";
 import Geocoder, { PhotonGeocode } from "./Geocoder";
 
 const geocoderURL = "http://geocoder.example.com";
@@ -20,11 +21,13 @@ describe("Geocoder", () => {
   });
 
   async function setupDefaultGeocoder() {
-    geocoder = new Geocoder({
-      url: geocoderURL + "/reverse",
-      diskTTL: 0,
-      inMemoryCacheSize: 0,
-    });
+    geocoder = new Geocoder(
+      {
+        url: geocoderURL + "/reverse",
+        cacheTTL: 0,
+      },
+      getPostgresTestConfig(),
+    );
     await geocoder.initialize();
 
     // Clear cache to ensure test isolation
@@ -34,11 +37,13 @@ describe("Geocoder", () => {
   }
 
   async function setupGeocoderWithTTL(ttl: number) {
-    geocoder = new Geocoder({
-      url: geocoderURL + "/reverse",
-      diskTTL: ttl,
-      inMemoryCacheSize: 0,
-    });
+    geocoder = new Geocoder(
+      {
+        url: geocoderURL + "/reverse",
+        cacheTTL: ttl,
+      },
+      getPostgresTestConfig(),
+    );
     await geocoder.initialize();
 
     // Clear cache to ensure test isolation
@@ -58,11 +63,13 @@ describe("Geocoder", () => {
           .response;
       });
 
-    geocoder = new Geocoder({
-      diskTTL: 0,
-      inMemoryCacheSize: 10,
-      url: geocoderURL + "/reverse",
-    });
+    geocoder = new Geocoder(
+      {
+        cacheTTL: 0,
+        url: geocoderURL + "/reverse",
+      },
+      getPostgresTestConfig(),
+    );
 
     await geocoder.initialize();
 

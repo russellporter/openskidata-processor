@@ -1,5 +1,5 @@
 import centroid from "@turf/centroid";
-import GeoJSON from "geojson";
+import * as GeoJSON from "geojson";
 import {
   FeatureType,
   getLiftElevationData,

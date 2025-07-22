@@ -1,11 +1,10 @@
 import { assert } from "console";
-import path from "path";
+import * as path from "path";
 
 export type GeocodingServerConfig = {
   url: string;
-  // Used for the disk cache. In memory cache ignores ttl.
-  diskTTL: number;
-  inMemoryCacheSize: number;
+  // How long to cache geocoding results in milliseconds
+  cacheTTL: number;
 };
 
 export type SnowCoverFetchPolicy = "full" | "incremental" | "none";
@@ -18,13 +17,16 @@ export type ElevationServerConfig = { url: string };
 
 export type TilesConfig = { mbTilesPath: string; tilesDir: string };
 
-export type PostgresCacheConfig = {
+export type PostgresConfig = {
   host: string;
   port: number;
-  database: string;
+  cacheDatabase: string;
   user: string;
   password?: string;
   maxConnections: number;
+  idleTimeoutMillis: number;
+  connectionTimeoutMillis: number;
+  tablePrefix: string;
 };
 
 export interface Config {
@@ -41,6 +43,8 @@ export interface Config {
   snowCover: SnowCoverConfig | null;
   // Tiles generation configuration
   tiles: TilesConfig | null;
+  // PostgreSQL cache configuration
+  postgresCache: PostgresConfig;
 }
 
 export function configFromEnvironment(): Config {
@@ -80,11 +84,10 @@ export function configFromEnvironment(): Config {
       process.env.GEOCODING_SERVER_URL !== undefined
         ? {
             url: process.env.GEOCODING_SERVER_URL,
-            diskTTL:
+            cacheTTL:
               geocodingCacheTTL !== undefined
                 ? Number.parseInt(geocodingCacheTTL)
                 : 1000 * 60 * 60 * 24 * 365, // 1 year
-            inMemoryCacheSize: 1000,
           }
         : null,
     bbox: bbox as GeoJSON.BBox,
@@ -104,37 +107,35 @@ export function configFromEnvironment(): Config {
             tilesDir: path.join(outputDir, "openskimap"),
           }
         : null,
+    postgresCache: getPostgresConfig(),
   };
 }
 
-export function createPostgresPoolConfig(database: string, maxConnections: number = 5): any {
-  const config: any = {
-    host: "localhost",
-    port: 5432,
-    database,
-    user: process.env.POSTGRES_USER || "postgres",
-    max: maxConnections,
-    idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 10000,
-  };
-  
-  if (process.env.POSTGRES_PASSWORD) {
-    config.password = process.env.POSTGRES_PASSWORD;
-  }
-  
-  return config;
-}
-
-export function getPostgresCacheConfig(): PostgresCacheConfig {
+function getPostgresConfig(): PostgresConfig {
   return {
     host: "localhost",
     port: 5432,
-    database:
-      process.env.NODE_ENV === "test"
-        ? "openskidata_cache_test"
-        : "openskidata_cache",
+    cacheDatabase: "openskidata_cache",
     user: process.env.POSTGRES_USER || "postgres",
     password: process.env.POSTGRES_PASSWORD,
     maxConnections: 5,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 10000,
+    tablePrefix: "",
+  };
+}
+
+export function getPostgresTestConfig(): PostgresConfig {
+  const testId = `test_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+  return {
+    host: "localhost",
+    port: 5432,
+    cacheDatabase: "openskidata_test",
+    user: process.env.POSTGRES_USER || "postgres",
+    password: process.env.POSTGRES_PASSWORD,
+    maxConnections: 5,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 10000,
+    tablePrefix: testId,
   };
 }

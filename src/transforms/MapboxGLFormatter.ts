@@ -1,4 +1,4 @@
-import GeoJSON from "geojson";
+import * as GeoJSON from "geojson";
 import {
   FeatureType,
   getLiftColor,

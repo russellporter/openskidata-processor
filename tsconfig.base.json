@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "outDir": "dist",
+    "esModuleInterop": true,
+    "target": "es2022",
+    "module": "commonjs",
+    "types": ["node", "jest"],
+    "baseUrl": ".",
+    "paths": {
+      "*": ["types/*"]
+    },
+    "skipLibCheck": true
+  },
+  "include": ["./src/**/*"]
+}

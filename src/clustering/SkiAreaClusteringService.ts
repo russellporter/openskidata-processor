@@ -20,7 +20,11 @@ import {
 } from "openskidata-format";
 import StreamToPromise from "stream-to-promise";
 import { v4 as uuid } from "uuid";
-import { GeocodingServerConfig, SnowCoverConfig } from "../Config";
+import {
+  GeocodingServerConfig,
+  PostgresConfig,
+  SnowCoverConfig,
+} from "../Config";
 import { readGeoJSONFeatures } from "../io/GeoJSONReader";
 import { skiAreaStatistics } from "../statistics/SkiAreaStatistics";
 import Geocoder from "../transforms/Geocoder";
@@ -68,6 +72,7 @@ export class SkiAreaClusteringService {
     outputRunsPath: string,
     geocoderConfig: GeocodingServerConfig | null,
     snowCoverConfig: SnowCoverConfig | null,
+    postgresConfig: PostgresConfig,
   ): Promise<void> {
     await performanceMonitor.withOperation(
       "Loading graph into database",
@@ -81,7 +86,11 @@ export class SkiAreaClusteringService {
       },
     );
 
-    await this.performClustering(geocoderConfig, snowCoverConfig);
+    await this.performClustering(
+      geocoderConfig,
+      snowCoverConfig,
+      postgresConfig,
+    );
 
     await performanceMonitor.withOperation("Augmenting Runs", async () => {
       await this.augmentGeoJSONFeatures(
@@ -89,6 +98,7 @@ export class SkiAreaClusteringService {
         outputRunsPath,
         FeatureType.Run,
         snowCoverConfig,
+        postgresConfig,
       );
     });
 
@@ -98,6 +108,7 @@ export class SkiAreaClusteringService {
         outputLiftsPath,
         FeatureType.Lift,
         null,
+        postgresConfig,
       );
     });
 
@@ -302,6 +313,7 @@ export class SkiAreaClusteringService {
   private async performClustering(
     geocoderConfig: GeocodingServerConfig | null,
     snowCoverConfig: SnowCoverConfig | null,
+    postgresConfig: PostgresConfig,
   ): Promise<void> {
     await performanceMonitor.withOperation(
       "Assign ski area activities and geometry based on member objects",
@@ -371,6 +383,7 @@ export class SkiAreaClusteringService {
         await this.augmentSkiAreasBasedOnAssignedLiftsAndRuns(
           geocoderConfig,
           snowCoverConfig,
+          postgresConfig,
         );
       },
     );
@@ -612,7 +625,7 @@ export class SkiAreaClusteringService {
     const hasKnownSkiAreaActivities = skiArea.activities.length > 0;
     const activitiesForClustering = hasKnownSkiAreaActivities
       ? skiArea.activities
-      : [...allSkiAreaActivities];
+      : Array.from(allSkiAreaActivities);
 
     let searchContext: SearchContext;
 
@@ -786,7 +799,7 @@ export class SkiAreaClusteringService {
       const hasKnownSkiAreaActivities = skiArea.activities.length > 0;
       const activitiesForClustering = hasKnownSkiAreaActivities
         ? skiArea.activities
-        : [...allSkiAreaActivities];
+        : Array.from(allSkiAreaActivities);
 
       const skiAreasToMerge = await this.getSkiAreasToMergeInto({
         ...skiArea,
@@ -1021,12 +1034,13 @@ export class SkiAreaClusteringService {
   private async augmentSkiAreasBasedOnAssignedLiftsAndRuns(
     geocoderConfig: GeocodingServerConfig | null,
     snowCoverConfig: SnowCoverConfig | null,
+    postgresConfig: PostgresConfig,
   ): Promise<void> {
     let geocoder: Geocoder | null = null;
 
     // Initialize geocoder once for all geocoding operations
     if (geocoderConfig) {
-      geocoder = new Geocoder(geocoderConfig);
+      geocoder = new Geocoder(geocoderConfig, postgresConfig);
       await geocoder.initialize();
     }
 
@@ -1045,6 +1059,7 @@ export class SkiAreaClusteringService {
           skiAreas,
           geocoder,
           snowCoverConfig,
+          postgresConfig,
         );
         activeBatches.add(batchPromise);
 
@@ -1071,6 +1086,7 @@ export class SkiAreaClusteringService {
     skiAreas: SkiAreaObject[],
     geocoder: Geocoder | null,
     snowCoverConfig: SnowCoverConfig | null,
+    postgresConfig: PostgresConfig,
   ): Promise<void> {
     return performanceMonitor.measure(
       "Augment batch of ski areas",
@@ -1085,6 +1101,7 @@ export class SkiAreaClusteringService {
               mapObjects,
               geocoder,
               snowCoverConfig,
+              postgresConfig,
             );
           }),
         );
@@ -1097,6 +1114,7 @@ export class SkiAreaClusteringService {
     memberObjects: MapObject[],
     geocoder: Geocoder | null,
     snowCoverConfig: SnowCoverConfig | null,
+    postgresConfig: PostgresConfig,
   ): Promise<void> {
     const noSkimapOrgSource = !skiArea.properties.sources.some(
       (source) => source.type === SourceType.SKIMAP_ORG,
@@ -1110,7 +1128,11 @@ export class SkiAreaClusteringService {
       return;
     }
 
-    const statistics = await skiAreaStatistics(memberObjects, snowCoverConfig);
+    const statistics = await skiAreaStatistics(
+      memberObjects,
+      postgresConfig,
+      snowCoverConfig,
+    );
     const updatedProperties = {
       ...skiArea.properties,
       statistics,
@@ -1211,6 +1233,7 @@ export class SkiAreaClusteringService {
     outputPath: string,
     featureType: FeatureType,
     snowCoverConfig: SnowCoverConfig | null,
+    postgresConfig: PostgresConfig,
   ): Promise<void> {
     console.log(
       `Augmenting ${featureType} features from ${inputPath} to ${outputPath}`,
@@ -1223,6 +1246,7 @@ export class SkiAreaClusteringService {
         this.database,
         featureType,
         snowCoverConfig,
+        postgresConfig,
       );
     } finally {
     }

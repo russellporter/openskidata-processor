@@ -1,5 +1,6 @@
 import { LiftType, RunDifficulty, SkiAreaActivity } from "openskidata-format";
 import { LiftObject, MapObjectType, RunObject } from "../clustering/MapObject";
+import { getPostgresTestConfig } from "../Config";
 import { skiAreaStatistics } from "./SkiAreaStatistics";
 
 describe("SkiAreaStatistics", () => {
@@ -31,7 +32,7 @@ describe("SkiAreaStatistics", () => {
       viirsPixels: [],
     };
 
-    const statistics = await skiAreaStatistics([run], null);
+    const statistics = await skiAreaStatistics([run], getPostgresTestConfig(), null);
 
     expect(statistics).toMatchInlineSnapshot(`
 {
@@ -80,7 +81,11 @@ describe("SkiAreaStatistics", () => {
       isInSkiAreaSite: false,
     };
 
-    const statistics = await skiAreaStatistics([lift], null);
+    const statistics = await skiAreaStatistics(
+      [lift],
+      getPostgresTestConfig(),
+      null,
+    );
 
     expect(statistics).toMatchInlineSnapshot(`
 {
@@ -135,7 +140,7 @@ describe("SkiAreaStatistics", () => {
       viirsPixels: [],
     };
 
-    const statistics = await skiAreaStatistics([run], null);
+    const statistics = await skiAreaStatistics([run], getPostgresTestConfig(), null);
 
     expect(statistics).toMatchInlineSnapshot(`
 {

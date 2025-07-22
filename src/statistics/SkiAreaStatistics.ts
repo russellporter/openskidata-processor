@@ -13,8 +13,8 @@ import {
   MapObjectType,
   RunObject,
 } from "../clustering/MapObject";
-import { SnowCoverConfig } from "../Config";
-import { getSnowCoverHistoryFromCache, VIIRSCacheData } from "../utils/snowCoverHistory";
+import { PostgresConfig, SnowCoverConfig } from "../Config";
+import { getSnowCoverHistoryFromCache } from "../utils/snowCoverHistory";
 import { VIIRSPixel } from "../utils/VIIRSPixelExtractor";
 
 const allSkiAreaActivities = new Set([
@@ -40,6 +40,7 @@ type MapObjectStatistics = {
 
 export async function skiAreaStatistics(
   mapObjects: MapObject[],
+  postgresConfig: PostgresConfig,
   snowCoverConfig: SnowCoverConfig | null,
 ): Promise<SkiAreaStatistics> {
   const runStats = runStatistics(mapObjects.filter(isRun));
@@ -61,6 +62,7 @@ export async function skiAreaStatistics(
   if (snowCoverConfig) {
     const snowCoverStats = await generateSnowCoverStatistics(
       mapObjects.filter(isRun),
+      postgresConfig,
     );
     if (snowCoverStats) {
       statistics.snowCover = snowCoverStats;
@@ -223,6 +225,7 @@ interface ObjectStatistics extends ObjectElevationStatistics {
 
 async function generateSnowCoverStatistics(
   runs: RunObject[],
+  postgresConfig: PostgresConfig,
 ): Promise<SkiAreaSnowCoverStatistics | null> {
   if (runs.length === 0) {
     return null;
@@ -236,7 +239,10 @@ async function generateSnowCoverStatistics(
     ).map((pixelString) => pixelString.split(",").map(Number) as VIIRSPixel);
 
     // Get overall snow cover history for all runs
-    const overallHistory = await getSnowCoverHistoryFromCache(uniquePixels);
+    const overallHistory = await getSnowCoverHistoryFromCache(
+      uniquePixels,
+      postgresConfig,
+    );
 
     // Group runs by activity and get snow cover for each activity
     const runsByActivity: Partial<
@@ -272,6 +278,7 @@ async function generateSnowCoverStatistics(
 
       const activityHistory = await getSnowCoverHistoryFromCache(
         uniqueActivityPixels,
+        postgresConfig,
       );
 
       if (activityHistory.length > 0) {

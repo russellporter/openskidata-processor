@@ -33,7 +33,7 @@ async function debugGeocode() {
     process.exit(1);
   }
 
-  const geocoder = new Geocoder(config.geocodingServer);
+  const geocoder = new Geocoder(config.geocodingServer, config.postgresCache);
 
   try {
     await geocoder.initialize();

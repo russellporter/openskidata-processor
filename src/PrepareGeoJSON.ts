@@ -5,7 +5,7 @@ import * as path from "path";
 import { join } from "path";
 import { Readable } from "stream";
 import StreamToPromise from "stream-to-promise";
-import { Config, ElevationServerConfig } from "./Config";
+import { Config, ElevationServerConfig, PostgresConfig } from "./Config";
 import clusterSkiAreas from "./clustering/ClusterSkiAreas";
 import { DataPaths, getPath } from "./io/GeoJSONFiles";
 import { readGeoJSONFeatures } from "./io/GeoJSONReader";
@@ -36,12 +36,16 @@ import { RunNormalizerAccumulator } from "./transforms/accumulator/RunNormalizer
 
 async function createElevationTransform(
   elevationServerConfig: ElevationServerConfig | null,
+  postgresConfig: PostgresConfig,
 ) {
   if (!elevationServerConfig) {
     return null;
   }
 
-  const processor = await createElevationProcessor(elevationServerConfig);
+  const processor = await createElevationProcessor(
+    elevationServerConfig,
+    postgresConfig,
+  );
   return { processor, transform: processor.processFeature };
 }
 
@@ -110,6 +114,7 @@ export default async function prepare(paths: DataPaths, config: Config) {
       // Create shared elevation processor for both runs and lifts
       const elevationTransform = await createElevationTransform(
         config.elevationServer,
+        config.postgresCache,
       );
 
       try {

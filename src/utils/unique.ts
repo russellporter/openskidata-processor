@@ -1,3 +1,3 @@
 export default function unique<T>(input: T[]): T[] {
-  return [...new Set(input)];
+  return Array.from(new Set(input));
 }

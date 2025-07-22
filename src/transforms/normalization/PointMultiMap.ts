@@ -12,7 +12,7 @@ export default class PointMultiMap {
   }
 
   getFeatures(point: number[]): RunLineFeature[] {
-    return [...this._get(point)];
+    return Array.from(this._get(point));
   }
 
   _get(point: number[]) {

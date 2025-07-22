@@ -1,5 +1,6 @@
-import fs, { createReadStream, createWriteStream } from "fs";
-import path from "path";
+import * as fs from "fs";
+import { createReadStream, createWriteStream } from "fs";
+import * as path from "path";
 import { createInterface } from "readline";
 import { runCommand } from "../utils/ProcessRunner";
 import { GeoPackageMerger } from "../io/GeoPackageMerger";
@@ -137,7 +138,7 @@ async function mergeGeoJsonFiles(
 
     // Finalize all GeoJSON files by removing the trailing comma and adding closing
     console.log(`\nFinalizing ${processedFiles.size} GeoJSON files...`);
-    for (const relativePath of processedFiles) {
+    for (const relativePath of Array.from(processedFiles)) {
       const outputPath = path.join(outputDir, relativePath);
       console.log(`Finalizing: ${relativePath}`);
 

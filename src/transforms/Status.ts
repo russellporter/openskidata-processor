@@ -22,7 +22,7 @@ export default function getStatusAndValue(
       };
     }
   } else {
-    for (const state of lifecycleStates) {
+    for (const state of Array.from(lifecycleStates)) {
       const lifecycleKey = getLifecycleKey(key, state);
       if (properties.hasOwnProperty(lifecycleKey)) {
         return {
@@ -34,7 +34,7 @@ export default function getStatusAndValue(
   }
 
   let status = Status.Operating;
-  for (const state of lifecycleStates) {
+  for (const state of Array.from(lifecycleStates)) {
     if (properties.hasOwnProperty(state) && properties[state] === "yes") {
       status = state;
       break;
@@ -53,7 +53,7 @@ function isUnsupportedStatus(
 ): boolean {
   return (
     unsupportedStates.has(properties[key]) ||
-    [...unsupportedStates].some((state) => properties[state] === "yes")
+    Array.from(unsupportedStates).some((state) => properties[state] === "yes")
   );
 }
 

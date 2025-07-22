@@ -1,5 +1,5 @@
 import { SkiAreaActivity } from "openskidata-format";
-import { Config } from "./Config";
+import { Config, getPostgresTestConfig } from "./Config";
 import prepare from "./PrepareGeoJSON";
 import * as TestHelpers from "./TestHelpers";
 import {
@@ -8,15 +8,18 @@ import {
   simplifiedSkiAreaFeature,
 } from "./TestHelpers";
 
-const config: Config = {
-  elevationServer: null,
-  bbox: null,
-  geocodingServer: null,
-  workingDir: TestHelpers.getTempWorkingDir(),
-  outputDir: TestHelpers.getTempWorkingDir(),
-  snowCover: null,
-  tiles: null,
-};
+function createTestConfig(): Config {
+  return {
+    elevationServer: null,
+    bbox: null,
+    geocodingServer: null,
+    workingDir: TestHelpers.getTempWorkingDir(),
+    outputDir: TestHelpers.getTempWorkingDir(),
+    snowCover: null,
+    tiles: null,
+    postgresCache: getPostgresTestConfig(),
+  };
+}
 
 it("produces empty output for empty input", async () => {
   const paths = TestHelpers.getFilePaths();
@@ -31,7 +34,7 @@ it("produces empty output for empty input", async () => {
     paths.input,
   );
 
-  await prepare(paths, config);
+  await prepare(paths, createTestConfig());
 
   // await new Promise((resolve) => setTimeout(resolve, 1000));
 
@@ -139,7 +142,7 @@ it("produces output for simple input", async () => {
     paths.input,
   );
 
-  await prepare(paths, config);
+  await prepare(paths, createTestConfig());
 
   expect(TestHelpers.contents(paths.output)).toMatchInlineSnapshot(`
 Map {
@@ -474,7 +477,7 @@ it("shortens ski area names for Mapbox GL output", async () => {
     paths.input,
   );
 
-  await prepare(paths, config);
+  await prepare(paths, createTestConfig());
 
   expect(
     TestHelpers.fileContents(paths.output.mapboxGL.skiAreas).features[0]
@@ -520,7 +523,7 @@ it("processes OpenStreetMap ski areas", async () => {
     paths.input,
   );
 
-  await prepare(paths, config);
+  await prepare(paths, createTestConfig());
 
   expect(TestHelpers.fileContents(paths.output.skiAreas))
     .toMatchInlineSnapshot(`
@@ -588,7 +591,7 @@ it("processes OpenStreetMap ski area sites", async () => {
     paths.input,
   );
 
-  await prepare(paths, config);
+  await prepare(paths, createTestConfig());
 
   expect(
     TestHelpers.fileContents(paths.output.skiAreas).features.map(

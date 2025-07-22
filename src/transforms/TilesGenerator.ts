@@ -1,4 +1,4 @@
-import path from "path";
+import * as path from "path";
 import { performanceMonitor } from "../clustering/database/PerformanceMonitor";
 import { TilesConfig } from "../Config";
 import { CommonGeoJSONPaths } from "../io/GeoJSONFiles";

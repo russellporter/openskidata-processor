@@ -1,4 +1,4 @@
-import assert from "assert";
+import { strict as assert } from "assert";
 
 export default function overpassBBoxQuery(bbox: GeoJSON.BBox | null) {
   if (bbox === null) {

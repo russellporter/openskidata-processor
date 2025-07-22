@@ -11,7 +11,7 @@ export default async function clusterSkiAreas(
   outputPaths: GeoJSONOutputPaths,
   config: Config,
 ): Promise<void> {
-  const database = new PostgreSQLClusteringDatabase(config.workingDir);
+  const database = new PostgreSQLClusteringDatabase(config.postgresCache);
   const clusteringService = new SkiAreaClusteringService(database);
 
   try {
@@ -26,6 +26,7 @@ export default async function clusterSkiAreas(
       outputPaths.runs,
       config.geocodingServer,
       config.snowCover,
+      config.postgresCache,
     );
   } finally {
     await database.close();

@@ -1,7 +1,8 @@
 import { addWeeks, getDayOfYear, startOfYear, subDays } from "date-fns";
 import { SnowCoverHistory } from "openskidata-format";
-import { VIIRSPixel } from "./VIIRSPixelExtractor";
+import { PostgresConfig } from "../Config";
 import { PostgresCache } from "./PostgresCache";
+import { VIIRSPixel } from "./VIIRSPixelExtractor";
 
 export interface VIIRSCacheData {
   year: number;
@@ -82,11 +83,19 @@ export function convertPixelDataToHistory(
 
       const [snowCover, cloudPersistence] = weekData;
 
-      if (!isValidSnowCover(snowCover) || typeof cloudPersistence !== "number" || cloudPersistence < 0) {
+      if (
+        !isValidSnowCover(snowCover) ||
+        typeof cloudPersistence !== "number" ||
+        cloudPersistence < 0
+      ) {
         continue;
       }
 
-      const dayAndYear = weekToDayAndYear(week, cloudPersistence, yearData.year);
+      const dayAndYear = weekToDayAndYear(
+        week,
+        cloudPersistence,
+        yearData.year,
+      );
       if (!dayAndYear) continue;
 
       const { year: actualYear, dayOfYear } = dayAndYear;
@@ -147,7 +156,8 @@ export function aggregatePixelHistories(
   if (!pixelsData?.length) return [];
 
   const validPixelsData = pixelsData.filter(
-    (pixel) => pixel?.data && Array.isArray(pixel.data) && pixel.data.length > 0,
+    (pixel) =>
+      pixel?.data && Array.isArray(pixel.data) && pixel.data.length > 0,
   );
 
   if (!validPixelsData.length) return [];
@@ -217,13 +227,14 @@ export function aggregatePixelHistories(
   // Group by year and calculate aggregated values
   const yearGroups = new Map<number, [number, number, number][]>();
 
-  for (const measurement of measurementsByYearAndDay.values()) {
+  for (const measurement of Array.from(measurementsByYearAndDay.values())) {
     const { year, day, snowCoverValues } = measurement;
 
     if (!snowCoverValues.length) continue;
 
     const averageSnowCover = Math.round(
-      snowCoverValues.reduce((sum, val) => sum + val, 0) / snowCoverValues.length,
+      snowCoverValues.reduce((sum, val) => sum + val, 0) /
+        snowCoverValues.length,
     );
 
     const validPixelPercentage = Math.round(
@@ -282,7 +293,7 @@ async function readPixelCacheData(
   }
 
   const cacheKey = `snow_cover:${tileId}:${row}:${col}`;
-  
+
   try {
     const data = await cache.get(cacheKey);
     if (!data || !Array.isArray(data)) return null;
@@ -299,7 +310,7 @@ async function readPixelCacheData(
             Array.isArray(weekData) &&
             weekData.length >= 2 &&
             typeof weekData[0] === "number" &&
-            typeof weekData[1] === "number"
+            typeof weekData[1] === "number",
         )
       );
     });
@@ -315,7 +326,7 @@ async function readPixelCacheData(
 /**
  * Get snow cover history for the given VIIRS pixels using PostgreSQL cache.
  *
- * @param cache PostgreSQL cache instance 
+ * @param cache PostgreSQL cache instance
  * @param pixels Array of VIIRS pixels in format [hTile, vTile, col, row]
  * @returns Aggregated snow cover history across all pixels
  */
@@ -342,7 +353,7 @@ export async function getSnowCoverHistory(
 
     const [hTile, vTile, col, row] = pixel;
     const tileId = `h${hTile.toString().padStart(2, "0")}v${vTile.toString().padStart(2, "0")}`;
-    
+
     if (!pixelsByTile[tileId]) {
       pixelsByTile[tileId] = [];
     }
@@ -371,8 +382,13 @@ export async function getSnowCoverHistory(
  */
 export async function getSnowCoverHistoryFromCache(
   pixels: VIIRSPixel[],
+  postgresConfig: PostgresConfig,
 ): Promise<SnowCoverHistory> {
-  const archive = new PostgresCache<VIIRSCacheData[]>("snow_cover", undefined, 0);
+  const archive = new PostgresCache<VIIRSCacheData[]>(
+    "snow_cover",
+    postgresConfig,
+    0,
+  );
   try {
     await archive.initialize();
     return await getSnowCoverHistory(archive, pixels);

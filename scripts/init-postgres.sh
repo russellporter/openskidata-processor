@@ -55,6 +55,16 @@ if [ ! -f /var/lib/postgresql/data/PG_VERSION ]; then
         echo "Creating custom user: $POSTGRES_USER"
         su - postgres -c "psql -c \"CREATE USER $POSTGRES_USER WITH PASSWORD '$POSTGRES_PASSWORD' SUPERUSER;\""
     fi
+
+    # Create application databases
+    echo "Creating application databases..."
+    su - postgres -c "psql -c \"CREATE DATABASE openskidata_cache;\""
+    su - postgres -c "psql -c \"CREATE DATABASE openskidata_test;\""
+    
+    # Enable PostGIS extension on both databases
+    echo "Enabling PostGIS extensions..."
+    su - postgres -c "psql -c \"CREATE EXTENSION IF NOT EXISTS postgis;\" openskidata_cache"
+    su - postgres -c "psql -c \"CREATE EXTENSION IF NOT EXISTS postgis;\" openskidata_test"
     
     # Stop PostgreSQL
     su - postgres -c "/usr/lib/postgresql/15/bin/pg_ctl -D /var/lib/postgresql/data stop"

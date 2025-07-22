@@ -3,7 +3,6 @@ import DataLoader from "dataloader";
 import fetchRetry from "fetch-retry";
 import * as iso3166_2 from "iso3166-2-db";
 import { Region } from "iso3166-2-db";
-import { LRUMap } from "lru_map";
 import * as ngeohash from "ngeohash";
 import * as Config from "../Config";
 import { PostgresCache } from "../utils/PostgresCache";
@@ -48,14 +47,17 @@ export default class Geocoder {
   private mutex = new Mutex();
   private diskCache: PostgresCache<PhotonGeocode>;
 
-  constructor(config: Config.GeocodingServerConfig) {
+  constructor(
+    config: Config.GeocodingServerConfig,
+    postgresConfig: Config.PostgresConfig,
+  ) {
     this.config = config;
 
     // Initialize PostgreSQL disk cache
     this.diskCache = new PostgresCache<PhotonGeocode>(
       "geocoding",
-      undefined,
-      config.diskTTL,
+      postgresConfig,
+      config.cacheTTL,
     );
 
     this.loader = new DataLoader<string, PhotonGeocode>(
@@ -64,7 +66,6 @@ export default class Geocoder {
       },
       {
         batch: false,
-        cacheMap: new LRUMap(config.inMemoryCacheSize),
       },
     );
   }

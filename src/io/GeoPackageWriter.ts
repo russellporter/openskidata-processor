@@ -16,7 +16,7 @@ import {
 } from "openskidata-format";
 import { Transform } from "stream";
 import { pipeline } from "stream/promises";
-import wkx from "wkx";
+import * as wkx from "wkx";
 import { readGeoJSONFeatures } from "./GeoJSONReader";
 
 // Type-safe column definition
@@ -357,7 +357,7 @@ export class GeoPackageWriter {
     });
 
     // Create a separate table for each geometry type
-    for (const [geomType, geomFeatures] of featuresByGeometryType) {
+    for (const [geomType, geomFeatures] of Array.from(featuresByGeometryType)) {
       const tableName = `${layerName}_${geomType.toLowerCase()}`;
       await this.addFeaturesToTable(tableName, geomFeatures, featureType);
     }

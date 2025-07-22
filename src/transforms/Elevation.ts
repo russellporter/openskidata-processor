@@ -6,7 +6,7 @@ import {
   LiftFeature,
   RunFeature,
 } from "openskidata-format";
-import { ElevationServerConfig } from "../Config";
+import { ElevationServerConfig, PostgresConfig } from "../Config";
 import { PostgresCache } from "../utils/PostgresCache";
 
 const elevationProfileResolution = 25;
@@ -21,10 +21,11 @@ export interface ElevationProcessor {
 
 export async function createElevationProcessor(
   elevationServerConfig: ElevationServerConfig,
+  postgresConfig: PostgresConfig,
 ): Promise<ElevationProcessor> {
   const cache = new PostgresCache<number | null>(
     "elevation",
-    undefined,
+    postgresConfig,
     ELEVATION_CACHE_TTL_MS,
     { valueType: "REAL" },
   );
