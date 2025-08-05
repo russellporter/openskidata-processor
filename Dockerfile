@@ -1,12 +1,13 @@
 # Multi-stage build for OpenSkiData Processor
 
 # Build Tippecanoe first (most expensive, least likely to change)
-FROM node:22-bookworm AS tippecanoe-builder
+FROM debian:bookworm-slim AS tippecanoe-builder
 RUN apt-get update && apt-get install -y \
     build-essential \
     git \
     pkg-config \
     zlib1g-dev \
+    libsqlite3-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Use specific commit for better caching
