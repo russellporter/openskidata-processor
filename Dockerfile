@@ -53,8 +53,8 @@ RUN apt-get update && apt-get install -y \
 COPY scripts/init-postgres.sh /usr/local/bin/init-postgres.sh
 RUN chmod +x /usr/local/bin/init-postgres.sh
 
-# Install dependencies on startup and initialize PostgreSQL as main process
-CMD ["sh", "-c", "npm install && exec /usr/local/bin/init-postgres.sh"]
+# Install dependencies on startup and run both TypeScript watch mode and PostgreSQL
+CMD ["sh", "-c", "npm install && npm run dev:all"]
 
 # Production stage
 FROM base AS production
