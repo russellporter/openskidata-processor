@@ -1,20 +1,27 @@
-import { Feature, Geometry, Polygon, LineString, MultiPolygon, MultiLineString } from "geojson";
+import {
+  Feature,
+  Geometry,
+  Polygon,
+  LineString,
+  MultiPolygon,
+  MultiLineString,
+} from "geojson";
 import booleanIntersects from "@turf/boolean-intersects";
 import { polygon } from "@turf/helpers";
 
 /**
  * VIIRS Pixel Extractor for determining satellite pixels that intersect with GeoJSON geometries.
- * 
+ *
  * This utility extracts VIIRS pixel coordinates that intersect with GeoJSON geometries for snow cover analysis.
  * It transforms WGS84 coordinates to the VIIRS Sinusoidal projection and determines which 375m pixels
  * are covered by ski run geometries.
- * 
+ *
  * Key features:
  * - Transforms coordinates from WGS84 to VIIRS Sinusoidal projection
  * - Extracts intersecting VIIRS pixels for geometries (Polygon, LineString, Multi*)
  * - Groups pixels by MODIS/VIIRS tile for efficient processing
  * - Handles edge cases with centroid fallback for very small geometries
- * 
+ *
  * Based on the Python implementation in snow-cover/src/pixel_extractor.py
  */
 
@@ -38,36 +45,54 @@ export class VIIRSPixelExtractor {
    * Transform WGS84 coordinates to Sinusoidal projection.
    * This is a simplified implementation of the Sinusoidal projection used by VIIRS/MODIS.
    */
-  private transformToSinusoidal(lon: number, lat: number): SinusoidalCoordinate {
+  private transformToSinusoidal(
+    lon: number,
+    lat: number,
+  ): SinusoidalCoordinate {
     // Convert degrees to radians
     const lonRad = (lon * Math.PI) / 180;
     const latRad = (lat * Math.PI) / 180;
-    
+
     // Sinusoidal projection formulas
     // x = R * lon * cos(lat)
     // y = R * lat
     const x = SPHERE_RADIUS * lonRad * Math.cos(latRad);
     const y = SPHERE_RADIUS * latRad;
-    
+
     return { x, y };
   }
 
   /**
    * Convert sinusoidal coordinates to VIIRS tile and pixel coordinates.
    */
-  private sinusoidalToTileAndPixel(x: number, y: number): { hTile: number; vTile: number; pixelCol: number; pixelRow: number } {
+  private sinusoidalToTileAndPixel(
+    x: number,
+    y: number,
+  ): { hTile: number; vTile: number; pixelCol: number; pixelRow: number } {
     // Calculate which tile this falls in using standard MODIS/VIIRS grid
-    const hTile = Math.max(0, Math.min(35, Math.floor((x + GLOBAL_WIDTH / 2) / TILE_SIZE_METERS)));
-    const vTile = Math.max(0, Math.min(17, Math.floor((GLOBAL_HEIGHT / 2 - y) / TILE_SIZE_METERS)));
-    
+    const hTile = Math.max(
+      0,
+      Math.min(35, Math.floor((x + GLOBAL_WIDTH / 2) / TILE_SIZE_METERS)),
+    );
+    const vTile = Math.max(
+      0,
+      Math.min(17, Math.floor((GLOBAL_HEIGHT / 2 - y) / TILE_SIZE_METERS)),
+    );
+
     // Calculate tile bounds using standard grid
     const tileLeft = hTile * TILE_SIZE_METERS - GLOBAL_WIDTH / 2;
     const tileTop = GLOBAL_HEIGHT / 2 - vTile * TILE_SIZE_METERS;
-    
+
     // Calculate pixel within tile (0-2999)
-    const col = Math.max(0, Math.min(PIXELS_PER_TILE - 1, Math.floor((x - tileLeft) / PIXEL_SIZE)));
-    const row = Math.max(0, Math.min(PIXELS_PER_TILE - 1, Math.floor((tileTop - y) / PIXEL_SIZE)));
-    
+    const col = Math.max(
+      0,
+      Math.min(PIXELS_PER_TILE - 1, Math.floor((x - tileLeft) / PIXEL_SIZE)),
+    );
+    const row = Math.max(
+      0,
+      Math.min(PIXELS_PER_TILE - 1, Math.floor((tileTop - y) / PIXEL_SIZE)),
+    );
+
     return {
       hTile,
       vTile,
@@ -88,7 +113,7 @@ export class VIIRSPixelExtractor {
         coordinates: [x, y],
       };
     }
-    
+
     if (geometry.type === "LineString") {
       return {
         type: "LineString",
@@ -98,45 +123,45 @@ export class VIIRSPixelExtractor {
         }),
       };
     }
-    
+
     if (geometry.type === "Polygon") {
       return {
         type: "Polygon",
-        coordinates: geometry.coordinates.map(ring =>
+        coordinates: geometry.coordinates.map((ring) =>
           ring.map(([lon, lat]) => {
             const { x, y } = this.transformToSinusoidal(lon, lat);
             return [x, y];
-          })
+          }),
         ),
       };
     }
-    
+
     if (geometry.type === "MultiPolygon") {
       return {
         type: "MultiPolygon",
-        coordinates: geometry.coordinates.map(polygon =>
-          polygon.map(ring =>
+        coordinates: geometry.coordinates.map((polygon) =>
+          polygon.map((ring) =>
             ring.map(([lon, lat]) => {
               const { x, y } = this.transformToSinusoidal(lon, lat);
               return [x, y];
-            })
-          )
+            }),
+          ),
         ),
       };
     }
-    
+
     if (geometry.type === "MultiLineString") {
       return {
         type: "MultiLineString",
-        coordinates: geometry.coordinates.map(lineString =>
+        coordinates: geometry.coordinates.map((lineString) =>
           lineString.map(([lon, lat]) => {
             const { x, y } = this.transformToSinusoidal(lon, lat);
             return [x, y];
-          })
+          }),
         ),
       };
     }
-    
+
     throw new Error(`Unsupported geometry type: ${geometry.type}`);
   }
 
@@ -147,29 +172,31 @@ export class VIIRSPixelExtractor {
   private pixelIntersectsGeometry(
     pixelX: number,
     pixelY: number,
-    geometryTransformed: Geometry
+    geometryTransformed: Geometry,
   ): boolean {
     // Create pixel polygon
     const pixelMinX = pixelX - PIXEL_SIZE / 2;
     const pixelMaxX = pixelX + PIXEL_SIZE / 2;
     const pixelMinY = pixelY - PIXEL_SIZE / 2;
     const pixelMaxY = pixelY + PIXEL_SIZE / 2;
-    
-    const pixelPolygon = polygon([[
-      [pixelMinX, pixelMinY],
-      [pixelMaxX, pixelMinY],
-      [pixelMaxX, pixelMaxY],
-      [pixelMinX, pixelMaxY],
-      [pixelMinX, pixelMinY]
-    ]]);
-    
+
+    const pixelPolygon = polygon([
+      [
+        [pixelMinX, pixelMinY],
+        [pixelMaxX, pixelMinY],
+        [pixelMaxX, pixelMaxY],
+        [pixelMinX, pixelMaxY],
+        [pixelMinX, pixelMinY],
+      ],
+    ]);
+
     // Create a Feature for the transformed geometry
     const geometryFeature: Feature = {
       type: "Feature",
       geometry: geometryTransformed,
-      properties: {}
+      properties: {},
     };
-    
+
     // Use Turf.js for proper geometric intersection
     return booleanIntersects(pixelPolygon, geometryFeature);
   }
@@ -177,12 +204,14 @@ export class VIIRSPixelExtractor {
   /**
    * Get bounding box of a geometry in sinusoidal coordinates.
    */
-  private getGeometryBounds(geometry: Geometry): [number, number, number, number] {
+  private getGeometryBounds(
+    geometry: Geometry,
+  ): [number, number, number, number] {
     let minX = Infinity;
     let minY = Infinity;
     let maxX = -Infinity;
     let maxY = -Infinity;
-    
+
     const updateBounds = (coords: number[][]) => {
       coords.forEach(([x, y]) => {
         minX = Math.min(minX, x);
@@ -191,24 +220,24 @@ export class VIIRSPixelExtractor {
         maxY = Math.max(maxY, y);
       });
     };
-    
+
     if (geometry.type === "Point") {
       const [x, y] = geometry.coordinates;
       return [x, y, x, y];
     }
-    
+
     if (geometry.type === "LineString") {
       updateBounds(geometry.coordinates);
     } else if (geometry.type === "Polygon") {
-      geometry.coordinates.forEach(ring => updateBounds(ring));
+      geometry.coordinates.forEach((ring) => updateBounds(ring));
     } else if (geometry.type === "MultiPolygon") {
-      geometry.coordinates.forEach(polygon =>
-        polygon.forEach(ring => updateBounds(ring))
+      geometry.coordinates.forEach((polygon) =>
+        polygon.forEach((ring) => updateBounds(ring)),
       );
     } else if (geometry.type === "MultiLineString") {
-      geometry.coordinates.forEach(lineString => updateBounds(lineString));
+      geometry.coordinates.forEach((lineString) => updateBounds(lineString));
     }
-    
+
     return [minX, minY, maxX, maxY];
   }
 
@@ -229,42 +258,57 @@ export class VIIRSPixelExtractor {
   getGeometryPixelCoordinates(geometry: Geometry): VIIRSPixel[] {
     // Transform geometry to sinusoidal projection
     const geometryTransformed = this.transformGeometryToSinusoidal(geometry);
-    
+
     // Get bounding box in sinusoidal coordinates
-    const [minX, minY, maxX, maxY] = this.getGeometryBounds(geometryTransformed);
-    
+    const [minX, minY, maxX, maxY] =
+      this.getGeometryBounds(geometryTransformed);
+
     // Convert corners to tiles to find all potentially affected tiles
     const minInfo = this.sinusoidalToTileAndPixel(minX, maxY); // top-left
     const maxInfo = this.sinusoidalToTileAndPixel(maxX, minY); // bottom-right
-    
+
     const pixelCoords: VIIRSPixel[] = [];
     const processedPixels = new Set<string>(); // To avoid duplicates
-    
+
     // Iterate through all potentially affected tiles
     for (let hTile = minInfo.hTile; hTile <= maxInfo.hTile; hTile++) {
       for (let vTile = minInfo.vTile; vTile <= maxInfo.vTile; vTile++) {
         // Calculate tile bounds using standard MODIS/VIIRS grid
         const tileLeft = hTile * TILE_SIZE_METERS - GLOBAL_WIDTH / 2;
         const tileTop = GLOBAL_HEIGHT / 2 - vTile * TILE_SIZE_METERS;
-        
+
         // Calculate pixel range within this tile to test
-        const testMinCol = Math.max(0, Math.floor((minX - tileLeft) / PIXEL_SIZE) - 1);
-        const testMaxCol = Math.min(PIXELS_PER_TILE - 1, Math.floor((maxX - tileLeft) / PIXEL_SIZE) + 1);
-        const testMinRow = Math.max(0, Math.floor((tileTop - maxY) / PIXEL_SIZE) - 1);
-        const testMaxRow = Math.min(PIXELS_PER_TILE - 1, Math.floor((tileTop - minY) / PIXEL_SIZE) + 1);
-        
+        const testMinCol = Math.max(
+          0,
+          Math.floor((minX - tileLeft) / PIXEL_SIZE) - 1,
+        );
+        const testMaxCol = Math.min(
+          PIXELS_PER_TILE - 1,
+          Math.floor((maxX - tileLeft) / PIXEL_SIZE) + 1,
+        );
+        const testMinRow = Math.max(
+          0,
+          Math.floor((tileTop - maxY) / PIXEL_SIZE) - 1,
+        );
+        const testMaxRow = Math.min(
+          PIXELS_PER_TILE - 1,
+          Math.floor((tileTop - minY) / PIXEL_SIZE) + 1,
+        );
+
         // Test each pixel in the range
         for (let row = testMinRow; row <= testMaxRow; row++) {
           for (let col = testMinCol; col <= testMaxCol; col++) {
             // Convert pixel to sinusoidal coordinates (pixel center)
             const pixelX = tileLeft + (col + 0.5) * PIXEL_SIZE;
             const pixelY = tileTop - (row + 0.5) * PIXEL_SIZE;
-            
+
             // Check if pixel intersects with the geometry
-            if (this.pixelIntersectsGeometry(pixelX, pixelY, geometryTransformed)) {
-              const tileName = `h${hTile.toString().padStart(2, '0')}v${vTile.toString().padStart(2, '0')}`;
+            if (
+              this.pixelIntersectsGeometry(pixelX, pixelY, geometryTransformed)
+            ) {
+              const tileName = `h${hTile.toString().padStart(2, "0")}v${vTile.toString().padStart(2, "0")}`;
               const pixelKey = `${tileName}_${col}_${row}`;
-              
+
               if (!processedPixels.has(pixelKey)) {
                 processedPixels.add(pixelKey);
                 pixelCoords.push([hTile, vTile, col, row]);
@@ -274,14 +318,22 @@ export class VIIRSPixelExtractor {
         }
       }
     }
-    
+
     // Fallback: if no pixels found, assign to centroid pixel
     if (pixelCoords.length === 0) {
       const centroid = this.getGeometryCentroid(geometryTransformed);
-      const centroidInfo = this.sinusoidalToTileAndPixel(centroid.x, centroid.y);
-      pixelCoords.push([centroidInfo.hTile, centroidInfo.vTile, centroidInfo.pixelCol, centroidInfo.pixelRow]);
+      const centroidInfo = this.sinusoidalToTileAndPixel(
+        centroid.x,
+        centroid.y,
+      );
+      pixelCoords.push([
+        centroidInfo.hTile,
+        centroidInfo.vTile,
+        centroidInfo.pixelCol,
+        centroidInfo.pixelRow,
+      ]);
     }
-    
+
     return pixelCoords;
   }
 
@@ -291,63 +343,76 @@ export class VIIRSPixelExtractor {
   extractPixelsFromFeature(feature: Feature): Set<string> {
     const uniquePixels = new Set<string>();
     const geometry = feature.geometry;
-    
+
     if (!geometry) {
       return uniquePixels;
     }
-    
+
     if (geometry.type === "Polygon" || geometry.type === "LineString") {
       const pixels = this.getGeometryPixelCoordinates(geometry);
-      pixels.forEach(pixel => {
+      pixels.forEach((pixel) => {
         const [hTile, vTile, col, row] = pixel;
-        const tileName = `h${hTile.toString().padStart(2, '0')}v${vTile.toString().padStart(2, '0')}`;
+        const tileName = `h${hTile.toString().padStart(2, "0")}v${vTile.toString().padStart(2, "0")}`;
         uniquePixels.add(`${tileName}_${row}_${col}`);
       });
-    } else if (geometry.type === "MultiPolygon" || geometry.type === "MultiLineString") {
+    } else if (
+      geometry.type === "MultiPolygon" ||
+      geometry.type === "MultiLineString"
+    ) {
       // Handle multi-geometries by processing each sub-geometry
       if (geometry.type === "MultiPolygon") {
-        (geometry as MultiPolygon).coordinates.forEach(polygonCoords => {
-          const subGeometry: Polygon = { type: "Polygon", coordinates: polygonCoords };
+        (geometry as MultiPolygon).coordinates.forEach((polygonCoords) => {
+          const subGeometry: Polygon = {
+            type: "Polygon",
+            coordinates: polygonCoords,
+          };
           const pixels = this.getGeometryPixelCoordinates(subGeometry);
-          pixels.forEach(pixel => {
+          pixels.forEach((pixel) => {
             const [hTile, vTile, col, row] = pixel;
-            const tileName = `h${hTile.toString().padStart(2, '0')}v${vTile.toString().padStart(2, '0')}`;
+            const tileName = `h${hTile.toString().padStart(2, "0")}v${vTile.toString().padStart(2, "0")}`;
             uniquePixels.add(`${tileName}_${row}_${col}`);
           });
         });
       } else {
-        (geometry as MultiLineString).coordinates.forEach(lineStringCoords => {
-          const subGeometry: LineString = { type: "LineString", coordinates: lineStringCoords };
-          const pixels = this.getGeometryPixelCoordinates(subGeometry);
-          pixels.forEach(pixel => {
-            const [hTile, vTile, col, row] = pixel;
-            const tileName = `h${hTile.toString().padStart(2, '0')}v${vTile.toString().padStart(2, '0')}`;
-            uniquePixels.add(`${tileName}_${row}_${col}`);
-          });
-        });
+        (geometry as MultiLineString).coordinates.forEach(
+          (lineStringCoords) => {
+            const subGeometry: LineString = {
+              type: "LineString",
+              coordinates: lineStringCoords,
+            };
+            const pixels = this.getGeometryPixelCoordinates(subGeometry);
+            pixels.forEach((pixel) => {
+              const [hTile, vTile, col, row] = pixel;
+              const tileName = `h${hTile.toString().padStart(2, "0")}v${vTile.toString().padStart(2, "0")}`;
+              uniquePixels.add(`${tileName}_${row}_${col}`);
+            });
+          },
+        );
       }
     }
-    
+
     return uniquePixels;
   }
 
   /**
    * Group unique pixels by tile for efficient processing.
    */
-  groupPixelsByTile(uniquePixels: Set<string>): Record<string, Array<[number, number]>> {
+  groupPixelsByTile(
+    uniquePixels: Set<string>,
+  ): Record<string, Array<[number, number]>> {
     const pixelsByTile: Record<string, Array<[number, number]>> = {};
-    
-    uniquePixels.forEach(pixelKey => {
-      const [tile, rowStr, colStr] = pixelKey.split('_');
+
+    uniquePixels.forEach((pixelKey) => {
+      const [tile, rowStr, colStr] = pixelKey.split("_");
       const row = parseInt(rowStr, 10);
       const col = parseInt(colStr, 10);
-      
+
       if (!pixelsByTile[tile]) {
         pixelsByTile[tile] = [];
       }
       pixelsByTile[tile].push([row, col]);
     });
-    
+
     return pixelsByTile;
   }
 }

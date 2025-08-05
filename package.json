@@ -76,6 +76,7 @@
     "build": "tsc",
     "dev": "tsc --watch",
     "dev:all": "concurrently \"npm run dev\" \"/usr/local/bin/init-postgres.sh\"",
+    "format": "prettier --write . --ignore-path .gitignore",
     "test": "jest",
     "record-tests": "jest -u",
     "check-types": "tsc --project tsconfig.typecheck.json",

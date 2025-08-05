@@ -1,4 +1,10 @@
 {
   "extends": "./tsconfig.base.json",
-  "exclude": ["**/*.test.ts", "**/*.unit.test.ts", "**/*.int.test.ts", "src/testSetup.ts", "dist"]
+  "exclude": [
+    "**/*.test.ts",
+    "**/*.unit.test.ts",
+    "**/*.int.test.ts",
+    "src/testSetup.ts",
+    "dist"
+  ]
 }

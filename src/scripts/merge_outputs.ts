@@ -25,13 +25,15 @@ function mergeGeoPackageWithSQLite(
 ): void {
   const merger = new GeoPackageMerger();
   const result = merger.mergeGeoPackages(targetPath, sourcePath);
-  
-  console.log(`  Found ${result.tablesProcessed} data tables to merge (excluding metadata)`);
+
+  console.log(
+    `  Found ${result.tablesProcessed} data tables to merge (excluding metadata)`,
+  );
   console.log(`  Successfully inserted ${result.rowsInserted} rows`);
-  
+
   if (result.errors.length > 0) {
     console.warn(`  Encountered ${result.errors.length} errors during merge:`);
-    result.errors.forEach(error => console.warn(`    ${error}`));
+    result.errors.forEach((error) => console.warn(`    ${error}`));
   }
 }
 
@@ -338,11 +340,11 @@ async function finalizeGeoJsonFile(outputPath: string): Promise<void> {
         try {
           // More robust comma removal - handle multiple trailing commas and whitespace
           let finalContent = buffer
-            .replace(/,+\s*$/, "")  // Remove one or more trailing commas and whitespace
-            .replace(/,(\s*,)+/g, ",")  // Remove duplicate commas within content
-            .replace(/\n\s*,\s*\n/g, ",\n")  // Clean up comma formatting
+            .replace(/,+\s*$/, "") // Remove one or more trailing commas and whitespace
+            .replace(/,(\s*,)+/g, ",") // Remove duplicate commas within content
+            .replace(/\n\s*,\s*\n/g, ",\n") // Clean up comma formatting
             .trim();
-          
+
           // Ensure we end with proper JSON structure
           if (!finalContent.endsWith("]")) {
             finalContent += "\n]";

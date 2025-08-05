@@ -12,6 +12,7 @@ This project runs in a containerized environment. All commands should be execute
 ### Build & Test Commands (run inside container)
 
 - Build: `docker compose exec app npm run build`
+- Format code: `docker compose exec app npm run format`
 - Test all: `docker compose exec app npm test`
 - Test single file: `docker compose exec app npx jest path/to/file.test.ts`
 - Type check: `docker compose exec app npm run check-types`

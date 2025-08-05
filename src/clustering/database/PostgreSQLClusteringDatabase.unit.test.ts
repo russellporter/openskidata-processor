@@ -14,7 +14,9 @@ describe("PostgreSQLClusteringDatabase", () => {
     try {
       await database.initialize();
       // Clean up any existing test data
-      await database['executeQuery']('DELETE FROM objects WHERE source = $1', ['test']);
+      await database["executeQuery"]("DELETE FROM objects WHERE source = $1", [
+        "test",
+      ]);
     } catch (error) {
       // Skip tests if PostgreSQL is not available
       console.warn("PostgreSQL not available, skipping tests:", error);
@@ -39,21 +41,21 @@ describe("PostgreSQLClusteringDatabase", () => {
       type: MapObjectType.SkiArea,
       geometry: {
         type: "Point" as const,
-        coordinates: [-122.4194, 37.7749]
+        coordinates: [-122.4194, 37.7749],
       },
       activities: [SkiAreaActivity.Downhill],
       skiAreas: [],
       source: "test",
       isPolygon: false,
       properties: { name: "Test Ski Area" },
-      id: "test-ski-area-1"
+      id: "test-ski-area-1",
     } as any;
 
     await database.saveObject(skiArea);
 
     const cursor = await database.getSkiAreas({});
     const skiAreas = await cursor.all();
-    
+
     expect(skiAreas).toHaveLength(1);
     expect(skiAreas[0]._key).toBe("test-ski-area-1");
     expect(skiAreas[0].activities).toContain(SkiAreaActivity.Downhill);
@@ -75,25 +77,31 @@ describe("PostgreSQLClusteringDatabase", () => {
         source: "test",
         isPolygon: false,
         properties: {},
-        id: "test-1"
+        id: "test-1",
       },
       {
-        _key: "test-2", 
+        _key: "test-2",
         type: MapObjectType.Run,
-        geometry: { type: "LineString" as const, coordinates: [[-122.42, 37.77], [-122.41, 37.76]] },
+        geometry: {
+          type: "LineString" as const,
+          coordinates: [
+            [-122.42, 37.77],
+            [-122.41, 37.76],
+          ],
+        },
         activities: [SkiAreaActivity.Downhill],
         skiAreas: [],
         source: "test",
         isPolygon: false,
-        properties: {}
-      }
+        properties: {},
+      },
     ] as any[];
 
     await database.saveObjects(objects);
 
     const cursor = await database.getSkiAreas({});
     const skiAreas = await cursor.all();
-    
+
     expect(skiAreas).toHaveLength(1);
     expect(skiAreas[0]._key).toBe("test-1");
   });
@@ -103,26 +111,38 @@ describe("PostgreSQLClusteringDatabase", () => {
     const unassignedRun = {
       _key: "unassigned-run-1",
       type: MapObjectType.Run,
-      geometry: { type: "LineString" as const, coordinates: [[-122.42, 37.77], [-122.41, 37.76]] },
+      geometry: {
+        type: "LineString" as const,
+        coordinates: [
+          [-122.42, 37.77],
+          [-122.41, 37.76],
+        ],
+      },
       activities: [SkiAreaActivity.Downhill],
       skiAreas: [],
       source: "test",
       isPolygon: false,
       isBasisForNewSkiArea: true, // This should be found
-      properties: {}
+      properties: {},
     } as any;
 
     // Create a run NOT marked as basis for new ski area
     const assignedRun = {
       _key: "assigned-run-1",
       type: MapObjectType.Run,
-      geometry: { type: "LineString" as const, coordinates: [[-122.43, 37.78], [-122.42, 37.77]] },
+      geometry: {
+        type: "LineString" as const,
+        coordinates: [
+          [-122.43, 37.78],
+          [-122.42, 37.77],
+        ],
+      },
       activities: [SkiAreaActivity.Downhill],
       skiAreas: ["some-ski-area"],
       source: "test",
       isPolygon: false,
       isBasisForNewSkiArea: false, // This should NOT be found
-      properties: {}
+      properties: {},
     } as any;
 
     await database.saveObjects([unassignedRun, assignedRun]);
@@ -133,7 +153,11 @@ describe("PostgreSQLClusteringDatabase", () => {
     expect(nextRun!._key).toBe("unassigned-run-1");
 
     // Mark the run as processed (assign to ski area)
-    await database.markObjectsAsPartOfSkiArea("test-ski-area", ["unassigned-run-1"], false);
+    await database.markObjectsAsPartOfSkiArea(
+      "test-ski-area",
+      ["unassigned-run-1"],
+      false,
+    );
 
     // Should return null now (no more unassigned runs)
     const noMoreRuns = await database.getNextUnassignedRun();

@@ -120,7 +120,11 @@ describe("PostgresCache", () => {
     const shortTTL = 100; // 100ms TTL
 
     beforeEach(async () => {
-      ttlCache = new PostgresCache("test_ttl_cache", getPostgresTestConfig(), shortTTL);
+      ttlCache = new PostgresCache(
+        "test_ttl_cache",
+        getPostgresTestConfig(),
+        shortTTL,
+      );
       await ttlCache.initialize();
     });
 
@@ -293,7 +297,11 @@ describe("PostgresCache", () => {
 
   describe("multiple initialization", () => {
     it("should handle multiple initialization calls gracefully", async () => {
-      const multiInitCache = new PostgresCache("multi_init", getPostgresTestConfig(), 0);
+      const multiInitCache = new PostgresCache(
+        "multi_init",
+        getPostgresTestConfig(),
+        0,
+      );
 
       await multiInitCache.initialize();
       await multiInitCache.initialize(); // Should not throw

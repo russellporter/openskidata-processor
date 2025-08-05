@@ -32,20 +32,20 @@ beforeEach(() => {
 /**
  * Integration test that verifies the SQLite clustering correctly
  * associates lifts and runs with ski areas.
- * 
+ *
  * This test creates a scenario with:
  * - A Skimap.org ski area (point geometry)
  * - A lift and run nearby that should be associated
- * 
+ *
  * The expected behavior is that the lift and run should have
  * the ski area ID in their skiAreas property after clustering.
- * 
+ *
  * This test was originally written to reproduce a bug where SQLite
  * clustering resulted in empty skiAreas arrays, but that has been fixed.
  */
 it("correctly associates lifts and runs with ski areas", async () => {
   const paths = TestHelpers.getFilePaths();
-  
+
   TestHelpers.mockFeatureFiles(
     [
       TestHelpers.mockSkiAreaFeature({
@@ -110,11 +110,7 @@ it("correctly associates lifts and runs with ski areas", async () => {
   };
 
   // Use SQLite database
-  await clusterSkiAreas(
-    paths.intermediate,
-    paths.output,
-    testConfig,
-  );
+  await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
 
   const lifts = TestHelpers.fileContents(paths.output.lifts).features.map(
     simplifiedLiftFeature,
@@ -139,7 +135,7 @@ it("correctly associates lifts and runs with ski areas", async () => {
 
   expect(runs).toEqual([
     {
-      id: "test-run-1", 
+      id: "test-run-1",
       name: "Test Run",
       skiAreas: ["test-ski-area-1"],
     },
@@ -160,7 +156,7 @@ it("correctly associates lifts and runs with ski areas", async () => {
  */
 it("verifies ski area associations persist through clustering and augmentation", async () => {
   const paths = TestHelpers.getFilePaths();
-  
+
   TestHelpers.mockFeatureFiles(
     [
       TestHelpers.mockSkiAreaFeature({
@@ -218,11 +214,7 @@ it("verifies ski area associations persist through clustering and augmentation",
   };
 
   // Use SQLite database
-  await clusterSkiAreas(
-    paths.intermediate,
-    paths.output,
-    testConfig,
-  );
+  await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
 
   const outputRuns = TestHelpers.fileContents(paths.output.runs).features;
   const outputLifts = TestHelpers.fileContents(paths.output.lifts).features;

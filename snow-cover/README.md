@@ -7,6 +7,7 @@ This system integrates VIIRS snow cover data with ski run analysis. It fetches t
 ## Overview
 
 The system processes `runs.geojson` files to:
+
 1. Extract unique VIIRS pixel coordinates that intersect with ski run geometries
 2. Fetch weekly snow cover data from VIIRS VNP10A1F tiles
 3. Cache data at the pixel level with error handling
@@ -114,10 +115,10 @@ Each pixel cache file contains JSON data:
   {
     "year": 2024,
     "data": [
-      [85, 0],    // Week 0: 85% snow cover, 0 days cloud persistence (fresh data)
-      [92, 3],    // Week 1: 92% snow cover, 3 days cloud persistence (3-day-old data)  
-      [301, 0],   // Week 2: No data available (old missing)
-      [400, 0]    // Week 3: No data available (recent, retryable)
+      [85, 0], // Week 0: 85% snow cover, 0 days cloud persistence (fresh data)
+      [92, 3], // Week 1: 92% snow cover, 3 days cloud persistence (3-day-old data)
+      [301, 0], // Week 2: No data available (old missing)
+      [400, 0] // Week 3: No data available (recent, retryable)
     ]
   }
 ]
@@ -126,6 +127,7 @@ Each pixel cache file contains JSON data:
 ### Cloud Persistence Values
 
 Cloud persistence indicates how old the snow cover data is:
+
 - **0**: Data from the same day (fresh)
 - **1-63**: Data is 1-63 days old (gap-filled from previous observations)
 - Higher values indicate older gap-filled data
@@ -139,7 +141,7 @@ Cloud persistence indicates how old the snow cover data is:
 ## Performance
 
 - **Batched processing**: Analyzes all missing data per tile first, then fetches in parallel
-- **Parallel downloads**: Uses configurable workers (default: 3) for concurrent VIIRS downloads  
+- **Parallel downloads**: Uses configurable workers (default: 3) for concurrent VIIRS downloads
 - **Efficient caching**: Loads/saves pixel JSON files only once per tile processing
 - **Memory management**: Downloads and deletes HDF files immediately after processing
 - **Smart caching**: Avoids repeated requests for known missing files
@@ -179,6 +181,7 @@ The pixel-level cache persists between runs, so subsequent executions only fetch
 ## Common Use Cases
 
 ### Catching Up on Historical Data
+
 ```bash
 # Process only 2020-2022 data
 python fetch_snow_data.py data/runs.geojson --from-year 2020 --to-year 2022
@@ -188,6 +191,7 @@ python fetch_snow_data.py data/runs.geojson --from-year 2023 --max-workers 6
 ```
 
 ### Daily/Regular Processing
+
 ```bash
 # Process only current year (typical for daily runs)
 python fetch_snow_data.py data/runs.geojson --from-year 2025
@@ -197,6 +201,7 @@ python fetch_snow_data.py data/runs.geojson
 ```
 
 ### Development and Testing
+
 ```bash
 # Test with limited data (one year, one tile)
 python fetch_snow_data.py data/runs.geojson --from-year 2024 --to-year 2024 --max-tiles 1

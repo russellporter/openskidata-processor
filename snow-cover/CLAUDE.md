@@ -70,6 +70,7 @@ python scripts/hdf-to-geotiff.py input.hdf output.tif
 ## Key Technical Details
 
 ### VIIRS Specifications
+
 - **Dataset**: NOAA/VIIRS/001/VNP10A1F (gap-filled snow cover)
 - **Resolution**: 375m pixels
 - **Projection**: Sinusoidal (same as MODIS)
@@ -77,13 +78,16 @@ python scripts/hdf-to-geotiff.py input.hdf output.tif
 - **Tile naming**: h##v## format (e.g., h18v04)
 
 ### Data Structure
+
 - **Input**: `data/runs.geojson` with ski run geometries
 - **Cache**: `data/snowcover/{tile}/{row}/{col}.json`
 - **Format**: Raw pixel values (0-100% snow cover) with cloud persistence (0-63 days)
 - **Error codes**: 301 (old missing), 400 (recent/retryable), 401 (other errors)
 
 ### Authentication
+
 Requires NASA Earthdata credentials in `~/.netrc`:
+
 ```
 machine urs.earthdata.nasa.gov
 login your_username
@@ -91,6 +95,7 @@ password your_password
 ```
 
 ### Testing Strategy
+
 - Unit tests for individual components
 - Integration tests with mock HDF data
 - Test fixtures in `tests/test_run_data.json`

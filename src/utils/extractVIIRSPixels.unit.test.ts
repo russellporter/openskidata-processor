@@ -1,5 +1,8 @@
 import { FeatureCollection, Feature } from "geojson";
-import { extractVIIRSPixelsFromGeoJSON, extractVIIRSPixelsFromFeature } from "./extractVIIRSPixels";
+import {
+  extractVIIRSPixelsFromGeoJSON,
+  extractVIIRSPixelsFromFeature,
+} from "./extractVIIRSPixels";
 
 describe("extractVIIRSPixels utilities", () => {
   describe("extractVIIRSPixelsFromGeoJSON", () => {
@@ -43,11 +46,11 @@ describe("extractVIIRSPixels utilities", () => {
       };
 
       const pixelsByTile = extractVIIRSPixelsFromGeoJSON(featureCollection);
-      
+
       expect(Object.keys(pixelsByTile).length).toBeGreaterThan(0);
-      
+
       // Check that each tile has valid pixel arrays
-      Object.values(pixelsByTile).forEach(pixels => {
+      Object.values(pixelsByTile).forEach((pixels) => {
         expect(pixels.length).toBeGreaterThan(0);
         pixels.forEach(([row, col]) => {
           expect(typeof row).toBe("number");
@@ -65,7 +68,7 @@ describe("extractVIIRSPixels utilities", () => {
       };
 
       const pixelsByTile = extractVIIRSPixelsFromGeoJSON(emptyCollection);
-      
+
       expect(Object.keys(pixelsByTile)).toHaveLength(0);
     });
   });
@@ -85,15 +88,15 @@ describe("extractVIIRSPixels utilities", () => {
       };
 
       const pixels = extractVIIRSPixelsFromFeature(feature);
-      
+
       expect(pixels.length).toBeGreaterThan(0);
-      
+
       // Verify tuple format: [hTile, vTile, column, row]
       const [hTile, vTile, col, row] = pixels[0];
-      expect(typeof hTile).toBe('number');
-      expect(typeof vTile).toBe('number');
-      expect(typeof col).toBe('number');
-      expect(typeof row).toBe('number');
+      expect(typeof hTile).toBe("number");
+      expect(typeof vTile).toBe("number");
+      expect(typeof col).toBe("number");
+      expect(typeof row).toBe("number");
     });
 
     it("should handle feature with no geometry", () => {
@@ -104,7 +107,7 @@ describe("extractVIIRSPixels utilities", () => {
       };
 
       const pixels = extractVIIRSPixelsFromFeature(feature);
-      
+
       expect(pixels).toHaveLength(0);
     });
   });

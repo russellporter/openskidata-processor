@@ -1,7 +1,12 @@
 import { FeatureType, SkiAreaActivity, SourceType } from "openskidata-format";
 import { SnowCoverConfig } from "../../Config";
 import Geocoder from "../../transforms/Geocoder";
-import { MapObject, MapObjectType, RunObject, SkiAreaObject } from "../MapObject";
+import {
+  MapObject,
+  MapObjectType,
+  RunObject,
+  SkiAreaObject,
+} from "../MapObject";
 
 export interface ClusteringDatabase {
   /**
@@ -37,7 +42,9 @@ export interface ClusteringDatabase {
   /**
    * Update multiple objects in batch
    */
-  updateObjects(updates: Array<{ key: string; updates: Partial<MapObject> }>): Promise<void>;
+  updateObjects(
+    updates: Array<{ key: string; updates: Partial<MapObject> }>,
+  ): Promise<void>;
 
   /**
    * Remove an object from the database

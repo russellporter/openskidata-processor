@@ -9,7 +9,6 @@ import {
 } from "@turf/helpers";
 import nearestPointOnLine from "@turf/nearest-point-on-line";
 
-
 export function centralPointsInFeature(
   geojson: GeoJSON.Point | GeoJSON.Polygon,
 ): GeoJSON.Point;

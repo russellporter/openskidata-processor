@@ -32,7 +32,11 @@ describe("SkiAreaStatistics", () => {
       viirsPixels: [],
     };
 
-    const statistics = await skiAreaStatistics([run], getPostgresTestConfig(), null);
+    const statistics = await skiAreaStatistics(
+      [run],
+      getPostgresTestConfig(),
+      null,
+    );
 
     expect(statistics).toMatchInlineSnapshot(`
 {
@@ -140,7 +144,11 @@ describe("SkiAreaStatistics", () => {
       viirsPixels: [],
     };
 
-    const statistics = await skiAreaStatistics([run], getPostgresTestConfig(), null);
+    const statistics = await skiAreaStatistics(
+      [run],
+      getPostgresTestConfig(),
+      null,
+    );
 
     expect(statistics).toMatchInlineSnapshot(`
 {

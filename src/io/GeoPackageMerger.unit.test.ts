@@ -10,7 +10,7 @@ describe("GeoPackageMerger", () => {
   let merger: GeoPackageMerger;
   let targetWriter: GeoPackageWriter;
   let sourceWriter: GeoPackageWriter;
-  
+
   let testDir: string;
   let targetGpkgPath: string;
   let sourceGpkgPath: string;
@@ -19,7 +19,7 @@ describe("GeoPackageMerger", () => {
     merger = new GeoPackageMerger();
     targetWriter = new GeoPackageWriter();
     sourceWriter = new GeoPackageWriter();
-    
+
     // Generate unique test directory for each test
     testDir = tmp.dirSync().name;
     targetGpkgPath = `${testDir}/target.gpkg`;
@@ -29,7 +29,7 @@ describe("GeoPackageMerger", () => {
   afterEach(async () => {
     await targetWriter.close();
     await sourceWriter.close();
-    
+
     // Clean up test files
     await Promise.all([
       fs.unlink(targetGpkgPath).catch(() => {}),
@@ -37,7 +37,10 @@ describe("GeoPackageMerger", () => {
     ]);
   });
 
-  async function getFeatureCount(path: string, tableName: string): Promise<number> {
+  async function getFeatureCount(
+    path: string,
+    tableName: string,
+  ): Promise<number> {
     const geoPackage = await GeoPackageAPI.open(path);
     const featureDao = geoPackage.getFeatureDao(tableName);
     const count = featureDao.count();
@@ -48,7 +51,7 @@ describe("GeoPackageMerger", () => {
   it("should merge two real geopackages with lift features", async () => {
     // Create target geopackage with lift features
     await targetWriter.initialize(targetGpkgPath);
-    
+
     const targetFeatures = [
       mockLiftFeature({
         id: "target-lift-1",
@@ -56,39 +59,56 @@ describe("GeoPackageMerger", () => {
         liftType: LiftType.ChairLift,
         geometry: {
           type: "LineString",
-          coordinates: [[10.0, 20.0], [11.0, 21.0]]
-        }
+          coordinates: [
+            [10.0, 20.0],
+            [11.0, 21.0],
+          ],
+        },
       }),
       mockLiftFeature({
-        id: "target-lift-2", 
+        id: "target-lift-2",
         name: "Target Lift 2",
         liftType: LiftType.ChairLift,
         geometry: {
           type: "LineString",
-          coordinates: [[12.0, 22.0], [13.0, 23.0]]
-        }
-      })
+          coordinates: [
+            [12.0, 22.0],
+            [13.0, 23.0],
+          ],
+        },
+      }),
     ];
 
-    await targetWriter.addFeatureLayer("lifts", targetFeatures, FeatureType.Lift);
+    await targetWriter.addFeatureLayer(
+      "lifts",
+      targetFeatures,
+      FeatureType.Lift,
+    );
     await targetWriter.close();
 
     // Create source geopackage with different lift features
     await sourceWriter.initialize(sourceGpkgPath);
-    
+
     const sourceFeatures = [
       mockLiftFeature({
         id: "source-lift-1",
-        name: "Source Lift 1", 
+        name: "Source Lift 1",
         liftType: LiftType.ChairLift,
         geometry: {
           type: "LineString",
-          coordinates: [[14.0, 24.0], [15.0, 25.0]]
-        }
-      })
+          coordinates: [
+            [14.0, 24.0],
+            [15.0, 25.0],
+          ],
+        },
+      }),
     ];
 
-    await sourceWriter.addFeatureLayer("lifts", sourceFeatures, FeatureType.Lift);
+    await sourceWriter.addFeatureLayer(
+      "lifts",
+      sourceFeatures,
+      FeatureType.Lift,
+    );
     await sourceWriter.close();
 
     // Merge source into target
@@ -100,14 +120,17 @@ describe("GeoPackageMerger", () => {
     expect(result.errors).toHaveLength(0);
 
     // Verify the target now has features from both sources
-    const finalCount = await getFeatureCount(targetGpkgPath, "lifts_linestring");
+    const finalCount = await getFeatureCount(
+      targetGpkgPath,
+      "lifts_linestring",
+    );
     expect(finalCount).toBe(3); // 2 original + 1 merged
   });
 
   it("should handle geopackages with duplicate feature IDs", async () => {
     // Create target geopackage
     await targetWriter.initialize(targetGpkgPath);
-    
+
     const targetFeatures = [
       mockLiftFeature({
         id: "lift-1", // Same ID as source
@@ -115,17 +138,24 @@ describe("GeoPackageMerger", () => {
         liftType: LiftType.ChairLift,
         geometry: {
           type: "LineString",
-          coordinates: [[10.0, 20.0], [11.0, 21.0]]
-        }
-      })
+          coordinates: [
+            [10.0, 20.0],
+            [11.0, 21.0],
+          ],
+        },
+      }),
     ];
 
-    await targetWriter.addFeatureLayer("lifts", targetFeatures, FeatureType.Lift);
+    await targetWriter.addFeatureLayer(
+      "lifts",
+      targetFeatures,
+      FeatureType.Lift,
+    );
     await targetWriter.close();
 
     // Create source geopackage with same feature ID
     await sourceWriter.initialize(sourceGpkgPath);
-    
+
     const sourceFeatures = [
       mockLiftFeature({
         id: "lift-1", // Same ID as target
@@ -133,12 +163,19 @@ describe("GeoPackageMerger", () => {
         liftType: LiftType.ChairLift,
         geometry: {
           type: "LineString",
-          coordinates: [[14.0, 24.0], [15.0, 25.0]]
-        }
-      })
+          coordinates: [
+            [14.0, 24.0],
+            [15.0, 25.0],
+          ],
+        },
+      }),
     ];
 
-    await sourceWriter.addFeatureLayer("lifts", sourceFeatures, FeatureType.Lift);
+    await sourceWriter.addFeatureLayer(
+      "lifts",
+      sourceFeatures,
+      FeatureType.Lift,
+    );
     await sourceWriter.close();
 
     // Merge source into target
@@ -149,14 +186,17 @@ describe("GeoPackageMerger", () => {
     expect(result.errors).toHaveLength(0);
 
     // The original feature should be preserved (no increase in count due to duplicate)
-    const finalCount = await getFeatureCount(targetGpkgPath, "lifts_linestring");
+    const finalCount = await getFeatureCount(
+      targetGpkgPath,
+      "lifts_linestring",
+    );
     expect(finalCount).toBe(1); // Only the original feature remains
   });
 
   it("should merge empty source geopackage without errors", async () => {
     // Create target geopackage with features
     await targetWriter.initialize(targetGpkgPath);
-    
+
     const targetFeatures = [
       mockLiftFeature({
         id: "target-lift-1",
@@ -164,12 +204,19 @@ describe("GeoPackageMerger", () => {
         liftType: LiftType.ChairLift,
         geometry: {
           type: "LineString",
-          coordinates: [[10.0, 20.0], [11.0, 21.0]]
-        }
-      })
+          coordinates: [
+            [10.0, 20.0],
+            [11.0, 21.0],
+          ],
+        },
+      }),
     ];
 
-    await targetWriter.addFeatureLayer("lifts", targetFeatures, FeatureType.Lift);
+    await targetWriter.addFeatureLayer(
+      "lifts",
+      targetFeatures,
+      FeatureType.Lift,
+    );
     await targetWriter.close();
 
     // Create empty source geopackage
@@ -183,7 +230,10 @@ describe("GeoPackageMerger", () => {
     expect(result.errors).toHaveLength(0);
 
     // Verify the target is unchanged
-    const finalCount = await getFeatureCount(targetGpkgPath, "lifts_linestring");
+    const finalCount = await getFeatureCount(
+      targetGpkgPath,
+      "lifts_linestring",
+    );
     expect(finalCount).toBe(1);
   });
 });

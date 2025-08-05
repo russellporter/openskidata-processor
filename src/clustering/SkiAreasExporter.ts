@@ -13,7 +13,7 @@ export default async function exportSkiAreasGeoJSON(
   database: ClusteringDatabase,
 ) {
   const skiAreasIterable = await database.streamSkiAreas();
-  
+
   await streamToPromise(
     asyncIterableToStream(skiAreasIterable)
       .pipe(map<SkiAreaObject, SkiAreaFeature>(objectToFeature))
@@ -22,9 +22,11 @@ export default async function exportSkiAreasGeoJSON(
   );
 }
 
-function asyncIterableToStream(iterable: AsyncIterable<SkiAreaObject>): Readable {
+function asyncIterableToStream(
+  iterable: AsyncIterable<SkiAreaObject>,
+): Readable {
   const iterator = iterable[Symbol.asyncIterator]();
-  
+
   return new Readable({
     objectMode: true,
     read: function (this: Readable, _) {

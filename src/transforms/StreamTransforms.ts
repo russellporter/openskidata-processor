@@ -68,9 +68,9 @@ export function flatMap<X, Y>(mapper: (input: X) => Y | null): Transform {
 export function flatMapArray<X, Y>(mapper: (input: X) => Y[]): Transform {
   return new Transform({
     objectMode: true,
-    transform: function(data: X, _, done) {
+    transform: function (data: X, _, done) {
       const results = mapper(data);
-      
+
       // Push each item in the array separately
       results.forEach((item) => this.push(item));
       done(null);

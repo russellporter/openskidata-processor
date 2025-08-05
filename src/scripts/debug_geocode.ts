@@ -37,7 +37,7 @@ async function debugGeocode() {
 
   try {
     await geocoder.initialize();
-    
+
     const result = await geocoder.rawGeocode([longitude, latitude]);
     let readableResult: any = result;
     readableResult.date = new Date(result.timestamp).toISOString();

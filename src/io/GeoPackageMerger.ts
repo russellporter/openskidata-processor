@@ -34,15 +34,15 @@ export class GeoPackageMerger {
   mergeGeoPackages(targetPath: string, sourcePath: string): MergeResult {
     const targetDb = new Database(targetPath);
     const sourceDb = new Database(sourcePath, { readonly: true });
-    
+
     // Enable performance optimizations
     this.optimizeDatabase(targetDb);
     this.optimizeReadonlyDatabase(sourceDb);
-    
+
     const result: MergeResult = {
       tablesProcessed: 0,
       rowsInserted: 0,
-      errors: []
+      errors: [],
     };
 
     try {
@@ -61,12 +61,12 @@ export class GeoPackageMerger {
 
       for (const table of tables) {
         const tableName = table.name;
-        
+
         try {
           const rowsInserted = this.mergeTable(targetDb, sourceDb, tableName);
           result.rowsInserted += rowsInserted;
           result.tablesProcessed++;
-          
+
           // Update geopackage metadata if this is a geographic table
           this.updateGeoPackageMetadata(targetDb, sourceDb, tableName);
         } catch (error) {
@@ -82,7 +82,11 @@ export class GeoPackageMerger {
     return result;
   }
 
-  private mergeTable(targetDb: Database.Database, sourceDb: Database.Database, tableName: string): number {
+  private mergeTable(
+    targetDb: Database.Database,
+    sourceDb: Database.Database,
+    tableName: string,
+  ): number {
     // Check if table exists in target
     const targetTableExists = targetDb
       .prepare(
@@ -100,7 +104,11 @@ export class GeoPackageMerger {
     }
   }
 
-  private mergeDataIntoExistingTable(targetDb: Database.Database, sourceDb: Database.Database, tableName: string): number {
+  private mergeDataIntoExistingTable(
+    targetDb: Database.Database,
+    sourceDb: Database.Database,
+    tableName: string,
+  ): number {
     // Get total row count for batching
     const totalRows = sourceDb
       .prepare(`SELECT COUNT(*) as count FROM ${tableName}`)
@@ -115,18 +123,18 @@ export class GeoPackageMerger {
       .prepare(`PRAGMA table_info(${tableName})`)
       .all() as any[];
     const allColumnNames = columns.map((col) => col.name);
-    
+
     // Check if there's an auto-incrementing primary key (typically 'id')
     const pkColumn = columns.find((col: any) => col.pk === 1);
-    const hasAutoIncrementPK = pkColumn && pkColumn.name === 'id';
-    
+    const hasAutoIncrementPK = pkColumn && pkColumn.name === "id";
+
     let columnList: string;
     let placeholders: string;
     let columnsToInsert: string[];
-    
+
     if (hasAutoIncrementPK) {
       // Exclude the auto-increment primary key column
-      columnsToInsert = allColumnNames.filter(name => name !== 'id');
+      columnsToInsert = allColumnNames.filter((name) => name !== "id");
       columnList = columnsToInsert.join(", ");
       placeholders = columnsToInsert.map(() => "?").join(", ");
     } else {
@@ -136,17 +144,19 @@ export class GeoPackageMerger {
     }
 
     // Check if feature_id column exists and create set of existing feature_ids
-    const hasFeatureId = columnsToInsert.includes('feature_id');
+    const hasFeatureId = columnsToInsert.includes("feature_id");
     let existingFeatureIds: Set<string> = new Set();
-    
+
     if (hasFeatureId) {
       // Build a set of existing feature_ids for fast lookup
       const existingIds = targetDb
-        .prepare(`SELECT feature_id FROM ${tableName} WHERE feature_id IS NOT NULL`)
+        .prepare(
+          `SELECT feature_id FROM ${tableName} WHERE feature_id IS NOT NULL`,
+        )
         .all() as { feature_id: string }[];
-      existingFeatureIds = new Set(existingIds.map(row => row.feature_id));
+      existingFeatureIds = new Set(existingIds.map((row) => row.feature_id));
     }
-    
+
     // Use INSERT OR IGNORE to handle conflicts on unique constraints other than auto-increment PK
     const insertStmt = targetDb.prepare(`
       INSERT OR IGNORE INTO ${tableName} (${columnList}) 
@@ -157,18 +167,22 @@ export class GeoPackageMerger {
     const insertMany = targetDb.transaction((rows: any[]) => {
       for (const row of rows) {
         // Check for semantic duplicates based on feature_id using the set
-        if (hasFeatureId && row['feature_id'] && existingFeatureIds.has(row['feature_id'])) {
+        if (
+          hasFeatureId &&
+          row["feature_id"] &&
+          existingFeatureIds.has(row["feature_id"])
+        ) {
           continue; // Skip this row silently
         }
-        
+
         const values = columnsToInsert.map((col) => row[col]);
         try {
           const result = insertStmt.run(...values);
           if (result.changes > 0) {
             insertedCount++;
             // Add to existing set to avoid duplicates within the same batch
-            if (hasFeatureId && row['feature_id']) {
-              existingFeatureIds.add(row['feature_id']);
+            if (hasFeatureId && row["feature_id"]) {
+              existingFeatureIds.add(row["feature_id"]);
             }
           }
         } catch (error) {
@@ -192,7 +206,11 @@ export class GeoPackageMerger {
     return insertedCount;
   }
 
-  private copyTableFromSource(targetDb: Database.Database, sourceDb: Database.Database, tableName: string): number {
+  private copyTableFromSource(
+    targetDb: Database.Database,
+    sourceDb: Database.Database,
+    tableName: string,
+  ): number {
     const createTableSql = sourceDb
       .prepare(
         `
@@ -253,7 +271,11 @@ export class GeoPackageMerger {
     return totalRows.count;
   }
 
-  private updateGeoPackageMetadata(targetDb: Database.Database, sourceDb: Database.Database, tableName: string): void {
+  private updateGeoPackageMetadata(
+    targetDb: Database.Database,
+    sourceDb: Database.Database,
+    tableName: string,
+  ): void {
     try {
       // Check if this table has an entry in gpkg_contents in the source
       const sourceContent = sourceDb
@@ -278,7 +300,7 @@ export class GeoPackageMerger {
           sourceContent.min_y,
           sourceContent.max_x,
           sourceContent.max_y,
-          sourceContent.srs_id
+          sourceContent.srs_id,
         );
 
         // Copy geometry_columns entry if it exists
@@ -299,7 +321,7 @@ export class GeoPackageMerger {
             sourceGeomCol.geometry_type_name,
             sourceGeomCol.srs_id,
             sourceGeomCol.z,
-            sourceGeomCol.m
+            sourceGeomCol.m,
           );
         }
       }
@@ -311,34 +333,34 @@ export class GeoPackageMerger {
 
   private optimizeDatabase(db: Database.Database): void {
     // Enable WAL mode for better concurrency and performance
-    db.pragma('journal_mode = WAL');
-    
+    db.pragma("journal_mode = WAL");
+
     // Increase cache size (default is 2MB, increase to 64MB)
-    db.pragma('cache_size = -65536');
-    
+    db.pragma("cache_size = -65536");
+
     // Disable synchronous writes for better performance (less safe but faster)
-    db.pragma('synchronous = NORMAL');
-    
+    db.pragma("synchronous = NORMAL");
+
     // Increase page size for better performance with large data
-    db.pragma('page_size = 4096');
-    
+    db.pragma("page_size = 4096");
+
     // Optimize memory usage
-    db.pragma('temp_store = MEMORY');
-    
+    db.pragma("temp_store = MEMORY");
+
     // Optimize for bulk operations
-    db.pragma('mmap_size = 268435456'); // 256MB
+    db.pragma("mmap_size = 268435456"); // 256MB
   }
 
   private optimizeReadonlyDatabase(db: Database.Database): void {
     // Read-only optimizations that don't require write access
-    
+
     // Increase cache size (default is 2MB, increase to 64MB)
-    db.pragma('cache_size = -65536');
-    
+    db.pragma("cache_size = -65536");
+
     // Optimize memory usage
-    db.pragma('temp_store = MEMORY');
-    
+    db.pragma("temp_store = MEMORY");
+
     // Optimize for bulk operations
-    db.pragma('mmap_size = 268435456'); // 256MB
+    db.pragma("mmap_size = 268435456"); // 256MB
   }
 }
