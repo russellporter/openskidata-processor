@@ -18,7 +18,7 @@ import notEmpty from "../utils/notEmpty";
 import buildFeature from "./FeatureBuilder";
 import { getOSMFirstValue, getOSMName } from "./OSMTransforms";
 import { Omit } from "./Omit";
-import { getRunDifficultyConvention } from "./RunFormatter";
+import { getRunDifficultyConvention } from "openskidata-format";
 import getStatusAndValue from "./Status";
 
 export enum InputSkiAreaType {

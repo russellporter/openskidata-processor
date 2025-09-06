@@ -29,7 +29,7 @@ import { readGeoJSONFeatures } from "../io/GeoJSONReader";
 import { skiAreaStatistics } from "../statistics/SkiAreaStatistics";
 import Geocoder from "../transforms/Geocoder";
 import { getPoints, getPositions } from "../transforms/GeoTransforms";
-import { getRunDifficultyConvention } from "../transforms/RunFormatter";
+import { getRunDifficultyConvention } from "openskidata-format";
 import { mapAsync } from "../transforms/StreamTransforms";
 import { isPlaceholderGeometry } from "../utils/PlaceholderSiteGeometry";
 import { VIIRSPixelExtractor } from "../utils/VIIRSPixelExtractor";
