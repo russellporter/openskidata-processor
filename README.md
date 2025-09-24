@@ -62,8 +62,25 @@ To speed up subsequent runs of the processor, some data (elevations, geocodes, s
 
 Features will be augmented with elevation data. Enabled out of the box when the docker compose file is used.
 
-To enable, set `ELEVATION_SERVER_URL` to an endpoint that can receive POST requests in the format of https://github.com/racemap/elevation-service.
+The processor supports two types of elevation servers:
+
+**Racemap Elevation Service (default):**
+Set `ELEVATION_SERVER_URL` to an endpoint that can receive POST requests in the format of https://github.com/racemap/elevation-service.
 You should use a local instance of the elevation server because a large number of requests will be performed.
+
+```bash
+ELEVATION_SERVER_URL="https://api.racemap.com/elevation"
+ELEVATION_SERVER_TYPE="racemap"  # optional, defaults to racemap
+```
+
+**Tileserver GL Elevation:**
+For elevation data served via [Tileserver GL](https://tileserver.readthedocs.io/en/latest/endpoints.html#source-data) with RGB-encoded elevation tiles. Configure using URL templates with `{z}`, `{lng}`, and `{lat}` tokens:
+
+```bash
+ELEVATION_SERVER_URL="https://example.com/data/mydata/elevation/{z}/{lng}/{lat}"
+ELEVATION_SERVER_TYPE="tileserver-gl"
+ELEVATION_SERVER_ZOOM="12"  # optional, defaults to 12
+```
 
 ### Reverse geocoding
 
