@@ -31,6 +31,7 @@ beforeEach(() => {
   testConfig = {
     elevationServer: {
       url: "http://elevation.example.com",
+      type: 'racemap',
     },
     bbox: null,
     geocodingServer: null,

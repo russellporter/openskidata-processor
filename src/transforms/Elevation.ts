@@ -11,6 +11,7 @@ import { PostgresCache } from "../utils/PostgresCache";
 
 const elevationProfileResolution = 25;
 const ELEVATION_CACHE_TTL_MS = 365 * 24 * 60 * 60 * 1000; // 1 year
+const DEFAULT_TILESERVER_ZOOM = 12;
 
 export interface ElevationProcessor {
   processFeature: (
@@ -185,7 +186,7 @@ async function fetchElevationsFromServer(
     case 'racemap':
       return await fetchElevationsFromRacemap(coordinates, elevationServerConfig.url);
     case 'tileserver-gl':
-      throw new Error('Tileserver GL elevation fetching not yet implemented');
+      return await fetchElevationsFromTileserverGL(coordinates, elevationServerConfig.url, elevationServerConfig.zoom ?? DEFAULT_TILESERVER_ZOOM);
     default:
       const exhaustiveCheck: never = elevationServerConfig.type;
       throw new Error(`Unknown elevation server type: ${exhaustiveCheck}`);
@@ -209,6 +210,44 @@ async function fetchElevationsFromRacemap(
   }
 
   return await response.json();
+}
+
+async function fetchElevationsFromTileserverGL(
+  coordinates: number[][],
+  baseURL: string,
+  zoom: number,
+): Promise<(number | null)[]> {
+  // Ensure baseURL has trailing slash
+  const normalizedBaseURL = baseURL.endsWith('/') ? baseURL : baseURL + '/';
+
+  const elevationPromises = coordinates.map(async ([lat, lng]) => {
+    // URL format: https://example.com/data/{id}/elevation/{z}/{long}/{lat}
+    const url = `${normalizedBaseURL}${zoom}/${lng}/${lat}`;
+
+    try {
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        console.warn(`Failed to fetch elevation for ${lat},${lng}: ${response.status}`);
+        return null;
+      }
+
+      const data = await response.json();
+
+      // Response format: {"z":7,"x":68,"y":45,"red":134,"green":66,"blue":0,"latitude":11.84069,"longitude":46.04798,"elevation":1602}
+      if (typeof data.elevation === 'number') {
+        return data.elevation;
+      } else {
+        console.warn(`Invalid elevation response for ${lat},${lng}:`, data);
+        return null;
+      }
+    } catch (error) {
+      console.warn(`Error fetching elevation for ${lat},${lng}:`, error);
+      return null;
+    }
+  });
+
+  return await Promise.all(elevationPromises);
 }
 
 function getCoordinates(feature: RunFeature | LiftFeature) {
