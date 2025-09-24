@@ -226,7 +226,11 @@ async function fetchElevationsFromTileserverGL(
       .replace('{lat}', lat.toString());
 
     try {
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'openskidata-processor/1.0.0 (+https://github.com/russellporter/openskidata-processor)'
+        }
+      });
 
       if (!response.ok) {
         console.warn(`Failed to fetch elevation for ${lat},${lng}: ${response.status}`);
