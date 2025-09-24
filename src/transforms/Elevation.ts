@@ -6,7 +6,7 @@ import {
   LiftFeature,
   RunFeature,
 } from "openskidata-format";
-import { ElevationServerConfig, PostgresConfig } from "../Config";
+import { ElevationServerConfig, ElevationServerType, PostgresConfig } from "../Config";
 import { PostgresCache } from "../utils/PostgresCache";
 
 const elevationProfileResolution = 25;
@@ -35,7 +35,7 @@ export async function createElevationProcessor(
     async (geohashes: readonly string[]) => {
       return await batchLoadElevations(
         Array.from(geohashes),
-        elevationServerConfig.url,
+        elevationServerConfig,
         cache,
       );
     },
@@ -114,7 +114,7 @@ export async function createElevationProcessor(
 
 async function batchLoadElevations(
   geohashes: string[],
-  elevationServerURL: string,
+  elevationServerConfig: ElevationServerConfig,
   cache: PostgresCache<number | null>,
 ): Promise<(number | null)[]> {
   const results: (number | null)[] = new Array(geohashes.length);
@@ -142,19 +142,10 @@ async function batchLoadElevations(
   }
 
   // Fetch elevations for uncached coordinates
-  const response = await fetch(elevationServerURL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(uncachedCoordinates),
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed status code: " + response.status);
-  }
-
-  const fetchedElevations: (number | null)[] = await response.json();
+  const fetchedElevations: (number | null)[] = await fetchElevationsFromServer(
+    uncachedCoordinates,
+    elevationServerConfig,
+  );
 
   if (uncachedCoordinates.length !== fetchedElevations.length) {
     throw new Error(
@@ -184,6 +175,40 @@ async function batchLoadElevations(
   }
 
   return results;
+}
+
+async function fetchElevationsFromServer(
+  coordinates: number[][],
+  elevationServerConfig: ElevationServerConfig,
+): Promise<(number | null)[]> {
+  switch (elevationServerConfig.type) {
+    case 'racemap':
+      return await fetchElevationsFromRacemap(coordinates, elevationServerConfig.url);
+    case 'tileserver-gl':
+      throw new Error('Tileserver GL elevation fetching not yet implemented');
+    default:
+      const exhaustiveCheck: never = elevationServerConfig.type;
+      throw new Error(`Unknown elevation server type: ${exhaustiveCheck}`);
+  }
+}
+
+async function fetchElevationsFromRacemap(
+  coordinates: number[][],
+  elevationServerURL: string,
+): Promise<(number | null)[]> {
+  const response = await fetch(elevationServerURL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(coordinates),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed status code: " + response.status);
+  }
+
+  return await response.json();
 }
 
 function getCoordinates(feature: RunFeature | LiftFeature) {
