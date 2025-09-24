@@ -214,15 +214,16 @@ async function fetchElevationsFromRacemap(
 
 async function fetchElevationsFromTileserverGL(
   coordinates: number[][],
-  baseURL: string,
+  urlTemplate: string,
   zoom: number,
 ): Promise<(number | null)[]> {
-  // Ensure baseURL has trailing slash
-  const normalizedBaseURL = baseURL.endsWith('/') ? baseURL : baseURL + '/';
-
   const elevationPromises = coordinates.map(async ([lat, lng]) => {
-    // URL format: https://example.com/data/{id}/elevation/{z}/{long}/{lat}
-    const url = `${normalizedBaseURL}${zoom}/${lng}/${lat}`;
+    // Replace tokens in URL template
+    // URL format: https://example.com/data/mydata/elevation/{z}/{lng}/{lat}
+    const url = urlTemplate
+      .replace('{z}', zoom.toString())
+      .replace('{lng}', lng.toString())
+      .replace('{lat}', lat.toString());
 
     try {
       const response = await fetch(url);
