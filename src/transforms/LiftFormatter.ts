@@ -12,6 +12,7 @@ import buildFeature from "./FeatureBuilder";
 import {
   getOSMFirstValue,
   getOSMName,
+  getOSMRef,
   mapOSMBoolean,
   mapOSMNumber,
   mapOSMString,
@@ -58,7 +59,7 @@ export function formatLift(feature: InputLiftFeature): LiftFeature | null {
     return null;
   }
 
-  const ref = mapOSMString(tags.ref);
+  const ref = getOSMRef(tags);
   const properties: LiftPropertiesWithoutID = {
     type: FeatureType.Lift,
     liftType: liftType,

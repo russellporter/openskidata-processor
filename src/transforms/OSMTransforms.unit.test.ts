@@ -1,8 +1,62 @@
-import { getOSMName } from "./OSMTransforms";
+import { getOSMName, getOSMRef } from "./OSMTransforms";
 
 type TestProperties = Record<string, string | undefined>;
 
 describe("OSMTransforms", () => {
+  describe("getOSMRef", () => {
+    it("should return null when no ref tags exist", () => {
+      const properties: TestProperties = {};
+      expect(getOSMRef(properties)).toBeNull();
+    });
+
+    it("should return ref when only ref exists", () => {
+      const properties: TestProperties = { ref: "5" };
+      expect(getOSMRef(properties)).toBe("5");
+    });
+
+    it("should prioritize piste:loc_ref over other ref tags", () => {
+      const properties: TestProperties = {
+        ref: "1",
+        "loc_ref": "2",
+        "piste:ref": "3",
+        "piste:loc_ref": "4",
+      };
+      expect(getOSMRef(properties)).toBe("4");
+    });
+
+    it("should prioritize piste:ref over loc_ref and ref", () => {
+      const properties: TestProperties = {
+        ref: "1",
+        "loc_ref": "2",
+        "piste:ref": "3",
+      };
+      expect(getOSMRef(properties)).toBe("3");
+    });
+
+    it("should prioritize loc_ref over ref", () => {
+      const properties: TestProperties = {
+        ref: "1",
+        "loc_ref": "2",
+      };
+      expect(getOSMRef(properties)).toBe("2");
+    });
+
+    it("should handle falsy string value '0'", () => {
+      const properties: TestProperties = {
+        ref: "0",
+      };
+      expect(getOSMRef(properties)).toBe("0");
+    });
+
+    it("should handle falsy string value '0' in piste:loc_ref", () => {
+      const properties: TestProperties = {
+        ref: "5",
+        "piste:loc_ref": "0",
+      };
+      expect(getOSMRef(properties)).toBe("0");
+    });
+  });
+
   describe("getOSMName", () => {
     it("should return null when no name is found", () => {
       const properties: TestProperties = {};

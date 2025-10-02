@@ -80,6 +80,34 @@ export function getOSMFirstValue<Properties extends OSMTags>(
   return values[0];
 }
 
+/**
+ * Get the first defined value from a list of keys in priority order.
+ */
+export function getOrElse<P extends { [key: string]: string | undefined }>(
+  properties: P,
+  ...keys: (keyof P)[]
+): string | undefined {
+  for (const key of keys) {
+    const value = properties[key];
+    if (value !== undefined) {
+      return value;
+    }
+  }
+  return undefined;
+}
+
+/**
+ * Get the ref of an object based on the OSM tags.
+ * Priority order: piste:loc_ref > piste:ref > loc_ref > ref
+ */
+export function getOSMRef<Properties extends OSMTags>(
+  properties: Properties,
+): string | null {
+  return mapOSMString(
+    getOrElse(properties, "piste:loc_ref", "piste:ref", "loc_ref", "ref"),
+  );
+}
+
 function nameKeysForRootKey<Properties extends OSMTags>(
   properties: Properties,
   rootKey: Extract<keyof Properties, string>,

@@ -16,8 +16,10 @@ import notEmpty from "../utils/notEmpty";
 import buildFeature from "./FeatureBuilder";
 import { Omit } from "./Omit";
 import {
+  getOrElse,
   getOSMFirstValue,
   getOSMName,
+  getOSMRef,
   mapOSMBoolean,
   mapOSMString,
 } from "./OSMTransforms";
@@ -39,7 +41,7 @@ export function formatRun(feature: InputRunFeature): RunFeature[] {
     return [];
   }
 
-  const ref = mapOSMString(getOrElse(tags, "piste:ref", "ref"));
+  const ref = getOSMRef(tags);
   const properties: Omit<RunProperties, "id"> = {
     type: FeatureType.Run,
     uses: uses,
@@ -137,23 +139,6 @@ function getOneway(tags: OSMRunTags, uses: RunUse[]): boolean | null {
   return null;
 }
 
-function getOrElse<P extends { [key: string]: string | undefined }>(
-  properties: P,
-  key: keyof P,
-  fallbackKey: keyof P,
-): string | undefined {
-  const value = properties[key];
-  if (value !== undefined) {
-    return value;
-  }
-
-  const fallback = properties[fallbackKey];
-  if (fallback !== undefined) {
-    return fallback;
-  }
-
-  return undefined;
-}
 
 function getGrooming(tags: OSMRunTags): RunGrooming | null {
   const value = tags["piste:grooming"]?.replace(";", "+");
