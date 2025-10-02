@@ -13,6 +13,10 @@ const elevationProfileResolution = 25;
 const ELEVATION_CACHE_TTL_MS = 365 * 24 * 60 * 60 * 1000; // 1 year
 const DEFAULT_TILESERVER_ZOOM = [12];
 
+type Result<T, E = Error> =
+  | { ok: true; value: T }
+  | { ok: false; error: E };
+
 export interface ElevationProcessor {
   processFeature: (
     feature: RunFeature | LiftFeature,
@@ -143,7 +147,7 @@ async function batchLoadElevations(
   }
 
   // Fetch elevations for uncached coordinates
-  const fetchedElevations: (number | null)[] = await fetchElevationsFromServer(
+  const fetchedElevations: Result<number | null, string>[] = await fetchElevationsFromServer(
     uncachedCoordinates,
     elevationServerConfig,
   );
@@ -158,16 +162,22 @@ async function batchLoadElevations(
     );
   }
 
-  // Cache fetched elevations
+  // Cache only successful results
   const cacheEntries: Array<{ key: string; value: number | null }> = [];
 
   for (let i = 0; i < uncachedIndices.length; i++) {
     const originalIndex = uncachedIndices[i];
-    const elevation = fetchedElevations[i];
+    const result = fetchedElevations[i];
     const geohash = geohashes[originalIndex];
 
-    cacheEntries.push({ key: geohash, value: elevation });
-    results[originalIndex] = elevation;
+    if (result.ok) {
+      // Cache successful results (including null for "no data available")
+      cacheEntries.push({ key: geohash, value: result.value });
+      results[originalIndex] = result.value;
+    } else {
+      // Don't cache errors, return null for this request
+      results[originalIndex] = null;
+    }
   }
 
   // Batch cache new elevations
@@ -181,10 +191,11 @@ async function batchLoadElevations(
 async function fetchElevationsFromServer(
   coordinates: number[][],
   elevationServerConfig: ElevationServerConfig,
-): Promise<(number | null)[]> {
+): Promise<Result<number | null, string>[]> {
   switch (elevationServerConfig.type) {
     case 'racemap':
-      return await fetchElevationsFromRacemap(coordinates, elevationServerConfig.url);
+      const racemapResults = await fetchElevationsFromRacemap(coordinates, elevationServerConfig.url);
+      return racemapResults.map(elevation => ({ ok: true, value: elevation }));
     case 'tileserver-gl':
       return await fetchElevationsFromTileserverGL(coordinates, elevationServerConfig.url, elevationServerConfig.zoom ?? DEFAULT_TILESERVER_ZOOM);
     default:
@@ -217,7 +228,7 @@ async function fetchElevationFromTileserverGLAtZoom(
   lng: number,
   urlTemplate: string,
   zoom: number,
-): Promise<number | null> {
+): Promise<Result<number | null, string>> {
   // Replace tokens in URL template
   // URL format: https://example.com/data/mydata/elevation/{z}/{lng}/{lat}
   const url = urlTemplate
@@ -234,26 +245,29 @@ async function fetchElevationFromTileserverGLAtZoom(
 
     // 204 No Content means elevation not found at this zoom level
     if (response.status === 204) {
-      return null;
+      return { ok: true, value: null };
     }
 
     if (!response.ok) {
-      console.warn(`Failed to fetch elevation for ${lat},${lng} at zoom ${zoom}: ${response.status}`);
-      return null;
+      const error = `Failed to fetch elevation for ${lat},${lng} at zoom ${zoom}: ${response.status}`;
+      console.warn(error);
+      return { ok: false, error };
     }
 
     const data = await response.json();
 
     // Response format: {"z":7,"x":68,"y":45,"red":134,"green":66,"blue":0,"latitude":11.84069,"longitude":46.04798,"elevation":1602}
     if (typeof data.elevation === 'number') {
-      return data.elevation;
+      return { ok: true, value: data.elevation };
     } else {
-      console.warn(`Invalid elevation response for ${lat},${lng} at zoom ${zoom}:`, data);
-      return null;
+      const error = `Invalid elevation response for ${lat},${lng} at zoom ${zoom}`;
+      console.warn(error, data);
+      return { ok: false, error };
     }
   } catch (error) {
-    console.warn(`Error fetching elevation for ${lat},${lng} at zoom ${zoom}:`, error);
-    return null;
+    const errorMsg = `Error fetching elevation for ${lat},${lng} at zoom ${zoom}: ${error}`;
+    console.warn(errorMsg);
+    return { ok: false, error: errorMsg };
   }
 }
 
@@ -261,18 +275,26 @@ async function fetchElevationsFromTileserverGL(
   coordinates: number[][],
   urlTemplate: string,
   zooms: number[],
-): Promise<(number | null)[]> {
+): Promise<Result<number | null, string>[]> {
   const elevationPromises = coordinates.map(async ([lat, lng]) => {
-    // Try each zoom level in order until we get a result
     for (const zoom of zooms) {
-      const elevation = await fetchElevationFromTileserverGLAtZoom(lat, lng, urlTemplate, zoom);
-      if (elevation !== null) {
-        return elevation;
+      const result = await fetchElevationFromTileserverGLAtZoom(lat, lng, urlTemplate, zoom);
+
+      // If we got an error, return it immediately
+      if (!result.ok) {
+        return result;
       }
+
+      // If we got elevation data, return it
+      if (result.value !== null) {
+        return result;
+      }
+
+      // No data at this zoom level, try next one
     }
 
-    // All zoom levels failed
-    return null;
+    // All zoom levels returned no data
+    return { ok: true, value: null } as Result<number | null, string>;
   });
 
   return await Promise.all(elevationPromises);
