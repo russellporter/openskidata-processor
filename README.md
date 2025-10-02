@@ -56,7 +56,17 @@ For quick development iterations, `./run.sh --skip-download` uses the previously
 
 ### Caching
 
-To speed up subsequent runs of the processor, some data (elevations, geocodes, snow cover) is cached. The default directory for caches is `data`. This can be overridden with the `CACHE_DIR` environment variable.
+To speed up subsequent runs of the processor, some data (elevations, geocodes, snow cover) is cached in PostgreSQL. The cache is stored in a database named `openskidata_cache` (configurable via environment variables).
+
+**Clearing caches:**
+
+To clear cached data, use the interactive cache clearing utility:
+
+```bash
+docker compose exec app npm run clear-cache
+```
+
+This will show you each cache table with its size and row count, and prompt you to confirm clearing each one.
 
 ### Elevation data
 

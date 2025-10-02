@@ -84,7 +84,8 @@
     "prepare-geojson": "node --optimize_for_size --max_old_space_size=${MAX_OLD_SPACE_SIZE:-4096} dist/scripts/prepare_geojson.js",
     "debug-geocode": "node dist/scripts/debug_geocode.js",
     "merge-outputs": "node dist/scripts/merge_outputs.js",
-    "extract-tiles": "node dist/scripts/extract_tiles.js"
+    "extract-tiles": "node dist/scripts/extract_tiles.js",
+    "clear-cache": "node dist/scripts/clear_cache.js"
   },
   "author": "Russell Porter",
   "license": "ISC"
