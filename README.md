@@ -79,8 +79,10 @@ For elevation data served via [Tileserver GL](https://tileserver.readthedocs.io/
 ```bash
 ELEVATION_SERVER_URL="https://example.com/data/mydata/elevation/{z}/{lng}/{lat}"
 ELEVATION_SERVER_TYPE="tileserver-gl"
-ELEVATION_SERVER_ZOOM="12"  # optional, defaults to 12
+ELEVATION_SERVER_ZOOM="14,12"  # optional, comma-separated list of zoom levels to try in order, defaults to 12
 ```
+
+The processor will attempt to fetch elevation data at each zoom level in order, falling back to the next zoom level if a 204 No Content response is received.
 
 ### Reverse geocoding
 

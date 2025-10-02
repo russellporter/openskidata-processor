@@ -18,7 +18,7 @@ export type ElevationServerType = 'racemap' | 'tileserver-gl';
 export type ElevationServerConfig = {
   url: string;
   type: ElevationServerType;
-  zoom?: number; // Optional zoom level for tileserver-gl
+  zoom?: number[]; // Optional zoom levels for tileserver-gl - will be tried in order
 };
 
 export type TilesConfig = { mbTilesPath: string; tilesDir: string };
@@ -85,7 +85,9 @@ export function configFromEnvironment(): Config {
       ? {
           url: elevationServerURL,
           type: (process.env["ELEVATION_SERVER_TYPE"] as ElevationServerType) ?? 'racemap',
-          zoom: process.env["ELEVATION_SERVER_ZOOM"] ? parseInt(process.env["ELEVATION_SERVER_ZOOM"]) : undefined,
+          zoom: process.env["ELEVATION_SERVER_ZOOM"]
+            ? process.env["ELEVATION_SERVER_ZOOM"].split(',').map(z => parseInt(z.trim()))
+            : undefined,
         }
       : null,
     geocodingServer:
