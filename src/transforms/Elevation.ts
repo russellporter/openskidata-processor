@@ -12,10 +12,27 @@ import { PostgresCache } from "../utils/PostgresCache";
 const elevationProfileResolution = 25;
 const ELEVATION_CACHE_TTL_MS = 365 * 24 * 60 * 60 * 1000; // 1 year
 const DEFAULT_TILESERVER_ZOOM = [12];
+const ERROR_LOG_THROTTLE_MS = 60000; // Log unique errors at most once per minute
 
 type Result<T, E = Error> =
   | { ok: true; value: T }
   | { ok: false; error: E };
+
+class ThrottledLogger {
+  private lastLoggedErrors: Map<string, number> = new Map();
+
+  log(errorKey: string, logFn: () => void): void {
+    const now = Date.now();
+    const lastLogged = this.lastLoggedErrors.get(errorKey);
+
+    if (!lastLogged || now - lastLogged > ERROR_LOG_THROTTLE_MS) {
+      logFn();
+      this.lastLoggedErrors.set(errorKey, now);
+    }
+  }
+}
+
+const throttledLogger = new ThrottledLogger();
 
 export interface ElevationProcessor {
   processFeature: (
@@ -164,6 +181,7 @@ async function batchLoadElevations(
 
   // Cache only successful results
   const cacheEntries: Array<{ key: string; value: number | null }> = [];
+  let errorCount = 0;
 
   for (let i = 0; i < uncachedIndices.length; i++) {
     const originalIndex = uncachedIndices[i];
@@ -176,8 +194,19 @@ async function batchLoadElevations(
       results[originalIndex] = result.value;
     } else {
       // Don't cache errors, return null for this request
+      errorCount++;
+      throttledLogger.log(result.error, () => {
+        console.warn(`Elevation fetch error: ${result.error}`);
+      });
       results[originalIndex] = null;
     }
+  }
+
+  // Log summary if there were errors
+  if (errorCount > 0) {
+    throttledLogger.log('elevation-error-summary', () => {
+      console.warn(`Failed to fetch elevation for ${errorCount} of ${fetchedElevations.length} coordinates`);
+    });
   }
 
   // Batch cache new elevations
@@ -249,9 +278,7 @@ async function fetchElevationFromTileserverGLAtZoom(
     }
 
     if (!response.ok) {
-      const error = `Failed to fetch elevation for ${lat},${lng} at zoom ${zoom}: ${response.status}`;
-      console.warn(error);
-      return { ok: false, error };
+      return { ok: false, error: `HTTP ${response.status} at zoom ${zoom}` };
     }
 
     const data = await response.json();
@@ -260,14 +287,10 @@ async function fetchElevationFromTileserverGLAtZoom(
     if (typeof data.elevation === 'number') {
       return { ok: true, value: data.elevation };
     } else {
-      const error = `Invalid elevation response for ${lat},${lng} at zoom ${zoom}`;
-      console.warn(error, data);
-      return { ok: false, error };
+      return { ok: false, error: `Invalid elevation response at zoom ${zoom}` };
     }
   } catch (error) {
-    const errorMsg = `Error fetching elevation for ${lat},${lng} at zoom ${zoom}: ${error}`;
-    console.warn(errorMsg);
-    return { ok: false, error: errorMsg };
+    return { ok: false, error: `Fetch error at zoom ${zoom}: ${error}` };
   }
 }
 
