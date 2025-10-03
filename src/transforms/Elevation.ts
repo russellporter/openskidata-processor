@@ -1,3 +1,4 @@
+import { Semaphore } from "async-mutex";
 import DataLoader from "dataloader";
 import * as geohash from "ngeohash";
 import {
@@ -13,6 +14,7 @@ const elevationProfileResolution = 25;
 const ELEVATION_CACHE_TTL_MS = 365 * 24 * 60 * 60 * 1000; // 1 year
 const DEFAULT_TILESERVER_ZOOM = [12];
 const ERROR_LOG_THROTTLE_MS = 60000; // Log unique errors at most once per minute
+const TILESERVER_CONCURRENCY_LIMIT = 8; // Maximum concurrent requests to tileserver
 
 type Result<T, E = Error> =
   | { ok: true; value: T }
@@ -299,9 +301,13 @@ async function fetchElevationsFromTileserverGL(
   urlTemplate: string,
   zooms: number[],
 ): Promise<Result<number | null, string>[]> {
+  const semaphore = new Semaphore(TILESERVER_CONCURRENCY_LIMIT);
+
   const elevationPromises = coordinates.map(async ([lat, lng]) => {
     for (const zoom of zooms) {
-      const result = await fetchElevationFromTileserverGLAtZoom(lat, lng, urlTemplate, zoom);
+      const result = await semaphore.runExclusive(async () => {
+        return await fetchElevationFromTileserverGLAtZoom(lat, lng, urlTemplate, zoom);
+      });
 
       // If we got an error, return it immediately
       if (!result.ok) {
