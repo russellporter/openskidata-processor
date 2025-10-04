@@ -98,7 +98,25 @@ The processor will attempt to fetch elevation data at each zoom level in order, 
 
 Features will be augmented with country/region/locality information.
 
-To enable, set `GEOCODING_SERVER_URL` to an endpoint that reverse geocodes in the format of https://photon.komoot.io/reverse. Geocoding results are cached on disk (by default in the `cache` directory) for faster subsequent runs of the processor.
+The processor supports two geocoding service formats:
+
+**Photon:**
+Set `GEOCODING_SERVER_URL` to an endpoint that reverse geocodes in the format of https://photon.komoot.io/reverse:
+
+```bash
+GEOCODING_SERVER_URL="https://photon.komoot.io/reverse"
+GEOCODING_SERVER_TYPE="photon"  # optional, this is the default
+```
+
+**geocode-api (Who's On First):**
+Set `GEOCODING_SERVER_URL` to an endpoint in the format of https://github.com/russellporter/geocode-api:
+
+```bash
+GEOCODING_SERVER_URL="http://localhost:3000/reverse"
+GEOCODING_SERVER_TYPE="geocode-api"
+```
+
+Geocoding results are cached in PostgreSQL in type-specific tables for faster subsequent runs of the processor.
 
 ### Snow cover data
 

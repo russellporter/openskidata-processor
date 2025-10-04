@@ -1,6 +1,6 @@
 import nock from "nock";
 import { getPostgresTestConfig } from "../Config";
-import Geocoder, { PhotonGeocode } from "./Geocoder";
+import Geocoder, { PhotonGeocode, GeocodeApiResponse, WhosOnFirstGeometry } from "./Geocoder";
 
 const geocoderURL = "http://geocoder.example.com";
 
@@ -323,6 +323,105 @@ describe("Geocoder", () => {
 }
 `);
   });
+
+  describe("geocode-api format", () => {
+    async function setupGeocodeApiGeocoder() {
+      geocoder = new Geocoder(
+        {
+          url: geocoderURL + "/reverse",
+          type: "geocode-api",
+          cacheTTL: 0,
+        },
+        getPostgresTestConfig(),
+      );
+      await geocoder.initialize();
+      await (geocoder as any).diskCache.clear();
+      return geocoder;
+    }
+
+    it("handles geocode-api with no data", async () => {
+      mockGeocodeApiHTTPResponse(mockGeocodeApiNoDataGeocode());
+      await setupGeocodeApiGeocoder();
+
+      const result = await geocoder.geocode([0, 0]);
+      expect(result).toMatchInlineSnapshot(`null`);
+    });
+
+    it("handles geocode-api with only country", async () => {
+      mockGeocodeApiHTTPResponse(
+        mockGeocodeApiGeocode([
+          { id: 1, name: "Andorra", placetype: "country", iso_code: "AD", name_eng: "Andorra" },
+        ]),
+      );
+      await setupGeocodeApiGeocoder();
+
+      const result = await geocoder.geocode([0, 0]);
+      expect(result).toMatchInlineSnapshot(`
+{
+  "iso3166_1Alpha2": "AD",
+  "iso3166_2": null,
+  "localized": {
+    "en": {
+      "country": "Andorra",
+      "locality": null,
+      "region": null,
+    },
+  },
+}
+`);
+    });
+
+    it("handles geocode-api with country and region", async () => {
+      mockGeocodeApiHTTPResponse(
+        mockGeocodeApiGeocode([
+          { id: 1, name: "Andorra", placetype: "country", iso_code: "AD", name_eng: "Andorra" },
+          { id: 2, name: "Andorra la Vella", placetype: "region", iso_code: "AD-07", name_eng: "Andorra la Vella" },
+        ]),
+      );
+      await setupGeocodeApiGeocoder();
+
+      const result = await geocoder.geocode([0, 0]);
+      expect(result).toMatchInlineSnapshot(`
+{
+  "iso3166_1Alpha2": "AD",
+  "iso3166_2": "AD-07",
+  "localized": {
+    "en": {
+      "country": "Andorra",
+      "locality": null,
+      "region": "Andorra la Vella",
+    },
+  },
+}
+`);
+    });
+
+    it("handles geocode-api with full data", async () => {
+      mockGeocodeApiHTTPResponse(
+        mockGeocodeApiGeocode([
+          { id: 1, name: "Andorra", placetype: "country", iso_code: "AD", name_eng: "Andorra" },
+          { id: 2, name: "Andorra la Vella", placetype: "region", iso_code: "AD-07", name_eng: "Andorra la Vella" },
+          { id: 3, name: "Andorra la Vella", placetype: "locality", name_eng: "Andorra la Vella" },
+        ]),
+      );
+      await setupGeocodeApiGeocoder();
+
+      const result = await geocoder.geocode([0, 0]);
+      expect(result).toMatchInlineSnapshot(`
+{
+  "iso3166_1Alpha2": "AD",
+  "iso3166_2": "AD-07",
+  "localized": {
+    "en": {
+      "country": "Andorra",
+      "locality": "Andorra la Vella",
+      "region": "Andorra la Vella",
+    },
+  },
+}
+`);
+    });
+  });
 });
 
 function mockHTTPResponse(geocode: PhotonGeocode) {
@@ -372,6 +471,44 @@ function mockPhotonGeocode(
           },
         },
       ],
+    },
+  };
+}
+
+function mockGeocodeApiHTTPResponse(geocode: GeocodeApiResponse) {
+  nock(geocoderURL)
+    .get(
+      "/reverse?lon=-0.0054931640625&lat=-0.00274658203125&fields=id,name,placetype,iso_code,name_eng",
+    )
+    .reply(200, () => {
+      return geocode.response;
+    });
+}
+
+function mockGeocodeApiNoDataGeocode(): GeocodeApiResponse {
+  return {
+    timestamp: 0,
+    url: "",
+    response: {
+      geometries: [],
+    },
+  };
+}
+
+function mockGeocodeApiGeocode(
+  geometries: Partial<WhosOnFirstGeometry>[],
+): GeocodeApiResponse {
+  return {
+    timestamp: 0,
+    url: "",
+    response: {
+      geometries: geometries.map(g => ({
+        id: g.id || 0,
+        name: g.name || "",
+        placetype: g.placetype || "",
+        iso_code: g.iso_code,
+        name_eng: g.name_eng,
+      })),
     },
   };
 }

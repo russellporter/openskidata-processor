@@ -22,6 +22,24 @@ export type PhotonGeocode = {
   >;
 };
 
+export type WhosOnFirstGeometry = {
+  id: number;
+  name: string;
+  placetype: string;
+  iso_code?: string;
+  name_eng?: string;
+};
+
+export type GeocodeApiResponse = {
+  url: string;
+  timestamp: number;
+  response: {
+    geometries: WhosOnFirstGeometry[];
+  };
+};
+
+export type RawGeocode = PhotonGeocode | GeocodeApiResponse;
+
 export type Geocode = {
   iso3166_1Alpha2: string;
   iso3166_2: string | null;
@@ -41,26 +59,30 @@ iso3166_2.changeNameProvider("osm");
 
 export default class Geocoder {
   private config: Config.GeocodingServerConfig;
-  private loader: DataLoader<string, PhotonGeocode>;
+  private geocodingType: Config.GeocodingServerType;
+  private loader: DataLoader<string, RawGeocode>;
   private remoteErrorCount = 0;
   private maxRemoteErrors = 10;
   private mutex = new Mutex();
-  private diskCache: PostgresCache<PhotonGeocode>;
+  private diskCache: PostgresCache<RawGeocode>;
 
   constructor(
     config: Config.GeocodingServerConfig,
     postgresConfig: Config.PostgresConfig,
   ) {
     this.config = config;
+    this.geocodingType = config.type || 'photon';
 
-    // Initialize PostgreSQL disk cache
-    this.diskCache = new PostgresCache<PhotonGeocode>(
-      "geocoding",
+    // Initialize PostgreSQL disk cache with type-specific table name
+    // Replace hyphens with underscores for PostgreSQL compatibility
+    const sanitizedType = this.geocodingType.replace(/-/g, '_');
+    this.diskCache = new PostgresCache<RawGeocode>(
+      `geocoding_${sanitizedType}`,
       postgresConfig,
       config.cacheTTL,
     );
 
-    this.loader = new DataLoader<string, PhotonGeocode>(
+    this.loader = new DataLoader<string, RawGeocode>(
       async (loadForKeys) => {
         return [await this.rawGeocodeLocalOrRemote(loadForKeys[0])];
       },
@@ -83,7 +105,7 @@ export default class Geocoder {
     return this.enhance(rawGeocode);
   };
 
-  rawGeocode = async (position: GeoJSON.Position): Promise<PhotonGeocode> => {
+  rawGeocode = async (position: GeoJSON.Position): Promise<RawGeocode> => {
     const geohash = ngeohash.encode(position[1], position[0], geocodePrecision);
 
     return await this.loader.load(geohash);
@@ -91,7 +113,7 @@ export default class Geocoder {
 
   private rawGeocodeLocalOrRemote = async (
     geohash: string,
-  ): Promise<PhotonGeocode> => {
+  ): Promise<RawGeocode> => {
     try {
       const content = await this.rawGeocodeLocal(geohash);
       if (content) {
@@ -115,16 +137,23 @@ export default class Geocoder {
 
   private rawGeocodeLocal = async (
     geohash: string,
-  ): Promise<PhotonGeocode | null> => {
+  ): Promise<RawGeocode | null> => {
     return await this.diskCache.get(geohash);
   };
 
   private rawGeocodeRemote = async (
     geohash: string,
-  ): Promise<PhotonGeocode> => {
+  ): Promise<RawGeocode> => {
     return this.mutex.runExclusive(async () => {
       const point = ngeohash.decode(geohash);
-      const url = `${this.config.url}?lon=${point.longitude}&lat=${point.latitude}&lang=en&limit=1&radius=5`;
+
+      let url: string;
+      if (this.geocodingType === 'geocode-api') {
+        url = `${this.config.url}?lon=${point.longitude}&lat=${point.latitude}&fields=id,name,placetype,iso_code,name_eng`;
+      } else {
+        url = `${this.config.url}?lon=${point.longitude}&lat=${point.latitude}&lang=en&limit=1&radius=5`;
+      }
+
       const response = await fetchRetry(fetch)(url, {
         method: "GET",
         headers: {
@@ -141,7 +170,7 @@ export default class Geocoder {
         },
       }).then((res) => res.json());
 
-      const data: PhotonGeocode = {
+      const data: RawGeocode = {
         url: url,
         response: response,
         timestamp: currentTimestamp(),
@@ -152,7 +181,7 @@ export default class Geocoder {
     });
   };
 
-  private enhance = (rawGeocode: PhotonGeocode): Geocode | null => {
+  private enhancePhoton = (rawGeocode: PhotonGeocode): Geocode | null => {
     console.assert(
       rawGeocode.response.features.length <= 1,
       "Expected Photon geocode to only have at most a single feature.",
@@ -217,6 +246,53 @@ export default class Geocoder {
         },
       },
     };
+  };
+
+  private enhanceWhosOnFirst = (rawGeocode: GeocodeApiResponse): Geocode | null => {
+    const geometries = rawGeocode.response.geometries;
+
+    if (geometries.length === 0) {
+      return null;
+    }
+
+    // Find country, region, and locality from geometries
+    const countryGeometry = geometries.find(g => g.placetype === 'country');
+    const regionGeometry = geometries.find(g => g.placetype === 'region');
+    const localityGeometry = geometries.find(g => g.placetype === 'locality');
+
+    // Must have at least a country
+    if (!countryGeometry) {
+      return null;
+    }
+
+    // Get country code from iso_code
+    const countryCode = countryGeometry.iso_code;
+    if (!countryCode) {
+      return null;
+    }
+
+    // Get ISO 3166-2 code from region if available
+    const iso3166_2 = regionGeometry?.iso_code || null;
+
+    return {
+      iso3166_1Alpha2: countryCode,
+      iso3166_2: iso3166_2,
+      localized: {
+        en: {
+          country: countryGeometry.name_eng || countryGeometry.name,
+          region: regionGeometry?.name_eng || regionGeometry?.name || null,
+          locality: localityGeometry?.name_eng || localityGeometry?.name || null,
+        },
+      },
+    };
+  };
+
+  private enhance = (rawGeocode: RawGeocode): Geocode | null => {
+    if (this.geocodingType === 'geocode-api') {
+      return this.enhanceWhosOnFirst(rawGeocode as GeocodeApiResponse);
+    } else {
+      return this.enhancePhoton(rawGeocode as PhotonGeocode);
+    }
   };
 }
 

@@ -1,8 +1,11 @@
 import { assert } from "console";
 import * as path from "path";
 
+export type GeocodingServerType = 'photon' | 'geocode-api';
+
 export type GeocodingServerConfig = {
   url: string;
+  type?: GeocodingServerType;
   // How long to cache geocoding results in milliseconds
   cacheTTL: number;
 };
@@ -94,6 +97,7 @@ export function configFromEnvironment(): Config {
       process.env.GEOCODING_SERVER_URL !== undefined
         ? {
             url: process.env.GEOCODING_SERVER_URL,
+            type: (process.env.GEOCODING_SERVER_TYPE as GeocodingServerType) || 'photon',
             cacheTTL:
               geocodingCacheTTL !== undefined
                 ? Number.parseInt(geocodingCacheTTL)
