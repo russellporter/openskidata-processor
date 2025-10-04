@@ -154,21 +154,47 @@ export default class Geocoder {
         url = `${this.config.url}?lon=${point.longitude}&lat=${point.latitude}&lang=en&limit=1&radius=5`;
       }
 
-      const response = await fetchRetry(fetch)(url, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        retryDelay: 10000,
-        retryOn: (attempt, error, response) => {
-          if (attempt > 1) {
+      let fetchResponse: Response;
+      try {
+        fetchResponse = await fetchRetry(fetch)(url, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          retryDelay: 10000,
+          retryOn: (attempt, error, response) => {
+            if (attempt > 1) {
+              return false;
+            }
+            if (error !== null) {
+              console.error(`Geocoding request failed (attempt ${attempt}):`, error);
+              return true;
+            }
+            if (response !== null && (response.status < 200 || response.status >= 300)) {
+              console.error(`Geocoding request failed with status ${response.status} (attempt ${attempt}): ${url}`);
+              return true;
+            }
             return false;
-          }
-          return (
-            error !== null || (response !== null && response.status >= 400)
-          );
-        },
-      }).then((res) => res.json());
+          },
+        });
+      } catch (error) {
+        console.error(`Geocoding fetch failed for ${url}:`, error);
+        throw error;
+      }
+
+      if (!fetchResponse.ok) {
+        const errorMessage = `Geocoding request failed with status ${fetchResponse.status} for ${url}`;
+        console.error(errorMessage);
+        throw new Error(errorMessage);
+      }
+
+      let response: any;
+      try {
+        response = await fetchResponse.json();
+      } catch (error) {
+        console.error(`Failed to parse JSON response from ${url}:`, error);
+        throw error;
+      }
 
       const data: RawGeocode = {
         url: url,
