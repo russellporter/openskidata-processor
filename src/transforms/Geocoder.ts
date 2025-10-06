@@ -1,6 +1,5 @@
 import { Mutex } from "async-mutex";
 import DataLoader from "dataloader";
-import fetchRetry from "fetch-retry";
 import * as iso3166_2 from "iso3166-2-db";
 import { Region } from "iso3166-2-db";
 import * as ngeohash from "ngeohash";
@@ -156,25 +155,10 @@ export default class Geocoder {
 
       let fetchResponse: Response;
       try {
-        fetchResponse = await fetchRetry(fetch)(url, {
+        fetchResponse = await fetch(url, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
-          },
-          retryDelay: 10000,
-          retryOn: (attempt, error, response) => {
-            if (attempt > 1) {
-              return false;
-            }
-            if (error !== null) {
-              console.error(`Geocoding request failed (attempt ${attempt}):`, error);
-              return true;
-            }
-            if (response !== null && (response.status < 200 || response.status >= 300)) {
-              console.error(`Geocoding request failed with status ${response.status} (attempt ${attempt}): ${url}`);
-              return true;
-            }
-            return false;
           },
         });
       } catch (error) {

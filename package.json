@@ -32,7 +32,6 @@
     "better-sqlite3": "^11.10.0",
     "dataloader": "^2",
     "date-fns": "^4.1.0",
-    "fetch-retry": "^6.0.0",
     "iso3166-2-db": "^2",
     "lodash": "^4",
     "merge2": "^1",
