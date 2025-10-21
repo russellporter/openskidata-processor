@@ -1,5 +1,8 @@
 import { multiPolygon, point, polygon } from "@turf/helpers";
-import { centralPointsInFeature } from "./GeoTransforms";
+import {
+  centralPointsInFeature,
+  isValidGeometryInFeature,
+} from "./GeoTransforms";
 
 describe("GeoTransforms", () => {
   describe("centralPointsInFeatures", () => {
@@ -111,6 +114,39 @@ describe("GeoTransforms", () => {
           "type": "MultiPoint",
         }
       `);
+    });
+  });
+
+  describe("isValidGeometryInFeature", () => {
+    it("should return true for valid geometry", () => {
+      const feature: any = {
+        type: "Feature",
+        properties: { id: 1 },
+        geometry: {
+          type: "Point",
+          coordinates: [0, 0],
+        },
+      };
+      expect(isValidGeometryInFeature(feature)).toBe(true);
+    });
+
+    it("should return false for invalid geometry", () => {
+      const feature: any = {
+        type: "Feature",
+        properties: { id: 2 },
+        geometry: {
+          type: "Polygon",
+          coordinates: [
+            [
+              [0, 0],
+              [1, 1],
+              [1, 0],
+              [0, 1],
+            ],
+          ],
+        },
+      };
+      expect(isValidGeometryInFeature(feature)).toBe(false);
     });
   });
 });

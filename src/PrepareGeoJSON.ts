@@ -21,12 +21,14 @@ import { generateTiles } from "./transforms/TilesGenerator";
 import { runCommand } from "./utils/ProcessRunner";
 
 import { performanceMonitor } from "./clustering/database/PerformanceMonitor";
+import { isValidGeometryInFeature } from "./transforms/GeoTransforms";
 import {
   SkiAreaSiteProvider,
   addSkiAreaSites,
 } from "./transforms/SkiAreaSiteProvider";
 import {
   accumulate,
+  filter,
   flatMap,
   flatMapArray,
   map,
@@ -123,6 +125,7 @@ export default async function prepare(paths: DataPaths, config: Config) {
             readGeoJSONFeatures(paths.input.geoJSON.runs)
               .pipe(flatMapArray(formatRun))
               .pipe(map(addSkiAreaSites(siteProvider)))
+              .pipe(filter(isValidGeometryInFeature))
               .pipe(accumulate(new RunNormalizerAccumulator()))
               .pipe(mapAsync(elevationTransform?.transform || null, 10))
               .pipe(toFeatureCollection())
