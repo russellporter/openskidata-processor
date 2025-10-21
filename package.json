@@ -22,6 +22,7 @@
     "@turf/boolean-contains": "^7",
     "@turf/boolean-intersects": "^7.2.0",
     "@turf/boolean-point-in-polygon": "^7",
+    "@turf/boolean-valid": "^7.2.0",
     "@turf/buffer": "^7",
     "@turf/centroid": "^7",
     "@turf/helpers": "^7",

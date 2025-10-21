@@ -1,4 +1,5 @@
 import booleanPointInPolygon from "@turf/boolean-point-in-polygon";
+import booleanValid from "@turf/boolean-valid";
 import centroid from "@turf/centroid";
 import {
   featureCollection,
@@ -8,6 +9,7 @@ import {
   polygon,
 } from "@turf/helpers";
 import nearestPointOnLine from "@turf/nearest-point-on-line";
+import { InputRunFeature } from "../features/RunFeature";
 
 export function centralPointsInFeature(
   geojson: GeoJSON.Point | GeoJSON.Polygon,
@@ -104,4 +106,14 @@ export function getPositions(
     case "MultiPolygon":
       return geojson.coordinates.flat(2);
   }
+}
+
+export function isValidGeometryInFeature(feature: InputRunFeature): boolean {
+  if (!booleanValid(feature.geometry)) {
+    console.warn(
+      `Invalid geometry found in feature. id=${feature?.properties?.id}`,
+    );
+    return false;
+  }
+  return true;
 }
