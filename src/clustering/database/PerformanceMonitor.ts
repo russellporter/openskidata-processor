@@ -49,19 +49,39 @@ export class PerformanceMonitor {
     }
 
     // Sort phases by first operation start time
+    // Note: Using reduce() instead of Math.min(...array) to avoid stack overflow with large datasets
     const sortedPhases = Array.from(phaseMetrics.entries()).sort(
-      ([, a], [, b]) =>
-        Math.min(...a.map((m) => m.startTime)) -
-        Math.min(...b.map((m) => m.startTime)),
+      ([, a], [, b]) => {
+        const minA = a.reduce((min, m) => Math.min(min, m.startTime), Infinity);
+        const minB = b.reduce((min, m) => Math.min(min, m.startTime), Infinity);
+        return minA - minB;
+      },
     );
 
     // Display each phase
     for (const [phaseName, metrics] of sortedPhases) {
-      const phaseStartTime = Math.min(...metrics.map((m) => m.startTime));
-      const phaseEndTime = Math.max(...metrics.map((m) => m.endTime));
+      // Using reduce() instead of spread operator to avoid stack overflow with large metric arrays
+      const phaseStartTime = metrics.reduce((min, m) => Math.min(min, m.startTime), Infinity);
+      const phaseEndTime = metrics.reduce((max, m) => Math.max(max, m.endTime), -Infinity);
       const phaseDuration = phaseEndTime - phaseStartTime;
 
       console.log(`${phaseName} (${this.formatDuration(phaseDuration)})`);
+
+      // Build parent-child map once upfront to avoid repeated filtering
+      const childrenMap = new Map<string, PerformanceMetrics[]>();
+      for (const metric of metrics) {
+        if (metric.parentOperation) {
+          if (!childrenMap.has(metric.parentOperation)) {
+            childrenMap.set(metric.parentOperation, []);
+          }
+          childrenMap.get(metric.parentOperation)!.push(metric);
+        }
+      }
+
+      // Sort children by start time once
+      for (const children of childrenMap.values()) {
+        children.sort((a, b) => a.startTime - b.startTime);
+      }
 
       // Find root operations for this phase
       // If there's a single operation with the same name as the phase, show its children directly
@@ -73,9 +93,7 @@ export class PerformanceMonitor {
       if (phaseWrapperOperations.length === 1) {
         // If there's a single phase wrapper, show its children directly
         const wrapperOperation = phaseWrapperOperations[0];
-        rootOperations = metrics
-          .filter((m) => m.parentOperation === wrapperOperation.operationId)
-          .sort((a, b) => a.startTime - b.startTime);
+        rootOperations = childrenMap.get(wrapperOperation.operationId) || [];
       } else {
         // Otherwise, show all root operations (operations without parents in this phase)
         rootOperations = metrics
@@ -88,38 +106,53 @@ export class PerformanceMonitor {
       }
 
       const displayOperation = (
-        metric: PerformanceMetrics,
-        prefix: string,
-        isLast: boolean,
-        phaseMetrics: PerformanceMetrics[],
+        rootMetric: PerformanceMetrics,
+        rootPrefix: string,
+        rootIsLast: boolean,
+        childrenMap: Map<string, PerformanceMetrics[]>,
       ) => {
-        const slowWarning = metric.duration > 30000 ? " ⚠️" : "";
-        console.log(
-          `${prefix} ${metric.operation} (${this.formatDuration(metric.duration)})${slowWarning}`,
-        );
+        // Use iterative approach with a stack to avoid call stack overflow
+        interface StackItem {
+          metric: PerformanceMetrics;
+          prefix: string;
+          isLast: boolean;
+        }
 
-        // Show child operations recursively
-        const childOps = phaseMetrics
-          .filter((m) => m.parentOperation === metric.operationId)
-          .sort((a, b) => a.startTime - b.startTime);
+        const stack: StackItem[] = [
+          { metric: rootMetric, prefix: rootPrefix, isLast: rootIsLast },
+        ];
 
-        childOps.forEach((childMetric, childIndex) => {
-          const isLastChild = childIndex === childOps.length - 1;
-          const childPrefix = isLast ? "   " : "│  ";
-          const childTreePrefix = isLastChild ? "└─" : "├─";
-          displayOperation(
-            childMetric,
-            `${childPrefix}${childTreePrefix}`,
-            isLastChild,
-            phaseMetrics,
+        while (stack.length > 0) {
+          const { metric, prefix, isLast } = stack.pop()!;
+
+          const slowWarning = metric.duration > 30000 ? " ⚠️" : "";
+          console.log(
+            `${prefix} ${metric.operation} (${this.formatDuration(metric.duration)})${slowWarning}`,
           );
-        });
+
+          // Get child operations from pre-built map
+          const childOps = childrenMap.get(metric.operationId) || [];
+
+          // Push children onto stack in reverse order so they're processed in correct order
+          for (let childIndex = childOps.length - 1; childIndex >= 0; childIndex--) {
+            const childMetric = childOps[childIndex];
+            const isLastChild = childIndex === childOps.length - 1;
+            const childPrefix = isLast ? "   " : "│  ";
+            const childTreePrefix = isLastChild ? "└─" : "├─";
+
+            stack.push({
+              metric: childMetric,
+              prefix: `${childPrefix}${childTreePrefix}`,
+              isLast: isLastChild,
+            });
+          }
+        }
       };
 
       rootOperations.forEach((metric, index) => {
         const isLast = index === rootOperations.length - 1;
         const prefix = isLast ? "└─" : "├─";
-        displayOperation(metric, prefix, isLast, metrics);
+        displayOperation(metric, prefix, isLast, childrenMap);
       });
 
       console.log();
@@ -161,10 +194,11 @@ export class PerformanceMonitor {
       console.log();
     }
 
+    // Using reduce() instead of spread operator to avoid stack overflow with large metric arrays
     const totalDuration =
       this.metrics.length > 0
-        ? Math.max(...this.metrics.map((m) => m.endTime)) -
-          Math.min(...this.metrics.map((m) => m.startTime))
+        ? this.metrics.reduce((max, m) => Math.max(max, m.endTime), -Infinity) -
+          this.metrics.reduce((min, m) => Math.min(min, m.startTime), Infinity)
         : 0;
 
     console.log(`Total Processing Time: ${this.formatDuration(totalDuration)}`);
