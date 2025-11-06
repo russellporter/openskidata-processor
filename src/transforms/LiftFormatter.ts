@@ -9,6 +9,7 @@ import { InputLiftFeature, OSMLiftTags } from "../features/LiftFeature";
 import { osmID } from "../features/OSMGeoJSONProperties";
 import notEmpty from "../utils/notEmpty";
 import buildFeature from "./FeatureBuilder";
+import { isValidGeometryInFeature } from "./GeoTransforms";
 import {
   getOSMFirstValue,
   getOSMName,
@@ -31,6 +32,10 @@ export function formatLift(feature: InputLiftFeature): LiftFeature | null {
     feature.geometry.type !== "LineString" &&
     feature.geometry.type !== "MultiLineString"
   ) {
+    return null;
+  }
+
+  if (!isValidGeometryInFeature(feature)) {
     return null;
   }
 

@@ -14,6 +14,7 @@ import { osmID } from "../features/OSMGeoJSONProperties";
 import { InputRunFeature, OSMRunTags } from "../features/RunFeature";
 import notEmpty from "../utils/notEmpty";
 import buildFeature from "./FeatureBuilder";
+import { isValidGeometryInFeature } from "./GeoTransforms";
 import { Omit } from "./Omit";
 import {
   getOrElse,
@@ -27,6 +28,10 @@ import getStatusAndValue from "./Status";
 
 export function formatRun(feature: InputRunFeature): RunFeature[] {
   if (feature.geometry.type === "Point") {
+    return [];
+  }
+
+  if (!isValidGeometryInFeature(feature)) {
     return [];
   }
 

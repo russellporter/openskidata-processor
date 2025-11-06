@@ -16,6 +16,7 @@ import {
 import placeholderSiteGeometry from "../utils/PlaceholderSiteGeometry";
 import notEmpty from "../utils/notEmpty";
 import buildFeature from "./FeatureBuilder";
+import { isValidGeometryInFeature } from "./GeoTransforms";
 import { getOSMFirstValue, getOSMName } from "./OSMTransforms";
 import { Omit } from "./Omit";
 import { getRunDifficultyConvention } from "openskidata-format";
@@ -77,6 +78,10 @@ function formatOpenStreetMapLanduse(
     osmFeature.geometry.type !== "Polygon" &&
     osmFeature.geometry.type !== "MultiPolygon"
   ) {
+    return null;
+  }
+
+  if (!isValidGeometryInFeature(osmFeature)) {
     return null;
   }
 

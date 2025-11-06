@@ -9,7 +9,7 @@ import {
   polygon,
 } from "@turf/helpers";
 import nearestPointOnLine from "@turf/nearest-point-on-line";
-import { InputRunFeature } from "../features/RunFeature";
+import OSMGeoJSONProperties from "../features/OSMGeoJSONProperties";
 
 export function centralPointsInFeature(
   geojson: GeoJSON.Point | GeoJSON.Polygon,
@@ -108,12 +108,21 @@ export function getPositions(
   }
 }
 
-export function isValidGeometryInFeature(feature: InputRunFeature): boolean {
-  if (!booleanValid(feature.geometry)) {
+export function isValidGeometryInFeature(
+  feature: GeoJSON.Feature<GeoJSON.Geometry, OSMGeoJSONProperties<{}>>,
+): boolean {
+  try {
+    if (!booleanValid(feature.geometry)) {
+      console.warn(
+        `Invalid geometry found in feature: https://www.openstreetmap.org/${feature.properties.type}/${feature.properties.id}`,
+      );
+      return false;
+    }
+    return true;
+  } catch (e) {
     console.warn(
-      `Invalid geometry found in feature. id=${feature?.properties?.id}`,
+      `Error thrown when validating feature: https://www.openstreetmap.org/${feature.properties.type}/${feature.properties.id} - ${e}`,
     );
     return false;
   }
-  return true;
 }

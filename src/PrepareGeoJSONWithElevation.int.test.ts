@@ -338,12 +338,9 @@ it("adds elevations to run polygons", async () => {
               [
                 [6.544500899999999, 45.3230511],
                 [6.543409400000001, 45.323173700000005],
-                [6.544500899999999, 45.3230511],
-              ],
-              [
                 [6.5502579, 45.3224134],
                 [6.550612, 45.3222571],
-                [6.5502579, 45.3224134],
+                [6.544500899999999, 45.3230511],
               ],
             ],
           },
@@ -355,8 +352,8 @@ it("adds elevations to run polygons", async () => {
 
   await prepare(paths, testConfig);
 
-  expect(TestHelpers.fileContents(paths.output.runs).features[0].geometry)
-    .toMatchInlineSnapshot(`
+  expect(TestHelpers.fileContents(paths.output.runs).features[0].geometry).
+toMatchInlineSnapshot(`
 {
   "coordinates": [
     [
@@ -371,18 +368,6 @@ it("adds elevations to run polygons", async () => {
         1,
       ],
       [
-        6.544500899999996,
-        45.3230511,
-        0,
-      ],
-      [
-        6.544500899999996,
-        45.3230511,
-        0,
-      ],
-    ],
-    [
-      [
         6.5502579,
         45.3224134,
         2,
@@ -393,14 +378,9 @@ it("adds elevations to run polygons", async () => {
         3,
       ],
       [
-        6.5502579,
-        45.3224134,
-        2,
-      ],
-      [
-        6.5502579,
-        45.3224134,
-        2,
+        6.544500899999996,
+        45.3230511,
+        0,
       ],
     ],
   ],
