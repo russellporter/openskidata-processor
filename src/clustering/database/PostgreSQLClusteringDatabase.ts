@@ -40,11 +40,11 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
 
   // SQL statements
   private static readonly INSERT_OBJECT_SQL = `
-    INSERT INTO objects 
-    (key, type, source, geometry, geometry_with_elevations, geom, is_polygon, activities, ski_areas, 
-     is_basis_for_new_ski_area, is_in_ski_area_polygon, is_in_ski_area_site, 
-     lift_type, difficulty, viirs_pixels, properties) 
-    VALUES ($1, $2, $3, $4, $5, ST_Force2D(ST_GeomFromGeoJSON($6)), $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+    INSERT INTO objects
+    (key, type, source, geometry, geometry_with_elevations, geom, is_polygon, activities, ski_areas,
+     is_basis_for_new_ski_area, is_in_ski_area_polygon, is_in_ski_area_site,
+     lift_type, difficulty, viirs_pixels, properties)
+    VALUES ($1, $2, $3, $4, $5, ST_MakeValid(ST_Force2D(ST_GeomFromGeoJSON($6)), 'method=structure'), $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
     ON CONFLICT (key) DO UPDATE SET
       type = EXCLUDED.type,
       source = EXCLUDED.source,
@@ -318,7 +318,7 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
           const geometryGeoJSON = JSON.stringify(value);
           setParts.push(
             `geometry = $${paramIndex++}`,
-            `geom = ST_Force2D(ST_GeomFromGeoJSON($${paramIndex++}))`,
+            `geom = ST_MakeValid(ST_Force2D(ST_GeomFromGeoJSON($${paramIndex++})), 'method=structure')`,
           );
           values.push(JSON.stringify(value), geometryGeoJSON);
           break;
@@ -574,7 +574,7 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
 
     if (options.onlyInPolygon) {
       const polygonGeoJSON = JSON.stringify(options.onlyInPolygon);
-      query += ` AND ST_CoveredBy(geom, ST_Force2D(ST_GeomFromGeoJSON($${paramIndex++})))`;
+      query += ` AND ST_CoveredBy(geom, ST_MakeValid(ST_Force2D(ST_GeomFromGeoJSON($${paramIndex++})), 'method=structure'))`;
       params.push(polygonGeoJSON);
     }
 
@@ -649,16 +649,16 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
 
       if (context.searchType === "contains") {
         query = `
-          SELECT * FROM objects 
-          WHERE ST_CoveredBy(geom, ST_Buffer(geography(ST_Force2D(ST_GeomFromGeoJSON($${paramIndex++}))), $${paramIndex++})::geometry)
+          SELECT * FROM objects
+          WHERE ST_CoveredBy(geom, ST_Buffer(geography(ST_MakeValid(ST_Force2D(ST_GeomFromGeoJSON($${paramIndex++})), 'method=structure')), $${paramIndex++})::geometry)
             AND type != 'SKI_AREA'
         `;
         params = [geometryGeoJSON, bufferMeters];
       } else {
         // For intersects, use ST_DWithin with geography index
         query = `
-          SELECT * FROM objects 
-          WHERE ST_DWithin(geography(geom), geography(ST_Force2D(ST_GeomFromGeoJSON($${paramIndex++}))), $${paramIndex++})
+          SELECT * FROM objects
+          WHERE ST_DWithin(geography(geom), geography(ST_MakeValid(ST_Force2D(ST_GeomFromGeoJSON($${paramIndex++})), 'method=structure')), $${paramIndex++})
             AND type != 'SKI_AREA'
         `;
         params = [geometryGeoJSON, bufferMeters];
@@ -668,14 +668,14 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
       // Use direct geometry (no buffering)
       if (context.searchType === "contains") {
         query = `
-          SELECT * FROM objects 
-          WHERE ST_CoveredBy(geom, ST_Force2D(ST_GeomFromGeoJSON($${paramIndex++})))
+          SELECT * FROM objects
+          WHERE ST_CoveredBy(geom, ST_MakeValid(ST_Force2D(ST_GeomFromGeoJSON($${paramIndex++})), 'method=structure'))
             AND type != 'SKI_AREA'
         `;
       } else {
         query = `
-          SELECT * FROM objects 
-          WHERE ST_Intersects(geom, ST_Force2D(ST_GeomFromGeoJSON($${paramIndex++})))
+          SELECT * FROM objects
+          WHERE ST_Intersects(geom, ST_MakeValid(ST_Force2D(ST_GeomFromGeoJSON($${paramIndex++})), 'method=structure'))
             AND type != 'SKI_AREA'
         `;
       }
@@ -906,9 +906,9 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
           WHERE key = $2 AND type = 'SKI_AREA'
         ),
         union_result AS (
-          SELECT 
-            CASE 
-              WHEN COUNT(*) > 0 THEN ST_AsGeoJSON(ST_Union(ST_MakeValid(geom)))::jsonb
+          SELECT
+            CASE
+              WHEN COUNT(*) > 0 THEN ST_AsGeoJSON(ST_Union(ST_MakeValid(geom, 'method=structure')))::jsonb
               ELSE NULL
             END as union_geometry
           FROM member_geometries
