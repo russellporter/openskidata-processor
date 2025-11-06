@@ -79,7 +79,7 @@ describe("GeoPackageMerger", () => {
       }),
     ];
 
-    await targetWriter.addFeatureLayer(
+    await targetWriter.addToFeatureLayer(
       "lifts",
       targetFeatures,
       FeatureType.Lift,
@@ -104,7 +104,7 @@ describe("GeoPackageMerger", () => {
       }),
     ];
 
-    await sourceWriter.addFeatureLayer(
+    await sourceWriter.addToFeatureLayer(
       "lifts",
       sourceFeatures,
       FeatureType.Lift,
@@ -146,7 +146,7 @@ describe("GeoPackageMerger", () => {
       }),
     ];
 
-    await targetWriter.addFeatureLayer(
+    await targetWriter.addToFeatureLayer(
       "lifts",
       targetFeatures,
       FeatureType.Lift,
@@ -171,7 +171,7 @@ describe("GeoPackageMerger", () => {
       }),
     ];
 
-    await sourceWriter.addFeatureLayer(
+    await sourceWriter.addToFeatureLayer(
       "lifts",
       sourceFeatures,
       FeatureType.Lift,
@@ -212,7 +212,7 @@ describe("GeoPackageMerger", () => {
       }),
     ];
 
-    await targetWriter.addFeatureLayer(
+    await targetWriter.addToFeatureLayer(
       "lifts",
       targetFeatures,
       FeatureType.Lift,
