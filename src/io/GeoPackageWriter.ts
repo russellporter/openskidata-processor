@@ -3,7 +3,6 @@ import {
   GeoPackage,
   GeoPackageAPI,
   GeometryColumns,
-  GeometryData,
 } from "@ngageoint/geopackage";
 import centroid from "@turf/centroid";
 import { existsSync } from "fs";
@@ -16,7 +15,6 @@ import {
 } from "openskidata-format";
 import { Transform } from "stream";
 import { pipeline } from "stream/promises";
-import * as wkx from "wkx";
 import { readGeoJSONFeatures } from "./GeoJSONReader";
 
 // Type-safe column definition
@@ -304,12 +302,44 @@ export class GeoPackageWriter {
     } else {
       this.geoPackage = await GeoPackageAPI.create(filePath);
     }
+
+    // Apply SQLite performance optimizations
+    this.optimizeDatabaseForBulkInsert();
   }
 
-  async addFeatureLayer<T extends FeatureType>(
+  /**
+   * Optimizes SQLite database for bulk insert operations
+   */
+  private optimizeDatabaseForBulkInsert(): void {
+    if (!this.geoPackage) {
+      throw new Error("GeoPackage not initialized");
+    }
+
+    try {
+      const db = this.geoPackage.database;
+
+      db.run("PRAGMA journal_mode = WAL");
+      db.run("PRAGMA cache_size = -65536"); // 64MB cache
+      db.run("PRAGMA synchronous = NORMAL");
+      db.run("PRAGMA page_size = 4096");
+      db.run("PRAGMA temp_store = MEMORY");
+      db.run("PRAGMA mmap_size = 268435456"); // 256MB
+    } catch (error) {
+      console.warn("Warning: Could not apply database optimizations:", error);
+    }
+  }
+
+  /**
+   * Add features to a layer (appending to existing tables or creating new ones).
+   * Groups features by geometry type and creates separate tables for each type.
+   *
+   * @param skipSpatialIndex - Skip creating spatial indexes (useful when adding multiple batches)
+   */
+  async addToFeatureLayer<T extends FeatureType>(
     layerName: string,
     features: Feature<GeoJSON.Geometry, FeaturePropertiesMap[T]>[],
     featureType: T,
+    skipSpatialIndex: boolean = false,
   ): Promise<void> {
     if (!this.geoPackage) {
       throw new Error("GeoPackage not initialized");
@@ -332,7 +362,12 @@ export class GeoPackageWriter {
 
       // Output all ski areas to a single point layer
       const pointTableName = `${layerName}_point`;
-      await this.addFeaturesToTable(pointTableName, pointFeatures, featureType);
+      await this.addFeaturesToTable(
+        pointTableName,
+        pointFeatures,
+        featureType,
+        skipSpatialIndex,
+      );
 
       // Filter out point features for the original geometry processing
       // to avoid duplicating them
@@ -359,7 +394,28 @@ export class GeoPackageWriter {
     // Create a separate table for each geometry type
     for (const [geomType, geomFeatures] of Array.from(featuresByGeometryType)) {
       const tableName = `${layerName}_${geomType.toLowerCase()}`;
-      await this.addFeaturesToTable(tableName, geomFeatures, featureType);
+      await this.addFeaturesToTable(
+        tableName,
+        geomFeatures,
+        featureType,
+        skipSpatialIndex,
+      );
+    }
+  }
+
+  /**
+   * Create spatial indexes for all tables in a layer
+   */
+  async createIndexesForLayer(layerName: string): Promise<void> {
+    if (!this.geoPackage) {
+      throw new Error("GeoPackage not initialized");
+    }
+
+    const tables = this.geoPackage.getFeatureTables();
+    const layerTables = tables.filter((t) => t.startsWith(layerName + "_"));
+
+    for (const tableName of layerTables) {
+      await this.geoPackage.indexFeatureTable(tableName);
     }
   }
 
@@ -381,35 +437,16 @@ export class GeoPackageWriter {
     }));
   }
 
-  private setFeatureRowValues<T extends FeatureType>(
-    featureRow: {
-      setValueWithColumnName: (columnName: string, value: unknown) => void;
-    },
-    properties: FeaturePropertiesMap[T],
-    featureType: T,
-  ): void {
-    const schema = this.getSchema(featureType);
-
-    schema.forEach((column) => {
-      const value = column.getValue(properties);
-      // Convert undefined to null for SQLite compatibility
-      featureRow.setValueWithColumnName(
-        column.name,
-        value === undefined ? null : value,
-      );
-    });
-  }
-
   private async addFeaturesToTable<T extends FeatureType>(
     tableName: string,
     features: Feature<GeoJSON.Geometry, FeaturePropertiesMap[T]>[],
     featureType: T,
+    skipSpatialIndex: boolean = false,
   ): Promise<void> {
     if (!this.geoPackage || features.length === 0) {
       return;
     }
 
-    // Get column definitions based on feature type
     const columns = this.getColumnDefinitions(featureType);
 
     // Calculate bounding box
@@ -437,11 +474,8 @@ export class GeoPackageWriter {
     geometryColumns.z = 0;
     geometryColumns.m = 0;
 
-    // Check if table already exists
-    const tableExists = this.geoPackage.isTable(tableName);
-
-    if (!tableExists) {
-      // Create the feature table
+    // Create the feature table if it doesn't exist
+    if (!this.geoPackage.isTable(tableName)) {
       this.geoPackage.createFeatureTable(
         tableName,
         geometryColumns,
@@ -451,49 +485,42 @@ export class GeoPackageWriter {
       );
     }
 
-    const featureDao = this.geoPackage.getFeatureDao(tableName);
+    // Transform properties to SQLite-compatible values
+    const transformedFeatures = features.map((feature) => {
+      const schema = this.getSchema(featureType);
+      const transformedProperties: Record<string, string | number | null> = {};
 
-    // Add features to the table
-    for (let i = 0; i < features.length; i++) {
-      const feature = features[i];
-      const featureRow = featureDao.newRow();
-
-      try {
-        // Set geometry using wkx library to convert from GeoJSON
-        let geometry = feature.geometry;
-
-        // Convert Polygon to MultiPolygon
-        if (geometry.type === "Polygon") {
-          geometry = {
-            type: "MultiPolygon",
-            coordinates: [geometry.coordinates],
-          };
-        }
-
-        const wkxGeometry = wkx.Geometry.parseGeoJSON(geometry);
-        const geometryData = new GeometryData();
-        geometryData.setSrsId(4326);
-        geometryData.setGeometry(wkxGeometry);
-        featureRow.geometry = geometryData;
-
-        // Set properties based on feature type
-        if (feature.properties) {
-          this.setFeatureRowValues(
-            featureRow,
-            feature.properties as FeaturePropertiesMap[typeof featureType],
-            featureType,
-          );
-        }
-
-        featureDao.create(featureRow);
-      } catch (error) {
-        console.error(
-          `Error processing feature ${i} in table ${tableName}:`,
-          error,
+      schema.forEach((column) => {
+        const value = column.getValue(
+          feature.properties as FeaturePropertiesMap[T],
         );
-        throw error;
+        transformedProperties[column.name] =
+          value === undefined ? null : (value as string | number | null);
+      });
+
+      // Handle Polygon → MultiPolygon conversion
+      let geometry = feature.geometry;
+      if (geometry.type === "Polygon") {
+        geometry = {
+          type: "MultiPolygon",
+          coordinates: [(geometry as GeoJSON.Polygon).coordinates],
+        } as GeoJSON.MultiPolygon;
       }
-    }
+
+      return {
+        type: "Feature" as const,
+        geometry,
+        properties: transformedProperties,
+      };
+    });
+
+    // Use library's batch insert with automatic transaction handling
+    await this.geoPackage.addGeoJSONFeaturesToGeoPackage(
+      transformedFeatures,
+      tableName,
+      !skipSpatialIndex, // Create index if not skipped
+      1000, // batch size
+    );
   }
 
   private extractCoordinates(geometry: GeoJSON.Geometry): number[][] {
@@ -552,52 +579,17 @@ export class GeoPackageWriter {
 
   async close(): Promise<void> {
     if (this.geoPackage) {
+      // Optimize database file size
+      try {
+        this.geoPackage.database.run("VACUUM");
+      } catch (error) {
+        console.warn("Warning: Could not vacuum database:", error);
+      }
+
       await this.geoPackage.close();
       this.geoPackage = null;
     }
   }
-}
-
-export function createGeoPackageWriteStream<T extends FeatureType>(
-  geoPackagePath: string,
-  layerName: string,
-  featureType: T,
-): Transform {
-  let features: Feature<GeoJSON.Geometry, FeaturePropertiesMap[T]>[] = [];
-  let writer: GeoPackageWriter | null = null;
-
-  return new Transform({
-    objectMode: true,
-    async transform(chunk: any, encoding, callback) {
-      try {
-        // Parse the GeoJSON if it's a string
-        const data = typeof chunk === "string" ? JSON.parse(chunk) : chunk;
-
-        if (data.type === "FeatureCollection" && data.features) {
-          features.push(...data.features);
-        } else if (data.type === "Feature") {
-          features.push(data);
-        }
-
-        callback();
-      } catch (error) {
-        callback(error as Error);
-      }
-    },
-    async flush(callback) {
-      try {
-        if (features.length > 0) {
-          writer = new GeoPackageWriter();
-          await writer.initialize(geoPackagePath);
-          await writer.addFeatureLayer(layerName, features, featureType);
-          await writer.close();
-        }
-        callback();
-      } catch (error) {
-        callback(error as Error);
-      }
-    },
-  });
 }
 
 export async function convertGeoJSONToGeoPackage<T extends FeatureType>(
@@ -606,25 +598,52 @@ export async function convertGeoJSONToGeoPackage<T extends FeatureType>(
   layerName: string,
   featureType: T,
 ): Promise<void> {
-  const features: Feature<GeoJSON.Geometry, FeaturePropertiesMap[T]>[] = [];
+  const writer = new GeoPackageWriter();
+  await writer.initialize(geoPackagePath);
+
+  const BATCH_SIZE = 1000;
+  let batch: Feature<GeoJSON.Geometry, FeaturePropertiesMap[T]>[] = [];
 
   await pipeline(
     readGeoJSONFeatures(geoJSONPath),
     new Transform({
       objectMode: true,
-      transform(
+      async transform(
         feature: Feature<GeoJSON.Geometry, FeaturePropertiesMap[T]>,
         encoding,
         callback,
       ) {
-        features.push(feature);
-        callback();
+        batch.push(feature);
+
+        if (batch.length >= BATCH_SIZE) {
+          try {
+            await writer.addToFeatureLayer(layerName, batch, featureType, true);
+            batch = [];
+            callback();
+          } catch (error) {
+            callback(error as Error);
+          }
+        } else {
+          callback();
+        }
+      },
+      async flush(callback) {
+        if (batch.length > 0) {
+          try {
+            await writer.addToFeatureLayer(layerName, batch, featureType, true);
+            callback();
+          } catch (error) {
+            callback(error as Error);
+          }
+        } else {
+          callback();
+        }
       },
     }),
   );
 
-  const writer = new GeoPackageWriter();
-  await writer.initialize(geoPackagePath);
-  await writer.addFeatureLayer(layerName, features, featureType);
+  // Create spatial indexes once at the end
+  await writer.createIndexesForLayer(layerName);
+
   await writer.close();
 }

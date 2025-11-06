@@ -72,7 +72,7 @@ describe("GeoPackageWriter", () => {
       },
     ];
 
-    await writer.addFeatureLayer("test_lifts", features, FeatureType.Lift);
+    await writer.addToFeatureLayer("test_lifts", features, FeatureType.Lift);
     await writer.close();
 
     // Verify the layer was created with geometry type suffix
@@ -125,7 +125,7 @@ describe("GeoPackageWriter", () => {
       },
     ];
 
-    await writer.addFeatureLayer("test_runs", features, FeatureType.Run);
+    await writer.addToFeatureLayer("test_runs", features, FeatureType.Run);
     await writer.close();
 
     // Verify the layer was created with geometry type suffix
@@ -170,7 +170,7 @@ describe("GeoPackageWriter", () => {
       },
     ];
 
-    await writer.addFeatureLayer("test_areas", features, FeatureType.SkiArea);
+    await writer.addToFeatureLayer("test_areas", features, FeatureType.SkiArea);
     await writer.close();
 
     // Verify both point and multipolygon layers were created
@@ -238,7 +238,7 @@ describe("GeoPackageWriter", () => {
       },
     ];
 
-    await writer.addFeatureLayer("test_areas", features, FeatureType.SkiArea);
+    await writer.addToFeatureLayer("test_areas", features, FeatureType.SkiArea);
     await writer.close();
 
     // Verify both point and multipolygon layers were created
@@ -299,7 +299,7 @@ describe("GeoPackageWriter", () => {
       },
     ];
 
-    await writer.addFeatureLayer("test_runs", features, FeatureType.Run);
+    await writer.addToFeatureLayer("test_runs", features, FeatureType.Run);
     await writer.close();
 
     // Verify only multipolygon layer was created (no point layer for runs)
@@ -378,7 +378,7 @@ describe("GeoPackageWriter", () => {
       },
     ];
 
-    await writer.addFeatureLayer("mixed_types", features, FeatureType.Lift);
+    await writer.addToFeatureLayer("mixed_types", features, FeatureType.Lift);
     await writer.close();
 
     // Verify the layer was created with correct number of features
@@ -425,7 +425,7 @@ describe("GeoPackageWriter", () => {
     ];
 
     await expect(
-      writer.addFeatureLayer("test", features, FeatureType.Lift),
+      writer.addToFeatureLayer("test", features, FeatureType.Lift),
     ).rejects.toThrow("GeoPackage not initialized");
   });
 
@@ -503,7 +503,7 @@ describe("GeoPackageWriter", () => {
       },
     ];
 
-    await writer.addFeatureLayer("ski_areas", features, FeatureType.SkiArea);
+    await writer.addToFeatureLayer("ski_areas", features, FeatureType.SkiArea);
     await writer.close();
 
     // Verify that point and multipolygon tables were created for ski areas
@@ -628,7 +628,7 @@ describe("GeoPackageWriter", () => {
       },
     ];
 
-    await writer.addFeatureLayer("lifts", features, FeatureType.Lift);
+    await writer.addToFeatureLayer("lifts", features, FeatureType.Lift);
     await writer.close();
 
     // Verify the layer was created
@@ -731,7 +731,7 @@ describe("GeoPackageWriter", () => {
       },
     ];
 
-    await writer.addFeatureLayer("runs", features, FeatureType.Run);
+    await writer.addToFeatureLayer("runs", features, FeatureType.Run);
     await writer.close();
 
     // Verify the data handles missing values correctly
@@ -787,7 +787,7 @@ describe("GeoPackageWriter", () => {
       },
     ];
 
-    await writer.addFeatureLayer("lifts", features, FeatureType.Lift);
+    await writer.addToFeatureLayer("lifts", features, FeatureType.Lift);
     await writer.close();
 
     // Verify the layer was created with empty ski area columns
