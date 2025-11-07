@@ -38,6 +38,7 @@ export type OSMLiftTags = {
   "aerialway:access"?: string;
   "aerialway:winter:access"?: string;
   "aerialway:summer:access"?: string;
+  "ref:FR:CAIRN"?: string;
 
   website?: string;
 };
