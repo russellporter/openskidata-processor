@@ -23,27 +23,38 @@ export default async function augmentGeoJSONFeatures(
     readGeoJSONFeatures(inputPath)
       .pipe(
         mapAsync(async (feature: AugmentedMapFeature) => {
-          let skiAreas = await database.getSkiAreasForObject(
+          // Fetch the map object from the database
+          const mapObject = await database.getObjectById(
             feature.properties.id,
           );
+
+          if (!mapObject) {
+            return feature;
+          }
+
+          // Get ski areas from the map object
+          const skiAreaIds = mapObject.skiAreas;
+          const skiAreas = skiAreaIds.length > 0
+            ? await database.getSkiAreasByIds(skiAreaIds, false).then(cursor => cursor.all())
+            : [];
 
           feature.properties.skiAreas = skiAreas
             .map(objectToFeature)
             .map(toSkiAreaSummary);
 
+          // Set places from the map object
+          if ('properties' in mapObject && 'places' in mapObject.properties) {
+            feature.properties.places = mapObject.properties.places;
+          }
+
           // Add snow cover history for runs if snow cover config is provided
-          if (snowCoverConfig && featureType === FeatureType.Run) {
-            const runObject = await database.getRunObjectById(
-              feature.properties.id,
+          if (snowCoverConfig && featureType === FeatureType.Run && mapObject.type === 'RUN') {
+            const snowCoverHistory = await generateRunSnowCoverHistory(
+              mapObject as RunObject,
+              postgresConfig,
             );
-            if (runObject) {
-              const snowCoverHistory = await generateRunSnowCoverHistory(
-                runObject,
-                postgresConfig,
-              );
-              if (snowCoverHistory && snowCoverHistory.length > 0) {
-                feature.properties.snowCoverHistory = snowCoverHistory;
-              }
+            if (snowCoverHistory && snowCoverHistory.length > 0) {
+              feature.properties.snowCoverHistory = snowCoverHistory;
             }
           }
 

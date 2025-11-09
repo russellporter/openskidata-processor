@@ -816,39 +816,13 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
     };
   }
 
-  async getSkiAreasForObject(objectId: string): Promise<SkiAreaObject[]> {
+  async getObjectById(objectId: string): Promise<MapObject | null> {
     this.ensureInitialized();
 
-    const objectQuery = "SELECT ski_areas FROM objects WHERE key = $1";
-    const objectRows = await this.executeQuery<any[]>(objectQuery, [objectId]);
+    const query = "SELECT * FROM objects WHERE key = $1";
+    const rows = await this.executeQuery<any[]>(query, [objectId]);
 
-    if (objectRows.length === 0 || !objectRows[0].ski_areas) {
-      return [];
-    }
-
-    const skiAreaIds = (objectRows[0].ski_areas || []).filter(
-      (id: any) => id != null,
-    );
-    if (skiAreaIds.length === 0) {
-      return [];
-    }
-
-    const placeholders = skiAreaIds
-      .map((_: string, i: number) => `$${i + 1}`)
-      .join(",");
-    const query = `SELECT * FROM objects WHERE type = 'SKI_AREA' AND key IN (${placeholders})`;
-
-    const rows = await this.executeQuery<any[]>(query, skiAreaIds);
-    return rows.map(this.rowToMapObject) as SkiAreaObject[];
-  }
-
-  async getRunObjectById(runId: string): Promise<RunObject | null> {
-    this.ensureInitialized();
-
-    const query = "SELECT * FROM objects WHERE key = $1 AND type = 'RUN'";
-    const rows = await this.executeQuery<any[]>(query, [runId]);
-
-    return rows.length > 0 ? (this.rowToMapObject(rows[0]) as RunObject) : null;
+    return rows.length > 0 ? this.rowToMapObject(rows[0]) : null;
   }
 
   private rowToMapObject(row: any): MapObject {

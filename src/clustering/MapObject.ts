@@ -101,6 +101,7 @@ export type MapFeature<Geometry extends GeoJSON.Geometry = MapObjectGeometry> =
 
 interface AugmentedMapFeatureProperties extends MapFeatureProperties {
   skiAreas: SkiAreaSummaryFeature[];
+  places?: Place[];
   snowCoverHistory?: SnowCoverHistory;
 }
 

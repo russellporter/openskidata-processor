@@ -111,14 +111,9 @@ export interface ClusteringDatabase {
   streamSkiAreas(): Promise<AsyncIterable<SkiAreaObject>>;
 
   /**
-   * Get ski areas associated with a specific object ID
+   * Get a map object by ID
    */
-  getSkiAreasForObject(objectId: string): Promise<SkiAreaObject[]>;
-
-  /**
-   * Get a run object by ID
-   */
-  getRunObjectById(runId: string): Promise<RunObject | null>;
+  getObjectById(objectId: string): Promise<MapObject | null>;
 
   /**
    * Get the derived geometry for a ski area based on its member objects

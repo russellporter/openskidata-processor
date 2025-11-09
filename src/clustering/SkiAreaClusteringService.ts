@@ -1329,17 +1329,14 @@ export class SkiAreaClusteringService {
       `Augmenting ${featureType} features from ${inputPath} to ${outputPath}`,
     );
 
-    try {
-      await augmentGeoJSONFeatures(
-        inputPath,
-        outputPath,
-        this.database,
-        featureType,
-        snowCoverConfig,
-        postgresConfig,
-      );
-    } finally {
-    }
+    await augmentGeoJSONFeatures(
+      inputPath,
+      outputPath,
+      this.database,
+      featureType,
+      snowCoverConfig,
+      postgresConfig,
+    );
   }
 
   private async exportSkiAreasGeoJSON(outputPath: string): Promise<void> {
