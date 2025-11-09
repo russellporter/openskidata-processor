@@ -1012,8 +1012,8 @@ export class SkiAreaClusteringService {
         sources: [],
         runConvention: getRunDifficultyConvention(geometry),
         websites: [],
-        wikidata_id: null,
-        location: null,
+        wikidataID: null,
+        places: [],
       },
     };
 
@@ -1142,7 +1142,10 @@ export class SkiAreaClusteringService {
     if (geocoder) {
       const coordinates = centroid(skiArea.geometry).geometry.coordinates;
       try {
-        updatedProperties.location = await geocoder.geocode(coordinates);
+        const place = await geocoder.geocode(coordinates);
+        if (place) {
+          updatedProperties.places = [place];
+        }
       } catch (error) {
         console.log(`Failed geocoding ${JSON.stringify(coordinates)}`);
         console.log(error);

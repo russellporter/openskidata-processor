@@ -114,7 +114,9 @@ it("adds elevations to lift geometry", async () => {
         "name": "Skilift Oberau",
         "occupancy": null,
         "oneway": null,
+        "places": [],
         "ref": null,
+        "refFRCAIRN": null,
         "skiAreas": [],
         "sources": [
           {
@@ -125,7 +127,7 @@ it("adds elevations to lift geometry", async () => {
         "status": "operating",
         "type": "lift",
         "websites": [],
-        "wikidata_id": null,
+        "wikidataID": null,
       },
       "type": "Feature",
     },
@@ -287,7 +289,9 @@ it("completes without adding elevations when elevation server fails", async () =
         "name": "Skilift Oberau",
         "occupancy": null,
         "oneway": null,
+        "places": [],
         "ref": null,
+        "refFRCAIRN": null,
         "skiAreas": [],
         "sources": [
           {
@@ -298,7 +302,7 @@ it("completes without adding elevations when elevation server fails", async () =
         "status": "operating",
         "type": "lift",
         "websites": [],
-        "wikidata_id": null,
+        "wikidataID": null,
       },
       "type": "Feature",
     },

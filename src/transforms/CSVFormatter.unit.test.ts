@@ -40,18 +40,20 @@ describe("CSVFormatter", () => {
             ],
             runConvention: RunDifficultyConvention.EUROPE,
             websites: ["https://testskiarea.com"],
-            wikidata_id: null,
-            location: {
-              iso3166_1Alpha2: "US",
-              iso3166_2: "US-CO",
-              localized: {
-                en: {
-                  country: "United States",
-                  region: "Colorado",
-                  locality: "Vail",
+            wikidataID: null,
+            places: [
+              {
+                iso3166_1Alpha2: "US",
+                iso3166_2: "US-CO",
+                localized: {
+                  en: {
+                    country: "United States",
+                    region: "Colorado",
+                    locality: "Vail",
+                  },
                 },
               },
-            },
+            ],
             statistics: {
               runs: {
                 byActivity: {
@@ -142,7 +144,7 @@ describe("CSVFormatter", () => {
                   name: "Test Ski Area",
                   activities: [SkiAreaActivity.Downhill],
                   status: Status.Operating,
-                  location: null,
+                  places: [],
                 },
               },
             ],
@@ -152,7 +154,8 @@ describe("CSVFormatter", () => {
             },
             sources: [{ type: SourceType.OPENSTREETMAP, id: "123" }],
             websites: [],
-            wikidata_id: null,
+            wikidataID: null,
+            places: [],
           },
         };
 
@@ -181,6 +184,7 @@ describe("CSVFormatter", () => {
             id: "test-lift",
             name: "Test Lift",
             ref: "A",
+            refFRCAIRN: null,
             liftType: LiftType.ChairLift,
             status: Status.Operating,
             capacity: 2400,
@@ -204,21 +208,20 @@ describe("CSVFormatter", () => {
                   name: "Test Ski Area",
                   activities: [SkiAreaActivity.Downhill],
                   status: Status.Operating,
-                  location: null,
+                  places: [],
                 },
               },
             ],
             sources: [{ type: SourceType.OPENSTREETMAP, id: "123" }],
             websites: [],
-            wikidata_id: null,
+            wikidataID: null,
+            places: [],
           },
         };
 
         const csv = formatter(FeatureType.Lift)(liftFeature);
 
-        expect(csv).toMatchInlineSnapshot(
-          `"Test Lift,A,chair_lift,operating,,,,Test Ski Area,,600,2400,4,yes,yes,yes,30511,400,50.9,0.67,1600,2000,0.01,,,https://openskimap.org/?obj=test-lift,test-lift,LineString,20.100000,10.100000,test-ski-area,https://www.openstreetmap.org/123,"`,
-        );
+        expect(csv).toMatchInlineSnapshot(`"Test Lift,A,,chair_lift,operating,,,,Test Ski Area,,600,2400,4,yes,yes,yes,30511,400,50.9,0.67,1600,2000,0.01,,,https://openskimap.org/?obj=test-lift,test-lift,LineString,20.100000,10.100000,test-ski-area,https://www.openstreetmap.org/123,"`);
       });
     });
   });
@@ -241,7 +244,7 @@ describe("CSVFormatter", () => {
       stream.write("test-data-2");
       stream.end(() => {
         expect(output).toMatchInlineSnapshot(`
-"name,country,region,locality,status,has_downhill,has_nordic,downhill_distance_km,nordic_distance_km,vertical_m,min_elevation_m,max_elevation_m,lift_count,surface_lifts_count,run_convention,wikidata_id,websites,openskimap,id,geometry,lat,lng,sources
+"name,countries,regions,localities,status,has_downhill,has_nordic,downhill_distance_km,nordic_distance_km,vertical_m,min_elevation_m,max_elevation_m,lift_count,surface_lifts_count,run_convention,wikidata_id,websites,openskimap,id,geometry,lat,lng,sources
 test-data-1
 test-data-2
 "

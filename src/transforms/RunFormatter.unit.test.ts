@@ -47,6 +47,7 @@ describe("RunFormatter", () => {
   "name": null,
   "oneway": true,
   "patrolled": null,
+  "places": [],
   "ref": null,
   "skiAreas": [],
   "sources": [
@@ -61,7 +62,7 @@ describe("RunFormatter", () => {
     "downhill",
   ],
   "websites": [],
-  "wikidata_id": null,
+  "wikidataID": null,
 }
 `);
   });

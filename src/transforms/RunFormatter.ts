@@ -68,7 +68,8 @@ export function formatRun(feature: InputRunFeature): RunFeature[] {
       { type: SourceType.OPENSTREETMAP, id: osmID(feature.properties) },
     ],
     websites: [tags.website].filter(notEmpty),
-    wikidata_id: getOSMFirstValue(tags, "wikidata"),
+    wikidataID: getOSMFirstValue(tags, "wikidata"),
+    places: [],
     elevationProfile: null,
   };
 

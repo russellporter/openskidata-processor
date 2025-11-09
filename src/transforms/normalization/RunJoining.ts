@@ -1,6 +1,7 @@
 import _ from "lodash";
 import {
   FeatureType,
+  Place,
   RunDifficulty,
   RunFeature,
   RunGrooming,
@@ -12,7 +13,7 @@ import uniquedSources from "../UniqueSources";
 
 const ignoredPropertiesForComparison: Set<string> = new Set<
   keyof RunProperties
->(["id", "sources", "skiAreas", "elevationProfile"]);
+>(["id", "sources", "skiAreas", "elevationProfile", "places"]);
 
 export function isPartOfSameRun(
   leftFeature: RunFeature,
@@ -85,10 +86,11 @@ export function mergedProperties(
     websites: mergedAndUniqued(
       ...allProperties.map((properties) => properties.websites),
     ),
-    wikidata_id:
+    wikidataID:
       allProperties
-        .map((properties) => properties.wikidata_id)
+        .map((properties) => properties.wikidataID)
         .find((id) => id !== null) || null,
+    places: uniquePlaces(allProperties.flatMap((p) => p.places)),
   };
 }
 
@@ -203,6 +205,26 @@ function uniquedByID<Feature extends { properties: { id: string } }>(
 
     ids.add(feature.properties.id);
 
+    return true;
+  });
+}
+
+function uniquePlaces(places: Place[]): Place[] {
+  const seen = new Set<string>();
+
+  return places.filter((place) => {
+    // Create a unique key from the place's identifying properties
+    const key = JSON.stringify({
+      iso3166_1Alpha2: place.iso3166_1Alpha2,
+      iso3166_2: place.iso3166_2,
+      locality: place.localized.en.locality,
+    });
+
+    if (seen.has(key)) {
+      return false;
+    }
+
+    seen.add(key);
     return true;
   });
 }

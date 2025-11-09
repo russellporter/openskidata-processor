@@ -72,6 +72,7 @@ export function formatLift(feature: InputLiftFeature): LiftFeature | null {
     name: getOSMName(tags, "name", null, ref),
     oneway: mapOSMBoolean(tags.oneway),
     ref: ref,
+    refFRCAIRN: getOSMFirstValue(tags, "ref:FR:CAIRN"),
     description: tags.description || null,
     occupancy: mapOSMNumber(tags["aerialway:occupancy"]),
     capacity: mapOSMNumber(tags["aerialway:capacity"]),
@@ -84,7 +85,8 @@ export function formatLift(feature: InputLiftFeature): LiftFeature | null {
       { type: SourceType.OPENSTREETMAP, id: osmID(feature.properties) },
     ],
     websites: [tags.website].filter(notEmpty),
-    wikidata_id: getOSMFirstValue(tags, "wikidata"),
+    wikidataID: getOSMFirstValue(tags, "wikidata"),
+    places: [],
   };
 
   return buildFeature(

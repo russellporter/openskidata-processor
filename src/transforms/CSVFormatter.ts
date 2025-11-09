@@ -8,7 +8,7 @@ import {
   getSourceURL,
   LiftFeature,
   LiftType,
-  Location,
+  Place,
   RunDifficulty,
   RunFeature,
   RunStatisticsByDifficulty,
@@ -116,11 +116,11 @@ export function getCSVFilename(type: FeatureType): string {
 function getHeadersForType(type: FeatureType): string {
   switch (type) {
     case FeatureType.Run:
-      return "name,ref,country,region,locality,ski_area_names,difficulty,color,oneway,lit,gladed,patrolled,grooming,uses,inclined_length_m,descent_m,ascent_m,average_pitch_%,max_pitch_%,min_elevation_m,max_elevation_m,difficulty_convention,wikidata_id,websites,openskimap,id,geometry,lat,lng,ski_area_ids,sources,description";
+      return "name,ref,countries,regions,localities,ski_area_names,difficulty,color,oneway,lit,gladed,patrolled,grooming,uses,inclined_length_m,descent_m,ascent_m,average_pitch_%,max_pitch_%,min_elevation_m,max_elevation_m,difficulty_convention,wikidata_id,websites,openskimap,id,geometry,lat,lng,ski_area_ids,sources,description";
     case FeatureType.Lift:
-      return "name,ref,lift_type,status,country,region,locality,ski_area_names,oneway,duration_sec,capacity,occupancy,detachable,bubble,heating,inclined_length_m,vertical_m,speed_m_per_s,vertical_speed_m_per_s,min_elevation_m,max_elevation_m,overall_pitch_%,wikidata_id,websites,openskimap,id,geometry,lat,lng,ski_area_ids,sources,description";
+      return "name,ref,ref_fr_cairn,lift_type,status,countries,regions,localities,ski_area_names,oneway,duration_sec,capacity,occupancy,detachable,bubble,heating,inclined_length_m,vertical_m,speed_m_per_s,vertical_speed_m_per_s,min_elevation_m,max_elevation_m,overall_pitch_%,wikidata_id,websites,openskimap,id,geometry,lat,lng,ski_area_ids,sources,description";
     case FeatureType.SkiArea:
-      return "name,country,region,locality,status,has_downhill,has_nordic,downhill_distance_km,nordic_distance_km,vertical_m,min_elevation_m,max_elevation_m,lift_count,surface_lifts_count,run_convention,wikidata_id,websites,openskimap,id,geometry,lat,lng,sources";
+      return "name,countries,regions,localities,status,has_downhill,has_nordic,downhill_distance_km,nordic_distance_km,vertical_m,min_elevation_m,max_elevation_m,lift_count,surface_lifts_count,run_convention,wikidata_id,websites,openskimap,id,geometry,lat,lng,sources";
     default:
       throw new Error(`Unknown feature type: ${type}`);
   }
@@ -170,7 +170,8 @@ function formatRun(feature: RunFeature): string {
   return [
     escapeField(properties.name),
     escapeField(properties.ref),
-    ...extractLocationAndSkiAreas(properties.skiAreas),
+    ...extractPlaces(properties.places),
+    extractSkiAreaNames(properties.skiAreas),
     properties.difficulty,
     colorName,
     formatBoolean(properties.oneway),
@@ -187,7 +188,7 @@ function formatRun(feature: RunFeature): string {
     elevationData?.minElevationInMeters.toFixed(),
     elevationData?.maxElevationInMeters.toFixed(),
     properties.difficultyConvention,
-    escapeField(properties.wikidata_id),
+    escapeField(properties.wikidataID),
     formatWebsites(properties.websites),
     getOpenSkiMapURL(properties.id),
     properties.id,
@@ -205,9 +206,11 @@ function formatLift(feature: LiftFeature): string {
   return [
     escapeField(properties.name),
     escapeField(properties.ref),
+    escapeField(properties.refFRCAIRN),
     properties.liftType,
     properties.status,
-    ...extractLocationAndSkiAreas(properties.skiAreas),
+    ...extractPlaces(properties.places),
+    extractSkiAreaNames(properties.skiAreas),
     formatBoolean(properties.oneway),
     properties.duration ? properties.duration.toString() : "",
     properties.capacity ? properties.capacity.toString() : "",
@@ -222,7 +225,7 @@ function formatLift(feature: LiftFeature): string {
     elevationData?.minElevationInMeters.toFixed(),
     elevationData?.maxElevationInMeters.toFixed(),
     elevationData?.overallPitchInPercent?.toFixed(2),
-    escapeField(properties.wikidata_id),
+    escapeField(properties.wikidataID),
     formatWebsites(properties.websites),
     getOpenSkiMapURL(properties.id),
     properties.id,
@@ -242,7 +245,7 @@ function formatSkiArea(feature: SkiAreaFeature): string {
 
   return [
     escapeField(properties.name),
-    ...extractLocation(properties.location),
+    ...extractPlaces(properties.places),
     properties.status,
     formatBoolean(properties.activities.includes(SkiAreaActivity.Downhill)),
     formatBoolean(properties.activities.includes(SkiAreaActivity.Nordic)),
@@ -268,7 +271,7 @@ function formatSkiArea(feature: SkiAreaFeature): string {
     totalLiftCount > 0 ? totalLiftCount.toString() : "",
     surfaceLiftCount > 0 ? surfaceLiftCount.toString() : "",
     properties.runConvention,
-    escapeField(properties.wikidata_id),
+    escapeField(properties.wikidataID),
     formatWebsites(properties.websites),
     getOpenSkiMapURL(properties.id),
     properties.id,
@@ -306,30 +309,37 @@ function formatBoolean(value: boolean | null): string {
   return value ? "yes" : "no";
 }
 
-function extractLocationAndSkiAreas(skiAreas: SkiAreaSummaryFeature[]) {
-  const firstSkiArea = skiAreas.length > 0 ? skiAreas[0] : null;
-  const locationFields = extractLocation(firstSkiArea?.properties.location);
-
-  const skiAreaNames = escapeField(
+function extractSkiAreaNames(skiAreas: SkiAreaSummaryFeature[]): string {
+  return escapeField(
     skiAreas
       .filter((name) => name !== null)
       .map((area) => area.properties.name)
       .sort()
       .join(","),
   );
-
-  return [...locationFields, skiAreaNames];
 }
 
 function extractSkiAreaIDs(skiAreas: SkiAreaSummaryFeature[]) {
   return skiAreas.map((area) => area.properties.id).join(";");
 }
 
-function extractLocation(location: Location | null | undefined): string[] {
-  const country = escapeField(location?.localized.en.country);
-  const region = escapeField(location?.localized.en.region);
-  const locality = escapeField(location?.localized.en.locality);
-  return [country, region, locality];
+function extractPlaces(places: Place[]): string[] {
+  // Get unique values for each field
+  const uniqueCountries = Array.from(
+    new Set(places.map((p) => p.localized.en.country).filter((c) => c)),
+  ).sort();
+  const uniqueRegions = Array.from(
+    new Set(places.map((p) => p.localized.en.region).filter((r) => r)),
+  ).sort();
+  const uniqueLocalities = Array.from(
+    new Set(places.map((p) => p.localized.en.locality).filter((l) => l)),
+  ).sort();
+
+  return [
+    escapeField(uniqueCountries.join(";")),
+    escapeField(uniqueRegions.join(";")),
+    escapeField(uniqueLocalities.join(";")),
+  ];
 }
 
 function formatSources(sources: Source[]): string {

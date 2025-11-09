@@ -175,7 +175,9 @@ Map {
           "name": "Skilift Oberau",
           "occupancy": null,
           "oneway": null,
+          "places": [],
           "ref": null,
+          "refFRCAIRN": null,
           "skiAreas": [
             {
               "geometry": {
@@ -190,8 +192,8 @@ Map {
                   "downhill",
                 ],
                 "id": "02911313f405ef0415188ceb357b415f02af5d64",
-                "location": null,
                 "name": "Rabenkopflift Oberau",
+                "places": [],
                 "status": null,
                 "type": "skiArea",
               },
@@ -207,7 +209,7 @@ Map {
           "status": "operating",
           "type": "lift",
           "websites": [],
-          "wikidata_id": null,
+          "wikidataID": null,
         },
         "type": "Feature",
       },
@@ -354,6 +356,7 @@ Map {
           "name": "Oberauer Skiabfahrt",
           "oneway": true,
           "patrolled": null,
+          "places": [],
           "ref": null,
           "skiAreas": [
             {
@@ -369,8 +372,8 @@ Map {
                   "downhill",
                 ],
                 "id": "02911313f405ef0415188ceb357b415f02af5d64",
-                "location": null,
                 "name": "Rabenkopflift Oberau",
+                "places": [],
                 "status": null,
                 "type": "skiArea",
               },
@@ -389,7 +392,7 @@ Map {
             "downhill",
           ],
           "websites": [],
-          "wikidata_id": null,
+          "wikidataID": null,
         },
         "type": "Feature",
       },
@@ -411,8 +414,8 @@ Map {
             "downhill",
           ],
           "id": "02911313f405ef0415188ceb357b415f02af5d64",
-          "location": null,
           "name": "Rabenkopflift Oberau",
+          "places": [],
           "runConvention": "europe",
           "sources": [
             {
@@ -436,7 +439,7 @@ Map {
           "status": null,
           "type": "skiArea",
           "websites": [],
-          "wikidata_id": null,
+          "wikidataID": null,
         },
         "type": "Feature",
       },

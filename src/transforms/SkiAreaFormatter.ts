@@ -158,9 +158,9 @@ function propertiesForOpenStreetMapSkiArea(
     activities: [],
     status: status,
     websites: [tags.website].filter(notEmpty),
-    wikidata_id: getOSMFirstValue(tags, "wikidata"),
+    wikidataID: getOSMFirstValue(tags, "wikidata"),
     runConvention: runConvention,
-    location: null,
+    places: [],
   };
 }
 
@@ -182,7 +182,7 @@ function propertiesForSkiMapOrgSkiArea(
     runConvention: getRunDifficultyConvention(feature),
     websites: [feature.properties.official_website].filter(notEmpty),
     // TODO: #153 Get Wikidata ID from Skimap.org ID (https://github.com/russellporter/openskimap.org/issues/153)
-    wikidata_id: null,
-    location: null,
+    wikidataID: null,
+    places: [],
   };
 }

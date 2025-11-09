@@ -12,7 +12,7 @@ export function toSkiAreaSummary(
       activities: properties.activities,
       type: properties.type,
       status: properties.status,
-      location: properties.location,
+      places: properties.places,
     },
     geometry: skiArea.geometry,
   };

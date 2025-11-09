@@ -47,6 +47,8 @@ const toJSON = (value: unknown): string | null => {
 };
 
 // Helper to create common columns for a specific type
+// Includes place columns with semicolon-separated values from all places in the array:
+// country_codes, region_codes, countries, regions, localities
 function createCommonColumns<
   T extends SkiAreaProperties | LiftProperties | RunProperties,
 >(): ColumnDefinition<T>[] {
@@ -79,7 +81,68 @@ function createCommonColumns<
     {
       name: "wikidata_id",
       dataType: "TEXT",
-      getValue: (p) => p.wikidata_id,
+      getValue: (p) => p.wikidataID,
+    },
+    // Place fields (semicolon-separated unique lists from places array)
+    {
+      name: "country_codes",
+      dataType: "TEXT",
+      getValue: (p) => {
+        const unique = Array.from(
+          new Set(p.places.map((place) => place.iso3166_1Alpha2)),
+        ).sort();
+        return unique.length > 0 ? unique.join(";") : null;
+      },
+    },
+    {
+      name: "region_codes",
+      dataType: "TEXT",
+      getValue: (p) => {
+        const unique = Array.from(
+          new Set(
+            p.places.map((place) => place.iso3166_2).filter((r) => r) as string[],
+          ),
+        ).sort();
+        return unique.length > 0 ? unique.join(";") : null;
+      },
+    },
+    {
+      name: "countries",
+      dataType: "TEXT",
+      getValue: (p) => {
+        const unique = Array.from(
+          new Set(p.places.map((place) => place.localized.en.country)),
+        ).sort();
+        return unique.length > 0 ? unique.join(";") : null;
+      },
+    },
+    {
+      name: "regions",
+      dataType: "TEXT",
+      getValue: (p) => {
+        const unique = Array.from(
+          new Set(
+            p.places
+              .map((place) => place.localized.en.region)
+              .filter((r) => r) as string[],
+          ),
+        ).sort();
+        return unique.length > 0 ? unique.join(";") : null;
+      },
+    },
+    {
+      name: "localities",
+      dataType: "TEXT",
+      getValue: (p) => {
+        const unique = Array.from(
+          new Set(
+            p.places
+              .map((place) => place.localized.en.locality)
+              .filter((l) => l) as string[],
+          ),
+        ).sort();
+        return unique.length > 0 ? unique.join(";") : null;
+      },
     },
   ];
 }
@@ -90,31 +153,6 @@ const SKI_AREA_SCHEMA: ColumnDefinition<SkiAreaProperties>[] = [
     name: "activities",
     dataType: "TEXT",
     getValue: (p) => p.activities.join(","),
-  },
-  {
-    name: "location_country_code",
-    dataType: "TEXT",
-    getValue: (p) => p.location?.iso3166_1Alpha2,
-  },
-  {
-    name: "location_region_code",
-    dataType: "TEXT",
-    getValue: (p) => p.location?.iso3166_2,
-  },
-  {
-    name: "location_country",
-    dataType: "TEXT",
-    getValue: (p) => p.location?.localized.en.country,
-  },
-  {
-    name: "location_region",
-    dataType: "TEXT",
-    getValue: (p) => p.location?.localized.en.region,
-  },
-  {
-    name: "location_locality",
-    dataType: "TEXT",
-    getValue: (p) => p.location?.localized.en.locality,
   },
   {
     name: "min_elevation",
@@ -149,6 +187,11 @@ const LIFT_SCHEMA: ColumnDefinition<LiftProperties>[] = [
     name: "ref",
     dataType: "TEXT",
     getValue: (p) => p.ref,
+  },
+  {
+    name: "ref_fr_cairn",
+    dataType: "TEXT",
+    getValue: (p) => p.refFRCAIRN,
   },
   {
     name: "description",

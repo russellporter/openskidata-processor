@@ -32,8 +32,8 @@ describe("SkiAreaFormatter", () => {
       },
     };
 
-    expect(formatSkiArea(InputSkiAreaType.OPENSTREETMAP_LANDUSE)(feature))
-      .toMatchInlineSnapshot(`
+    expect(formatSkiArea(InputSkiAreaType.OPENSTREETMAP_LANDUSE)(feature)).
+toMatchInlineSnapshot(`
 {
   "geometry": {
     "coordinates": [
@@ -61,8 +61,8 @@ describe("SkiAreaFormatter", () => {
   "properties": {
     "activities": [],
     "id": "c638251d70817a3d3ad227cce5d353d3abff6abb",
-    "location": null,
     "name": "Ski Area",
+    "places": [],
     "runConvention": "europe",
     "sources": [
       {
@@ -75,7 +75,7 @@ describe("SkiAreaFormatter", () => {
     "websites": [
       "http://example.com",
     ],
-    "wikidata_id": null,
+    "wikidataID": null,
   },
   "type": "Feature",
 }
@@ -158,8 +158,8 @@ describe("SkiAreaFormatter", () => {
       },
     };
 
-    expect(formatSkiArea(InputSkiAreaType.SKIMAP_ORG)(feature))
-      .toMatchInlineSnapshot(`
+    expect(formatSkiArea(InputSkiAreaType.SKIMAP_ORG)(feature)).
+toMatchInlineSnapshot(`
 {
   "geometry": {
     "coordinates": [
@@ -173,8 +173,8 @@ describe("SkiAreaFormatter", () => {
       "downhill",
     ],
     "id": "fde59eba834efdc0f8859c40c4211027d9b6e3e9",
-    "location": null,
     "name": "Ski Area",
+    "places": [],
     "runConvention": "europe",
     "sources": [
       {
@@ -187,7 +187,7 @@ describe("SkiAreaFormatter", () => {
     "websites": [
       "http://example.com",
     ],
-    "wikidata_id": null,
+    "wikidataID": null,
   },
   "type": "Feature",
 }
@@ -204,8 +204,8 @@ describe("SkiAreaFormatter", () => {
       },
     };
 
-    expect(formatSkiArea(InputSkiAreaType.OPENSTREETMAP_SITE)(site))
-      .toMatchInlineSnapshot(`
+    expect(formatSkiArea(InputSkiAreaType.OPENSTREETMAP_SITE)(site)).
+toMatchInlineSnapshot(`
 {
   "geometry": {
     "coordinates": [
@@ -218,8 +218,8 @@ describe("SkiAreaFormatter", () => {
   "properties": {
     "activities": [],
     "id": "2033ab9be8698fcd4794c24e42782bf33c124e8d",
-    "location": null,
     "name": "Wendelstein",
+    "places": [],
     "runConvention": "north_america",
     "sources": [
       {
@@ -230,7 +230,7 @@ describe("SkiAreaFormatter", () => {
     "status": "operating",
     "type": "skiArea",
     "websites": [],
-    "wikidata_id": null,
+    "wikidataID": null,
   },
   "type": "Feature",
 }
