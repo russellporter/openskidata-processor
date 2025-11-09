@@ -573,7 +573,6 @@ describe("GeoPackageWriter", () => {
                 name: "Mountain Resort",
                 activities: [],
                 status: null,
-                places: [],
               },
             },
             {
@@ -585,7 +584,6 @@ describe("GeoPackageWriter", () => {
                 name: "Ski Valley",
                 activities: [],
                 status: null,
-                places: [],
               },
             },
           ],
@@ -630,7 +628,6 @@ describe("GeoPackageWriter", () => {
                 name: "Alpine Center",
                 activities: [],
                 status: null,
-                places: [],
               },
             },
           ],
