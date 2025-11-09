@@ -29,6 +29,7 @@ import { readGeoJSONFeatures } from "../io/GeoJSONReader";
 import { skiAreaStatistics } from "../statistics/SkiAreaStatistics";
 import Geocoder from "../transforms/Geocoder";
 import { getPoints, getPositions } from "../transforms/GeoTransforms";
+import { sortPlaces, uniquePlaces } from "../transforms/PlaceUtils";
 import { getRunDifficultyConvention } from "openskidata-format";
 import { mapAsync } from "../transforms/StreamTransforms";
 import { isPlaceholderGeometry } from "../utils/PlaceholderSiteGeometry";
@@ -206,6 +207,9 @@ export class SkiAreaClusteringService {
       isInSkiAreaPolygon: false,
       isInSkiAreaSite: feature.properties.skiAreas.length > 0,
       liftType: properties.liftType,
+      properties: {
+        places: [],
+      },
     };
   }
 
@@ -265,6 +269,9 @@ export class SkiAreaClusteringService {
       activities: activities,
       difficulty: feature.properties.difficulty,
       viirsPixels: viirsPixels,
+      properties: {
+        places: [],
+      },
     };
   }
 
@@ -378,6 +385,13 @@ export class SkiAreaClusteringService {
     );
 
     await performanceMonitor.withOperation(
+      "Geocode runs and lifts",
+      async () => {
+        await this.geocodeRunsAndLifts(geocoderConfig, postgresConfig);
+      },
+    );
+
+    await performanceMonitor.withOperation(
       "Augment ski areas based on assigned lifts and runs",
       async () => {
         await this.augmentSkiAreasBasedOnAssignedLiftsAndRuns(
@@ -397,7 +411,7 @@ export class SkiAreaClusteringService {
   }
 
   private async assignSkiAreaActivitiesAndGeometryBasedOnMemberObjects(): Promise<void> {
-    const skiAreasCursor = await this.database.getSkiAreas({});
+    const skiAreasCursor = await this.database.getSkiAreas({ useBatching: true });
 
     // Process multiple batches concurrently for better performance
     const concurrentBatches = Math.min(4, require("os").cpus().length);
@@ -464,6 +478,7 @@ export class SkiAreaClusteringService {
     const cursor = await this.database.getSkiAreas({
       onlyPolygons: true,
       onlySource: SourceType.OPENSTREETMAP,
+      useBatching: false, // Load all upfront since we remove objects during iteration
     });
 
     // Process multiple batches concurrently for better performance
@@ -506,6 +521,7 @@ export class SkiAreaClusteringService {
         const otherSkiAreasCursor = await this.database.getSkiAreas({
           onlySource: SourceType.SKIMAP_ORG,
           onlyInPolygon: skiArea.geometry,
+          useBatching: true, // Read-only nested cursor
         });
 
         const otherSkiAreas = await otherSkiAreasCursor.all();
@@ -532,6 +548,7 @@ export class SkiAreaClusteringService {
     const skiAreasCursor = await this.database.getSkiAreas({
       onlyPolygons: options.objects.onlyInPolygon || false,
       onlySource: options.skiArea.onlySource,
+      useBatching: true, // Safe to batch - only calls updateObject/markObjectsAsPartOfSkiArea (don't modify result set)
     });
 
     let skiAreas: SkiAreaObject[];
@@ -783,6 +800,7 @@ export class SkiAreaClusteringService {
   private async mergeSkimapOrgWithOpenStreetMapSkiAreas(): Promise<void> {
     const skiAreasCursor = await this.database.getSkiAreas({
       onlySource: SourceType.SKIMAP_ORG,
+      useBatching: false, // Load all upfront since we call removeObject during iteration
     });
 
     const processedSkimapOrgIds = new Set<string>();
@@ -851,6 +869,7 @@ export class SkiAreaClusteringService {
 
     const otherSkiAreasCursor = await this.database.getSkiAreasByIds(
       Array.from(otherSkiAreaIDs),
+      true, // Batching enabled - read-only operation
     );
     const otherSkiAreas: SkiAreaObject[] = await otherSkiAreasCursor.all();
 
@@ -1031,6 +1050,64 @@ export class SkiAreaClusteringService {
     );
   }
 
+  private async geocodeRunsAndLifts(
+    geocoderConfig: GeocodingServerConfig | null,
+    postgresConfig: PostgresConfig,
+  ): Promise<void> {
+    if (!geocoderConfig) {
+      console.log("Skipping run/lift geocoding - no geocoder config provided");
+      return;
+    }
+
+    const geocoder = new Geocoder(geocoderConfig, postgresConfig);
+    await geocoder.initialize();
+
+    try {
+      // Geocode runs
+      await performanceMonitor.measure("Geocode all runs", async () => {
+        const runsCursor = await this.database.getAllRuns(true);
+        let runs: RunObject[];
+        while ((runs = (await runsCursor.batches?.next()) as RunObject[])) {
+          await this.geocodeObjects(runs, geocoder);
+        }
+      });
+
+      // Geocode lifts
+      await performanceMonitor.measure("Geocode all lifts", async () => {
+        const liftsCursor = await this.database.getAllLifts(true);
+        let lifts: LiftObject[];
+        while ((lifts = (await liftsCursor.batches?.next()) as LiftObject[])) {
+          await this.geocodeObjects(lifts, geocoder);
+        }
+      });
+    } finally {
+      await geocoder.close();
+    }
+  }
+
+  private async geocodeObjects(
+    objects: (RunObject | LiftObject)[],
+    geocoder: Geocoder,
+  ): Promise<void> {
+    await Promise.all(
+      objects.map(async (object) => {
+        try {
+          const places = await geocoder.geocodeGeometry(object.geometry);
+          await this.database.updateObject(object._key, {
+            properties: {
+              ...object.properties,
+              places,
+            },
+          });
+        } catch (error) {
+          console.log(
+            `Failed geocoding ${object.type} ${object._key}: ${error instanceof Error ? error.message : String(error)}`,
+          );
+        }
+      }),
+    );
+  }
+
   private async augmentSkiAreasBasedOnAssignedLiftsAndRuns(
     geocoderConfig: GeocodingServerConfig | null,
     snowCoverConfig: SnowCoverConfig | null,
@@ -1045,7 +1122,9 @@ export class SkiAreaClusteringService {
     }
 
     try {
-      const skiAreasCursor = await this.database.getSkiAreas({});
+      const skiAreasCursor = await this.database.getSkiAreas({
+        useBatching: false, // Load all upfront since we call removeObject during iteration
+      });
 
       // Process multiple batches concurrently for better performance
       const concurrentBatches = Math.min(3, require("os").cpus().length);
@@ -1139,7 +1218,14 @@ export class SkiAreaClusteringService {
       runConvention: getRunDifficultyConvention(skiArea.geometry),
     };
 
-    if (geocoder) {
+    // Collect places from member runs and lifts
+    const memberPlaces = memberObjects.flatMap((obj) => obj.properties.places);
+
+    if (memberPlaces.length > 0) {
+      // Use places from member runs/lifts, deduplicated and sorted
+      updatedProperties.places = sortPlaces(uniquePlaces(memberPlaces));
+    } else if (geocoder) {
+      // Fallback to centroid-based geocoding if no member places exist
       const coordinates = centroid(skiArea.geometry).geometry.coordinates;
       try {
         const place = await geocoder.geocode(coordinates);
@@ -1160,6 +1246,7 @@ export class SkiAreaClusteringService {
   private async removeSkiAreasWithoutGeometry(): Promise<void> {
     const cursor = await this.database.getSkiAreas({
       onlySource: SourceType.OPENSTREETMAP,
+      useBatching: false, // Load all upfront since we call removeObject during iteration
     });
 
     let skiAreas: SkiAreaObject[];

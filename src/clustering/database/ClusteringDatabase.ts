@@ -2,6 +2,7 @@ import { FeatureType, SkiAreaActivity, SourceType } from "openskidata-format";
 import { SnowCoverConfig } from "../../Config";
 import Geocoder from "../../transforms/Geocoder";
 import {
+  LiftObject,
   MapObject,
   MapObjectType,
   RunObject,
@@ -54,12 +55,26 @@ export interface ClusteringDatabase {
   /**
    * Get ski areas based on filtering criteria
    */
-  getSkiAreas(options: GetSkiAreasOptions): Promise<SkiAreasCursor>;
+  getSkiAreas(options: GetSkiAreasOptions): Promise<Cursor<SkiAreaObject>>;
 
   /**
    * Get ski areas by their IDs
+   * @param ids - Array of ski area IDs to retrieve
+   * @param useBatching - When false, loads all results into memory upfront. When true, streams in batches.
    */
-  getSkiAreasByIds(ids: string[]): Promise<SkiAreasCursor>;
+  getSkiAreasByIds(ids: string[], useBatching: boolean): Promise<Cursor<SkiAreaObject>>;
+
+  /**
+   * Get all runs in the database
+   * @param useBatching - When false, loads all results into memory upfront. When true, streams in batches.
+   */
+  getAllRuns(useBatching: boolean): Promise<Cursor<RunObject>>;
+
+  /**
+   * Get all lifts in the database
+   * @param useBatching - When false, loads all results into memory upfront. When true, streams in batches.
+   */
+  getAllLifts(useBatching: boolean): Promise<Cursor<LiftObject>>;
 
   /**
    * Find objects near a given geometry
@@ -116,6 +131,12 @@ export interface GetSkiAreasOptions {
   onlySource?: SourceType;
   onlyPolygons?: boolean;
   onlyInPolygon?: GeoJSON.Polygon | GeoJSON.MultiPolygon;
+  /**
+   * When false, loads all results into memory upfront for safe iteration when modifying the database.
+   * When true, streams results in batches for memory efficiency.
+   * Set to false if you plan to modify the database during cursor iteration.
+   */
+  useBatching: boolean;
 }
 
 export interface SearchContext {
@@ -129,11 +150,11 @@ export interface SearchContext {
   bufferDistanceKm?: number;
 }
 
-export interface SkiAreasCursor {
-  next(): Promise<SkiAreaObject | null>;
-  all(): Promise<SkiAreaObject[]>;
+export interface Cursor<T> {
+  next(): Promise<T | null>;
+  all(): Promise<T[]>;
   batches?: {
-    next(): Promise<SkiAreaObject[] | null>;
+    next(): Promise<T[] | null>;
   };
 }
 

@@ -1,4 +1,5 @@
-import { Place, SkiAreaProperties, SourceType } from "openskidata-format";
+import { SkiAreaProperties, SourceType } from "openskidata-format";
+import { uniquePlaces } from "../transforms/PlaceUtils";
 import uniquedSources from "../transforms/UniqueSources";
 import mergedAndUniqued from "../utils/mergedAndUniqued";
 import { VIIRSPixel } from "../utils/VIIRSPixelExtractor";
@@ -76,26 +77,6 @@ function mergeSkiAreaProperties(
     statistics: primarySkiArea.statistics,
     places: uniquePlaces([...primarySkiArea.places, ...otherSkiArea.places]),
   };
-}
-
-function uniquePlaces(places: Place[]): Place[] {
-  const seen = new Set<string>();
-
-  return places.filter((place) => {
-    // Create a unique key from the place's identifying properties
-    const key = JSON.stringify({
-      iso3166_1Alpha2: place.iso3166_1Alpha2,
-      iso3166_2: place.iso3166_2,
-      locality: place.localized.en.locality,
-    });
-
-    if (seen.has(key)) {
-      return false;
-    }
-
-    seen.add(key);
-    return true;
-  });
 }
 
 function mergedWebsites(...skiAreas: SkiAreaProperties[]): string[] {

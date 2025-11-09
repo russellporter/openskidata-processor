@@ -1,6 +1,7 @@
 import {
   LiftGeometry,
   LiftType,
+  Place,
   RunDifficulty,
   SkiAreaActivity,
   SkiAreaProperties,
@@ -26,6 +27,9 @@ export interface DraftRun extends BaseDraftMapObject {
   isInSkiAreaSite: boolean;
   difficulty: RunDifficulty | null;
   viirsPixels: VIIRSPixel[];
+  properties: {
+    places: Place[];
+  };
 }
 
 export type RunGeometry =
@@ -40,6 +44,9 @@ export interface DraftLift extends BaseDraftMapObject {
   liftType: LiftType;
   isInSkiAreaPolygon: boolean;
   isInSkiAreaSite: boolean;
+  properties: {
+    places: Place[];
+  };
 }
 
 export interface DraftSkiArea extends BaseDraftMapObject {

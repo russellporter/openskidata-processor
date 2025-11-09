@@ -3,8 +3,11 @@ import DataLoader from "dataloader";
 import * as iso3166_2 from "iso3166-2-db";
 import { Region } from "iso3166-2-db";
 import * as ngeohash from "ngeohash";
+import { Place } from "openskidata-format";
 import * as Config from "../Config";
 import { PostgresCache } from "../utils/PostgresCache";
+import { extractPointsAlongGeometry } from "./GeoTransforms";
+import { sortPlaces, uniquePlaces } from "./PlaceUtils";
 
 export type PhotonGeocode = {
   url: string;
@@ -102,6 +105,35 @@ export default class Geocoder {
   geocode = async (position: GeoJSON.Position): Promise<Geocode | null> => {
     const rawGeocode = await this.rawGeocode(position);
     return this.enhance(rawGeocode);
+  };
+
+  /**
+   * Geocodes a geometry by extracting points along it at 1km intervals.
+   * Returns deduplicated and sorted array of places.
+   */
+  geocodeGeometry = async (
+    geometry:
+      | GeoJSON.LineString
+      | GeoJSON.MultiLineString
+      | GeoJSON.Polygon,
+  ): Promise<Place[]> => {
+    // Extract points along the geometry at 1km intervals
+    const points = extractPointsAlongGeometry(geometry, 1);
+
+    // Geocode all points in parallel
+    const geocodeResults = await Promise.all(
+      points.map((position) => this.geocode(position)),
+    );
+
+    // Filter out null results and convert to Place[]
+    const places = geocodeResults.filter(
+      (result): result is Place => result !== null,
+    );
+
+    // Deduplicate and sort
+    const uniqueAndSortedPlaces = sortPlaces(uniquePlaces(places));
+
+    return uniqueAndSortedPlaces;
   };
 
   rawGeocode = async (position: GeoJSON.Position): Promise<RawGeocode> => {

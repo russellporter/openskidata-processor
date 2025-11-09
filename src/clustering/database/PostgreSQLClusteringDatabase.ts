@@ -2,6 +2,7 @@ import { Pool, PoolClient } from "pg";
 import { PostgresConfig } from "../../Config";
 import { getPostgresPoolConfig } from "../../utils/getPostgresPoolConfig";
 import {
+  LiftObject,
   MapObject,
   MapObjectType,
   RunObject,
@@ -9,9 +10,9 @@ import {
 } from "../MapObject";
 import {
   ClusteringDatabase,
+  Cursor,
   GetSkiAreasOptions,
   SearchContext,
-  SkiAreasCursor,
 } from "./ClusteringDatabase";
 import { performanceMonitor } from "./PerformanceMonitor";
 
@@ -352,18 +353,6 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
     return { setParts, values };
   }
 
-  /**
-   * Checks if an error is a PostgreSQL geometry/topology error
-   */
-  private isPostgresGeometryError(error: any): boolean {
-    return (
-      error.message?.includes("TopologyException") ||
-      error.message?.includes("side location conflict") ||
-      error.message?.includes("invalid geometry") ||
-      error.message?.includes("geometry could not be converted") ||
-      error.code === "42804" // PostGIS geometry error code
-    );
-  }
 
   private async enablePostGIS(): Promise<void> {
     const pool = this.ensureInitialized();
@@ -556,8 +545,8 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
     });
   }
 
-  async getSkiAreas(options: GetSkiAreasOptions): Promise<SkiAreasCursor> {
-    this.ensureInitialized();
+  async getSkiAreas(options: GetSkiAreasOptions): Promise<Cursor<SkiAreaObject>> {
+    const pool = this.ensureInitialized();
 
     let query = "SELECT * FROM objects WHERE type = 'SKI_AREA'";
     const params: any[] = [];
@@ -578,43 +567,25 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
       params.push(polygonGeoJSON);
     }
 
-    try {
-      const rows = await this.executeQuery<any[]>(query, params);
-      const skiAreas = rows.map(this.rowToMapObject) as SkiAreaObject[];
+    // Use large batch size for non-batching mode to load everything upfront
+    const batchSize = options.useBatching
+      ? PostgreSQLClusteringDatabase.DEFAULT_BATCH_SIZE
+      : Number.MAX_SAFE_INTEGER;
 
-      return new PostgreSQLSkiAreasCursor(
-        skiAreas,
-        PostgreSQLClusteringDatabase.DEFAULT_BATCH_SIZE,
-      );
-    } catch (error: any) {
-      // Check if this is a geometry/topology error
-      if (this.isPostgresGeometryError(error)) {
-        console.warn(
-          `Geometry error in getSkiAreas query, returning empty result:`,
-          error.message,
-          options.onlyInPolygon
-            ? "in polygon: " + JSON.stringify(options.onlyInPolygon)
-            : "",
-        );
-        return new PostgreSQLSkiAreasCursor(
-          [],
-          PostgreSQLClusteringDatabase.DEFAULT_BATCH_SIZE,
-        );
-      }
-      // Re-throw all other errors
-      throw error;
-    }
+    return new PostgreSQLCursor<SkiAreaObject>(
+      pool,
+      query,
+      params,
+      (row) => this.rowToMapObject(row) as SkiAreaObject,
+      batchSize,
+    );
   }
 
-  async getSkiAreasByIds(ids: string[]): Promise<SkiAreasCursor> {
-    this.ensureInitialized();
+  async getSkiAreasByIds(ids: string[], useBatching: boolean): Promise<Cursor<SkiAreaObject>> {
+    const pool = this.ensureInitialized();
 
-    // Handle empty array case to avoid SQL syntax error
     if (ids.length === 0) {
-      return new PostgreSQLSkiAreasCursor(
-        [],
-        PostgreSQLClusteringDatabase.DEFAULT_BATCH_SIZE,
-      );
+      return new EmptyCursor<SkiAreaObject>();
     }
 
     const placeholders = ids
@@ -622,12 +593,50 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
       .join(",");
     const query = `SELECT * FROM objects WHERE type = 'SKI_AREA' AND key IN (${placeholders})`;
 
-    const rows = await this.executeQuery<any[]>(query, ids);
-    const skiAreas = rows.map(this.rowToMapObject) as SkiAreaObject[];
+    const batchSize = useBatching
+      ? PostgreSQLClusteringDatabase.DEFAULT_BATCH_SIZE
+      : Number.MAX_SAFE_INTEGER;
 
-    return new PostgreSQLSkiAreasCursor(
-      skiAreas,
-      PostgreSQLClusteringDatabase.DEFAULT_BATCH_SIZE,
+    return new PostgreSQLCursor<SkiAreaObject>(
+      pool,
+      query,
+      ids,
+      (row) => this.rowToMapObject(row) as SkiAreaObject,
+      batchSize,
+    );
+  }
+
+  async getAllRuns(useBatching: boolean): Promise<Cursor<RunObject>> {
+    const pool = this.ensureInitialized();
+
+    const query = "SELECT * FROM objects WHERE type = 'RUN'";
+    const batchSize = useBatching
+      ? PostgreSQLClusteringDatabase.DEFAULT_BATCH_SIZE
+      : Number.MAX_SAFE_INTEGER;
+
+    return new PostgreSQLCursor<RunObject>(
+      pool,
+      query,
+      [],
+      (row) => this.rowToMapObject(row) as RunObject,
+      batchSize,
+    );
+  }
+
+  async getAllLifts(useBatching: boolean): Promise<Cursor<LiftObject>> {
+    const pool = this.ensureInitialized();
+
+    const query = "SELECT * FROM objects WHERE type = 'LIFT'";
+    const batchSize = useBatching
+      ? PostgreSQLClusteringDatabase.DEFAULT_BATCH_SIZE
+      : Number.MAX_SAFE_INTEGER;
+
+    return new PostgreSQLCursor<LiftObject>(
+      pool,
+      query,
+      [],
+      (row) => this.rowToMapObject(row) as LiftObject,
+      batchSize,
     );
   }
 
@@ -715,26 +724,12 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
     return performanceMonitor.measure(
       "Find nearby objects",
       async () => {
-        try {
-          const rows = await this.executeQuery<any[]>(query, params);
-          const allFound = rows.map(this.rowToMapObject);
-          allFound.forEach((object) =>
-            context.alreadyVisited.push(object._key),
-          );
-          return allFound;
-        } catch (error: any) {
-          // Check if this is a geometry/topology error
-          if (this.isPostgresGeometryError(error)) {
-            console.warn(
-              `Geometry error in spatial query for id: ${context.id}, skipping:`,
-              error.message,
-              geometryGeoJSON,
-            );
-            return [];
-          }
-          // Re-throw all other errors
-          throw error;
-        }
+        const rows = await this.executeQuery<any[]>(query, params);
+        const allFound = rows.map(this.rowToMapObject);
+        allFound.forEach((object) =>
+          context.alreadyVisited.push(object._key),
+        );
+        return allFound;
       },
       () => ({
         poolStats: { idle: this.pool?.idleCount, total: this.pool?.totalCount },
@@ -878,12 +873,14 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
         row.geometry_with_elevations || row.geometry;
       baseObject.liftType = row.lift_type;
       baseObject.isInSkiAreaSite = Boolean(row.is_in_ski_area_site);
+      baseObject.properties = row.properties || { places: [] };
     } else if (row.type === MapObjectType.Run) {
       baseObject.geometryWithElevations =
         row.geometry_with_elevations || row.geometry;
       baseObject.difficulty = row.difficulty;
       baseObject.viirsPixels = row.viirs_pixels || [];
       baseObject.isInSkiAreaSite = Boolean(row.is_in_ski_area_site);
+      baseObject.properties = row.properties || { places: [] };
     }
 
     return baseObject as MapObject;
@@ -952,39 +949,131 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
   }
 }
 
-class PostgreSQLSkiAreasCursor implements SkiAreasCursor {
-  private index = 0;
+/**
+ * Empty cursor that returns no results
+ */
+class EmptyCursor<T> implements Cursor<T> {
+  async next(): Promise<T | null> {
+    return null;
+  }
+
+  async all(): Promise<T[]> {
+    return [];
+  }
+
+  batches = {
+    next: async (): Promise<T[] | null> => {
+      return null;
+    },
+  };
+}
+
+/**
+ * Generic cursor that fetches data from PostgreSQL in batches to minimize memory usage.
+ * Instead of loading all results upfront, this cursor fetches data on-demand using LIMIT/OFFSET.
+ */
+class PostgreSQLCursor<T extends MapObject> implements Cursor<T> {
+  private offset = 0;
   private readonly batchSize: number;
+  private currentBatch: T[] = [];
+  private batchIndex = 0;
+  private isExhausted = false;
 
   constructor(
-    private skiAreas: SkiAreaObject[],
+    private pool: Pool,
+    private query: string,
+    private params: any[],
+    private rowMapper: (row: any) => T,
     batchSize = 1000,
   ) {
     this.batchSize = batchSize;
   }
 
-  async next(): Promise<SkiAreaObject | null> {
-    if (this.index >= this.skiAreas.length) {
+  async next(): Promise<T | null> {
+    // If we have items in the current batch, return the next one
+    if (this.batchIndex < this.currentBatch.length) {
+      return this.currentBatch[this.batchIndex++];
+    }
+
+    // If we've exhausted all results, return null
+    if (this.isExhausted) {
       return null;
     }
-    return this.skiAreas[this.index++];
+
+    // Fetch the next batch from the database
+    await this.fetchNextBatch();
+
+    // After fetching, check if we have results
+    if (this.currentBatch.length === 0) {
+      this.isExhausted = true;
+      return null;
+    }
+
+    // Return the first item from the newly fetched batch
+    this.batchIndex = 1;
+    return this.currentBatch[0];
   }
 
-  async all(): Promise<SkiAreaObject[]> {
-    return this.skiAreas;
+  async all(): Promise<T[]> {
+    const results: T[] = [];
+    let item: T | null;
+    while ((item = await this.next()) !== null) {
+      results.push(item);
+    }
+    return results;
   }
 
   batches = {
-    next: async (): Promise<SkiAreaObject[] | null> => {
-      if (this.index >= this.skiAreas.length) {
+    next: async (): Promise<T[] | null> => {
+      // If we have a partial batch, return it
+      if (this.batchIndex < this.currentBatch.length) {
+        const remaining = this.currentBatch.slice(this.batchIndex);
+        this.batchIndex = this.currentBatch.length;
+        return remaining.length > 0 ? remaining : null;
+      }
+
+      // If we've exhausted all results, return null
+      if (this.isExhausted) {
         return null;
       }
-      const batch = this.skiAreas.slice(
-        this.index,
-        this.index + this.batchSize,
-      );
-      this.index += batch.length;
-      return batch;
+
+      // Fetch the next batch from the database
+      await this.fetchNextBatch();
+
+      // After fetching, check if we have results
+      if (this.currentBatch.length === 0) {
+        this.isExhausted = true;
+        return null;
+      }
+
+      // Return the entire batch and mark it as consumed
+      this.batchIndex = this.currentBatch.length;
+      return this.currentBatch;
     },
   };
+
+  private async fetchNextBatch(): Promise<void> {
+    const client = await this.pool.connect();
+    try {
+      // Add LIMIT and OFFSET to the query
+      const paginatedQuery = `${this.query} LIMIT $${this.params.length + 1} OFFSET $${this.params.length + 2}`;
+      const paginatedParams = [
+        ...this.params,
+        this.batchSize,
+        this.offset,
+      ];
+
+      const result = await client.query(paginatedQuery, paginatedParams);
+      this.currentBatch = result.rows.map(this.rowMapper);
+      this.batchIndex = 0;
+      this.offset += result.rows.length;
+
+      // If we got fewer results than requested, we've reached the end
+      if (result.rows.length < this.batchSize) {
+        this.isExhausted = true;
+      }
+    } finally {
+      client.release();
+    }
+  }
 }

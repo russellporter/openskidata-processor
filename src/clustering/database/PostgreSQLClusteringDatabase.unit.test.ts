@@ -53,7 +53,7 @@ describe("PostgreSQLClusteringDatabase", () => {
 
     await database.saveObject(skiArea);
 
-    const cursor = await database.getSkiAreas({});
+    const cursor = await database.getSkiAreas({ useBatching: true });
     const skiAreas = await cursor.all();
 
     expect(skiAreas).toHaveLength(1);
@@ -99,7 +99,7 @@ describe("PostgreSQLClusteringDatabase", () => {
 
     await database.saveObjects(objects);
 
-    const cursor = await database.getSkiAreas({});
+    const cursor = await database.getSkiAreas({ useBatching: true });
     const skiAreas = await cursor.all();
 
     expect(skiAreas).toHaveLength(1);

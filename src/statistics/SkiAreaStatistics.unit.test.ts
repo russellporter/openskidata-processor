@@ -30,6 +30,9 @@ describe("SkiAreaStatistics", () => {
       isInSkiAreaPolygon: false,
       isInSkiAreaSite: false,
       viirsPixels: [],
+      properties: {
+        places: [],
+      },
     };
 
     const statistics = await skiAreaStatistics(
@@ -83,6 +86,9 @@ describe("SkiAreaStatistics", () => {
       skiAreas: [],
       isInSkiAreaPolygon: false,
       isInSkiAreaSite: false,
+      properties: {
+        places: [],
+      },
     };
 
     const statistics = await skiAreaStatistics(
@@ -142,6 +148,9 @@ describe("SkiAreaStatistics", () => {
       isInSkiAreaPolygon: false,
       isInSkiAreaSite: false,
       viirsPixels: [],
+      properties: {
+        places: [],
+      },
     };
 
     const statistics = await skiAreaStatistics(
