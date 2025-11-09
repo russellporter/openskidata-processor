@@ -120,9 +120,10 @@ export default class Geocoder {
     // Extract points along the geometry at 1km intervals
     const points = extractPointsAlongGeometry(geometry, 1);
 
-    // Geocode all points in parallel
-    const geocodeResults = await Promise.all(
-      points.map((position) => this.geocode(position)),
+    // Geocode all points with concurrency limit
+    const geocodeResults = await this.geocodeWithConcurrencyLimit(
+      points,
+      10,
     );
 
     // Filter out null results and convert to Place[]
@@ -135,6 +136,26 @@ export default class Geocoder {
 
     return uniqueAndSortedPlaces;
   };
+
+  /**
+   * Geocodes multiple positions with a concurrency limit to avoid overwhelming the API.
+   */
+  private async geocodeWithConcurrencyLimit(
+    positions: GeoJSON.Position[],
+    maxConcurrent: number,
+  ): Promise<(Geocode | null)[]> {
+    const results: (Geocode | null)[] = [];
+
+    for (let i = 0; i < positions.length; i += maxConcurrent) {
+      const batch = positions.slice(i, i + maxConcurrent);
+      const batchResults = await Promise.all(
+        batch.map((position) => this.geocode(position)),
+      );
+      results.push(...batchResults);
+    }
+
+    return results;
+  }
 
   rawGeocode = async (position: GeoJSON.Position): Promise<RawGeocode> => {
     const geohash = ngeohash.encode(position[1], position[0], geocodePrecision);
@@ -180,7 +201,7 @@ export default class Geocoder {
 
       let url: string;
       if (this.geocodingType === 'geocode-api') {
-        url = `${this.config.url}?lon=${point.longitude}&lat=${point.latitude}&fields=id,name,placetype,iso_code,name_eng`;
+        url = `${this.config.url}?lon=${point.longitude}&lat=${point.latitude}&fields=id,name,placetype,iso_code,name_eng&placetype=country,region,locality`;
       } else {
         url = `${this.config.url}?lon=${point.longitude}&lat=${point.latitude}&lang=en&limit=1&radius=5`;
       }
