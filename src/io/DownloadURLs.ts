@@ -20,14 +20,13 @@ export const liftsDownloadConfig: OSMDownloadConfig = {
     >>;
     way(r)[railway]->.siterailways;
     way[railway=funicular]->.funiculars;
-    (
-      way[aerialway];
-      way[disused:aerialway];
-      way[abandoned:aerialway];
-      way[proposed:aerialway];
-      way[planned:aerialway];
-      way[construction:aerialway];
-    )->.aerialways;
+    way[aerialway];
+    way["disused:aerialway"];
+    way["abandoned:aerialway"];
+    way["proposed:aerialway"];
+    way["planned:aerialway"];
+    way["construction:aerialway"];
+    (._;)->.aerialways;
     ((.aerialways; .siterailways; .funiculars;); >;);
     out;
     `,
@@ -36,14 +35,12 @@ export const liftsDownloadConfig: OSMDownloadConfig = {
 export const skiAreasDownloadConfig: OSMDownloadConfig = {
   query: (bbox) => `
     [out:json][timeout:1800]${overpassBBoxQuery(bbox)};
-    (
-      wr[landuse=winter_sports];
-      wr[disused:landuse=winter_sports];
-      wr[abandoned:landuse=winter_sports];
-      wr[proposed:landuse=winter_sports];
-      wr[planned:landuse=winter_sports];
-      wr[construction:landuse=winter_sports];
-    );
+    wr[landuse=winter_sports];
+    wr["disused:landuse"=winter_sports];
+    wr["abandoned:landuse"=winter_sports];
+    wr["proposed:landuse"=winter_sports];
+    wr["planned:landuse"=winter_sports];
+    wr["construction:landuse"=winter_sports];
     (._; >;);
     out;
     `,
