@@ -64,7 +64,8 @@ export default class Geocoder {
   private geocodingType: Config.GeocodingServerType;
   private loader: DataLoader<string, RawGeocode>;
   private remoteErrorCount = 0;
-  private maxRemoteErrors = 10;
+  private maxRemoteErrors = 100;
+  private retryDelayMs = 2000;
   private mutex = new Mutex();
   private diskCache: PostgresCache<RawGeocode>;
 
@@ -73,11 +74,11 @@ export default class Geocoder {
     postgresConfig: Config.PostgresConfig,
   ) {
     this.config = config;
-    this.geocodingType = config.type || 'photon';
+    this.geocodingType = config.type || "photon";
 
     // Initialize PostgreSQL disk cache with type-specific table name
     // Replace hyphens with underscores for PostgreSQL compatibility
-    const sanitizedType = this.geocodingType.replace(/-/g, '_');
+    const sanitizedType = this.geocodingType.replace(/-/g, "_");
     this.diskCache = new PostgresCache<RawGeocode>(
       `geocoding_${sanitizedType}`,
       postgresConfig,
@@ -112,19 +113,13 @@ export default class Geocoder {
    * Returns deduplicated and sorted array of places.
    */
   geocodeGeometry = async (
-    geometry:
-      | GeoJSON.LineString
-      | GeoJSON.MultiLineString
-      | GeoJSON.Polygon,
+    geometry: GeoJSON.LineString | GeoJSON.MultiLineString | GeoJSON.Polygon,
   ): Promise<Place[]> => {
     // Extract points along the geometry at 1km intervals
     const points = extractPointsAlongGeometry(geometry, 1);
 
     // Geocode all points with concurrency limit
-    const geocodeResults = await this.geocodeWithConcurrencyLimit(
-      points,
-      10,
-    );
+    const geocodeResults = await this.geocodeWithConcurrencyLimit(points, 10);
 
     // Filter out null results and convert to Place[]
     const places = geocodeResults.filter(
@@ -180,12 +175,30 @@ export default class Geocoder {
     }
 
     try {
-      return await this.rawGeocodeRemote(geohash);
+      const result = await this.rawGeocodeRemoteWithRetry(geohash);
+      this.remoteErrorCount = 0;
+      return result;
     } catch (error) {
       this.remoteErrorCount++;
       throw error;
     }
   };
+
+  private rawGeocodeRemoteWithRetry = async (
+    geohash: string,
+  ): Promise<RawGeocode> => {
+    try {
+      return await this.rawGeocodeRemote(geohash);
+    } catch (error) {
+      console.log(`Geocoding failed, retrying in ${this.retryDelayMs}ms...`);
+      await this.delay(this.retryDelayMs);
+      return await this.rawGeocodeRemote(geohash);
+    }
+  };
+
+  private delay(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
 
   private rawGeocodeLocal = async (
     geohash: string,
@@ -193,14 +206,12 @@ export default class Geocoder {
     return await this.diskCache.get(geohash);
   };
 
-  private rawGeocodeRemote = async (
-    geohash: string,
-  ): Promise<RawGeocode> => {
+  private rawGeocodeRemote = async (geohash: string): Promise<RawGeocode> => {
     return this.mutex.runExclusive(async () => {
       const point = ngeohash.decode(geohash);
 
       let url: string;
-      if (this.geocodingType === 'geocode-api') {
+      if (this.geocodingType === "geocode-api") {
         url = `${this.config.url}?lon=${point.longitude}&lat=${point.latitude}&fields=id,name,placetype,iso_code,name_eng&placetype=country,region,locality`;
       } else {
         url = `${this.config.url}?lon=${point.longitude}&lat=${point.latitude}&lang=en&limit=1&radius=5`;
@@ -311,7 +322,9 @@ export default class Geocoder {
     };
   };
 
-  private enhanceWhosOnFirst = (rawGeocode: GeocodeApiResponse): Geocode | null => {
+  private enhanceWhosOnFirst = (
+    rawGeocode: GeocodeApiResponse,
+  ): Geocode | null => {
     const geometries = rawGeocode.response.geometries;
 
     if (geometries.length === 0) {
@@ -319,9 +332,9 @@ export default class Geocoder {
     }
 
     // Find country, region, and locality from geometries
-    const countryGeometry = geometries.find(g => g.placetype === 'country');
-    const regionGeometry = geometries.find(g => g.placetype === 'region');
-    const localityGeometry = geometries.find(g => g.placetype === 'locality');
+    const countryGeometry = geometries.find((g) => g.placetype === "country");
+    const regionGeometry = geometries.find((g) => g.placetype === "region");
+    const localityGeometry = geometries.find((g) => g.placetype === "locality");
 
     // Must have at least a country
     if (!countryGeometry) {
@@ -344,14 +357,15 @@ export default class Geocoder {
         en: {
           country: countryGeometry.name_eng || countryGeometry.name,
           region: regionGeometry?.name_eng || regionGeometry?.name || null,
-          locality: localityGeometry?.name_eng || localityGeometry?.name || null,
+          locality:
+            localityGeometry?.name_eng || localityGeometry?.name || null,
         },
       },
     };
   };
 
   private enhance = (rawGeocode: RawGeocode): Geocode | null => {
-    if (this.geocodingType === 'geocode-api') {
+    if (this.geocodingType === "geocode-api") {
       return this.enhanceWhosOnFirst(rawGeocode as GeocodeApiResponse);
     } else {
       return this.enhancePhoton(rawGeocode as PhotonGeocode);
