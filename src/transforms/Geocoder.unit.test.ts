@@ -478,7 +478,7 @@ function mockPhotonGeocode(
 function mockGeocodeApiHTTPResponse(geocode: GeocodeApiResponse) {
   nock(geocoderURL)
     .get(
-      "/reverse?lon=-0.0054931640625&lat=-0.00274658203125&fields=id,name,placetype,iso_code,name_eng",
+      "/reverse?lon=-0.0054931640625&lat=-0.00274658203125&fields=id,name,placetype,iso_code,name_eng&placetype=country,region,locality",
     )
     .reply(200, () => {
       return geocode.response;
