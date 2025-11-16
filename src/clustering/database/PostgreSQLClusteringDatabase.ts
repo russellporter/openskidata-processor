@@ -990,13 +990,15 @@ export class PostgreSQLCursor<T extends MapObject> implements Cursor<T> {
       ];
 
       const result = await client.query(paginatedQuery, paginatedParams);
-      const batch = result.rows.map(this.rowMapper);
+
+      // Update offset BEFORE mapping to prevent corruption if rowMapper throws
       this.offset += result.rows.length;
 
       if (result.rows.length < this.batchSize) {
         this.isExhausted = true;
       }
 
+      const batch = result.rows.map(this.rowMapper);
       return batch.length > 0 ? batch : null;
     } finally {
       client.release();
