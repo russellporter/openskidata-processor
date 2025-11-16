@@ -19,12 +19,12 @@ const SPECIFIC_FILES = {
   csv: ["csv/lifts.csv", "csv/runs.csv", "csv/ski_areas.csv"],
 };
 
-function mergeGeoPackageWithSQLite(
+async function mergeGeoPackageWithSQLite(
   targetPath: string,
   sourcePath: string,
-): void {
+): Promise<void> {
   const merger = new GeoPackageMerger();
-  const result = merger.mergeGeoPackages(targetPath, sourcePath);
+  const result = await merger.mergeGeoPackages(targetPath, sourcePath);
 
   console.log(
     `  Found ${result.tablesProcessed} data tables to merge (excluding metadata)`,
@@ -457,7 +457,7 @@ async function mergeGpkgFiles(
       } else {
         // Subsequent files - merge using SQLite directly
         try {
-          mergeGeoPackageWithSQLite(outputPath, inputPath);
+          await mergeGeoPackageWithSQLite(outputPath, inputPath);
         } catch (error) {
           console.error(`Failed to merge GeoPackage from ${inputPath}:`, error);
           throw error;

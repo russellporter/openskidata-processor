@@ -1,4 +1,5 @@
 import Database from "better-sqlite3";
+import { GeoPackageAPI, RTreeIndex } from "@ngageoint/geopackage";
 
 export interface MergeResult {
   tablesProcessed: number;
@@ -31,9 +32,21 @@ interface GpkgGeometryColumnsRow {
 export class GeoPackageMerger {
   private readonly BATCH_SIZE = 1000;
 
-  mergeGeoPackages(targetPath: string, sourcePath: string): MergeResult {
-    const targetDb = new Database(targetPath);
-    const sourceDb = new Database(sourcePath, { readonly: true });
+  async mergeGeoPackages(
+    targetPath: string,
+    sourcePath: string,
+  ): Promise<MergeResult> {
+    const targetGp = await GeoPackageAPI.open(targetPath);
+    const sourceGp = await GeoPackageAPI.open(sourcePath);
+
+    // Register spatial functions needed for RTree triggers
+    // RTreeIndex constructor calls createAllFunctions() automatically
+    new RTreeIndex(targetGp, null as any);
+    new RTreeIndex(sourceGp, null as any);
+
+    // Get the underlying better-sqlite3 Database objects
+    const targetDb = (targetGp.connection.adapter as any).db as Database.Database;
+    const sourceDb = (sourceGp.connection.adapter as any).db as Database.Database;
 
     // Enable performance optimizations
     this.optimizeDatabase(targetDb);
@@ -75,8 +88,8 @@ export class GeoPackageMerger {
         }
       }
     } finally {
-      targetDb.close();
-      sourceDb.close();
+      await targetGp.close();
+      await sourceGp.close();
     }
 
     return result;
