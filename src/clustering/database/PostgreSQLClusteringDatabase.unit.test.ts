@@ -1,4 +1,4 @@
-import { PostgreSQLClusteringDatabase } from "./PostgreSQLClusteringDatabase";
+import { PostgreSQLClusteringDatabase, PostgreSQLCursor } from "./PostgreSQLClusteringDatabase";
 import { MapObjectType } from "../MapObject";
 import { SkiAreaActivity } from "openskidata-format";
 import { getPostgresTestConfig } from "../../Config";
@@ -162,5 +162,35 @@ describe("PostgreSQLClusteringDatabase", () => {
     // Should return null now (no more unassigned runs)
     const noMoreRuns = await database.getNextUnassignedRun();
     expect(noMoreRuns).toBeNull();
+  });
+
+  it("should enforce ORDER BY when batching is enabled", async () => {
+    const pool = database["pool"];
+    if (!pool) throw new Error("Pool not initialized");
+
+    expect(() => {
+      new PostgreSQLCursor(
+        pool,
+        "SELECT * FROM objects WHERE type = 'RUN'",
+        [],
+        (row: any) => row as any,
+        1000
+      );
+    }).toThrow(/ORDER BY/);
+  });
+
+  it("should not enforce ORDER BY when batching is disabled", async () => {
+    const pool = database["pool"];
+    if (!pool) throw new Error("Pool not initialized");
+
+    expect(() => {
+      new PostgreSQLCursor(
+        pool,
+        "SELECT * FROM objects WHERE type = 'RUN'",
+        [],
+        (row: any) => row as any,
+        Number.MAX_SAFE_INTEGER
+      );
+    }).not.toThrow();
   });
 });

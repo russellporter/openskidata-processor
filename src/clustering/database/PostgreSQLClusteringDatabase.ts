@@ -567,6 +567,9 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
       params.push(polygonGeoJSON);
     }
 
+    // Add ORDER BY for deterministic pagination
+    query += " ORDER BY key";
+
     // Use large batch size for non-batching mode to load everything upfront
     const batchSize = options.useBatching
       ? PostgreSQLClusteringDatabase.DEFAULT_BATCH_SIZE
@@ -591,7 +594,7 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
     const placeholders = ids
       .map((_: string, i: number) => `$${i + 1}`)
       .join(",");
-    const query = `SELECT * FROM objects WHERE type = 'SKI_AREA' AND key IN (${placeholders})`;
+    const query = `SELECT * FROM objects WHERE type = 'SKI_AREA' AND key IN (${placeholders}) ORDER BY key`;
 
     const batchSize = useBatching
       ? PostgreSQLClusteringDatabase.DEFAULT_BATCH_SIZE
@@ -609,7 +612,7 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
   async getAllRuns(useBatching: boolean): Promise<Cursor<RunObject>> {
     const pool = this.ensureInitialized();
 
-    const query = "SELECT * FROM objects WHERE type = 'RUN'";
+    const query = "SELECT * FROM objects WHERE type = 'RUN' ORDER BY key";
     const batchSize = useBatching
       ? PostgreSQLClusteringDatabase.DEFAULT_BATCH_SIZE
       : Number.MAX_SAFE_INTEGER;
@@ -626,7 +629,7 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
   async getAllLifts(useBatching: boolean): Promise<Cursor<LiftObject>> {
     const pool = this.ensureInitialized();
 
-    const query = "SELECT * FROM objects WHERE type = 'LIFT'";
+    const query = "SELECT * FROM objects WHERE type = 'LIFT' ORDER BY key";
     const batchSize = useBatching
       ? PostgreSQLClusteringDatabase.DEFAULT_BATCH_SIZE
       : Number.MAX_SAFE_INTEGER;
@@ -946,7 +949,7 @@ class EmptyCursor<T> implements Cursor<T> {
  * Generic cursor that fetches data from PostgreSQL in batches to minimize memory usage.
  * Instead of loading all results upfront, this cursor fetches data on-demand using LIMIT/OFFSET.
  */
-class PostgreSQLCursor<T extends MapObject> implements Cursor<T> {
+export class PostgreSQLCursor<T extends MapObject> implements Cursor<T> {
   private offset = 0;
   private readonly batchSize: number;
   private currentBatch: T[] = [];
@@ -961,6 +964,23 @@ class PostgreSQLCursor<T extends MapObject> implements Cursor<T> {
     batchSize = 1000,
   ) {
     this.batchSize = batchSize;
+
+    // Validate that queries using batching have ORDER BY for deterministic results
+    if (batchSize < Number.MAX_SAFE_INTEGER && !this.hasOrderBy(query)) {
+      throw new Error(
+        'Query must include ORDER BY clause for deterministic pagination. ' +
+        'Without ORDER BY, OFFSET-based batching can skip or duplicate rows.\n' +
+        `Query: ${query.substring(0, 100)}...`
+      );
+    }
+  }
+
+  /**
+   * Checks if the query contains an ORDER BY clause.
+   */
+  private hasOrderBy(query: string): boolean {
+    const normalizedQuery = query.trim().replace(/\s+/g, ' ').toUpperCase();
+    return normalizedQuery.includes(' ORDER BY ');
   }
 
   async next(): Promise<T | null> {
