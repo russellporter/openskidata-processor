@@ -930,19 +930,13 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
  * Empty cursor that returns no results
  */
 class EmptyCursor<T> implements Cursor<T> {
-  async next(): Promise<T | null> {
+  async nextBatch(): Promise<T[] | null> {
     return null;
   }
 
   async all(): Promise<T[]> {
     return [];
   }
-
-  batches = {
-    next: async (): Promise<T[] | null> => {
-      return null;
-    },
-  };
 }
 
 /**
@@ -952,8 +946,6 @@ class EmptyCursor<T> implements Cursor<T> {
 export class PostgreSQLCursor<T extends MapObject> implements Cursor<T> {
   private offset = 0;
   private readonly batchSize: number;
-  private currentBatch: T[] = [];
-  private batchIndex = 0;
   private isExhausted = false;
 
   constructor(
@@ -983,73 +975,13 @@ export class PostgreSQLCursor<T extends MapObject> implements Cursor<T> {
     return normalizedQuery.includes(' ORDER BY ');
   }
 
-  async next(): Promise<T | null> {
-    // If we have items in the current batch, return the next one
-    if (this.batchIndex < this.currentBatch.length) {
-      return this.currentBatch[this.batchIndex++];
-    }
-
-    // If we've exhausted all results, return null
+  async nextBatch(): Promise<T[] | null> {
     if (this.isExhausted) {
       return null;
     }
 
-    // Fetch the next batch from the database
-    await this.fetchNextBatch();
-
-    // After fetching, check if we have results
-    if (this.currentBatch.length === 0) {
-      this.isExhausted = true;
-      return null;
-    }
-
-    // Return the first item from the newly fetched batch
-    this.batchIndex = 1;
-    return this.currentBatch[0];
-  }
-
-  async all(): Promise<T[]> {
-    const results: T[] = [];
-    let item: T | null;
-    while ((item = await this.next()) !== null) {
-      results.push(item);
-    }
-    return results;
-  }
-
-  batches = {
-    next: async (): Promise<T[] | null> => {
-      // If we have a partial batch, return it
-      if (this.batchIndex < this.currentBatch.length) {
-        const remaining = this.currentBatch.slice(this.batchIndex);
-        this.batchIndex = this.currentBatch.length;
-        return remaining.length > 0 ? remaining : null;
-      }
-
-      // If we've exhausted all results, return null
-      if (this.isExhausted) {
-        return null;
-      }
-
-      // Fetch the next batch from the database
-      await this.fetchNextBatch();
-
-      // After fetching, check if we have results
-      if (this.currentBatch.length === 0) {
-        this.isExhausted = true;
-        return null;
-      }
-
-      // Return the entire batch and mark it as consumed
-      this.batchIndex = this.currentBatch.length;
-      return this.currentBatch;
-    },
-  };
-
-  private async fetchNextBatch(): Promise<void> {
     const client = await this.pool.connect();
     try {
-      // Add LIMIT and OFFSET to the query
       const paginatedQuery = `${this.query} LIMIT $${this.params.length + 1} OFFSET $${this.params.length + 2}`;
       const paginatedParams = [
         ...this.params,
@@ -1058,16 +990,25 @@ export class PostgreSQLCursor<T extends MapObject> implements Cursor<T> {
       ];
 
       const result = await client.query(paginatedQuery, paginatedParams);
-      this.currentBatch = result.rows.map(this.rowMapper);
-      this.batchIndex = 0;
+      const batch = result.rows.map(this.rowMapper);
       this.offset += result.rows.length;
 
-      // If we got fewer results than requested, we've reached the end
       if (result.rows.length < this.batchSize) {
         this.isExhausted = true;
       }
+
+      return batch.length > 0 ? batch : null;
     } finally {
       client.release();
     }
+  }
+
+  async all(): Promise<T[]> {
+    const results: T[] = [];
+    let batch: T[] | null;
+    while ((batch = await this.nextBatch()) !== null) {
+      results.push(...batch);
+    }
+    return results;
   }
 }

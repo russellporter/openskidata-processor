@@ -146,11 +146,8 @@ export interface SearchContext {
 }
 
 export interface Cursor<T> {
-  next(): Promise<T | null>;
+  nextBatch(): Promise<T[] | null>;
   all(): Promise<T[]>;
-  batches?: {
-    next(): Promise<T[] | null>;
-  };
 }
 
 export interface ClusteringBusinessLogic {

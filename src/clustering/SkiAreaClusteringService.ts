@@ -417,9 +417,8 @@ export class SkiAreaClusteringService {
     const concurrentBatches = Math.min(4, require("os").cpus().length);
     const activeBatches = new Set<Promise<void>>();
 
-    let skiAreas: SkiAreaObject[] | null | undefined;
-    while ((skiAreas = await skiAreasCursor.batches?.next())) {
-      if (!skiAreas) break;
+    let skiAreas: SkiAreaObject[] | null;
+    while ((skiAreas = await skiAreasCursor.nextBatch())) {
 
       const batchPromise = this.processBatchForActivitiesAndGeometry(skiAreas);
       activeBatches.add(batchPromise);
@@ -485,8 +484,8 @@ export class SkiAreaClusteringService {
     const concurrentBatches = Math.min(3, require("os").cpus().length);
     const activeBatches = new Set<Promise<void>>();
 
-    let skiAreas: SkiAreaObject[];
-    while ((skiAreas = (await cursor.batches?.next()) as SkiAreaObject[])) {
+    let skiAreas: SkiAreaObject[] | null;
+    while ((skiAreas = await cursor.nextBatch())) {
       const batchPromise = this.processBatchForDuplicateRemoval(skiAreas);
       activeBatches.add(batchPromise);
 
@@ -551,10 +550,8 @@ export class SkiAreaClusteringService {
       useBatching: true, // Safe to batch - only calls updateObject/markObjectsAsPartOfSkiArea (don't modify result set)
     });
 
-    let skiAreas: SkiAreaObject[];
-    while (
-      (skiAreas = (await skiAreasCursor.batches?.next()) as SkiAreaObject[])
-    ) {
+    let skiAreas: SkiAreaObject[] | null;
+    while ((skiAreas = await skiAreasCursor.nextBatch())) {
       // Process ski areas sequentially when onlyIfNotAlreadyAssigned is true
       // to prevent race conditions where multiple ski areas claim the same objects
       if (options.objects.onlyIfNotAlreadyAssigned) {
@@ -804,11 +801,9 @@ export class SkiAreaClusteringService {
     });
 
     const processedSkimapOrgIds = new Set<string>();
-    let skiArea: SkiAreaObject | null;
+    const skiAreas = await skiAreasCursor.all();
 
-    while ((skiArea = await skiAreasCursor.next())) {
-      if (!skiArea) break;
-
+    for (const skiArea of skiAreas) {
       // Skip if this Skimap.org ski area has already been processed (merged)
       if (processedSkimapOrgIds.has(skiArea.id)) {
         continue;
@@ -1066,8 +1061,8 @@ export class SkiAreaClusteringService {
       // Geocode runs
       await performanceMonitor.measure("Geocode all runs", async () => {
         const runsCursor = await this.database.getAllRuns(true);
-        let runs: RunObject[];
-        while ((runs = (await runsCursor.batches?.next()) as RunObject[])) {
+        let runs: RunObject[] | null;
+        while ((runs = await runsCursor.nextBatch())) {
           await this.geocodeObjects(runs, geocoder);
         }
       });
@@ -1075,8 +1070,8 @@ export class SkiAreaClusteringService {
       // Geocode lifts
       await performanceMonitor.measure("Geocode all lifts", async () => {
         const liftsCursor = await this.database.getAllLifts(true);
-        let lifts: LiftObject[];
-        while ((lifts = (await liftsCursor.batches?.next()) as LiftObject[])) {
+        let lifts: LiftObject[] | null;
+        while ((lifts = await liftsCursor.nextBatch())) {
           await this.geocodeObjects(lifts, geocoder);
         }
       });
@@ -1130,10 +1125,8 @@ export class SkiAreaClusteringService {
       const concurrentBatches = Math.min(3, require("os").cpus().length);
       const activeBatches = new Set<Promise<void>>();
 
-      let skiAreas: SkiAreaObject[];
-      while (
-        (skiAreas = (await skiAreasCursor.batches?.next()) as SkiAreaObject[])
-      ) {
+      let skiAreas: SkiAreaObject[] | null;
+      while ((skiAreas = await skiAreasCursor.nextBatch())) {
         const batchPromise = this.processBatchForAugmentation(
           skiAreas,
           geocoder,
@@ -1249,11 +1242,11 @@ export class SkiAreaClusteringService {
       useBatching: false, // Load all upfront since we call removeObject during iteration
     });
 
-    let skiAreas: SkiAreaObject[];
+    let skiAreas: SkiAreaObject[] | null;
     let removeCount = 0;
     let totalCount = 0;
 
-    while ((skiAreas = (await cursor.batches?.next()) as SkiAreaObject[])) {
+    while ((skiAreas = await cursor.nextBatch())) {
       await Promise.all(
         skiAreas.map(async (skiArea) => {
           totalCount++;
