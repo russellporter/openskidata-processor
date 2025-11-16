@@ -1,4 +1,4 @@
-import { Mutex } from "async-mutex";
+import { Semaphore } from "async-mutex";
 import DataLoader from "dataloader";
 import * as iso3166_2 from "iso3166-2-db";
 import { Region } from "iso3166-2-db";
@@ -66,8 +66,9 @@ export default class Geocoder {
   private remoteErrorCount = 0;
   private maxRemoteErrors = 100;
   private retryDelayMs = 2000;
-  private mutex = new Mutex();
   private diskCache: PostgresCache<RawGeocode>;
+  private maxConcurrentRemoteRequests = 4;
+  private remoteSemaphore: Semaphore;
 
   constructor(
     config: Config.GeocodingServerConfig,
@@ -75,6 +76,9 @@ export default class Geocoder {
   ) {
     this.config = config;
     this.geocodingType = config.type || "photon";
+
+    // Initialize semaphore to limit concurrent remote API calls globally
+    this.remoteSemaphore = new Semaphore(this.maxConcurrentRemoteRequests);
 
     // Initialize PostgreSQL disk cache with type-specific table name
     // Replace hyphens with underscores for PostgreSQL compatibility
@@ -86,11 +90,12 @@ export default class Geocoder {
     );
 
     this.loader = new DataLoader<string, RawGeocode>(
-      async (loadForKeys) => {
-        return [await this.rawGeocodeLocalOrRemote(loadForKeys[0])];
+      async (geohashes) => {
+        return await this.rawGeocodeLocalOrRemoteBatch(geohashes as string[]);
       },
       {
-        batch: false,
+        batch: true,
+        maxBatchSize: 1000,
       },
     );
   }
@@ -118,8 +123,9 @@ export default class Geocoder {
     // Extract points along the geometry at 1km intervals
     const points = extractPointsAlongGeometry(geometry, 1);
 
-    // Geocode all points with concurrency limit
-    const geocodeResults = await this.geocodeWithConcurrencyLimit(points, 10);
+    const geocodeResults = await Promise.all(
+      points.map((position) => this.geocode(position)),
+    );
 
     // Filter out null results and convert to Place[]
     const places = geocodeResults.filter(
@@ -132,56 +138,63 @@ export default class Geocoder {
     return uniqueAndSortedPlaces;
   };
 
-  /**
-   * Geocodes multiple positions with a concurrency limit to avoid overwhelming the API.
-   */
-  private async geocodeWithConcurrencyLimit(
-    positions: GeoJSON.Position[],
-    maxConcurrent: number,
-  ): Promise<(Geocode | null)[]> {
-    const results: (Geocode | null)[] = [];
-
-    for (let i = 0; i < positions.length; i += maxConcurrent) {
-      const batch = positions.slice(i, i + maxConcurrent);
-      const batchResults = await Promise.all(
-        batch.map((position) => this.geocode(position)),
-      );
-      results.push(...batchResults);
-    }
-
-    return results;
-  }
-
   rawGeocode = async (position: GeoJSON.Position): Promise<RawGeocode> => {
     const geohash = ngeohash.encode(position[1], position[0], geocodePrecision);
 
     return await this.loader.load(geohash);
   };
 
-  private rawGeocodeLocalOrRemote = async (
-    geohash: string,
-  ): Promise<RawGeocode> => {
+  private rawGeocodeLocalOrRemoteBatch = async (
+    geohashes: string[],
+  ): Promise<RawGeocode[]> => {
+    // Try to get all from cache first using getMany
+    let cachedResults: (RawGeocode | undefined)[];
     try {
-      const content = await this.rawGeocodeLocal(geohash);
-      if (content) {
-        return content;
+      cachedResults = await this.diskCache.getMany(geohashes);
+    } catch (error) {
+      console.warn(`Local cache batch lookup failed:`, error);
+      cachedResults = new Array(geohashes.length).fill(undefined);
+    }
+
+    // Identify which geohashes need remote fetching
+    const results: RawGeocode[] = new Array(geohashes.length);
+    const missingIndices: number[] = [];
+
+    for (let i = 0; i < geohashes.length; i++) {
+      if (cachedResults[i] !== undefined) {
+        results[i] = cachedResults[i]!;
+      } else {
+        missingIndices.push(i);
       }
-    } catch (error) {
-      console.warn(`Local cache lookup failed for ${geohash}:`, error);
     }
 
-    if (this.remoteErrorCount >= this.maxRemoteErrors) {
-      throw new Error("Too many errors, not trying remote");
+    // Fetch missing geohashes from remote
+    if (missingIndices.length > 0) {
+      if (this.remoteErrorCount >= this.maxRemoteErrors) {
+        throw new Error("Too many errors, not trying remote");
+      }
+
+      const remotePromises = missingIndices.map(async (index) => {
+        const geohash = geohashes[index];
+        try {
+          const result = await this.rawGeocodeRemoteWithRetry(geohash);
+          this.remoteErrorCount = 0;
+          return { index, result };
+        } catch (error) {
+          this.remoteErrorCount++;
+          throw error;
+        }
+      });
+
+      const remoteResults = await Promise.all(remotePromises);
+
+      // Assign results back to their positions
+      for (const { index, result } of remoteResults) {
+        results[index] = result;
+      }
     }
 
-    try {
-      const result = await this.rawGeocodeRemoteWithRetry(geohash);
-      this.remoteErrorCount = 0;
-      return result;
-    } catch (error) {
-      this.remoteErrorCount++;
-      throw error;
-    }
+    return results;
   };
 
   private rawGeocodeRemoteWithRetry = async (
@@ -200,14 +213,10 @@ export default class Geocoder {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  private rawGeocodeLocal = async (
-    geohash: string,
-  ): Promise<RawGeocode | null> => {
-    return await this.diskCache.get(geohash);
-  };
-
   private rawGeocodeRemote = async (geohash: string): Promise<RawGeocode> => {
-    return this.mutex.runExclusive(async () => {
+    // Acquire semaphore permit to limit concurrent remote API calls globally
+    const [value, release] = await this.remoteSemaphore.acquire();
+    try {
       const point = ngeohash.decode(geohash);
 
       let url: string;
@@ -252,7 +261,10 @@ export default class Geocoder {
 
       await this.diskCache.set(geohash, data);
       return data;
-    });
+    } finally {
+      // Always release the semaphore permit
+      release();
+    }
   };
 
   private enhancePhoton = (rawGeocode: PhotonGeocode): Geocode | null => {

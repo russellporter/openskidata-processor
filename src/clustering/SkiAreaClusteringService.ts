@@ -1085,23 +1085,23 @@ export class SkiAreaClusteringService {
     objects: (RunObject | LiftObject)[],
     geocoder: Geocoder,
   ): Promise<void> {
-    // Process objects sequentially to avoid overwhelming the geocoder
-    // Each object's geocodeGeometry already limits to 10 concurrent requests
-    for (const object of objects) {
-      try {
-        const places = await geocoder.geocodeGeometry(object.geometry);
-        await this.database.updateObject(object._key, {
-          properties: {
-            ...object.properties,
-            places,
-          },
-        });
-      } catch (error) {
-        console.log(
-          `Failed geocoding ${object.type} ${object._key}: ${error instanceof Error ? error.message : String(error)}`,
-        );
-      }
-    }
+    await Promise.all(
+      objects.map(async (object) => {
+        try {
+          const places = await geocoder.geocodeGeometry(object.geometry);
+          await this.database.updateObject(object._key, {
+            properties: {
+              ...object.properties,
+              places,
+            },
+          });
+        } catch (error) {
+          console.log(
+            `Failed geocoding ${object.type} ${object._key}: ${error instanceof Error ? error.message : String(error)}`,
+          );
+        }
+      }),
+    );
   }
 
   private async augmentSkiAreasBasedOnAssignedLiftsAndRuns(
