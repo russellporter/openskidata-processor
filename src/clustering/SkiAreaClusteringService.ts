@@ -7,6 +7,7 @@ import { AssertionError } from "assert";
 import * as GeoJSON from "geojson";
 import {
   FeatureType,
+  getRunDifficultyConvention,
   LiftFeature,
   LiftGeometry,
   RunFeature,
@@ -30,7 +31,6 @@ import { skiAreaStatistics } from "../statistics/SkiAreaStatistics";
 import Geocoder from "../transforms/Geocoder";
 import { getPoints, getPositions } from "../transforms/GeoTransforms";
 import { sortPlaces, uniquePlaces } from "../transforms/PlaceUtils";
-import { getRunDifficultyConvention } from "openskidata-format";
 import { mapAsync } from "../transforms/StreamTransforms";
 import { isPlaceholderGeometry } from "../utils/PlaceholderSiteGeometry";
 import { VIIRSPixelExtractor } from "../utils/VIIRSPixelExtractor";
@@ -411,7 +411,9 @@ export class SkiAreaClusteringService {
   }
 
   private async assignSkiAreaActivitiesAndGeometryBasedOnMemberObjects(): Promise<void> {
-    const skiAreasCursor = await this.database.getSkiAreas({ useBatching: true });
+    const skiAreasCursor = await this.database.getSkiAreas({
+      useBatching: true,
+    });
 
     // Process multiple batches concurrently for better performance
     const concurrentBatches = Math.min(4, require("os").cpus().length);
@@ -419,7 +421,6 @@ export class SkiAreaClusteringService {
 
     let skiAreas: SkiAreaObject[] | null;
     while ((skiAreas = await skiAreasCursor.nextBatch())) {
-
       const batchPromise = this.processBatchForActivitiesAndGeometry(skiAreas);
       activeBatches.add(batchPromise);
 
@@ -520,7 +521,7 @@ export class SkiAreaClusteringService {
         const otherSkiAreasCursor = await this.database.getSkiAreas({
           onlySource: SourceType.SKIMAP_ORG,
           onlyInPolygon: skiArea.geometry,
-          useBatching: true, // Read-only nested cursor
+          useBatching: false, // We need all results upfront.
         });
 
         const otherSkiAreas = await otherSkiAreasCursor.all();
@@ -547,79 +548,79 @@ export class SkiAreaClusteringService {
     const skiAreasCursor = await this.database.getSkiAreas({
       onlyPolygons: options.objects.onlyInPolygon || false,
       onlySource: options.skiArea.onlySource,
-      useBatching: true, // Safe to batch - only calls updateObject/markObjectsAsPartOfSkiArea (don't modify result set)
+      useBatching: false, // Unsafe to batch, we may remove ski areas during iteration
     });
 
-    let skiAreas: SkiAreaObject[] | null;
-    while ((skiAreas = await skiAreasCursor.nextBatch())) {
-      // Process ski areas sequentially when onlyIfNotAlreadyAssigned is true
-      // to prevent race conditions where multiple ski areas claim the same objects
-      if (options.objects.onlyIfNotAlreadyAssigned) {
-        for (const skiArea of skiAreas) {
-          const memberObjects = await this.processSkiAreaForObjectAssignment(
-            skiArea,
-            options,
-          );
+    const skiAreas = await skiAreasCursor.all();
+    // Process ski areas sequentially when onlyIfNotAlreadyAssigned is true
+    // to prevent race conditions where multiple ski areas claim the same objects
+    if (options.objects.onlyIfNotAlreadyAssigned) {
+      for (const skiArea of skiAreas) {
+        const memberObjects = await this.processSkiAreaForObjectAssignment(
+          skiArea,
+          options,
+        );
 
-          if (memberObjects === null) {
-            continue;
-          }
+        if (memberObjects === null) {
+          continue;
+        }
 
-          await this.database.markObjectsAsPartOfSkiArea(
-            skiArea.id,
-            memberObjects.map((obj) => obj._key),
-            options.objects.onlyInPolygon || false,
-          );
+        await this.database.markObjectsAsPartOfSkiArea(
+          skiArea.id,
+          memberObjects.map((obj) => obj._key),
+          options.objects.onlyInPolygon || false,
+        );
 
-          const hasKnownSkiAreaActivities = skiArea.activities.length > 0;
-          if (!hasKnownSkiAreaActivities) {
-            const activities =
-              this.getActivitiesBasedOnRunsAndLifts(memberObjects);
-            await this.database.updateObject(skiArea._key, {
+        const hasKnownSkiAreaActivities = skiArea.activities.length > 0;
+        if (!hasKnownSkiAreaActivities) {
+          const activities =
+            this.getActivitiesBasedOnRunsAndLifts(memberObjects);
+          await this.database.updateObject(skiArea._key, {
+            activities: [...activities],
+            properties: {
+              ...skiArea.properties,
               activities: [...activities],
-              properties: {
-                ...skiArea.properties,
+            },
+          });
+        }
+      }
+    } else {
+      // Process concurrently in small batches to reduce database contention
+      const chunkSize = 3;
+      for (let i = 0; i < skiAreas.length; i += chunkSize) {
+        const chunk = skiAreas.slice(i, i + chunkSize);
+
+        await Promise.all(
+          chunk.map(async (skiArea) => {
+            const memberObjects = await this.processSkiAreaForObjectAssignment(
+              skiArea,
+              options,
+            );
+
+            if (memberObjects === null) {
+              return;
+            }
+
+            await this.database.markObjectsAsPartOfSkiArea(
+              skiArea.id,
+              memberObjects.map((obj) => obj._key),
+              options.objects.onlyInPolygon || false,
+            );
+
+            const hasKnownSkiAreaActivities = skiArea.activities.length > 0;
+            if (!hasKnownSkiAreaActivities) {
+              const activities =
+                this.getActivitiesBasedOnRunsAndLifts(memberObjects);
+              await this.database.updateObject(skiArea._key, {
                 activities: [...activities],
-              },
-            });
-          }
-        }
-      } else {
-        // Process concurrently in small batches to reduce database contention
-        const chunkSize = 3;
-        for (let i = 0; i < skiAreas.length; i += chunkSize) {
-          const chunk = skiAreas.slice(i, i + chunkSize);
-
-          await Promise.all(
-            chunk.map(async (skiArea) => {
-              const memberObjects =
-                await this.processSkiAreaForObjectAssignment(skiArea, options);
-
-              if (memberObjects === null) {
-                return;
-              }
-
-              await this.database.markObjectsAsPartOfSkiArea(
-                skiArea.id,
-                memberObjects.map((obj) => obj._key),
-                options.objects.onlyInPolygon || false,
-              );
-
-              const hasKnownSkiAreaActivities = skiArea.activities.length > 0;
-              if (!hasKnownSkiAreaActivities) {
-                const activities =
-                  this.getActivitiesBasedOnRunsAndLifts(memberObjects);
-                await this.database.updateObject(skiArea._key, {
+                properties: {
+                  ...skiArea.properties,
                   activities: [...activities],
-                  properties: {
-                    ...skiArea.properties,
-                    activities: [...activities],
-                  },
-                });
-              }
-            }),
-          );
-        }
+                },
+              });
+            }
+          }),
+        );
       }
     }
   }
