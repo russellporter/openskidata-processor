@@ -84,15 +84,15 @@ ELEVATION_SERVER_TYPE="racemap"
 ```
 
 **Tileserver GL:**
-For elevation data served via [Tileserver GL](https://tileserver.readthedocs.io/en/latest/endpoints.html#source-data) with RGB-encoded elevation tiles. Configure using URL templates with `{z}`, `{lng}`, and `{lat}` tokens:
+For elevation data served via [Tileserver GL](https://tileserver.readthedocs.io/en/latest/endpoints.html#source-data) with RGB-encoded elevation tiles. Configure using the batch elevation endpoint:
 
 ```bash
-ELEVATION_SERVER_URL="https://example.com/data/mydata/elevation/{z}/{lng}/{lat}"
+ELEVATION_SERVER_URL="https://example.com/data/mydata/elevation"
 ELEVATION_SERVER_TYPE="tileserver-gl"
 ELEVATION_SERVER_ZOOM="14,12"  # optional, comma-separated list of zoom levels to try in order, defaults to 12
 ```
 
-The processor will attempt to fetch elevation data at each zoom level in order, falling back to the next zoom level if a 204 No Content response is received.
+The processor uses the batch POST endpoint (`/data/{id}/elevation`) to fetch elevations for multiple coordinates at once. It will attempt each zoom level in order, falling back to the next zoom level for coordinates that return null (no data available).
 
 ### Reverse geocoding
 

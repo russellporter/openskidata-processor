@@ -1,4 +1,3 @@
-import { Semaphore } from "async-mutex";
 import DataLoader from "dataloader";
 import * as geohash from "ngeohash";
 import {
@@ -14,7 +13,6 @@ const elevationProfileResolution = 25;
 const ELEVATION_CACHE_TTL_MS = 365 * 24 * 60 * 60 * 1000; // 1 year
 const DEFAULT_TILESERVER_ZOOM = [12];
 const ERROR_LOG_THROTTLE_MS = 60000; // Log unique errors at most once per minute
-const TILESERVER_CONCURRENCY_LIMIT = 8; // Maximum concurrent requests to tileserver
 
 type Result<T, E = Error> =
   | { ok: true; value: T }
@@ -254,43 +252,41 @@ async function fetchElevationsFromRacemap(
   return await response.json();
 }
 
-async function fetchElevationFromTileserverGLAtZoom(
-  lat: number,
-  lng: number,
-  urlTemplate: string,
+async function fetchElevationsBatchFromTileserverGLAtZoom(
+  coordinates: number[][],
+  batchEndpointUrl: string,
   zoom: number,
-): Promise<Result<number | null, string>> {
-  // Replace tokens in URL template
-  // URL format: https://example.com/data/mydata/elevation/{z}/{lng}/{lat}
-  const url = urlTemplate
-    .replace('{z}', zoom.toString())
-    .replace('{lng}', lng.toString())
-    .replace('{lat}', lat.toString());
-
+): Promise<Result<(number | null)[], string>> {
+  // Batch endpoint URL format: https://example.com/data/{id}/elevation
   try {
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'openskidata-processor/1.0.0 (+https://github.com/russellporter/openskidata-processor)'
-      }
-    });
+    // Convert coordinates from [lat, lng] to {lon, lat, z} format
+    const points = coordinates.map(([lat, lng]) => ({
+      lon: lng,
+      lat: lat,
+      z: zoom,
+    }));
 
-    // 204 No Content means elevation not found at this zoom level
-    if (response.status === 204) {
-      return { ok: true, value: null };
-    }
+    const response = await fetch(batchEndpointUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'User-Agent': 'openskidata-processor/1.0.0 (+https://github.com/russellporter/openskidata-processor)',
+      },
+      body: JSON.stringify({ points }),
+    });
 
     if (!response.ok) {
       return { ok: false, error: `HTTP ${response.status} at zoom ${zoom}` };
     }
 
-    const data = await response.json();
+    const elevations = await response.json();
 
-    // Response format: {"z":7,"x":68,"y":45,"red":134,"green":66,"blue":0,"latitude":11.84069,"longitude":46.04798,"elevation":1602}
-    if (typeof data.elevation === 'number') {
-      return { ok: true, value: data.elevation };
-    } else {
-      return { ok: false, error: `Invalid elevation response at zoom ${zoom}` };
+    // Response should be an array of elevations (or null) in the same order
+    if (!Array.isArray(elevations) || elevations.length !== coordinates.length) {
+      return { ok: false, error: `Invalid batch response: expected array of ${coordinates.length} elevations` };
     }
+
+    return { ok: true, value: elevations };
   } catch (error) {
     return { ok: false, error: `Fetch error at zoom ${zoom}: ${error}` };
   }
@@ -298,35 +294,62 @@ async function fetchElevationFromTileserverGLAtZoom(
 
 async function fetchElevationsFromTileserverGL(
   coordinates: number[][],
-  urlTemplate: string,
+  batchEndpointUrl: string,
   zooms: number[],
 ): Promise<Result<number | null, string>[]> {
-  const semaphore = new Semaphore(TILESERVER_CONCURRENCY_LIMIT);
+  // Initialize results array with nulls
+  const results: Result<number | null, string>[] = coordinates.map(() => ({
+    ok: true,
+    value: null,
+  }));
 
-  const elevationPromises = coordinates.map(async ([lat, lng]) => {
-    for (const zoom of zooms) {
-      const result = await semaphore.runExclusive(async () => {
-        return await fetchElevationFromTileserverGLAtZoom(lat, lng, urlTemplate, zoom);
-      });
+  // Track which coordinates still need data
+  let coordinatesNeedingData: Array<{ index: number; coords: number[] }> =
+    coordinates.map((coords, index) => ({ index, coords }));
 
-      // If we got an error, return it immediately
-      if (!result.ok) {
-        return result;
-      }
-
-      // If we got elevation data, return it
-      if (result.value !== null) {
-        return result;
-      }
-
-      // No data at this zoom level, try next one
+  // Try each zoom level in order, one request at a time
+  for (const zoom of zooms) {
+    if (coordinatesNeedingData.length === 0) {
+      break; // All coordinates have data
     }
 
-    // All zoom levels returned no data
-    return { ok: true, value: null } as Result<number | null, string>;
-  });
+    // Batch fetch for all coordinates that still need data
+    const coordsToFetch = coordinatesNeedingData.map((item) => item.coords);
+    const batchResult = await fetchElevationsBatchFromTileserverGLAtZoom(
+      coordsToFetch,
+      batchEndpointUrl,
+      zoom,
+    );
 
-  return await Promise.all(elevationPromises);
+    // If the batch request failed, mark all remaining coordinates as errors
+    if (!batchResult.ok) {
+      for (const { index } of coordinatesNeedingData) {
+        results[index] = { ok: false, error: batchResult.error };
+      }
+      return results;
+    }
+
+    // Process batch results
+    const newCoordinatesNeedingData: Array<{ index: number; coords: number[] }> = [];
+
+    for (let i = 0; i < coordinatesNeedingData.length; i++) {
+      const { index } = coordinatesNeedingData[i];
+      const elevation = batchResult.value[i];
+
+      if (elevation !== null) {
+        // Found data for this coordinate
+        results[index] = { ok: true, value: elevation };
+      } else {
+        // No data at this zoom level, will try next zoom
+        newCoordinatesNeedingData.push(coordinatesNeedingData[i]);
+      }
+    }
+
+    coordinatesNeedingData = newCoordinatesNeedingData;
+  }
+
+  // Any remaining coordinates without data stay as null (ok: true, value: null)
+  return results;
 }
 
 function getCoordinates(feature: RunFeature | LiftFeature) {
