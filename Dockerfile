@@ -2,20 +2,21 @@
 
 # Build Tippecanoe first (most expensive, least likely to change)
 FROM debian:bookworm-slim AS tippecanoe-builder
-RUN apt-get update && apt-get install -y \
+
+# Use specific commit for better caching
+ENV TIPPECANOE_VERSION=2.78.0
+
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && apt-get install -y \
     build-essential \
     git \
     pkg-config \
     zlib1g-dev \
-    libsqlite3-dev \
-    && rm -rf /var/lib/apt/lists/*
+    libsqlite3-dev
 
-# Use specific commit for better caching
-ENV TIPPECANOE_VERSION=2.78.0
-RUN if [ ! -d "/tmp/tippecanoe" ]; then \
-        git clone --branch ${TIPPECANOE_VERSION} --single-branch --depth 1 \
-        https://github.com/felt/tippecanoe.git /tmp/tippecanoe; \
-    fi
+RUN git clone --branch ${TIPPECANOE_VERSION} --single-branch --depth 1 \
+    https://github.com/felt/tippecanoe.git /tmp/tippecanoe
 
 WORKDIR /tmp/tippecanoe
 RUN make -j$(nproc) && make install
@@ -28,13 +29,14 @@ COPY --from=tippecanoe-builder /usr/local/bin/tippecanoe /usr/local/bin/tippecan
 COPY --from=tippecanoe-builder /usr/local/bin/tile-join /usr/local/bin/tile-join
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && apt-get install -y \
     libsqlite3-dev \
     sqlite3 \
     postgresql-15 \
     postgresql-15-postgis-3 \
-    postgresql-client-15 \
-    && rm -rf /var/lib/apt/lists/*
+    postgresql-client-15
 
 # Set working directory
 WORKDIR /app
@@ -43,10 +45,11 @@ WORKDIR /app
 FROM base AS development
 
 # Install build dependencies for native modules and create data directory
-RUN apt-get update && apt-get install -y \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && apt-get install -y \
     build-essential \
     python3 \
-    && rm -rf /var/lib/apt/lists/* \
     && mkdir -p data
 
 # Copy PostgreSQL initialization script (done early as it rarely changes)
@@ -70,7 +73,8 @@ RUN chmod +x /usr/local/bin/init-postgres.sh
 # Copy package files and install dependencies (cache when package.json unchanged)
 COPY package.json package-lock.json ./
 # Install dev dependencies as well in order to build the application
-RUN npm --production=false  ci
+RUN --mount=type=cache,target=/root/.npm \
+    npm --production=false ci
 
 # Copy application source and build (only invalidated when source changes)
 COPY . .
