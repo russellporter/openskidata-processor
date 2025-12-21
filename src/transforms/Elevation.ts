@@ -63,6 +63,7 @@ export async function createElevationProcessor(
     },
     {
       batch: true,
+      // Note: a 10k batch size causes some 413 errors with Tileserver GL
       maxBatchSize: 1000,
     },
   );
