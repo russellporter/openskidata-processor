@@ -63,7 +63,7 @@ export async function createElevationProcessor(
     },
     {
       batch: true,
-      maxBatchSize: 10000,
+      maxBatchSize: 1000,
     },
   );
 
