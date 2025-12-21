@@ -91,14 +91,15 @@ export async function createElevationProcessor(
       // Load elevations using DataLoader
       const elevationResults = await Promise.all(
         geohashes.map((hash) => elevationLoader.load(hash)),
-      );
+      )
 
-      // Filter out nulls
-      if (elevationResults.some((elevation) => elevation === null)) {
-        throw new Error("Elevation data contains nulls");
-      }
-
-      elevations = elevationResults as number[];
+      // Round elevations, and fail if any are nulls
+      elevations = elevationResults.map((elevation) => {
+        if (elevation === null) {
+          throw new Error("No elevation data available");
+        }
+        return roundElevation(elevation);
+      }) as number[];
     } catch (error) {
       console.log("Failed to load elevations", error);
       return feature;
@@ -404,6 +405,10 @@ function addElevations(
       const exhaustiveCheck: never = geometryType;
       throw "Geometry type " + exhaustiveCheck + " not implemented";
   }
+}
+
+function roundElevation(elevation: number): number {
+  return Math.round(elevation * 10) / 10;
 }
 
 function addElevationToCoords(coords: number[], elevation: number) {
