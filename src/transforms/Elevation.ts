@@ -85,7 +85,7 @@ export async function createElevationProcessor(
         elevationProfileCoordinates,
       );
       const geohashes = allCoordinates.map(([lng, lat]) =>
-        geohash.encode(lat, lng, 9),
+        geohash.encode(lat, lng, 10), // 10: +-1m accuracy
       );
 
       // Load elevations using DataLoader
