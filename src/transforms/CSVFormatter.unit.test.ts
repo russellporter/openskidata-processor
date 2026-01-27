@@ -129,6 +129,8 @@ describe("CSVFormatter", () => {
             lit: true,
             gladed: false,
             patrolled: true,
+            snowmaking: null,
+            snowfarming: null,
             grooming: null,
             description: null,
             skiAreas: [

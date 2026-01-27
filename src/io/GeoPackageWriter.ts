@@ -12,6 +12,7 @@ import {
   LiftProperties,
   RunProperties,
   SkiAreaProperties,
+  SpotProperties,
 } from "openskidata-format";
 import { Transform } from "stream";
 import { pipeline } from "stream/promises";
@@ -29,6 +30,7 @@ type FeaturePropertiesMap = {
   [FeatureType.SkiArea]: SkiAreaProperties;
   [FeatureType.Lift]: LiftProperties;
   [FeatureType.Run]: RunProperties;
+  [FeatureType.Spot]: SpotProperties;
 };
 
 // Helper functions to convert values for SQLite
@@ -297,6 +299,16 @@ const RUN_SCHEMA: ColumnDefinition<RunProperties>[] = [
     getValue: (p) => toSQLiteBoolean(p.patrolled),
   },
   {
+    name: "snowmaking",
+    dataType: "BOOLEAN",
+    getValue: (p) => toSQLiteBoolean(p.snowmaking),
+  },
+  {
+    name: "snowfarming",
+    dataType: "BOOLEAN",
+    getValue: (p) => toSQLiteBoolean(p.snowfarming),
+  },
+  {
     name: "grooming",
     dataType: "TEXT",
     getValue: (p) => p.grooming,
@@ -327,10 +339,72 @@ const RUN_SCHEMA: ColumnDefinition<RunProperties>[] = [
   },
 ];
 
+const SPOT_SCHEMA: ColumnDefinition<SpotProperties>[] = [
+  {
+    name: "feature_id",
+    dataType: "TEXT",
+    getValue: (p) => p.id,
+  },
+  {
+    name: "spot_type",
+    dataType: "TEXT",
+    getValue: (p) => p.spotType,
+  },
+  {
+    name: "sources",
+    dataType: "TEXT",
+    getValue: (p) => toJSON(p.sources),
+  },
+  {
+    name: "ski_area_ids",
+    dataType: "TEXT",
+    getValue: (p) => p.skiAreas.map((area) => area.properties.id).join(","),
+  },
+  {
+    name: "ski_area_names",
+    dataType: "TEXT",
+    getValue: (p) =>
+      p.skiAreas
+        .map((area) => area.properties.name)
+        .filter((name) => name)
+        .join(","),
+  },
+  {
+    name: "country_codes",
+    dataType: "TEXT",
+    getValue: (p) =>
+      p.places.map((place) => place.iso3166_1Alpha2).join(";"),
+  },
+  {
+    name: "region_codes",
+    dataType: "TEXT",
+    getValue: (p) => p.places.map((place) => place.iso3166_2).join(";"),
+  },
+  {
+    name: "countries",
+    dataType: "TEXT",
+    getValue: (p) =>
+      p.places.map((place) => place.localized.en.country).join(";"),
+  },
+  {
+    name: "regions",
+    dataType: "TEXT",
+    getValue: (p) =>
+      p.places.map((place) => place.localized.en.region).join(";"),
+  },
+  {
+    name: "localities",
+    dataType: "TEXT",
+    getValue: (p) =>
+      p.places.map((place) => place.localized.en.locality).join(";"),
+  },
+];
+
 const FEATURE_SCHEMAS = {
   [FeatureType.SkiArea]: SKI_AREA_SCHEMA,
   [FeatureType.Lift]: LIFT_SCHEMA,
   [FeatureType.Run]: RUN_SCHEMA,
+  [FeatureType.Spot]: SPOT_SCHEMA,
 } as const;
 
 export class GeoPackageWriter {

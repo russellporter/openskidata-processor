@@ -77,6 +77,8 @@ export function mergedProperties(
     lit: allProperties.map((p) => p.lit).reduce(litReducer),
     gladed: allProperties.map((p) => p.gladed).reduce(gladedReducer),
     patrolled: allProperties.map((p) => p.patrolled).reduce(patrolledReducer),
+    snowmaking: allProperties.map((p) => p.snowmaking).reduce(snowmakingReducer),
+    snowfarming: allProperties.map((p) => p.snowfarming).reduce(snowfarmingReducer),
     grooming: allProperties.map((p) => p.grooming).reduce(groomingReducer),
     skiAreas: uniquedByID(allProperties.flatMap((p) => p.skiAreas)),
     elevationProfile: allProperties[0].elevationProfile,
@@ -190,6 +192,10 @@ const statusReducer = priorityReducer([
 const gladedReducer = priorityReducer([true, false, null]);
 
 const patrolledReducer = priorityReducer([true, false, null]);
+
+const snowmakingReducer = priorityReducer([true, false, null]);
+
+const snowfarmingReducer = priorityReducer([true, false, null]);
 
 const litReducer = priorityReducer([true, false, null]);
 

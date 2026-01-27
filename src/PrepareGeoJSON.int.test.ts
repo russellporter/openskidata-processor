@@ -378,6 +378,8 @@ Map {
               "type": "Feature",
             },
           ],
+          "snowfarming": null,
+          "snowmaking": null,
           "sources": [
             {
               "id": "way/227407268",

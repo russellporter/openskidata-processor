@@ -50,6 +50,8 @@ describe("RunFormatter", () => {
   "places": [],
   "ref": null,
   "skiAreas": [],
+  "snowfarming": null,
+  "snowmaking": null,
   "sources": [
     {
       "id": "way/1",

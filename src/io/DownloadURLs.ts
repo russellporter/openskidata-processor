@@ -57,15 +57,4 @@ export const skiAreaSitesDownloadConfig: OSMDownloadConfig = {
   `,
 };
 
-export const pointsOfInterestDownloadConfig: OSMDownloadConfig = {
-  query: (bbox) => `
-  [out:json][timeout:1800]${overpassBBoxQuery(bbox)};
-  rel[site=piste]->.sites;
-  (way(r.sites)[!"piste:type"][!"aerialway"][!"railway"];
-  node(r.sites);)->.pois;
-  (.pois; .pois>;);
-  out;
-  `,
-};
-
 export const skiMapSkiAreasURL = "https://skimap.org/SkiAreas/index.geojson";

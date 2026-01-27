@@ -202,7 +202,7 @@ export default async function prepare(paths: DataPaths, config: Config) {
       }
 
       // Create a single GeoPackage with all three layers
-      const layerMap = {
+      const layerMap: Record<FeatureType.SkiArea | FeatureType.Lift | FeatureType.Run, string> = {
         [FeatureType.SkiArea]: "ski_areas",
         [FeatureType.Lift]: "lifts",
         [FeatureType.Run]: "runs",
@@ -212,7 +212,7 @@ export default async function prepare(paths: DataPaths, config: Config) {
         FeatureType.SkiArea,
         FeatureType.Lift,
         FeatureType.Run,
-      ]) {
+      ] as const) {
         await convertGeoJSONToGeoPackage(
           getPath(paths.output, type),
           paths.output.geoPackage,

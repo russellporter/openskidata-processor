@@ -117,6 +117,8 @@ describe("GeoPackageWriter", () => {
           lit: null,
           gladed: null,
           patrolled: null,
+          snowmaking: null,
+          snowfarming: null,
           grooming: null,
           skiAreas: [],
           elevationProfile: null,
@@ -292,6 +294,8 @@ describe("GeoPackageWriter", () => {
           lit: null,
           gladed: null,
           patrolled: null,
+          snowmaking: null,
+          snowfarming: null,
           grooming: null,
           skiAreas: [],
           elevationProfile: null,
@@ -695,6 +699,8 @@ describe("GeoPackageWriter", () => {
           lit: null,
           gladed: null,
           patrolled: null,
+          snowmaking: null,
+          snowfarming: null,
           grooming: null,
           skiAreas: [
             {

@@ -55,6 +55,8 @@ export function formatter(
       return formatRun;
     case FeatureType.SkiArea:
       return formatSkiArea;
+    case FeatureType.Spot:
+      return () => null;
   }
 
   function formatRun(feature: RunFeature): MapboxGLRunFeature | null {

@@ -60,6 +60,8 @@ export function formatRun(feature: InputRunFeature): RunFeature[] {
     oneway: getOneway(tags, uses),
     gladed: getGladed(tags),
     patrolled: mapOSMBoolean(getOrElse(tags, "piste:patrolled", "patrolled")),
+    snowmaking: mapOSMBoolean(tags["piste:snowmaking"]),
+    snowfarming: mapOSMBoolean(tags["piste:snowfarming"]),
     lit: mapOSMBoolean(getOrElse(tags, "piste:lit", "lit")),
     grooming: getGrooming(tags),
     skiAreas: [],

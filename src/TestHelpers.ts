@@ -186,6 +186,8 @@ export function mockRunFeature<G extends InputRunGeometry>(options: {
       description: null,
       gladed: null,
       patrolled: options.patrolled !== undefined ? options.patrolled : null,
+      snowmaking: null,
+      snowfarming: null,
       grooming: options.grooming || null,
       skiAreas: options.skiAreas || [],
       elevationProfile: null,
