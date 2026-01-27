@@ -57,4 +57,19 @@ export const skiAreaSitesDownloadConfig: OSMDownloadConfig = {
   `,
 };
 
+export const spotsDownloadConfig: OSMDownloadConfig = {
+  query: (bbox) => `
+    [out:json][timeout:1800]${overpassBBoxQuery(bbox)};
+    (
+      node["piste:dismount"];
+      nw[aerialway=station];
+      nw[amenity=avalanche_transceiver][avalanche_transceiver=training];
+      nw[amenity=avalanche_transceiver][avalanche_transceiver=checkpoint];
+      nw["man_made"="piste:halfpipe"];
+    );
+    (._; >;);
+    out;
+    `,
+};
+
 export const skiMapSkiAreasURL = "https://skimap.org/SkiAreas/index.geojson";

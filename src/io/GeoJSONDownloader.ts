@@ -11,6 +11,7 @@ import {
   skiAreaSitesDownloadConfig,
   skiAreasDownloadConfig,
   skiMapSkiAreasURL,
+  spotsDownloadConfig,
 } from "./DownloadURLs";
 import { InputDataPaths } from "./GeoJSONFiles";
 import convertOSMFileToGeoJSON from "./OSMToGeoJSONConverter";
@@ -31,23 +32,29 @@ export default async function downloadAndConvertToGeoJSON(
           paths.osmJSON.runs,
           bbox,
         ),
+        downloadOSMJSON(
+          OSMEndpoint.LZ4,
+          liftsDownloadConfig,
+          paths.osmJSON.lifts,
+          bbox,
+        ),
         (async () => {
           await downloadOSMJSON(
-            OSMEndpoint.LZ4,
-            liftsDownloadConfig,
-            paths.osmJSON.lifts,
-            bbox,
-          );
-          await downloadOSMJSON(
-            OSMEndpoint.LZ4,
+            OSMEndpoint.PRIVATE_COFFEE,
             skiAreasDownloadConfig,
             paths.osmJSON.skiAreas,
             bbox,
           );
           await downloadOSMJSON(
-            OSMEndpoint.LZ4,
+            OSMEndpoint.PRIVATE_COFFEE,
             skiAreaSitesDownloadConfig,
             paths.osmJSON.skiAreaSites,
+            bbox,
+          );
+          await downloadOSMJSON(
+            OSMEndpoint.PRIVATE_COFFEE,
+            spotsDownloadConfig,
+            paths.osmJSON.spots,
             bbox,
           );
         })(),
@@ -63,6 +70,7 @@ export default async function downloadAndConvertToGeoJSON(
         paths.osmJSON.skiAreas,
         paths.geoJSON.skiAreas,
       );
+      await convertOSMFileToGeoJSON(paths.osmJSON.spots, paths.geoJSON.spots);
     });
 
     performanceMonitor.logTimeline();
@@ -74,6 +82,7 @@ export default async function downloadAndConvertToGeoJSON(
 enum OSMEndpoint {
   LZ4 = "https://lz4.overpass-api.de/api/interpreter",
   Z = "https://z.overpass-api.de/api/interpreter",
+  PRIVATE_COFFEE = "https://overpass.private.coffee/api/interpreter"
 }
 
 async function downloadOSMJSON(

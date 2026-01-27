@@ -17,6 +17,8 @@ import {
   SkiAreaStatistics,
   SkiAreaSummaryFeature,
   Source,
+  SpotFeature,
+  SpotType,
 } from "openskidata-format";
 import { Transform } from "stream";
 
@@ -33,8 +35,11 @@ export function formatter(
   type: FeatureType.Run,
 ): (feature: RunFeature) => string;
 export function formatter(
+  type: FeatureType.Spot,
+): (feature: SpotFeature) => string;
+export function formatter(
   type: FeatureType,
-): (feature: SkiAreaFeature | LiftFeature | RunFeature) => string;
+): (feature: SkiAreaFeature | LiftFeature | RunFeature | SpotFeature) => string;
 
 /**
  * Creates a formatter function for a specific feature type
@@ -52,6 +57,8 @@ export function formatter(
       return formatRun;
     case FeatureType.SkiArea:
       return formatSkiArea;
+    case FeatureType.Spot:
+      return formatSpot;
     default:
       throw new Error(`Unknown feature type: ${type}`);
   }
@@ -102,6 +109,8 @@ export function getCSVFilename(type: FeatureType): string {
       return "runs.csv";
     case FeatureType.Lift:
       return "lifts.csv";
+    case FeatureType.Spot:
+      return "spots.csv";
     default:
       throw new Error(`Unknown feature type: ${type}`);
   }
@@ -121,6 +130,8 @@ function getHeadersForType(type: FeatureType): string {
       return "name,ref,ref_fr_cairn,lift_type,status,countries,regions,localities,ski_area_names,oneway,duration_sec,capacity,occupancy,detachable,bubble,heating,inclined_length_m,vertical_m,speed_m_per_s,vertical_speed_m_per_s,min_elevation_m,max_elevation_m,overall_pitch_%,wikidata_id,websites,openskimap,id,geometry,lat,lng,ski_area_ids,sources,description";
     case FeatureType.SkiArea:
       return "name,countries,regions,localities,status,has_downhill,has_nordic,downhill_distance_km,nordic_distance_km,vertical_m,min_elevation_m,max_elevation_m,lift_count,surface_lifts_count,run_convention,wikidata_id,websites,openskimap,id,geometry,lat,lng,sources";
+    case FeatureType.Spot:
+      return "id,spot_type,longitude,latitude,sources,ski_areas,countries,regions,localities,dismount,name,position,entry,exit";
     default:
       throw new Error(`Unknown feature type: ${type}`);
   }
@@ -393,4 +404,40 @@ function calculateLiftCounts(statistics: SkiAreaStatistics | undefined) {
   }
 
   return { totalLiftCount, surfaceLiftCount };
+}
+
+function formatSpot(feature: SpotFeature): string {
+  const p = feature.properties;
+  const [lng, lat] = feature.geometry.coordinates;
+
+  const common = [
+    p.id,
+    escapeField(p.spotType),
+    lng.toFixed(6),
+    lat.toFixed(6),
+    formatSources(p.sources),
+    extractSkiAreaNames(p.skiAreas),
+    ...extractPlaces(p.places),
+  ];
+
+  // Type-specific columns (fill with empty strings for unused)
+  let typeSpecific: string[] = [];
+  switch (p.spotType) {
+    case SpotType.Crossing:
+      typeSpecific = [escapeField(p.dismount), "", "", "", ""];
+      break;
+    case SpotType.LiftStation:
+      typeSpecific = [
+        "",
+        escapeField(p.name),
+        escapeField(p.position),
+        formatBoolean(p.entry),
+        formatBoolean(p.exit),
+      ];
+      break;
+    default:
+      typeSpecific = ["", "", "", "", ""];
+  }
+
+  return [...common, ...typeSpecific].join(",");
 }

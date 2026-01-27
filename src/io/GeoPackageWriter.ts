@@ -102,7 +102,9 @@ function createCommonColumns<
       getValue: (p) => {
         const unique = Array.from(
           new Set(
-            p.places.map((place) => place.iso3166_2).filter((r) => r) as string[],
+            p.places
+              .map((place) => place.iso3166_2)
+              .filter((r) => r) as string[],
           ),
         ).sort();
         return unique.length > 0 ? unique.join(";") : null;
@@ -372,31 +374,89 @@ const SPOT_SCHEMA: ColumnDefinition<SpotProperties>[] = [
   {
     name: "country_codes",
     dataType: "TEXT",
-    getValue: (p) =>
-      p.places.map((place) => place.iso3166_1Alpha2).join(";"),
+    getValue: (p) => {
+      const unique = Array.from(
+        new Set(p.places.map((place) => place.iso3166_1Alpha2)),
+      ).sort();
+      return unique.length > 0 ? unique.join(";") : null;
+    },
   },
   {
     name: "region_codes",
     dataType: "TEXT",
-    getValue: (p) => p.places.map((place) => place.iso3166_2).join(";"),
+    getValue: (p) => {
+      const unique = Array.from(
+        new Set(
+          p.places.map((place) => place.iso3166_2).filter((r) => r) as string[],
+        ),
+      ).sort();
+      return unique.length > 0 ? unique.join(";") : null;
+    },
   },
   {
     name: "countries",
     dataType: "TEXT",
-    getValue: (p) =>
-      p.places.map((place) => place.localized.en.country).join(";"),
+    getValue: (p) => {
+      const unique = Array.from(
+        new Set(p.places.map((place) => place.localized.en.country)),
+      ).sort();
+      return unique.length > 0 ? unique.join(";") : null;
+    },
   },
   {
     name: "regions",
     dataType: "TEXT",
-    getValue: (p) =>
-      p.places.map((place) => place.localized.en.region).join(";"),
+    getValue: (p) => {
+      const unique = Array.from(
+        new Set(
+          p.places
+            .map((place) => place.localized.en.region)
+            .filter((r) => r) as string[],
+        ),
+      ).sort();
+      return unique.length > 0 ? unique.join(";") : null;
+    },
   },
   {
     name: "localities",
     dataType: "TEXT",
+    getValue: (p) => {
+      const unique = Array.from(
+        new Set(
+          p.places
+            .map((place) => place.localized.en.locality)
+            .filter((l) => l) as string[],
+        ),
+      ).sort();
+      return unique.length > 0 ? unique.join(";") : null;
+    },
+  },
+  {
+    name: "dismount",
+    dataType: "TEXT",
+    getValue: (p) => (p.spotType === "crossing" ? p.dismount : null),
+  },
+  {
+    name: "name",
+    dataType: "TEXT",
+    getValue: (p) => (p.spotType === "lift_station" ? p.name : null),
+  },
+  {
+    name: "position",
+    dataType: "TEXT",
+    getValue: (p) => (p.spotType === "lift_station" ? p.position : null),
+  },
+  {
+    name: "entry",
+    dataType: "BOOLEAN",
     getValue: (p) =>
-      p.places.map((place) => place.localized.en.locality).join(";"),
+      p.spotType === "lift_station" ? toSQLiteBoolean(p.entry) : null,
+  },
+  {
+    name: "exit",
+    dataType: "BOOLEAN",
+    getValue: (p) =>
+      p.spotType === "lift_station" ? toSQLiteBoolean(p.exit) : null,
   },
 ];
 

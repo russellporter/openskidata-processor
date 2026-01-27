@@ -101,6 +101,13 @@ export function mockInputFiles(
       features: input.runs,
     }),
   );
+  fs.writeFileSync(
+    inputPaths.geoJSON.spots,
+    JSON.stringify({
+      type: "FeatureCollection",
+      features: [],
+    }),
+  );
 }
 
 export function mockFeatureFiles(

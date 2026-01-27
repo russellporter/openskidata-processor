@@ -17,6 +17,7 @@ import { formatLift } from "./transforms/LiftFormatter";
 import * as MapboxGLFormatter from "./transforms/MapboxGLFormatter";
 import { formatRun } from "./transforms/RunFormatter";
 import { InputSkiAreaType, formatSkiArea } from "./transforms/SkiAreaFormatter";
+import { formatSpots } from "./transforms/SpotFormatter";
 import { generateTiles } from "./transforms/TilesGenerator";
 import { runCommand } from "./utils/ProcessRunner";
 
@@ -27,7 +28,6 @@ import {
 } from "./transforms/SkiAreaSiteProvider";
 import {
   accumulate,
-  filter,
   flatMap,
   flatMapArray,
   map,
@@ -144,6 +144,17 @@ export default async function prepare(paths: DataPaths, config: Config) {
               .pipe(createWriteStream(paths.intermediate.lifts)),
           );
         });
+
+        await performanceMonitor.withOperation("Processing spots", async () => {
+          await StreamToPromise(
+            readGeoJSONFeatures(paths.input.geoJSON.spots)
+              .pipe(flatMapArray(formatSpots))
+              .pipe(map(addSkiAreaSites(siteProvider)))
+              .pipe(mapAsync(elevationTransform?.transform || null, 10))
+              .pipe(toFeatureCollection())
+              .pipe(createWriteStream(paths.intermediate.spots)),
+          );
+        });
       } finally {
         if (elevationTransform) {
           await elevationTransform.processor.close();
@@ -161,25 +172,31 @@ export default async function prepare(paths: DataPaths, config: Config) {
       "Exporting to Mapbox GeoJSON",
       async () => {
         await Promise.all(
-          [FeatureType.SkiArea, FeatureType.Lift, FeatureType.Run].map(
-            (type) => {
-              return StreamToPromise(
-                readGeoJSONFeatures(getPath(paths.output, type))
-                  .pipe(flatMap(MapboxGLFormatter.formatter(type)))
-                  .pipe(toFeatureCollection())
-                  .pipe(
-                    createWriteStream(getPath(paths.output.mapboxGL, type)),
-                  ),
-              );
-            },
-          ),
+          [
+            FeatureType.SkiArea,
+            FeatureType.Lift,
+            FeatureType.Run,
+            FeatureType.Spot,
+          ].map((type) => {
+            return StreamToPromise(
+              readGeoJSONFeatures(getPath(paths.output, type))
+                .pipe(flatMap(MapboxGLFormatter.formatter(type)))
+                .pipe(toFeatureCollection())
+                .pipe(createWriteStream(getPath(paths.output.mapboxGL, type))),
+            );
+          }),
         );
       },
     );
 
     await performanceMonitor.withOperation("Exporting to CSV", async () => {
       await Promise.all(
-        [FeatureType.SkiArea, FeatureType.Lift, FeatureType.Run].map((type) => {
+        [
+          FeatureType.SkiArea,
+          FeatureType.Lift,
+          FeatureType.Run,
+          FeatureType.Spot,
+        ].map((type) => {
           return StreamToPromise(
             readGeoJSONFeatures(getPath(paths.output, type))
               .pipe(flatMap(CSVFormatter.formatter(type)))
@@ -201,17 +218,25 @@ export default async function prepare(paths: DataPaths, config: Config) {
         console.log("Removed existing GeoPackage file");
       }
 
-      // Create a single GeoPackage with all three layers
-      const layerMap: Record<FeatureType.SkiArea | FeatureType.Lift | FeatureType.Run, string> = {
+      // Create a single GeoPackage with all four layers
+      const layerMap: Record<
+        | FeatureType.SkiArea
+        | FeatureType.Lift
+        | FeatureType.Run
+        | FeatureType.Spot,
+        string
+      > = {
         [FeatureType.SkiArea]: "ski_areas",
         [FeatureType.Lift]: "lifts",
         [FeatureType.Run]: "runs",
+        [FeatureType.Spot]: "spots",
       };
 
       for (const type of [
         FeatureType.SkiArea,
         FeatureType.Lift,
         FeatureType.Run,
+        FeatureType.Spot,
       ] as const) {
         await convertGeoJSONToGeoPackage(
           getPath(paths.output, type),
