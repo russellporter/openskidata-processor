@@ -1,7 +1,7 @@
 import { assert } from "console";
 import * as path from "path";
 
-export type GeocodingServerType = 'photon' | 'geocode-api';
+export type GeocodingServerType = "photon" | "geocode-api";
 
 export type GeocodingServerConfig = {
   url: string;
@@ -16,7 +16,7 @@ export type SnowCoverConfig = {
   fetchPolicy: SnowCoverFetchPolicy;
 };
 
-export type ElevationServerType = 'racemap' | 'tileserver-gl';
+export type ElevationServerType = "racemap" | "tileserver-gl";
 
 export type ElevationServerConfig = {
   url: string;
@@ -87,9 +87,13 @@ export function configFromEnvironment(): Config {
     elevationServer: elevationServerURL
       ? {
           url: elevationServerURL,
-          type: (process.env["ELEVATION_SERVER_TYPE"] as ElevationServerType) ?? 'racemap',
+          type:
+            (process.env["ELEVATION_SERVER_TYPE"] as ElevationServerType) ??
+            "racemap",
           zoom: process.env["ELEVATION_SERVER_ZOOM"]
-            ? process.env["ELEVATION_SERVER_ZOOM"].split(',').map(z => parseInt(z.trim()))
+            ? process.env["ELEVATION_SERVER_ZOOM"]
+                .split(",")
+                .map((z) => parseInt(z.trim()))
             : undefined,
         }
       : null,
@@ -97,7 +101,9 @@ export function configFromEnvironment(): Config {
       process.env.GEOCODING_SERVER_URL !== undefined
         ? {
             url: process.env.GEOCODING_SERVER_URL,
-            type: (process.env.GEOCODING_SERVER_TYPE as GeocodingServerType) || 'photon',
+            type:
+              (process.env.GEOCODING_SERVER_TYPE as GeocodingServerType) ||
+              "photon",
             cacheTTL:
               geocodingCacheTTL !== undefined
                 ? Number.parseInt(geocodingCacheTTL)

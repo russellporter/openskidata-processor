@@ -32,8 +32,8 @@ describe("SkiAreaFormatter", () => {
       },
     };
 
-    expect(formatSkiArea(InputSkiAreaType.OPENSTREETMAP_LANDUSE)(feature)).
-toMatchInlineSnapshot(`
+    expect(formatSkiArea(InputSkiAreaType.OPENSTREETMAP_LANDUSE)(feature))
+      .toMatchInlineSnapshot(`
 {
   "geometry": {
     "coordinates": [
@@ -158,8 +158,8 @@ toMatchInlineSnapshot(`
       },
     };
 
-    expect(formatSkiArea(InputSkiAreaType.SKIMAP_ORG)(feature)).
-toMatchInlineSnapshot(`
+    expect(formatSkiArea(InputSkiAreaType.SKIMAP_ORG)(feature))
+      .toMatchInlineSnapshot(`
 {
   "geometry": {
     "coordinates": [
@@ -204,8 +204,8 @@ toMatchInlineSnapshot(`
       },
     };
 
-    expect(formatSkiArea(InputSkiAreaType.OPENSTREETMAP_SITE)(site)).
-toMatchInlineSnapshot(`
+    expect(formatSkiArea(InputSkiAreaType.OPENSTREETMAP_SITE)(site))
+      .toMatchInlineSnapshot(`
 {
   "geometry": {
     "coordinates": [

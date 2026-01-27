@@ -353,7 +353,6 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
     return { setParts, values };
   }
 
-
   private async enablePostGIS(): Promise<void> {
     const pool = this.ensureInitialized();
 
@@ -545,7 +544,9 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
     });
   }
 
-  async getSkiAreas(options: GetSkiAreasOptions): Promise<Cursor<SkiAreaObject>> {
+  async getSkiAreas(
+    options: GetSkiAreasOptions,
+  ): Promise<Cursor<SkiAreaObject>> {
     const pool = this.ensureInitialized();
 
     let query = "SELECT * FROM objects WHERE type = 'SKI_AREA'";
@@ -584,7 +585,10 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
     );
   }
 
-  async getSkiAreasByIds(ids: string[], useBatching: boolean): Promise<Cursor<SkiAreaObject>> {
+  async getSkiAreasByIds(
+    ids: string[],
+    useBatching: boolean,
+  ): Promise<Cursor<SkiAreaObject>> {
     const pool = this.ensureInitialized();
 
     if (ids.length === 0) {
@@ -729,9 +733,7 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
       async () => {
         const rows = await this.executeQuery<any[]>(query, params);
         const allFound = rows.map(this.rowToMapObject);
-        allFound.forEach((object) =>
-          context.alreadyVisited.push(object._key),
-        );
+        allFound.forEach((object) => context.alreadyVisited.push(object._key));
         return allFound;
       },
       () => ({
@@ -960,9 +962,9 @@ export class PostgreSQLCursor<T extends MapObject> implements Cursor<T> {
     // Validate that queries using batching have ORDER BY for deterministic results
     if (batchSize < Number.MAX_SAFE_INTEGER && !this.hasOrderBy(query)) {
       throw new Error(
-        'Query must include ORDER BY clause for deterministic pagination. ' +
-        'Without ORDER BY, OFFSET-based batching can skip or duplicate rows.\n' +
-        `Query: ${query.substring(0, 100)}...`
+        "Query must include ORDER BY clause for deterministic pagination. " +
+          "Without ORDER BY, OFFSET-based batching can skip or duplicate rows.\n" +
+          `Query: ${query.substring(0, 100)}...`,
       );
     }
   }
@@ -971,8 +973,8 @@ export class PostgreSQLCursor<T extends MapObject> implements Cursor<T> {
    * Checks if the query contains an ORDER BY clause.
    */
   private hasOrderBy(query: string): boolean {
-    const normalizedQuery = query.trim().replace(/\s+/g, ' ').toUpperCase();
-    return normalizedQuery.includes(' ORDER BY ');
+    const normalizedQuery = query.trim().replace(/\s+/g, " ").toUpperCase();
+    return normalizedQuery.includes(" ORDER BY ");
   }
 
   async nextBatch(): Promise<T[] | null> {
@@ -983,11 +985,7 @@ export class PostgreSQLCursor<T extends MapObject> implements Cursor<T> {
     const client = await this.pool.connect();
     try {
       const paginatedQuery = `${this.query} LIMIT $${this.params.length + 1} OFFSET $${this.params.length + 2}`;
-      const paginatedParams = [
-        ...this.params,
-        this.batchSize,
-        this.offset,
-      ];
+      const paginatedParams = [...this.params, this.batchSize, this.offset];
 
       const result = await client.query(paginatedQuery, paginatedParams);
 

@@ -6,7 +6,11 @@ import {
   LiftFeature,
   RunFeature,
 } from "openskidata-format";
-import { ElevationServerConfig, ElevationServerType, PostgresConfig } from "../Config";
+import {
+  ElevationServerConfig,
+  ElevationServerType,
+  PostgresConfig,
+} from "../Config";
 import { PostgresCache } from "../utils/PostgresCache";
 
 const elevationProfileResolution = 25;
@@ -14,9 +18,7 @@ const ELEVATION_CACHE_TTL_MS = 365 * 24 * 60 * 60 * 1000; // 1 year
 const DEFAULT_TILESERVER_ZOOM = [12];
 const ERROR_LOG_THROTTLE_MS = 60000; // Log unique errors at most once per minute
 
-type Result<T, E = Error> =
-  | { ok: true; value: T }
-  | { ok: false; error: E };
+type Result<T, E = Error> = { ok: true; value: T } | { ok: false; error: E };
 
 class ThrottledLogger {
   private lastLoggedErrors: Map<string, number> = new Map();
@@ -85,14 +87,14 @@ export async function createElevationProcessor(
       const allCoordinates = Array.from(coordinates).concat(
         elevationProfileCoordinates,
       );
-      const geohashes = allCoordinates.map(([lng, lat]) =>
-        geohash.encode(lat, lng, 10), // 10: +-1m accuracy
+      const geohashes = allCoordinates.map(
+        ([lng, lat]) => geohash.encode(lat, lng, 10), // 10: +-1m accuracy
       );
 
       // Load elevations using DataLoader
       const elevationResults = await Promise.all(
         geohashes.map((hash) => elevationLoader.load(hash)),
-      )
+      );
 
       // Round elevations, and fail if any are nulls
       elevations = elevationResults.map((elevation) => {
@@ -166,10 +168,8 @@ async function batchLoadElevations(
   }
 
   // Fetch elevations for uncached coordinates
-  const fetchedElevations: Result<number | null, string>[] = await fetchElevationsFromServer(
-    uncachedCoordinates,
-    elevationServerConfig,
-  );
+  const fetchedElevations: Result<number | null, string>[] =
+    await fetchElevationsFromServer(uncachedCoordinates, elevationServerConfig);
 
   if (uncachedCoordinates.length !== fetchedElevations.length) {
     throw new Error(
@@ -206,8 +206,10 @@ async function batchLoadElevations(
 
   // Log summary if there were errors
   if (errorCount > 0) {
-    throttledLogger.log('elevation-error-summary', () => {
-      console.warn(`Failed to fetch elevation for ${errorCount} of ${fetchedElevations.length} coordinates`);
+    throttledLogger.log("elevation-error-summary", () => {
+      console.warn(
+        `Failed to fetch elevation for ${errorCount} of ${fetchedElevations.length} coordinates`,
+      );
     });
   }
 
@@ -224,11 +226,21 @@ async function fetchElevationsFromServer(
   elevationServerConfig: ElevationServerConfig,
 ): Promise<Result<number | null, string>[]> {
   switch (elevationServerConfig.type) {
-    case 'racemap':
-      const racemapResults = await fetchElevationsFromRacemap(coordinates, elevationServerConfig.url);
-      return racemapResults.map(elevation => ({ ok: true, value: elevation }));
-    case 'tileserver-gl':
-      return await fetchElevationsFromTileserverGL(coordinates, elevationServerConfig.url, elevationServerConfig.zoom ?? DEFAULT_TILESERVER_ZOOM);
+    case "racemap":
+      const racemapResults = await fetchElevationsFromRacemap(
+        coordinates,
+        elevationServerConfig.url,
+      );
+      return racemapResults.map((elevation) => ({
+        ok: true,
+        value: elevation,
+      }));
+    case "tileserver-gl":
+      return await fetchElevationsFromTileserverGL(
+        coordinates,
+        elevationServerConfig.url,
+        elevationServerConfig.zoom ?? DEFAULT_TILESERVER_ZOOM,
+      );
     default:
       const exhaustiveCheck: never = elevationServerConfig.type;
       throw new Error(`Unknown elevation server type: ${exhaustiveCheck}`);
@@ -269,10 +281,11 @@ async function fetchElevationsBatchFromTileserverGLAtZoom(
     }));
 
     const response = await fetch(batchEndpointUrl, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'User-Agent': 'openskidata-processor/1.0.0 (+https://github.com/russellporter/openskidata-processor)',
+        "Content-Type": "application/json",
+        "User-Agent":
+          "openskidata-processor/1.0.0 (+https://github.com/russellporter/openskidata-processor)",
       },
       body: JSON.stringify({ points }),
     });
@@ -284,8 +297,14 @@ async function fetchElevationsBatchFromTileserverGLAtZoom(
     const elevations = await response.json();
 
     // Response should be an array of elevations (or null) in the same order
-    if (!Array.isArray(elevations) || elevations.length !== coordinates.length) {
-      return { ok: false, error: `Invalid batch response: expected array of ${coordinates.length} elevations` };
+    if (
+      !Array.isArray(elevations) ||
+      elevations.length !== coordinates.length
+    ) {
+      return {
+        ok: false,
+        error: `Invalid batch response: expected array of ${coordinates.length} elevations`,
+      };
     }
 
     return { ok: true, value: elevations };
@@ -332,7 +351,10 @@ async function fetchElevationsFromTileserverGL(
     }
 
     // Process batch results
-    const newCoordinatesNeedingData: Array<{ index: number; coords: number[] }> = [];
+    const newCoordinatesNeedingData: Array<{
+      index: number;
+      coords: number[];
+    }> = [];
 
     for (let i = 0; i < coordinatesNeedingData.length; i++) {
       const { index } = coordinatesNeedingData[i];

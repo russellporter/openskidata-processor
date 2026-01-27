@@ -112,7 +112,10 @@ describe("GeoPackageMerger", () => {
     await sourceWriter.close();
 
     // Merge source into target
-    const result = await merger.mergeGeoPackages(targetGpkgPath, sourceGpkgPath);
+    const result = await merger.mergeGeoPackages(
+      targetGpkgPath,
+      sourceGpkgPath,
+    );
 
     // Verify the merge was successful
     expect(result.tablesProcessed).toBeGreaterThan(0);
@@ -179,7 +182,10 @@ describe("GeoPackageMerger", () => {
     await sourceWriter.close();
 
     // Merge source into target
-    const result = await merger.mergeGeoPackages(targetGpkgPath, sourceGpkgPath);
+    const result = await merger.mergeGeoPackages(
+      targetGpkgPath,
+      sourceGpkgPath,
+    );
 
     // Verify the merge handled duplicates gracefully
     expect(result.tablesProcessed).toBeGreaterThan(0);
@@ -224,7 +230,10 @@ describe("GeoPackageMerger", () => {
     await sourceWriter.close();
 
     // Merge source into target
-    const result = await merger.mergeGeoPackages(targetGpkgPath, sourceGpkgPath);
+    const result = await merger.mergeGeoPackages(
+      targetGpkgPath,
+      sourceGpkgPath,
+    );
 
     // Verify no errors occurred
     expect(result.errors).toHaveLength(0);

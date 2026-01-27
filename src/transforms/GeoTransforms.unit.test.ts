@@ -1,4 +1,10 @@
-import { lineString, multiLineString, multiPolygon, point, polygon } from "@turf/helpers";
+import {
+  lineString,
+  multiLineString,
+  multiPolygon,
+  point,
+  polygon,
+} from "@turf/helpers";
 import {
   centralPointsInFeature,
   extractPointsAlongGeometry,
@@ -46,26 +52,26 @@ describe("GeoTransforms", () => {
 
     it("should provide point inside polygon that is not in the hole", () => {
       expect(
-  centralPointsInFeature(
-    polygon([
-    [
-    [0, 0],
-    [1, 0],
-    [1, 1],
-    [0, 1],
-    [0, 0]],
+        centralPointsInFeature(
+          polygon([
+            [
+              [0, 0],
+              [1, 0],
+              [1, 1],
+              [0, 1],
+              [0, 0],
+            ],
 
-
-    [
-    [0.25, 0.25],
-    [0.25, 0.75],
-    [0.75, 0.75],
-    [0.75, 0.25],
-    [0.25, 0.25]]]
-
-    ).geometry
-  )
-).toMatchInlineSnapshot(`
+            [
+              [0.25, 0.25],
+              [0.25, 0.75],
+              [0.75, 0.75],
+              [0.75, 0.25],
+              [0.25, 0.25],
+            ],
+          ]).geometry,
+        ),
+      ).toMatchInlineSnapshot(`
 {
   "coordinates": [
     0.25000000000000006,

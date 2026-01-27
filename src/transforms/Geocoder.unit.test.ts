@@ -1,6 +1,10 @@
 import nock from "nock";
 import { getPostgresTestConfig } from "../Config";
-import Geocoder, { PhotonGeocode, GeocodeApiResponse, WhosOnFirstGeometry } from "./Geocoder";
+import Geocoder, {
+  PhotonGeocode,
+  GeocodeApiResponse,
+  WhosOnFirstGeometry,
+} from "./Geocoder";
 
 const geocoderURL = "http://geocoder.example.com";
 
@@ -350,7 +354,13 @@ describe("Geocoder", () => {
     it("handles geocode-api with only country", async () => {
       mockGeocodeApiHTTPResponse(
         mockGeocodeApiGeocode([
-          { id: 1, name: "Andorra", placetype: "country", iso_code: "AD", name_eng: "Andorra" },
+          {
+            id: 1,
+            name: "Andorra",
+            placetype: "country",
+            iso_code: "AD",
+            name_eng: "Andorra",
+          },
         ]),
       );
       await setupGeocodeApiGeocoder();
@@ -374,8 +384,20 @@ describe("Geocoder", () => {
     it("handles geocode-api with country and region", async () => {
       mockGeocodeApiHTTPResponse(
         mockGeocodeApiGeocode([
-          { id: 1, name: "Andorra", placetype: "country", iso_code: "AD", name_eng: "Andorra" },
-          { id: 2, name: "Andorra la Vella", placetype: "region", iso_code: "AD-07", name_eng: "Andorra la Vella" },
+          {
+            id: 1,
+            name: "Andorra",
+            placetype: "country",
+            iso_code: "AD",
+            name_eng: "Andorra",
+          },
+          {
+            id: 2,
+            name: "Andorra la Vella",
+            placetype: "region",
+            iso_code: "AD-07",
+            name_eng: "Andorra la Vella",
+          },
         ]),
       );
       await setupGeocodeApiGeocoder();
@@ -399,9 +421,26 @@ describe("Geocoder", () => {
     it("handles geocode-api with full data", async () => {
       mockGeocodeApiHTTPResponse(
         mockGeocodeApiGeocode([
-          { id: 1, name: "Andorra", placetype: "country", iso_code: "AD", name_eng: "Andorra" },
-          { id: 2, name: "Andorra la Vella", placetype: "region", iso_code: "AD-07", name_eng: "Andorra la Vella" },
-          { id: 3, name: "Andorra la Vella", placetype: "locality", name_eng: "Andorra la Vella" },
+          {
+            id: 1,
+            name: "Andorra",
+            placetype: "country",
+            iso_code: "AD",
+            name_eng: "Andorra",
+          },
+          {
+            id: 2,
+            name: "Andorra la Vella",
+            placetype: "region",
+            iso_code: "AD-07",
+            name_eng: "Andorra la Vella",
+          },
+          {
+            id: 3,
+            name: "Andorra la Vella",
+            placetype: "locality",
+            name_eng: "Andorra la Vella",
+          },
         ]),
       );
       await setupGeocodeApiGeocoder();
@@ -502,7 +541,7 @@ function mockGeocodeApiGeocode(
     timestamp: 0,
     url: "",
     response: {
-      geometries: geometries.map(g => ({
+      geometries: geometries.map((g) => ({
         id: g.id || 0,
         name: g.name || "",
         placetype: g.placetype || "",

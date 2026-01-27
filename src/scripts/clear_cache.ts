@@ -81,9 +81,7 @@ async function main() {
     console.error(
       `❌ Failed to connect to cache database: ${postgresConfig.cacheDatabase}`,
     );
-    console.error(
-      "Make sure the database exists and PostgreSQL is running.\n",
-    );
+    console.error("Make sure the database exists and PostgreSQL is running.\n");
     console.error(`Error: ${error}`);
     process.exit(1);
   }

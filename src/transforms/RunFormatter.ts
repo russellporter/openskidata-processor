@@ -147,7 +147,6 @@ function getOneway(tags: OSMRunTags, uses: RunUse[]): boolean | null {
   return null;
 }
 
-
 function getGrooming(tags: OSMRunTags): RunGrooming | null {
   const value = tags["piste:grooming"]?.replace(";", "+");
   if (value) {

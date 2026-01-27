@@ -169,10 +169,7 @@ function extractPointsFromLine(
  * Returns deduplicated array of positions.
  */
 export function extractPointsAlongGeometry(
-  geometry:
-    | GeoJSON.LineString
-    | GeoJSON.MultiLineString
-    | GeoJSON.Polygon,
+  geometry: GeoJSON.LineString | GeoJSON.MultiLineString | GeoJSON.Polygon,
   intervalKm: number,
 ): GeoJSON.Position[] {
   const points: GeoJSON.Position[] = [];
@@ -197,8 +194,7 @@ export function extractPointsAlongGeometry(
   // Deduplicate positions
   const uniquePoints = points.filter(
     (point, index, self) =>
-      index ===
-      self.findIndex((p) => p[0] === point[0] && p[1] === point[1]),
+      index === self.findIndex((p) => p[0] === point[0] && p[1] === point[1]),
   );
 
   return uniquePoints;

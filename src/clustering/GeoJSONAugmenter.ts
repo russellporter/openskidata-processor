@@ -24,9 +24,7 @@ export default async function augmentGeoJSONFeatures(
       .pipe(
         mapAsync(async (feature: AugmentedMapFeature) => {
           // Fetch the map object from the database
-          const mapObject = await database.getObjectById(
-            feature.properties.id,
-          );
+          const mapObject = await database.getObjectById(feature.properties.id);
 
           if (!mapObject) {
             return feature;
@@ -34,21 +32,28 @@ export default async function augmentGeoJSONFeatures(
 
           // Get ski areas from the map object
           const skiAreaIds = mapObject.skiAreas;
-          const skiAreas = skiAreaIds.length > 0
-            ? await database.getSkiAreasByIds(skiAreaIds, false).then(cursor => cursor.all())
-            : [];
+          const skiAreas =
+            skiAreaIds.length > 0
+              ? await database
+                  .getSkiAreasByIds(skiAreaIds, false)
+                  .then((cursor) => cursor.all())
+              : [];
 
           feature.properties.skiAreas = skiAreas
             .map(objectToFeature)
             .map(toSkiAreaSummary);
 
           // Set places from the map object
-          if ('properties' in mapObject && 'places' in mapObject.properties) {
+          if ("properties" in mapObject && "places" in mapObject.properties) {
             feature.properties.places = mapObject.properties.places;
           }
 
           // Add snow cover history for runs if snow cover config is provided
-          if (snowCoverConfig && featureType === FeatureType.Run && mapObject.type === 'RUN') {
+          if (
+            snowCoverConfig &&
+            featureType === FeatureType.Run &&
+            mapObject.type === "RUN"
+          ) {
             const snowCoverHistory = await generateRunSnowCoverHistory(
               mapObject as RunObject,
               postgresConfig,

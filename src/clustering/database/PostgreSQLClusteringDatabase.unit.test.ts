@@ -1,4 +1,7 @@
-import { PostgreSQLClusteringDatabase, PostgreSQLCursor } from "./PostgreSQLClusteringDatabase";
+import {
+  PostgreSQLClusteringDatabase,
+  PostgreSQLCursor,
+} from "./PostgreSQLClusteringDatabase";
 import { MapObjectType } from "../MapObject";
 import { SkiAreaActivity } from "openskidata-format";
 import { getPostgresTestConfig } from "../../Config";
@@ -174,7 +177,7 @@ describe("PostgreSQLClusteringDatabase", () => {
         "SELECT * FROM objects WHERE type = 'RUN'",
         [],
         (row: any) => row as any,
-        1000
+        1000,
       );
     }).toThrow(/ORDER BY/);
   });
@@ -189,7 +192,7 @@ describe("PostgreSQLClusteringDatabase", () => {
         "SELECT * FROM objects WHERE type = 'RUN'",
         [],
         (row: any) => row as any,
-        Number.MAX_SAFE_INTEGER
+        Number.MAX_SAFE_INTEGER,
       );
     }).not.toThrow();
   });

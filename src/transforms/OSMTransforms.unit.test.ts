@@ -17,7 +17,7 @@ describe("OSMTransforms", () => {
     it("should prioritize piste:loc_ref over other ref tags", () => {
       const properties: TestProperties = {
         ref: "1",
-        "loc_ref": "2",
+        loc_ref: "2",
         "piste:ref": "3",
         "piste:loc_ref": "4",
       };
@@ -27,7 +27,7 @@ describe("OSMTransforms", () => {
     it("should prioritize piste:ref over loc_ref and ref", () => {
       const properties: TestProperties = {
         ref: "1",
-        "loc_ref": "2",
+        loc_ref: "2",
         "piste:ref": "3",
       };
       expect(getOSMRef(properties)).toBe("3");
@@ -36,7 +36,7 @@ describe("OSMTransforms", () => {
     it("should prioritize loc_ref over ref", () => {
       const properties: TestProperties = {
         ref: "1",
-        "loc_ref": "2",
+        loc_ref: "2",
       };
       expect(getOSMRef(properties)).toBe("2");
     });

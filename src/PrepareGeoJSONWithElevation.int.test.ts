@@ -31,7 +31,7 @@ beforeEach(() => {
   testConfig = {
     elevationServer: {
       url: "http://elevation.example.com",
-      type: 'racemap',
+      type: "racemap",
     },
     bbox: null,
     geocodingServer: null,
@@ -356,8 +356,8 @@ it("adds elevations to run polygons", async () => {
 
   await prepare(paths, testConfig);
 
-  expect(TestHelpers.fileContents(paths.output.runs).features[0].geometry).
-toMatchInlineSnapshot(`
+  expect(TestHelpers.fileContents(paths.output.runs).features[0].geometry)
+    .toMatchInlineSnapshot(`
 {
   "coordinates": [
     [

@@ -62,7 +62,10 @@ export interface ClusteringDatabase {
    * @param ids - Array of ski area IDs to retrieve
    * @param useBatching - When false, loads all results into memory upfront. When true, streams in batches.
    */
-  getSkiAreasByIds(ids: string[], useBatching: boolean): Promise<Cursor<SkiAreaObject>>;
+  getSkiAreasByIds(
+    ids: string[],
+    useBatching: boolean,
+  ): Promise<Cursor<SkiAreaObject>>;
 
   /**
    * Get all runs in the database

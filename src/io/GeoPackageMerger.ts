@@ -45,8 +45,10 @@ export class GeoPackageMerger {
     new RTreeIndex(sourceGp, null as any);
 
     // Get the underlying better-sqlite3 Database objects
-    const targetDb = (targetGp.connection.adapter as any).db as Database.Database;
-    const sourceDb = (sourceGp.connection.adapter as any).db as Database.Database;
+    const targetDb = (targetGp.connection.adapter as any)
+      .db as Database.Database;
+    const sourceDb = (sourceGp.connection.adapter as any)
+      .db as Database.Database;
 
     // Enable performance optimizations
     this.optimizeDatabase(targetDb);

@@ -61,8 +61,14 @@ export class PerformanceMonitor {
     // Display each phase
     for (const [phaseName, metrics] of sortedPhases) {
       // Using reduce() instead of spread operator to avoid stack overflow with large metric arrays
-      const phaseStartTime = metrics.reduce((min, m) => Math.min(min, m.startTime), Infinity);
-      const phaseEndTime = metrics.reduce((max, m) => Math.max(max, m.endTime), -Infinity);
+      const phaseStartTime = metrics.reduce(
+        (min, m) => Math.min(min, m.startTime),
+        Infinity,
+      );
+      const phaseEndTime = metrics.reduce(
+        (max, m) => Math.max(max, m.endTime),
+        -Infinity,
+      );
       const phaseDuration = phaseEndTime - phaseStartTime;
 
       console.log(`${phaseName} (${this.formatDuration(phaseDuration)})`);
@@ -134,7 +140,11 @@ export class PerformanceMonitor {
           const childOps = childrenMap.get(metric.operationId) || [];
 
           // Push children onto stack in reverse order so they're processed in correct order
-          for (let childIndex = childOps.length - 1; childIndex >= 0; childIndex--) {
+          for (
+            let childIndex = childOps.length - 1;
+            childIndex >= 0;
+            childIndex--
+          ) {
             const childMetric = childOps[childIndex];
             const isLastChild = childIndex === childOps.length - 1;
             const childPrefix = isLast ? "   " : "│  ";

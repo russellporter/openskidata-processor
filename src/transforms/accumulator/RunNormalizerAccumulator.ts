@@ -13,9 +13,10 @@ import {
 } from "../normalization/MergeOverlappingRuns";
 import Accumulator from "./Accumulator";
 
-export class RunNormalizerAccumulator
-  implements Accumulator<FormattedInputRunFeature, RunFeature>
-{
+export class RunNormalizerAccumulator implements Accumulator<
+  FormattedInputRunFeature,
+  RunFeature
+> {
   private features: FormattedInputRunFeature[];
 
   constructor() {
