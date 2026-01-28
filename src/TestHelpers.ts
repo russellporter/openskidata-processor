@@ -34,6 +34,7 @@ import {
   InputSkiMapOrgSkiAreaFeature,
   OSMSkiAreaSite,
 } from "./features/SkiAreaFeature";
+import { InputSpotFeature } from "./features/SpotFeature";
 import {
   DataPaths,
   GeoJSONIntermediatePaths,
@@ -68,6 +69,7 @@ export function mockInputFiles(
     openStreetMapSkiAreaSites: OSMSkiAreaSite[];
     lifts: InputLiftFeature[];
     runs: InputRunFeature[];
+    spots?: InputSpotFeature[];
   },
   inputPaths: InputDataPaths,
 ) {
@@ -109,7 +111,7 @@ export function mockInputFiles(
     inputPaths.geoJSON.spots,
     JSON.stringify({
       type: "FeatureCollection",
-      features: [],
+      features: input.spots || [],
     }),
   );
 }
@@ -157,8 +159,10 @@ export function contents(paths: GeoJSONOutputPaths): FolderContents {
     paths.mapboxGL.lifts,
     paths.mapboxGL.runs,
     paths.mapboxGL.skiAreas,
+    paths.mapboxGL.spots,
     paths.runs,
     paths.skiAreas,
+    paths.spots,
   ]
     .filter((path) => fs.existsSync(path))
     .reduce((contents: FolderContents, filePath: string) => {

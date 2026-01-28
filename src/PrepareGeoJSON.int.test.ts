@@ -1,4 +1,4 @@
-import { SkiAreaActivity } from "openskidata-format";
+import { SkiAreaActivity, SpotType } from "openskidata-format";
 import { Config, getPostgresTestConfig } from "./Config";
 import prepare from "./PrepareGeoJSON";
 import * as TestHelpers from "./TestHelpers";
@@ -6,6 +6,7 @@ import {
   simplifiedLiftFeature,
   simplifiedRunFeature,
   simplifiedSkiAreaFeature,
+  simplifiedSpotFeature,
 } from "./TestHelpers";
 
 function createTestConfig(): Config {
@@ -56,11 +57,19 @@ it("produces empty output for empty input", async () => {
         "features": [],
         "type": "FeatureCollection",
       },
+      "output/mapboxgl_spots.geojson" => {
+        "features": [],
+        "type": "FeatureCollection",
+      },
       "output/runs.geojson" => {
         "features": [],
         "type": "FeatureCollection",
       },
       "output/ski_areas.geojson" => {
+        "features": [],
+        "type": "FeatureCollection",
+      },
+      "output/spots.geojson" => {
         "features": [],
         "type": "FeatureCollection",
       },
@@ -317,6 +326,10 @@ Map {
     ],
     "type": "FeatureCollection",
   },
+  "output/mapboxgl_spots.geojson" => {
+    "features": [],
+    "type": "FeatureCollection",
+  },
   "output/runs.geojson" => {
     "features": [
       {
@@ -444,6 +457,10 @@ Map {
         "type": "Feature",
       },
     ],
+    "type": "FeatureCollection",
+  },
+  "output/spots.geojson" => {
+    "features": [],
     "type": "FeatureCollection",
   },
 }
@@ -641,6 +658,140 @@ it("processes OpenStreetMap ski area sites", async () => {
     "skiAreas": [
       "2033ab9be8698fcd4794c24e42782bf33c124e8d",
     ],
+  },
+]
+`);
+});
+
+it("processes spot entities", async () => {
+  const paths = TestHelpers.getFilePaths();
+  TestHelpers.mockInputFiles(
+    {
+      skiMapSkiAreas: [
+        {
+          type: "Feature",
+          properties: {
+            id: "13666",
+            name: "Test Ski Area",
+            status: null,
+            activities: [SkiAreaActivity.Downhill],
+            scalerank: 1,
+            official_website: null,
+          },
+          geometry: {
+            type: "Point",
+            coordinates: [11.122066084534, 47.557111836837],
+          },
+        },
+      ],
+      openStreetMapSkiAreas: [],
+      openStreetMapSkiAreaSites: [],
+      lifts: [],
+      runs: [],
+      spots: [
+        {
+          type: "Feature",
+          id: "node/123456",
+          properties: {
+            type: "node",
+            id: 123456,
+            tags: {
+              aerialway: "station",
+              "aerialway:access": "both",
+              name: "Base Station",
+            },
+          },
+          geometry: {
+            type: "Point",
+            coordinates: [11.122, 47.557],
+          },
+        },
+        {
+          type: "Feature",
+          id: "node/123457",
+          properties: {
+            type: "node",
+            id: 123457,
+            tags: {
+              amenity: "avalanche_transceiver",
+              avalanche_transceiver: "checkpoint",
+            },
+          },
+          geometry: {
+            type: "Point",
+            coordinates: [11.123, 47.558],
+          },
+        },
+        {
+          type: "Feature",
+          id: "node/123458",
+          properties: {
+            type: "node",
+            id: 123458,
+            tags: {
+              man_made: "piste:halfpipe",
+            },
+          },
+          geometry: {
+            type: "Point",
+            coordinates: [11.124, 47.559],
+          },
+        },
+        {
+          type: "Feature",
+          id: "node/123459",
+          properties: {
+            type: "node",
+            id: 123459,
+            tags: {
+              "piste:dismount": "yes",
+            },
+          },
+          geometry: {
+            type: "Point",
+            coordinates: [11.125, 47.56],
+          },
+        },
+      ],
+    },
+    paths.input,
+  );
+
+  await prepare(paths, createTestConfig());
+
+  expect(
+    TestHelpers.fileContents(paths.output.spots).features.map(
+      simplifiedSpotFeature,
+    ),
+  ).toMatchInlineSnapshot(`
+[
+  {
+    "id": "a8a3c9a787af7eaf5eb06bc2d98a5efefcc00da5",
+    "skiAreas": [
+      "02911313f405ef0415188ceb357b415f02af5d64",
+    ],
+    "spotType": "lift_station",
+  },
+  {
+    "id": "f600d71632dca9be0db9329fb195db78b05a5925",
+    "skiAreas": [
+      "02911313f405ef0415188ceb357b415f02af5d64",
+    ],
+    "spotType": "avalanche_transceiver_checkpoint",
+  },
+  {
+    "id": "fa5db1e311482c3d3e5aa9fa050d048f1da67568",
+    "skiAreas": [
+      "02911313f405ef0415188ceb357b415f02af5d64",
+    ],
+    "spotType": "halfpipe",
+  },
+  {
+    "id": "4f5a803958dbab90d2aac06681d5a5d7ef1bcf5a",
+    "skiAreas": [
+      "02911313f405ef0415188ceb357b415f02af5d64",
+    ],
+    "spotType": "crossing",
   },
 ]
 `);
