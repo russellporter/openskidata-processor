@@ -70,6 +70,28 @@ if [ ! -f /var/lib/postgresql/data/PG_VERSION ]; then
     su - postgres -c "/usr/lib/postgresql/15/bin/pg_ctl -D /var/lib/postgresql/data stop"
 fi
 
+# Start PostgreSQL temporarily to clean up old clustering databases
+echo "Starting PostgreSQL for maintenance..."
+su - postgres -c "/usr/lib/postgresql/15/bin/pg_ctl -D /var/lib/postgresql/data -l /var/log/postgresql/postgresql-15-main.log start"
+
+# Wait for PostgreSQL to start
+sleep 3
+
+# Clean up clustering databases older than 1 day
+echo "Checking for old clustering databases to clean up..."
+su - postgres -c "psql -t -c \"
+  SELECT 'DROP DATABASE IF EXISTS \"' || datname || '\";'
+  FROM pg_database
+  WHERE datname LIKE 'clustering-%'
+    AND (pg_stat_file('base/'||oid ||'/PG_VERSION')).modification < NOW() - INTERVAL '1 day'
+\" | psql"
+
+# Stop PostgreSQL
+su - postgres -c "/usr/lib/postgresql/15/bin/pg_ctl -D /var/lib/postgresql/data stop"
+
+# Wait for PostgreSQL to stop
+sleep 2
+
 # Run PostgreSQL in foreground as the main process
 echo "Starting PostgreSQL in foreground..."
 exec su - postgres -c "/usr/lib/postgresql/15/bin/postgres -D /var/lib/postgresql/data -c config_file=/etc/postgresql/15/main/postgresql.conf"

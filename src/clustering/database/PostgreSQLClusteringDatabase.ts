@@ -157,51 +157,12 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
     // Wait a bit more to ensure all connections are properly closed
     await new Promise((resolve) => setTimeout(resolve, 200));
 
-    // Delete the temporary database
-    const adminPoolConfig = getPostgresPoolConfig(
-      "postgres",
-      this.postgresConfig,
+    console.log(
+      `✅ Closed connections to clustering database: ${this.databaseName}`,
     );
-    adminPoolConfig.connectionTimeoutMillis = 2000;
-
-    const adminPool = new Pool(adminPoolConfig);
-
-    try {
-      const adminClient = await adminPool.connect();
-      try {
-        // Terminate any existing connections to the database before dropping it
-        // Wrap in try-catch to handle connection termination errors gracefully
-        try {
-          await adminClient.query(`
-            SELECT pg_terminate_backend(pg_stat_activity.pid)
-            FROM pg_stat_activity
-            WHERE pg_stat_activity.datname = '${this.databaseName}'
-              AND pid <> pg_backend_pid()
-          `);
-        } catch (terminateError) {
-          // Connection termination errors are expected during shutdown
-          console.debug(`Connection termination completed: ${terminateError}`);
-        }
-
-        await adminClient.query(
-          `DROP DATABASE IF EXISTS "${this.databaseName}"`,
-        );
-        console.log(`✅ Deleted temporary database: ${this.databaseName}`);
-      } finally {
-        adminClient.release();
-      }
-    } catch (error) {
-      console.warn(
-        `Failed to delete temporary database ${this.databaseName}: ${error}`,
-      );
-    } finally {
-      try {
-        await adminPool.end();
-      } catch (poolError) {
-        // Ignore pool cleanup errors during shutdown
-        console.debug(`Admin pool cleanup: ${poolError}`);
-      }
-    }
+    console.log(
+      `   Database will be cleaned up automatically after 1 day if not in use`,
+    );
   }
 
   private ensureInitialized(): Pool {
