@@ -180,7 +180,14 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
       const result = await client.query(query, params);
       return result.rows as T;
     } catch (error) {
-      console.error(`Query failed: ${query.substring(0, 100)}...`, error);
+      console.error(`Query failed:`);
+      console.error(`Query: ${query}`);
+      console.error(
+        `Parameters: ${JSON.stringify(params, null, 2).substring(0, 5000)}${
+          JSON.stringify(params).length > 5000 ? "... (truncated)" : ""
+        }`,
+      );
+      console.error(`Error:`, error);
       throw error;
     } finally {
       client.release();
