@@ -18,6 +18,10 @@ import {
   SkiAreaStatistics,
   Source,
   SourceType,
+  SpotFeature,
+  SpotGeometry,
+  SpotProperties,
+  SpotType,
   Status,
 } from "openskidata-format";
 import * as path from "path";
@@ -115,6 +119,7 @@ export function mockFeatureFiles(
   lifts: LiftFeature[],
   runs: RunFeature[],
   intermedatePaths: GeoJSONIntermediatePaths,
+  spots?: SpotFeature[],
 ) {
   fs.writeFileSync(
     intermedatePaths.skiAreas,
@@ -135,6 +140,13 @@ export function mockFeatureFiles(
     JSON.stringify({
       type: "FeatureCollection",
       features: runs,
+    }),
+  );
+  fs.writeFileSync(
+    intermedatePaths.spots,
+    JSON.stringify({
+      type: "FeatureCollection",
+      features: spots || [],
     }),
   );
 }
@@ -250,6 +262,69 @@ export function mockLiftFeature<G extends LiftGeometry>(options: {
   };
 }
 
+export function mockSpotFeature<G extends SpotGeometry>(
+  options: {
+    id: string;
+    spotType: SpotType;
+    geometry: G;
+    skiAreas?: SkiAreaFeature[];
+    sources?: Source[];
+    places?: Place[];
+  } & (
+    | { spotType: SpotType.LiftStation; name?: string | null }
+    | { spotType: Exclude<SpotType, SpotType.LiftStation> }
+  ),
+): GeoJSON.Feature<G, SpotProperties> {
+  const baseProperties = {
+    type: FeatureType.Spot as const,
+    id: options.id,
+    skiAreas: options.skiAreas || [],
+    sources: options.sources || [],
+    places: options.places || [],
+  };
+
+  let properties: SpotProperties;
+  if (options.spotType === SpotType.LiftStation) {
+    properties = {
+      ...baseProperties,
+      spotType: SpotType.LiftStation,
+      name: "name" in options ? options.name || null : null,
+      position: null,
+      entry: null,
+      exit: null,
+    };
+  } else if (options.spotType === SpotType.Crossing) {
+    properties = {
+      ...baseProperties,
+      spotType: SpotType.Crossing,
+      dismount: null,
+    } as any;
+  } else if (options.spotType === SpotType.AvalancheTransceiverTraining) {
+    properties = {
+      ...baseProperties,
+      spotType: SpotType.AvalancheTransceiverTraining,
+    };
+  } else if (options.spotType === SpotType.AvalancheTransceiverCheckpoint) {
+    properties = {
+      ...baseProperties,
+      spotType: SpotType.AvalancheTransceiverCheckpoint,
+    };
+  } else if (options.spotType === SpotType.Halfpipe) {
+    properties = {
+      ...baseProperties,
+      spotType: SpotType.Halfpipe,
+    };
+  } else {
+    throw new Error(`Unknown spot type: ${options.spotType}`);
+  }
+
+  return {
+    type: "Feature",
+    properties,
+    geometry: options.geometry,
+  };
+}
+
 type MockSkiAreaPropertyOptions = {
   id?: string;
   name?: string;
@@ -343,5 +418,15 @@ export function simplifiedSkiAreaFeatureWithSources(feature: SkiAreaFeature) {
   return {
     ...simplifiedSkiAreaFeature(feature),
     sources: feature.properties.sources,
+  };
+}
+
+export function simplifiedSpotFeature(feature: SpotFeature) {
+  return {
+    id: feature.properties.id,
+    spotType: feature.properties.spotType,
+    skiAreas: feature.properties.skiAreas.map(
+      (skiArea) => skiArea.properties.id,
+    ),
   };
 }

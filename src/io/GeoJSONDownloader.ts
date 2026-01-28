@@ -82,7 +82,7 @@ export default async function downloadAndConvertToGeoJSON(
 enum OSMEndpoint {
   LZ4 = "https://lz4.overpass-api.de/api/interpreter",
   Z = "https://z.overpass-api.de/api/interpreter",
-  PRIVATE_COFFEE = "https://overpass.private.coffee/api/interpreter"
+  PRIVATE_COFFEE = "https://overpass.private.coffee/api/interpreter",
 }
 
 async function downloadOSMJSON(

@@ -3,7 +3,7 @@ import {
   PostgreSQLCursor,
 } from "./PostgreSQLClusteringDatabase";
 import { MapObjectType } from "../MapObject";
-import { SkiAreaActivity } from "openskidata-format";
+import { SkiAreaActivity, SpotType } from "openskidata-format";
 import { getPostgresTestConfig } from "../../Config";
 import * as TestHelpers from "../../TestHelpers";
 
@@ -195,5 +195,37 @@ describe("PostgreSQLClusteringDatabase", () => {
         Number.MAX_SAFE_INTEGER,
       );
     }).not.toThrow();
+  });
+
+  it("should save and retrieve spot objects", async () => {
+    const spot = {
+      _key: "test-spot-1",
+      type: MapObjectType.Spot,
+      geometry: {
+        type: "Point" as const,
+        coordinates: [-122.4194, 37.7749],
+      },
+      spotType: SpotType.LiftStation,
+      activities: [SkiAreaActivity.Downhill],
+      skiAreas: [],
+      source: "test",
+      isPolygon: false,
+      isInSkiAreaPolygon: false,
+      isInSkiAreaSite: false,
+      properties: {
+        places: [],
+      },
+    } as any;
+
+    await database.saveObject(spot);
+
+    const spotsCursor = await database.getAllSpots(true);
+    const spots = await spotsCursor.all();
+
+    expect(spots).toHaveLength(1);
+    expect(spots[0]._key).toBe("test-spot-1");
+    expect(spots[0].spotType).toBe(SpotType.LiftStation);
+    expect(spots[0].activities).toContain(SkiAreaActivity.Downhill);
+    expect(spots[0].properties.places).toEqual([]);
   });
 });

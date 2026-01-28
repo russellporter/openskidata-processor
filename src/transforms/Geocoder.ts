@@ -117,9 +117,7 @@ export default class Geocoder {
    * Geocodes a geometry by extracting points along it at 1km intervals.
    * Returns deduplicated and sorted array of places.
    */
-  geocodeGeometry = async (
-    geometry: GeoJSON.LineString | GeoJSON.MultiLineString | GeoJSON.Polygon,
-  ): Promise<Place[]> => {
+  geocodeGeometry = async (geometry: GeoJSON.Geometry): Promise<Place[]> => {
     // Extract points along the geometry at 1km intervals
     const points = extractPointsAlongGeometry(geometry, 1);
 

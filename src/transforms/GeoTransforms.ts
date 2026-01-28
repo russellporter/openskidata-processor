@@ -169,12 +169,20 @@ function extractPointsFromLine(
  * Returns deduplicated array of positions.
  */
 export function extractPointsAlongGeometry(
-  geometry: GeoJSON.LineString | GeoJSON.MultiLineString | GeoJSON.Polygon,
+  geometry: GeoJSON.Geometry,
   intervalKm: number,
 ): GeoJSON.Position[] {
   const points: GeoJSON.Position[] = [];
 
   switch (geometry.type) {
+    case "Point":
+      points.push(geometry.coordinates);
+      break;
+    case "MultiPoint":
+      for (const coords of geometry.coordinates) {
+        points.push(coords);
+      }
+      break;
     case "LineString":
       points.push(...extractPointsFromLine(geometry, intervalKm));
       break;
@@ -189,6 +197,20 @@ export function extractPointsAlongGeometry(
       const outerRing = lineString(geometry.coordinates[0]).geometry;
       points.push(...extractPointsFromLine(outerRing, intervalKm));
       break;
+    case "MultiPolygon":
+      for (const polygonCoords of geometry.coordinates) {
+        const outerRing = lineString(polygonCoords[0]).geometry;
+        points.push(...extractPointsFromLine(outerRing, intervalKm));
+      }
+      break;
+    case "GeometryCollection":
+      for (const geom of geometry.geometries) {
+        points.push(...extractPointsAlongGeometry(geom, intervalKm));
+      }
+      break;
+    default:
+      const exhaustiveCheck: never = geometry;
+      throw "Support for geometry " + exhaustiveCheck + " not implemented";
   }
 
   // Deduplicate positions

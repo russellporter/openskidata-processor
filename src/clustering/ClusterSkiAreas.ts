@@ -1,4 +1,3 @@
-import { copyFileSync, existsSync, writeFileSync } from "fs";
 import { Config } from "../Config";
 import {
   GeoJSONIntermediatePaths,
@@ -22,28 +21,15 @@ export default async function clusterSkiAreas(
       intermediatePaths.skiAreas,
       intermediatePaths.lifts,
       intermediatePaths.runs,
+      intermediatePaths.spots,
       outputPaths.skiAreas,
       outputPaths.lifts,
       outputPaths.runs,
+      outputPaths.spots,
       config.geocodingServer,
       config.snowCover,
       config.postgresCache,
     );
-
-    // TODO: extend clustering to spots
-    // Copy spots directly from intermediate to output (spots don't need clustering)
-    if (existsSync(intermediatePaths.spots)) {
-      copyFileSync(intermediatePaths.spots, outputPaths.spots);
-    } else {
-      // Create empty spots file if it doesn't exist
-      writeFileSync(
-        outputPaths.spots,
-        JSON.stringify({
-          type: "FeatureCollection",
-          features: [],
-        }),
-      );
-    }
   } finally {
     await database.close();
   }

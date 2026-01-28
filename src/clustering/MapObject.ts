@@ -8,15 +8,17 @@ import {
   SkiAreaSummaryFeature,
   SnowCoverHistory,
   SourceType,
+  SpotType,
 } from "openskidata-format";
 import { VIIRSPixel } from "../utils/VIIRSPixelExtractor";
 
-export type MapObject = RunObject | LiftObject | SkiAreaObject;
+export type MapObject = RunObject | LiftObject | SkiAreaObject | SpotObject;
 export type RunObject = DraftRun & { _id: string };
 export type LiftObject = DraftLift & { _id: string };
 export type SkiAreaObject = DraftSkiArea & { _id: string };
+export type SpotObject = DraftSpot & { _id: string };
 
-export type DraftMapObject = DraftRun | DraftLift | DraftSkiArea;
+export type DraftMapObject = DraftRun | DraftLift | DraftSkiArea | DraftSpot;
 
 export interface DraftRun extends BaseDraftMapObject {
   type: MapObjectType.Run;
@@ -49,6 +51,17 @@ export interface DraftLift extends BaseDraftMapObject {
   };
 }
 
+export interface DraftSpot extends BaseDraftMapObject {
+  type: MapObjectType.Spot;
+  geometry: GeoJSON.Point;
+  spotType: SpotType;
+  isInSkiAreaPolygon: boolean;
+  isInSkiAreaSite: boolean;
+  properties: {
+    places: Place[];
+  };
+}
+
 export interface DraftSkiArea extends BaseDraftMapObject {
   id: string;
   type: MapObjectType.SkiArea;
@@ -73,6 +86,7 @@ export enum MapObjectType {
   SkiArea = "SKI_AREA",
   Lift = "LIFT",
   Run = "RUN",
+  Spot = "SPOT",
 }
 
 export interface MapFeatureProperties {

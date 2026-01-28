@@ -17,6 +17,8 @@ import {
   SkiAreaActivity,
   SkiAreaFeature,
   SourceType,
+  SpotFeature,
+  SpotType,
   Status,
 } from "openskidata-format";
 import StreamToPromise from "stream-to-promise";
@@ -45,11 +47,13 @@ import {
   DraftMapObject,
   DraftRun,
   DraftSkiArea,
+  DraftSpot,
   LiftObject,
   MapObject,
   MapObjectType,
   RunObject,
   SkiAreaObject,
+  SpotObject,
 } from "./MapObject";
 import mergeSkiAreaObjects from "./MergeSkiAreaObjects";
 import exportSkiAreasGeoJSON from "./SkiAreasExporter";
@@ -68,9 +72,11 @@ export class SkiAreaClusteringService {
     skiAreasPath: string,
     liftsPath: string,
     runsPath: string,
+    spotsPath: string,
     outputSkiAreasPath: string,
     outputLiftsPath: string,
     outputRunsPath: string,
+    outputSpotsPath: string,
     geocoderConfig: GeocodingServerConfig | null,
     snowCoverConfig: SnowCoverConfig | null,
     postgresConfig: PostgresConfig,
@@ -82,6 +88,7 @@ export class SkiAreaClusteringService {
           skiAreasPath,
           liftsPath,
           runsPath,
+          spotsPath,
           snowCoverConfig,
         );
       },
@@ -113,6 +120,16 @@ export class SkiAreaClusteringService {
       );
     });
 
+    await performanceMonitor.withOperation("Augmenting Spots", async () => {
+      await this.augmentGeoJSONFeatures(
+        spotsPath,
+        outputSpotsPath,
+        FeatureType.Spot,
+        null,
+        postgresConfig,
+      );
+    });
+
     await performanceMonitor.withOperation("Exporting Ski Areas", async () => {
       await this.exportSkiAreasGeoJSON(outputSkiAreasPath);
     });
@@ -122,6 +139,7 @@ export class SkiAreaClusteringService {
     skiAreasPath: string,
     liftsPath: string,
     runsPath: string,
+    spotsPath: string,
     snowCoverConfig: SnowCoverConfig | null,
   ): Promise<void> {
     const viirsExtractor = new VIIRSPixelExtractor();
@@ -136,6 +154,7 @@ export class SkiAreaClusteringService {
           this.loadFeatures(runsPath, (feature) =>
             this.prepareRun(feature, viirsExtractor, snowCoverConfig),
           ),
+          this.loadFeatures(spotsPath, (feature) => this.prepareSpot(feature)),
         ].map<Promise<Buffer>>(StreamToPromise),
       );
     });
@@ -275,6 +294,40 @@ export class SkiAreaClusteringService {
     };
   }
 
+  private prepareSpot(feature: SpotFeature): DraftSpot {
+    const properties = feature.properties;
+
+    return {
+      _key: properties.id,
+      type: MapObjectType.Spot,
+      geometry: feature.geometry,
+      spotType: properties.spotType,
+      activities: this.getSpotActivities(properties.spotType),
+      skiAreas: feature.properties.skiAreas.map(
+        (skiArea) => skiArea.properties.id,
+      ),
+      isInSkiAreaPolygon: false,
+      isInSkiAreaSite: feature.properties.skiAreas.length > 0,
+      properties: {
+        places: [],
+      },
+    };
+  }
+
+  private getSpotActivities(spotType: SpotType): SkiAreaActivity[] {
+    switch (spotType) {
+      case SpotType.LiftStation:
+      case SpotType.Halfpipe:
+        return [SkiAreaActivity.Downhill];
+      case SpotType.Crossing:
+      case SpotType.AvalancheTransceiverTraining:
+      case SpotType.AvalancheTransceiverCheckpoint:
+        return [SkiAreaActivity.Downhill, SkiAreaActivity.Nordic];
+      default:
+        return [];
+    }
+  }
+
   private geometryWithoutElevations(
     geometry: GeoJSON.Geometry,
   ): GeoJSON.Geometry {
@@ -384,12 +437,9 @@ export class SkiAreaClusteringService {
       },
     );
 
-    await performanceMonitor.withOperation(
-      "Geocode runs and lifts",
-      async () => {
-        await this.geocodeRunsAndLifts(geocoderConfig, postgresConfig);
-      },
-    );
+    await performanceMonitor.withOperation("Geocode objects", async () => {
+      await this.geocodeAllObjects(geocoderConfig, postgresConfig);
+    });
 
     await performanceMonitor.withOperation(
       "Augment ski areas based on assigned lifts and runs",
@@ -1046,12 +1096,14 @@ export class SkiAreaClusteringService {
     );
   }
 
-  private async geocodeRunsAndLifts(
+  private async geocodeAllObjects(
     geocoderConfig: GeocodingServerConfig | null,
     postgresConfig: PostgresConfig,
   ): Promise<void> {
     if (!geocoderConfig) {
-      console.log("Skipping run/lift geocoding - no geocoder config provided");
+      console.log(
+        "Skipping run/lift/spot geocoding - no geocoder config provided",
+      );
       return;
     }
 
@@ -1076,13 +1128,22 @@ export class SkiAreaClusteringService {
           await this.geocodeObjects(lifts, geocoder);
         }
       });
+
+      // Geocode spots
+      await performanceMonitor.measure("Geocode all spots", async () => {
+        const spotsCursor = await this.database.getAllSpots(true);
+        let spots: SpotObject[] | null;
+        while ((spots = await spotsCursor.nextBatch())) {
+          await this.geocodeObjects(spots, geocoder);
+        }
+      });
     } finally {
       await geocoder.close();
     }
   }
 
   private async geocodeObjects(
-    objects: (RunObject | LiftObject)[],
+    objects: (RunObject | LiftObject | SpotObject)[],
     geocoder: Geocoder,
   ): Promise<void> {
     await Promise.all(

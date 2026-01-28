@@ -7,6 +7,7 @@ import {
   SkiAreaActivity,
   SkiAreaFeature,
   SourceType,
+  SpotType,
   Status,
 } from "openskidata-format";
 import { Config, getPostgresTestConfig } from "../Config";
@@ -17,6 +18,7 @@ import {
   simplifiedSkiAreaFeature,
   simplifiedSkiAreaFeatureWithSources,
   simplifiedSkiAreaFeatureWithStatistics,
+  simplifiedSpotFeature,
 } from "../TestHelpers";
 import { toSkiAreaSummary } from "../transforms/toSkiAreaSummary";
 import clusterSkiAreas from "./ClusterSkiAreas";
@@ -2611,4 +2613,150 @@ it("extends site=piste ski area with nearby runs", async () => {
   },
 ]
 `);
+});
+
+it("associates spots to ski areas but spots alone do not create ski areas", async () => {
+  const paths = TestHelpers.getFilePaths();
+  TestHelpers.mockFeatureFiles(
+    [],
+    [
+      TestHelpers.mockLiftFeature({
+        id: "1",
+        name: "Lift",
+        liftType: LiftType.ChairLift,
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [0, 0],
+            [1, 0],
+          ],
+        },
+      }),
+    ],
+    [
+      TestHelpers.mockRunFeature({
+        id: "2",
+        name: "Run",
+        uses: [RunUse.Downhill],
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [0, 0],
+            [1, 1],
+          ],
+        },
+      }),
+    ],
+    paths.intermediate,
+    [
+      TestHelpers.mockSpotFeature({
+        id: "3",
+        spotType: SpotType.LiftStation,
+        name: "Base Station",
+        geometry: {
+          type: "Point",
+          coordinates: [0, 0],
+        },
+      }),
+      TestHelpers.mockSpotFeature({
+        id: "4",
+        spotType: SpotType.Crossing,
+        geometry: {
+          type: "Point",
+          coordinates: [0.5, 0.5],
+        },
+      }),
+    ],
+  );
+
+  await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
+
+  expect(
+    TestHelpers.fileContents(paths.output.spots).features.map(
+      simplifiedSpotFeature,
+    ),
+  ).toMatchInlineSnapshot(`
+    [
+      {
+        "id": "3",
+        "skiAreas": [
+          "mock-UUID-0",
+        ],
+        "spotType": "lift_station",
+      },
+      {
+        "id": "4",
+        "skiAreas": [
+          "mock-UUID-0",
+        ],
+        "spotType": "crossing",
+      },
+    ]
+  `);
+
+  expect(
+    TestHelpers.fileContents(paths.output.skiAreas).features.map(
+      simplifiedSkiAreaFeature,
+    ),
+  ).toMatchInlineSnapshot(`
+    [
+      {
+        "activities": [
+          "downhill",
+        ],
+        "id": "mock-UUID-0",
+        "name": null,
+      },
+    ]
+  `);
+});
+
+it("does not create ski area for spots alone without runs or lifts", async () => {
+  const paths = TestHelpers.getFilePaths();
+  TestHelpers.mockFeatureFiles([], [], [], paths.intermediate, [
+    TestHelpers.mockSpotFeature({
+      id: "1",
+      spotType: SpotType.LiftStation,
+      name: "Isolated Station",
+      geometry: {
+        type: "Point",
+        coordinates: [0, 0],
+      },
+    }),
+    TestHelpers.mockSpotFeature({
+      id: "2",
+      spotType: SpotType.Halfpipe,
+      geometry: {
+        type: "Point",
+        coordinates: [1, 1],
+      },
+    }),
+  ]);
+
+  await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
+
+  expect(
+    TestHelpers.fileContents(paths.output.spots).features.map(
+      simplifiedSpotFeature,
+    ),
+  ).toMatchInlineSnapshot(`
+    [
+      {
+        "id": "1",
+        "skiAreas": [],
+        "spotType": "lift_station",
+      },
+      {
+        "id": "2",
+        "skiAreas": [],
+        "spotType": "halfpipe",
+      },
+    ]
+  `);
+
+  expect(
+    TestHelpers.fileContents(paths.output.skiAreas).features.map(
+      simplifiedSkiAreaFeature,
+    ),
+  ).toMatchInlineSnapshot(`[]`);
 });

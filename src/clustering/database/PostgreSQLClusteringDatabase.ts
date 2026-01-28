@@ -7,6 +7,7 @@ import {
   MapObjectType,
   RunObject,
   SkiAreaObject,
+  SpotObject,
 } from "../MapObject";
 import {
   ClusteringDatabase,
@@ -44,8 +45,8 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
     INSERT INTO objects
     (key, type, source, geometry, geometry_with_elevations, geom, is_polygon, activities, ski_areas,
      is_basis_for_new_ski_area, is_in_ski_area_polygon, is_in_ski_area_site,
-     lift_type, difficulty, viirs_pixels, properties)
-    VALUES ($1, $2, $3, $4, $5, ST_MakeValid(ST_Force2D(ST_GeomFromGeoJSON($6)), 'method=structure'), $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+     lift_type, difficulty, viirs_pixels, spot_type, properties)
+    VALUES ($1, $2, $3, $4, $5, ST_MakeValid(ST_Force2D(ST_GeomFromGeoJSON($6)), 'method=structure'), $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
     ON CONFLICT (key) DO UPDATE SET
       type = EXCLUDED.type,
       source = EXCLUDED.source,
@@ -61,6 +62,7 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
       lift_type = EXCLUDED.lift_type,
       difficulty = EXCLUDED.difficulty,
       viirs_pixels = EXCLUDED.viirs_pixels,
+      spot_type = EXCLUDED.spot_type,
       properties = EXCLUDED.properties
   `;
 
@@ -298,6 +300,7 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
       (object as any).liftType || null,
       (object as any).difficulty || null,
       JSON.stringify((object as any).viirsPixels || []),
+      (object as any).spotType || null,
       JSON.stringify((object as any).properties || {}),
     ];
   }
@@ -381,6 +384,7 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
         lift_type TEXT,
         difficulty TEXT,
         viirs_pixels JSONB,
+        spot_type TEXT,
         properties JSONB NOT NULL,
         geom GEOMETRY(Geometry, 4326)
       )
@@ -409,25 +413,29 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
       -- Core filtering indexes
       CREATE INDEX IF NOT EXISTS idx_type_source ON objects(type, source);
       CREATE INDEX IF NOT EXISTS idx_type_polygon ON objects(type, is_polygon);
-      
-      -- Ski area assignment queries  
+
+      -- Ski area assignment queries
       CREATE INDEX IF NOT EXISTS idx_ski_areas_gin ON objects USING GIN (ski_areas);
       CREATE INDEX IF NOT EXISTS idx_type_ski_areas ON objects(type) WHERE ski_areas = '[]'::jsonb;
-      
+
       -- Unassigned object queries (critical for clustering performance)
-      CREATE INDEX IF NOT EXISTS idx_unassigned_runs ON objects(type, is_basis_for_new_ski_area) 
+      CREATE INDEX IF NOT EXISTS idx_unassigned_runs ON objects(type, is_basis_for_new_ski_area)
         WHERE type = 'RUN' AND is_basis_for_new_ski_area = true;
-      
+
       -- Source-specific queries with polygon filtering
-      CREATE INDEX IF NOT EXISTS idx_source_polygon ON objects(source, is_polygon) 
+      CREATE INDEX IF NOT EXISTS idx_source_polygon ON objects(source, is_polygon)
         WHERE is_polygon = true;
       CREATE INDEX IF NOT EXISTS idx_source_type_polygon ON objects(source, type, is_polygon);
-      
+
       -- Activity-based filtering (using GIN for JSONB)
       CREATE INDEX IF NOT EXISTS idx_activities_gin ON objects USING GIN (activities);
-      
+
       -- Polygon containment queries
       CREATE INDEX IF NOT EXISTS idx_polygon_filter ON objects(is_polygon, is_in_ski_area_polygon);
+
+      -- Spot-specific queries
+      CREATE INDEX IF NOT EXISTS idx_spots ON objects(type, spot_type)
+        WHERE type = 'SPOT';
     `);
     console.log("✅ Created optimized composite indexes");
   }
@@ -647,6 +655,23 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
     );
   }
 
+  async getAllSpots(useBatching: boolean): Promise<Cursor<SpotObject>> {
+    const pool = this.ensureInitialized();
+
+    const query = "SELECT * FROM objects WHERE type = 'SPOT' ORDER BY key";
+    const batchSize = useBatching
+      ? PostgreSQLClusteringDatabase.DEFAULT_BATCH_SIZE
+      : Number.MAX_SAFE_INTEGER;
+
+    return new PostgreSQLCursor<SpotObject>(
+      pool,
+      query,
+      [],
+      (row) => this.rowToMapObject(row) as SpotObject,
+      batchSize,
+    );
+  }
+
   async findNearbyObjects(
     geometry: GeoJSON.Geometry,
     context: SearchContext,
@@ -858,6 +883,10 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
         row.geometry_with_elevations || row.geometry;
       baseObject.difficulty = row.difficulty;
       baseObject.viirsPixels = row.viirs_pixels || [];
+      baseObject.isInSkiAreaSite = Boolean(row.is_in_ski_area_site);
+      baseObject.properties = row.properties || { places: [] };
+    } else if (row.type === MapObjectType.Spot) {
+      baseObject.spotType = row.spot_type;
       baseObject.isInSkiAreaSite = Boolean(row.is_in_ski_area_site);
       baseObject.properties = row.properties || { places: [] };
     }

@@ -7,6 +7,7 @@ import {
   MapObjectType,
   RunObject,
   SkiAreaObject,
+  SpotObject,
 } from "../MapObject";
 
 export interface ClusteringDatabase {
@@ -78,6 +79,12 @@ export interface ClusteringDatabase {
    * @param useBatching - When false, loads all results into memory upfront. When true, streams in batches.
    */
   getAllLifts(useBatching: boolean): Promise<Cursor<LiftObject>>;
+
+  /**
+   * Get all spots in the database
+   * @param useBatching - When false, loads all results into memory upfront. When true, streams in batches.
+   */
+  getAllSpots(useBatching: boolean): Promise<Cursor<SpotObject>>;
 
   /**
    * Find objects near a given geometry
