@@ -1,7 +1,7 @@
 # Multi-stage build for OpenSkiData Processor
 
 # Build Tippecanoe first (most expensive, least likely to change)
-FROM debian:bookworm-slim AS tippecanoe-builder
+FROM debian:trixie-slim AS tippecanoe-builder
 
 # Use specific commit for better caching
 ENV TIPPECANOE_VERSION=2.78.0
@@ -22,7 +22,7 @@ WORKDIR /tmp/tippecanoe
 RUN make -j$(nproc) && make install
 
 # Base stage with common dependencies
-FROM node:22-bookworm AS base
+FROM node:22-trixie AS base
 
 # Copy Tippecanoe binaries
 COPY --from=tippecanoe-builder /usr/local/bin/tippecanoe /usr/local/bin/tippecanoe
@@ -34,9 +34,9 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt-get update && apt-get install -y \
     libsqlite3-dev \
     sqlite3 \
-    postgresql-15 \
-    postgresql-15-postgis-3 \
-    postgresql-client-15
+    postgresql-17 \
+    postgresql-17-postgis-3 \
+    postgresql-client-17
 
 # Set working directory
 WORKDIR /app

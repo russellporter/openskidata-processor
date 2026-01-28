@@ -9,13 +9,13 @@ echo "Starting PostgreSQL initialization..."
 # Configure PostgreSQL to listen on all addresses
 echo "Configuring PostgreSQL to listen on all addresses..."
 # Needs to be done each time as the data dir doesnt hold this file
-sed -i "s/#listen_addresses = 'localhost'/listen_addresses = '*'/" /etc/postgresql/15/main/postgresql.conf
+sed -i "s/#listen_addresses = 'localhost'/listen_addresses = '*'/" /etc/postgresql/17/main/postgresql.conf
 
 # Configure authentication based on whether custom user/password are set
 if [ -n "$POSTGRES_USER" ] && [ -n "$POSTGRES_PASSWORD" ]; then
     echo "Configuring PostgreSQL with password authentication..."
     # Needs to be done each time as the data dir doesnt hold this file
-    tee "/etc/postgresql/15/main/pg_hba.conf" > /dev/null << EOF
+    tee "/etc/postgresql/17/main/pg_hba.conf" > /dev/null << EOF
 # TYPE  DATABASE        USER            ADDRESS                 METHOD
 local   all             all                                     trust
 host    all             all             127.0.0.1/32            md5
@@ -24,7 +24,7 @@ host    all             all             0.0.0.0/0               md5
 EOF
 else
     echo "Configuring PostgreSQL with trust authentication..."
-    tee "/etc/postgresql/15/main/pg_hba.conf" > /dev/null << EOF
+    tee "/etc/postgresql/17/main/pg_hba.conf" > /dev/null << EOF
 # TYPE  DATABASE        USER            ADDRESS                 METHOD
 local   all             all                                     trust
 host    all             all             127.0.0.1/32            trust
@@ -34,7 +34,7 @@ EOF
 fi
 
 # Update PostgreSQL config to use the data directory
-sed -i "s|data_directory = '/var/lib/postgresql/15/main'|data_directory = '/var/lib/postgresql/data'|" /etc/postgresql/15/main/postgresql.conf
+sed -i "s|data_directory = '/var/lib/postgresql/17/main'|data_directory = '/var/lib/postgresql/data'|" /etc/postgresql/17/main/postgresql.conf
 
 # Initialize PostgreSQL if not already initialized
 if [ ! -f /var/lib/postgresql/data/PG_VERSION ]; then
@@ -42,10 +42,10 @@ if [ ! -f /var/lib/postgresql/data/PG_VERSION ]; then
     echo "Setting up data directory permissions..."
     chown -R postgres:postgres /var/lib/postgresql/data
     chmod 700 /var/lib/postgresql/data
-    su - postgres -c "/usr/lib/postgresql/15/bin/initdb -D /var/lib/postgresql/data"
+    su - postgres -c "/usr/lib/postgresql/17/bin/initdb -D /var/lib/postgresql/data"
 
     # Start PostgreSQL temporarily to create user if needed
-    su - postgres -c "/usr/lib/postgresql/15/bin/pg_ctl -D /var/lib/postgresql/data -l /var/log/postgresql/postgresql-15-main.log start"
+    su - postgres -c "/usr/lib/postgresql/17/bin/pg_ctl -D /var/lib/postgresql/data -l /var/log/postgresql/postgresql-17-main.log start"
     
     # Wait for PostgreSQL to start
     sleep 5
@@ -67,12 +67,12 @@ if [ ! -f /var/lib/postgresql/data/PG_VERSION ]; then
     su - postgres -c "psql -c \"CREATE EXTENSION IF NOT EXISTS postgis;\" openskidata_test"
     
     # Stop PostgreSQL
-    su - postgres -c "/usr/lib/postgresql/15/bin/pg_ctl -D /var/lib/postgresql/data stop"
+    su - postgres -c "/usr/lib/postgresql/17/bin/pg_ctl -D /var/lib/postgresql/data stop"
 fi
 
 # Start PostgreSQL temporarily to clean up old clustering databases
 echo "Starting PostgreSQL for maintenance..."
-su - postgres -c "/usr/lib/postgresql/15/bin/pg_ctl -D /var/lib/postgresql/data -l /var/log/postgresql/postgresql-15-main.log start"
+su - postgres -c "/usr/lib/postgresql/17/bin/pg_ctl -D /var/lib/postgresql/data -l /var/log/postgresql/postgresql-17-main.log start"
 
 # Wait for PostgreSQL to start
 sleep 3
@@ -87,11 +87,11 @@ su - postgres -c "psql -t -c \"
 \" | psql"
 
 # Stop PostgreSQL
-su - postgres -c "/usr/lib/postgresql/15/bin/pg_ctl -D /var/lib/postgresql/data stop"
+su - postgres -c "/usr/lib/postgresql/17/bin/pg_ctl -D /var/lib/postgresql/data stop"
 
 # Wait for PostgreSQL to stop
 sleep 2
 
 # Run PostgreSQL in foreground as the main process
 echo "Starting PostgreSQL in foreground..."
-exec su - postgres -c "/usr/lib/postgresql/15/bin/postgres -D /var/lib/postgresql/data -c config_file=/etc/postgresql/15/main/postgresql.conf"
+exec su - postgres -c "/usr/lib/postgresql/17/bin/postgres -D /var/lib/postgresql/data -c config_file=/etc/postgresql/17/main/postgresql.conf"
