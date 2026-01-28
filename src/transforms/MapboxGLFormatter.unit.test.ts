@@ -1,4 +1,11 @@
-import { FeatureType, LiftType, RunUse } from "openskidata-format";
+import {
+  DismountRequirement,
+  FeatureType,
+  LiftStationPosition,
+  LiftType,
+  RunUse,
+  SpotType,
+} from "openskidata-format";
 import * as TestHelpers from "../TestHelpers";
 import { formatter } from "./MapboxGLFormatter";
 describe("MapboxGLFormatter", () => {
@@ -250,5 +257,207 @@ describe("MapboxGLFormatter", () => {
         "2",
       ]
     `);
+  });
+
+  it("should export LiftStation spot with all properties", () => {
+    const feature = TestHelpers.mockSpotFeature({
+      id: "spot1",
+      spotType: SpotType.LiftStation,
+      name: "Lower Station",
+      geometry: { type: "Point", coordinates: [10, 20] },
+      skiAreas: [
+        TestHelpers.mockSkiAreaFeature({
+          id: "ski-area-1",
+          geometry: { type: "Point", coordinates: [0, 0] },
+        }),
+      ],
+    });
+
+    const mapboxGLFeature = formatter(FeatureType.Spot)(feature);
+
+    expect(mapboxGLFeature).toMatchInlineSnapshot(`
+      {
+        "geometry": {
+          "coordinates": [
+            10,
+            20,
+          ],
+          "type": "Point",
+        },
+        "properties": {
+          "entry": null,
+          "exit": null,
+          "id": "spot1",
+          "name": "Lower Station",
+          "position": null,
+          "skiAreas": [
+            "ski-area-1",
+          ],
+          "spotType": "lift_station",
+        },
+        "type": "Feature",
+      }
+    `);
+  });
+
+  it("should export LiftStation spot with null name", () => {
+    const feature = TestHelpers.mockSpotFeature({
+      id: "spot2",
+      spotType: SpotType.LiftStation,
+      name: null,
+      geometry: { type: "Point", coordinates: [10, 20] },
+    });
+
+    const mapboxGLFeature = formatter(FeatureType.Spot)(feature);
+
+    expect(mapboxGLFeature?.properties.name).toBe(null);
+    expect(mapboxGLFeature?.properties.spotType).toBe(SpotType.LiftStation);
+  });
+
+  it("should export Crossing spot with dismount requirement", () => {
+    const feature = TestHelpers.mockSpotFeature({
+      id: "spot3",
+      spotType: SpotType.Crossing,
+      geometry: { type: "Point", coordinates: [15, 25] },
+      skiAreas: [
+        TestHelpers.mockSkiAreaFeature({
+          id: "ski-area-2",
+          geometry: { type: "Point", coordinates: [0, 0] },
+        }),
+      ],
+    });
+
+    const mapboxGLFeature = formatter(FeatureType.Spot)(feature);
+
+    expect(mapboxGLFeature).toMatchInlineSnapshot(`
+      {
+        "geometry": {
+          "coordinates": [
+            15,
+            25,
+          ],
+          "type": "Point",
+        },
+        "properties": {
+          "dismount": null,
+          "id": "spot3",
+          "skiAreas": [
+            "ski-area-2",
+          ],
+          "spotType": "crossing",
+        },
+        "type": "Feature",
+      }
+    `);
+  });
+
+  it("should export Halfpipe spot with minimal properties", () => {
+    const feature = TestHelpers.mockSpotFeature({
+      id: "spot4",
+      spotType: SpotType.Halfpipe,
+      geometry: { type: "Point", coordinates: [5, 15] },
+    });
+
+    const mapboxGLFeature = formatter(FeatureType.Spot)(feature);
+
+    expect(mapboxGLFeature).toMatchInlineSnapshot(`
+      {
+        "geometry": {
+          "coordinates": [
+            5,
+            15,
+          ],
+          "type": "Point",
+        },
+        "properties": {
+          "id": "spot4",
+          "skiAreas": [],
+          "spotType": "halfpipe",
+        },
+        "type": "Feature",
+      }
+    `);
+  });
+
+  it("should export AvalancheTransceiverTraining spot with minimal properties", () => {
+    const feature = TestHelpers.mockSpotFeature({
+      id: "spot5",
+      spotType: SpotType.AvalancheTransceiverTraining,
+      geometry: { type: "Point", coordinates: [8, 18] },
+    });
+
+    const mapboxGLFeature = formatter(FeatureType.Spot)(feature);
+
+    expect(mapboxGLFeature).toMatchInlineSnapshot(`
+      {
+        "geometry": {
+          "coordinates": [
+            8,
+            18,
+          ],
+          "type": "Point",
+        },
+        "properties": {
+          "id": "spot5",
+          "skiAreas": [],
+          "spotType": "avalanche_transceiver_training",
+        },
+        "type": "Feature",
+      }
+    `);
+  });
+
+  it("should export AvalancheTransceiverCheckpoint spot with minimal properties", () => {
+    const feature = TestHelpers.mockSpotFeature({
+      id: "spot6",
+      spotType: SpotType.AvalancheTransceiverCheckpoint,
+      geometry: { type: "Point", coordinates: [12, 22] },
+    });
+
+    const mapboxGLFeature = formatter(FeatureType.Spot)(feature);
+
+    expect(mapboxGLFeature?.properties.id).toBe("spot6");
+    expect(mapboxGLFeature?.properties.spotType).toBe(
+      SpotType.AvalancheTransceiverCheckpoint,
+    );
+    expect(mapboxGLFeature?.properties.skiAreas).toEqual([]);
+  });
+
+  it("should preserve geometry for spot features", () => {
+    const coordinates: [number, number] = [100, 200];
+    const feature = TestHelpers.mockSpotFeature({
+      id: "spot7",
+      spotType: SpotType.Halfpipe,
+      geometry: { type: "Point", coordinates },
+    });
+
+    const mapboxGLFeature = formatter(FeatureType.Spot)(feature);
+
+    expect(mapboxGLFeature?.geometry).toEqual({
+      type: "Point",
+      coordinates,
+    });
+  });
+
+  it("should map ski area IDs for spots", () => {
+    const feature = TestHelpers.mockSpotFeature({
+      id: "spot8",
+      spotType: SpotType.Crossing,
+      geometry: { type: "Point", coordinates: [50, 60] },
+      skiAreas: [
+        TestHelpers.mockSkiAreaFeature({
+          id: "area-1",
+          geometry: { type: "Point", coordinates: [0, 0] },
+        }),
+        TestHelpers.mockSkiAreaFeature({
+          id: "area-2",
+          geometry: { type: "Point", coordinates: [1, 1] },
+        }),
+      ],
+    });
+
+    const mapboxGLFeature = formatter(FeatureType.Spot)(feature);
+
+    expect(mapboxGLFeature?.properties.skiAreas).toEqual(["area-1", "area-2"]);
   });
 });

@@ -1,3 +1,8 @@
+import {
+  SpotType,
+  LiftStationPosition,
+  DismountRequirement,
+} from "openskidata-format";
 import OSMGeoJSONProperties from "./OSMGeoJSONProperties";
 
 export type OSMSpotTags = {
@@ -21,4 +26,24 @@ export type InputSpotGeometry =
 export type InputSpotFeature = GeoJSON.Feature<
   InputSpotGeometry,
   OSMGeoJSONProperties<OSMSpotTags>
+>;
+
+export type MapboxGLSpotProperties = {
+  id: string;
+  spotType: SpotType;
+  skiAreas: string[];
+
+  // LiftStation properties
+  name?: string | null;
+  position?: LiftStationPosition | null;
+  entry?: boolean | null;
+  exit?: boolean | null;
+
+  // Crossing properties
+  dismount?: DismountRequirement;
+};
+
+export type MapboxGLSpotFeature = GeoJSON.Feature<
+  GeoJSON.Point,
+  MapboxGLSpotProperties
 >;

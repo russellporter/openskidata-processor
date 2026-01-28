@@ -4,6 +4,7 @@ import {
   RunFeature,
   SkiAreaFeature,
   SourceType,
+  SpotFeature,
 } from "openskidata-format";
 import { OSMSkiAreaSite } from "../features/SkiAreaFeature";
 import { formatSkiArea, InputSkiAreaType } from "./SkiAreaFormatter";
@@ -42,7 +43,7 @@ export class SkiAreaSiteProvider {
 }
 
 export function addSkiAreaSites(siteProvider: SkiAreaSiteProvider) {
-  return (feature: RunFeature | LiftFeature) => {
+  return (feature: RunFeature | LiftFeature | SpotFeature) => {
     const osmIDs = feature.properties.sources
       .filter((source) => source.type == SourceType.OPENSTREETMAP)
       .map((source) => source.id);

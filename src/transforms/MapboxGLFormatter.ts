@@ -1,10 +1,12 @@
 import * as GeoJSON from "geojson";
 import {
+  DismountRequirement,
   FeatureType,
   getLiftColor,
   getLiftNameAndType,
   getRunColorName,
   LiftFeature,
+  LiftStationPosition,
   runColorNameToValue,
   RunDifficulty,
   RunFeature,
@@ -12,6 +14,8 @@ import {
   RunUse,
   SkiAreaActivity,
   SkiAreaFeature,
+  SpotFeature,
+  SpotType,
 } from "openskidata-format";
 import {
   MapboxGLLiftFeature,
@@ -26,6 +30,10 @@ import {
   MapboxGLSkiAreaFeature,
   MapboxGLSkiAreaProperties,
 } from "../features/SkiAreaFeature";
+import {
+  MapboxGLSpotFeature,
+  MapboxGLSpotProperties,
+} from "../features/SpotFeature";
 import unique from "../utils/unique";
 import { centralPointsInFeature } from "./GeoTransforms";
 
@@ -38,12 +46,20 @@ export function formatter(
 export function formatter(
   type: FeatureType.Run,
 ): (feature: RunFeature) => MapboxGLRunFeature | null;
+export function formatter(
+  type: FeatureType.Spot,
+): (feature: SpotFeature) => MapboxGLSpotFeature | null;
 
 export function formatter(
   type: FeatureType,
 ): (
-  feature: SkiAreaFeature | LiftFeature | RunFeature,
-) => MapboxGLSkiAreaFeature | MapboxGLLiftFeature | MapboxGLRunFeature | null;
+  feature: SkiAreaFeature | LiftFeature | RunFeature | SpotFeature,
+) =>
+  | MapboxGLSkiAreaFeature
+  | MapboxGLLiftFeature
+  | MapboxGLRunFeature
+  | MapboxGLSpotFeature
+  | null;
 
 export function formatter(
   type: FeatureType,
@@ -56,7 +72,7 @@ export function formatter(
     case FeatureType.SkiArea:
       return formatSkiArea;
     case FeatureType.Spot:
-      return () => null;
+      return formatSpot;
   }
 
   function formatRun(feature: RunFeature): MapboxGLRunFeature | null {
@@ -126,6 +142,50 @@ export function formatter(
       geometry: feature.geometry,
       properties: mapboxGLProperties,
     };
+  }
+
+  function formatSpot(feature: SpotFeature): MapboxGLSpotFeature {
+    const properties = feature.properties;
+
+    const baseProperties: MapboxGLSpotProperties = {
+      id: properties.id,
+      spotType: properties.spotType,
+      skiAreas: properties.skiAreas.map((skiArea) => skiArea.properties.id),
+    };
+
+    // Add type-specific properties
+    switch (properties.spotType) {
+      case SpotType.LiftStation:
+        return {
+          type: feature.type,
+          geometry: feature.geometry,
+          properties: {
+            ...baseProperties,
+            name: properties.name,
+            position: properties.position,
+            entry: properties.entry,
+            exit: properties.exit,
+          },
+        };
+
+      case SpotType.Crossing:
+        return {
+          type: feature.type,
+          geometry: feature.geometry,
+          properties: {
+            ...baseProperties,
+            dismount: properties.dismount,
+          },
+        };
+
+      default:
+        // AvalancheTransceiverTraining, AvalancheTransceiverCheckpoint, Halfpipe
+        return {
+          type: feature.type,
+          geometry: feature.geometry,
+          properties: baseProperties,
+        };
+    }
   }
 
   function getDistance(statistics: RunStatisticsByDifficulty) {
