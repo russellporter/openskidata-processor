@@ -182,11 +182,7 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
     } catch (error) {
       console.error(`Query failed:`);
       console.error(`Query: ${query}`);
-      console.error(
-        `Parameters: ${JSON.stringify(params, null, 2).substring(0, 5000)}${
-          JSON.stringify(params).length > 5000 ? "... (truncated)" : ""
-        }`,
-      );
+      console.error(`Parameters: ${JSON.stringify(params, null, 2)}`);
       console.error(`Error:`, error);
       throw error;
     } finally {
