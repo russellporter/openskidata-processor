@@ -663,7 +663,7 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
         // For intersects, use ST_DWithin with geography index
         query = `
           SELECT * FROM objects
-          WHERE ST_DWithin(geography(geom), geography(ST_MakeValid(ST_Force2D(ST_GeomFromGeoJSON($${paramIndex++})), 'method=structure')), $${paramIndex++})
+          WHERE ST_DWithin(geography(geom), geography(ST_Force2D(ST_GeomFromGeoJSON($${paramIndex++}))), $${paramIndex++})
             AND type != 'SKI_AREA'
         `;
         params = [geometryGeoJSON, bufferMeters];
