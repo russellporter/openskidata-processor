@@ -46,9 +46,22 @@ if [ ! -f /var/lib/postgresql/data/PG_VERSION ]; then
 
     # Start PostgreSQL temporarily to create user if needed
     su - postgres -c "/usr/lib/postgresql/17/bin/pg_ctl -D /var/lib/postgresql/data -l /var/log/postgresql/postgresql-17-main.log start"
-    
-    # Wait for PostgreSQL to start
-    sleep 5
+
+    # Wait for PostgreSQL to be ready
+    echo "Waiting for PostgreSQL to be ready..."
+    for i in {1..30}; do
+        if su - postgres -c "pg_isready -q"; then
+            echo "PostgreSQL is ready"
+            break
+        fi
+        if [ $i -eq 30 ]; then
+            echo "ERROR: PostgreSQL failed to start within 30 seconds"
+            echo "Startup logs:"
+            cat /var/log/postgresql/postgresql-17-main.log
+            exit 1
+        fi
+        sleep 1
+    done
     
     # Create custom user if environment variables are set
     if [ -n "$POSTGRES_USER" ] && [ -n "$POSTGRES_PASSWORD" ]; then
@@ -70,12 +83,25 @@ if [ ! -f /var/lib/postgresql/data/PG_VERSION ]; then
     su - postgres -c "/usr/lib/postgresql/17/bin/pg_ctl -D /var/lib/postgresql/data stop"
 fi
 
-# Start PostgreSQL temporarily to clean up old clustering databases
-echo "Starting PostgreSQL for maintenance..."
+# Start PostgreSQL as the main process
+echo "Starting PostgreSQL..."
 su - postgres -c "/usr/lib/postgresql/17/bin/pg_ctl -D /var/lib/postgresql/data -l /var/log/postgresql/postgresql-17-main.log start"
 
-# Wait for PostgreSQL to start
-sleep 3
+# Wait for PostgreSQL to be ready
+echo "Waiting for PostgreSQL to be ready..."
+for i in {1..30}; do
+    if su - postgres -c "pg_isready -q"; then
+        echo "PostgreSQL is ready"
+        break
+    fi
+    if [ $i -eq 30 ]; then
+        echo "ERROR: PostgreSQL failed to start within 30 seconds"
+        echo "Startup logs:"
+        cat /var/log/postgresql/postgresql-17-main.log
+        exit 1
+    fi
+    sleep 1
+done
 
 # Clean up clustering databases older than 1 day
 echo "Checking for old clustering databases to clean up..."
@@ -86,12 +112,6 @@ su - postgres -c "psql -t -c \"
     AND (pg_stat_file('base/'||oid ||'/PG_VERSION')).modification < NOW() - INTERVAL '1 day'
 \" | psql"
 
-# Stop PostgreSQL
-su - postgres -c "/usr/lib/postgresql/17/bin/pg_ctl -D /var/lib/postgresql/data stop"
-
-# Wait for PostgreSQL to stop
-sleep 2
-
-# Run PostgreSQL in foreground as the main process
-echo "Starting PostgreSQL in foreground..."
-exec su - postgres -c "/usr/lib/postgresql/17/bin/postgres -D /var/lib/postgresql/data -c config_file=/etc/postgresql/17/main/postgresql.conf"
+# Keep container running by tailing PostgreSQL logs
+echo "PostgreSQL initialization complete. Tailing logs..."
+exec tail -f /var/log/postgresql/postgresql-17-main.log
