@@ -45,7 +45,13 @@ if [ ! -f /var/lib/postgresql/data/PG_VERSION ]; then
     su - postgres -c "/usr/lib/postgresql/17/bin/initdb -D /var/lib/postgresql/data"
 
     # Start PostgreSQL temporarily to create user if needed
-    su - postgres -c "/usr/lib/postgresql/17/bin/pg_ctl -D /var/lib/postgresql/data -l /var/log/postgresql/postgresql-17-main.log start"
+    echo "Starting PostgreSQL for initialization..."
+    if ! su - postgres -c "/usr/lib/postgresql/17/bin/pg_ctl -D /var/lib/postgresql/data -l /var/log/postgresql/postgresql-17-main.log start"; then
+        echo "ERROR: Failed to start PostgreSQL"
+        echo "Startup logs:"
+        cat /var/log/postgresql/postgresql-17-main.log 2>&1 || echo "Log file not found"
+        exit 1
+    fi
 
     # Wait for PostgreSQL to be ready
     echo "Waiting for PostgreSQL to be ready..."
@@ -55,9 +61,9 @@ if [ ! -f /var/lib/postgresql/data/PG_VERSION ]; then
             break
         fi
         if [ $i -eq 30 ]; then
-            echo "ERROR: PostgreSQL failed to start within 30 seconds"
+            echo "ERROR: PostgreSQL failed to become ready within 30 seconds"
             echo "Startup logs:"
-            cat /var/log/postgresql/postgresql-17-main.log
+            cat /var/log/postgresql/postgresql-17-main.log 2>&1 || echo "Log file not found"
             exit 1
         fi
         sleep 1
@@ -85,7 +91,12 @@ fi
 
 # Start PostgreSQL as the main process
 echo "Starting PostgreSQL..."
-su - postgres -c "/usr/lib/postgresql/17/bin/pg_ctl -D /var/lib/postgresql/data -l /var/log/postgresql/postgresql-17-main.log start"
+if ! su - postgres -c "/usr/lib/postgresql/17/bin/pg_ctl -D /var/lib/postgresql/data -l /var/log/postgresql/postgresql-17-main.log start"; then
+    echo "ERROR: Failed to start PostgreSQL"
+    echo "Startup logs:"
+    cat /var/log/postgresql/postgresql-17-main.log 2>&1 || echo "Log file not found"
+    exit 1
+fi
 
 # Wait for PostgreSQL to be ready
 echo "Waiting for PostgreSQL to be ready..."
@@ -95,9 +106,9 @@ for i in {1..30}; do
         break
     fi
     if [ $i -eq 30 ]; then
-        echo "ERROR: PostgreSQL failed to start within 30 seconds"
+        echo "ERROR: PostgreSQL failed to become ready within 30 seconds"
         echo "Startup logs:"
-        cat /var/log/postgresql/postgresql-17-main.log
+        cat /var/log/postgresql/postgresql-17-main.log 2>&1 || echo "Log file not found"
         exit 1
     fi
     sleep 1
