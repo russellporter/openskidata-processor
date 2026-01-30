@@ -16,13 +16,34 @@ export type SnowCoverConfig = {
   fetchPolicy: SnowCoverFetchPolicy;
 };
 
-export type ElevationServerType = "racemap" | "tileserver-gl";
-
-export type ElevationServerConfig = {
+export type RacemapElevationServerConfig = {
+  type: "racemap";
   url: string;
-  type: ElevationServerType;
-  zoom?: number[]; // Optional zoom levels for tileserver-gl - will be tried in order
+  batchSize: number;
 };
+
+export type TileserverGLElevationServerConfig = {
+  type: "tileserver-gl";
+  url: string;
+  zoom: number[];
+  batchSize: number;
+};
+
+export type TileElevationServerConfig = {
+  type: "tile";
+  url: string;
+  zoom: number[];
+  tileSize: number;
+  tileCacheDir: string;
+  tileCacheMaxTiles: number;
+  tileConcurrency: number;
+  batchSize: number;
+};
+
+export type ElevationServerConfig =
+  | RacemapElevationServerConfig
+  | TileserverGLElevationServerConfig
+  | TileElevationServerConfig;
 
 export type TilesConfig = { mbTilesPath: string; tilesDir: string };
 
@@ -85,17 +106,7 @@ export function configFromEnvironment(): Config {
 
   return {
     elevationServer: elevationServerURL
-      ? {
-          url: elevationServerURL,
-          type:
-            (process.env["ELEVATION_SERVER_TYPE"] as ElevationServerType) ??
-            "racemap",
-          zoom: process.env["ELEVATION_SERVER_ZOOM"]
-            ? process.env["ELEVATION_SERVER_ZOOM"]
-                .split(",")
-                .map((z) => parseInt(z.trim()))
-            : undefined,
-        }
+      ? buildElevationServerConfig(elevationServerURL)
       : null,
     geocodingServer:
       process.env.GEOCODING_SERVER_URL !== undefined
@@ -129,6 +140,58 @@ export function configFromEnvironment(): Config {
         : null,
     postgresCache: getPostgresConfig(),
   };
+}
+
+const DEFAULT_ELEVATION_ZOOM = [12];
+const DEFAULT_ELEVATION_BATCH_SIZE = 10000;
+
+function parseZoom(): number[] {
+  const raw = process.env["ELEVATION_SERVER_ZOOM"];
+  if (!raw) return DEFAULT_ELEVATION_ZOOM;
+  return raw.split(",").map((z) => parseInt(z.trim()));
+}
+
+function parseBatchSize(): number {
+  const raw = process.env["ELEVATION_SERVER_BATCH_SIZE"];
+  return raw ? parseInt(raw) : DEFAULT_ELEVATION_BATCH_SIZE;
+}
+
+function buildElevationServerConfig(url: string): ElevationServerConfig {
+  const type = (process.env["ELEVATION_SERVER_TYPE"] ?? "racemap") as
+    | "racemap"
+    | "tileserver-gl"
+    | "tile";
+
+  const batchSize = parseBatchSize();
+
+  switch (type) {
+    case "racemap":
+      return { type, url, batchSize };
+    case "tileserver-gl":
+      return { type, url, zoom: parseZoom(), batchSize };
+    case "tile":
+      return {
+        type,
+        url,
+        zoom: parseZoom(),
+        tileSize: process.env["ELEVATION_TILE_SIZE"]
+          ? parseInt(process.env["ELEVATION_TILE_SIZE"])
+          : 512,
+        tileCacheDir:
+          process.env["ELEVATION_TILE_CACHE_DIR"] ?? "data/tile-cache",
+        tileCacheMaxTiles: process.env["ELEVATION_TILE_CACHE_MAX_TILES"]
+          ? parseInt(process.env["ELEVATION_TILE_CACHE_MAX_TILES"])
+          : 100000,
+        tileConcurrency: process.env["ELEVATION_TILE_CONCURRENCY"]
+          ? parseInt(process.env["ELEVATION_TILE_CONCURRENCY"])
+          : 4,
+        batchSize,
+      };
+    default: {
+      const exhaustiveCheck: never = type;
+      throw new Error(`Unknown elevation server type: ${exhaustiveCheck}`);
+    }
+  }
 }
 
 function getPostgresConfig(): PostgresConfig {

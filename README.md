@@ -72,9 +72,18 @@ This will show you each cache table with its size and row count, and prompt you 
 
 Features will be augmented with elevation data.
 
-The processor supports two types of elevation servers:
+The processor supports three types of elevation servers. All types share the following common configuration:
 
-**Racemap:**
+**Common configuration:**
+
+- `ELEVATION_SERVER_URL` - Base URL of the elevation server
+- `ELEVATION_SERVER_TYPE` - Server type: `racemap`, `tileserver-gl`, or `tile`
+- `ELEVATION_SERVER_BATCH_SIZE` - Maximum number of coordinates to batch in a single request (default: 10000)
+
+**Server types:**
+
+#### Racemap
+
 Set `ELEVATION_SERVER_URL` to an endpoint that can receive POST requests in the format of https://github.com/racemap/elevation-service.
 You should use a local instance of the elevation server because a large number of requests will be performed.
 
@@ -83,16 +92,31 @@ ELEVATION_SERVER_URL="https://elevation.racemap.com/api"
 ELEVATION_SERVER_TYPE="racemap"
 ```
 
-**Tileserver GL:**
-For elevation data served via [Tileserver GL](https://tileserver.readthedocs.io/en/latest/endpoints.html#source-data) with RGB-encoded elevation tiles. Configure using the batch elevation endpoint:
+#### Tileserver GL
+
+For elevation data served via [Tileserver GL](https://tileserver.readthedocs.io/en/latest/endpoints.html#source-data) with RGB-encoded elevation tiles. Uses the batch POST endpoint (`/data/{id}/elevation`) to fetch elevations for multiple coordinates at once.
 
 ```bash
 ELEVATION_SERVER_URL="https://example.com/data/mydata/elevation"
 ELEVATION_SERVER_TYPE="tileserver-gl"
-ELEVATION_SERVER_ZOOM="14,12"  # optional, comma-separated list of zoom levels to try in order, defaults to 12
+ELEVATION_SERVER_ZOOM="14,12"  # Comma-separated list of zoom levels to try in order (default: 12)
 ```
 
-The processor uses the batch POST endpoint (`/data/{id}/elevation`) to fetch elevations for multiple coordinates at once. It will attempt each zoom level in order, falling back to the next zoom level for coordinates that return null (no data available).
+The processor will attempt each zoom level in order, falling back to the next zoom level for coordinates that return null (no data available).
+
+#### Terrain Tiles
+
+For direct access to terrain tiles (Mapbox Terrain-RGB or compatible format). The processor fetches and caches tiles locally for better performance.
+
+```bash
+ELEVATION_SERVER_URL="https://example.com/tiles/{z}/{x}/{y}.png"
+ELEVATION_SERVER_TYPE="tile"
+ELEVATION_SERVER_ZOOM="14,12"              # Comma-separated list of zoom levels to try in order (default: 12)
+ELEVATION_TILE_SIZE="512"                  # Tile size in pixels (default: 512)
+ELEVATION_TILE_CACHE_DIR="data/tile-cache" # Local cache directory (default: data/tile-cache)
+ELEVATION_TILE_CACHE_MAX_TILES="100000"     # Maximum tiles to cache (default: 100000)
+ELEVATION_TILE_CONCURRENCY="4"             # Parallel tile downloads (default: 4)
+```
 
 ### Reverse geocoding
 

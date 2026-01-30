@@ -5,17 +5,14 @@ import {
   FeatureType,
   LiftFeature,
   RunFeature,
+  SpotFeature,
 } from "openskidata-format";
-import {
-  ElevationServerConfig,
-  ElevationServerType,
-  PostgresConfig,
-} from "../Config";
+import { ElevationServerConfig, PostgresConfig } from "../Config";
 import { PostgresCache } from "../utils/PostgresCache";
+import { TerrainTileElevationSource } from "./elevation/TerrainTileElevationSource";
 
 const elevationProfileResolution = 25;
 const ELEVATION_CACHE_TTL_MS = 365 * 24 * 60 * 60 * 1000; // 1 year
-const DEFAULT_TILESERVER_ZOOM = [12];
 const ERROR_LOG_THROTTLE_MS = 60000; // Log unique errors at most once per minute
 
 type Result<T, E = Error> = { ok: true; value: T } | { ok: false; error: E };
@@ -38,8 +35,8 @@ const throttledLogger = new ThrottledLogger();
 
 export interface ElevationProcessor {
   processFeature: (
-    feature: RunFeature | LiftFeature,
-  ) => Promise<RunFeature | LiftFeature>;
+    feature: RunFeature | LiftFeature | SpotFeature,
+  ) => Promise<RunFeature | LiftFeature | SpotFeature>;
   close: () => Promise<void>;
 }
 
@@ -55,24 +52,36 @@ export async function createElevationProcessor(
   );
   await cache.initialize();
 
+  let terrainTileSource: TerrainTileElevationSource | null = null;
+  if (elevationServerConfig.type === "tile") {
+    terrainTileSource = new TerrainTileElevationSource({
+      urlTemplate: elevationServerConfig.url,
+      tileSize: elevationServerConfig.tileSize,
+      cacheDir: elevationServerConfig.tileCacheDir,
+      cacheMaxTiles: elevationServerConfig.tileCacheMaxTiles,
+      tileConcurrency: elevationServerConfig.tileConcurrency,
+    });
+    await terrainTileSource.initialize();
+  }
+
   const elevationLoader = new DataLoader<string, number | null>(
     async (geohashes: readonly string[]) => {
       return await batchLoadElevations(
         Array.from(geohashes),
         elevationServerConfig,
         cache,
+        terrainTileSource,
       );
     },
     {
       batch: true,
-      // Note: a 10k batch size causes some 413 errors with Tileserver GL
-      maxBatchSize: 1000,
+      maxBatchSize: elevationServerConfig.batchSize,
     },
   );
 
   const processFeature = async (
-    feature: RunFeature | LiftFeature,
-  ): Promise<RunFeature | LiftFeature> => {
+    feature: RunFeature | LiftFeature | SpotFeature,
+  ): Promise<RunFeature | LiftFeature | SpotFeature> => {
     const coordinates: number[][] = getCoordinates(feature);
     const geometry = feature.geometry;
     const elevationProfileCoordinates: number[][] =
@@ -129,6 +138,9 @@ export async function createElevationProcessor(
   };
 
   const close = async (): Promise<void> => {
+    if (terrainTileSource) {
+      await terrainTileSource.close();
+    }
     await cache.close();
   };
 
@@ -142,6 +154,7 @@ async function batchLoadElevations(
   geohashes: string[],
   elevationServerConfig: ElevationServerConfig,
   cache: PostgresCache<number | null>,
+  terrainTileSource: TerrainTileElevationSource | null,
 ): Promise<(number | null)[]> {
   const results: (number | null)[] = new Array(geohashes.length);
   const uncachedIndices: number[] = [];
@@ -169,7 +182,11 @@ async function batchLoadElevations(
 
   // Fetch elevations for uncached coordinates
   const fetchedElevations: Result<number | null, string>[] =
-    await fetchElevationsFromServer(uncachedCoordinates, elevationServerConfig);
+    await fetchElevationsFromServer(
+      uncachedCoordinates,
+      elevationServerConfig,
+      terrainTileSource,
+    );
 
   if (uncachedCoordinates.length !== fetchedElevations.length) {
     throw new Error(
@@ -224,9 +241,10 @@ async function batchLoadElevations(
 async function fetchElevationsFromServer(
   coordinates: number[][],
   elevationServerConfig: ElevationServerConfig,
+  terrainTileSource: TerrainTileElevationSource | null,
 ): Promise<Result<number | null, string>[]> {
   switch (elevationServerConfig.type) {
-    case "racemap":
+    case "racemap": {
       const racemapResults = await fetchElevationsFromRacemap(
         coordinates,
         elevationServerConfig.url,
@@ -235,15 +253,22 @@ async function fetchElevationsFromServer(
         ok: true,
         value: elevation,
       }));
+    }
     case "tileserver-gl":
       return await fetchElevationsFromTileserverGL(
         coordinates,
         elevationServerConfig.url,
-        elevationServerConfig.zoom ?? DEFAULT_TILESERVER_ZOOM,
+        elevationServerConfig.zoom,
       );
-    default:
-      const exhaustiveCheck: never = elevationServerConfig.type;
-      throw new Error(`Unknown elevation server type: ${exhaustiveCheck}`);
+    case "tile":
+      return await terrainTileSource!.fetchElevations(
+        coordinates,
+        elevationServerConfig.zoom,
+      );
+    default: {
+      const exhaustiveCheck: never = elevationServerConfig;
+      throw new Error(`Unknown elevation server config: ${exhaustiveCheck}`);
+    }
   }
 }
 
@@ -376,10 +401,15 @@ async function fetchElevationsFromTileserverGL(
   return results;
 }
 
-function getCoordinates(feature: RunFeature | LiftFeature) {
+function getCoordinates(
+  feature: RunFeature | LiftFeature | SpotFeature,
+): number[][] {
   let coordinates: number[][];
   const geometryType = feature.geometry.type;
   switch (geometryType) {
+    case "Point":
+      coordinates = [feature.geometry.coordinates];
+      break;
     case "LineString":
       coordinates = feature.geometry.coordinates;
       break;
@@ -399,12 +429,14 @@ function getCoordinates(feature: RunFeature | LiftFeature) {
 }
 
 function addElevations(
-  feature: RunFeature | LiftFeature,
+  feature: RunFeature | LiftFeature | SpotFeature,
   elevations: number[],
 ) {
   let i = 0;
   const geometryType = feature.geometry.type;
   switch (geometryType) {
+    case "Point":
+      return addElevationToCoords(feature.geometry.coordinates, elevations[i]);
     case "LineString":
       return feature.geometry.coordinates.forEach((coords) => {
         addElevationToCoords(coords, elevations[i]);
