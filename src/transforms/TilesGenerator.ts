@@ -64,6 +64,22 @@ export async function generateTiles(
     },
   );
 
+  await performanceMonitor.withOperation("Generating spot tiles", async () => {
+    await runCommand("tippecanoe", [
+      "-Q",
+      "-o",
+      path.join(workingDir, "spots.mbtiles"),
+      "-f",
+      "-z",
+      "15",
+      "-Z",
+      "9",
+      "--simplify-only-low-zooms",
+      "--drop-densest-as-needed",
+      "--named-layer=spots:" + geoJSONPaths.spots,
+    ]);
+  });
+
   // Combine all layers into single MBTiles file
   await performanceMonitor.withOperation("Combining tiles", async () => {
     await runCommand("tile-join", [
@@ -74,6 +90,7 @@ export async function generateTiles(
       path.join(workingDir, "ski_areas.mbtiles"),
       path.join(workingDir, "runs.mbtiles"),
       path.join(workingDir, "lifts.mbtiles"),
+      path.join(workingDir, "spots.mbtiles"),
     ]);
   });
 
