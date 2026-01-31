@@ -32,6 +32,7 @@ beforeEach(() => {
     elevationServer: {
       url: "http://elevation.example.com",
       type: "racemap",
+      batchSize: 10000,
     },
     bbox: null,
     geocodingServer: null,
