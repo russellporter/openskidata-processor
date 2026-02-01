@@ -74,6 +74,8 @@ export async function generateTiles(
       "15",
       "-Z",
       "9",
+      "-B",
+      "10",
       "--simplify-only-low-zooms",
       "--drop-densest-as-needed",
       "--named-layer=spots:" + geoJSONPaths.spots,
