@@ -295,6 +295,8 @@ Map {
           "skiAreas": [
             "02911313f405ef0415188ceb357b415f02af5d64",
           ],
+          "snowfarming": null,
+          "snowmaking": null,
         },
         "type": "Feature",
       },

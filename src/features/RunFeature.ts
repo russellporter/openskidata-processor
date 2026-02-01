@@ -63,6 +63,8 @@ export type MapboxGLRunProperties = {
   color: RunColorValue;
   colorName: RunColorName;
   grooming: RunGrooming | null;
+  snowmaking: boolean | null;
+  snowfarming: boolean | null;
   // Run uses. Multiple uses are supported by rendering parallel lines for each use.
   // The value is the offset of the line from the baseline. The average of all offsets is always 0.
   downhill?: number;

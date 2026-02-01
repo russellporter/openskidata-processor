@@ -95,6 +95,8 @@ export function formatter(
       color: runColorNameToValue(colorName),
       colorName: colorName,
       grooming: properties.grooming,
+      snowmaking: properties.snowmaking,
+      snowfarming: properties.snowfarming,
       skiAreas: properties.skiAreas.map((skiArea) => skiArea.properties.id),
     };
 
