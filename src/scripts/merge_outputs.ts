@@ -2,8 +2,8 @@ import * as fs from "fs";
 import { createReadStream, createWriteStream } from "fs";
 import * as path from "path";
 import { createInterface } from "readline";
-import { runCommand } from "../utils/ProcessRunner";
 import { GeoPackageMerger } from "../io/GeoPackageMerger";
+import { runCommand } from "../utils/ProcessRunner";
 
 interface MergeStats {
   geoJsonFiles: number;
@@ -13,10 +13,15 @@ interface MergeStats {
 }
 
 const SPECIFIC_FILES = {
-  geojson: ["ski_areas.geojson", "lifts.geojson", "runs.geojson"],
+  geojson: [
+    "ski_areas.geojson",
+    "lifts.geojson",
+    "runs.geojson",
+    "spots.geojson",
+  ],
   mbtiles: ["openskimap.mbtiles"],
   gpkg: ["openskidata.gpkg"],
-  csv: ["csv/lifts.csv", "csv/runs.csv", "csv/ski_areas.csv"],
+  csv: ["csv/lifts.csv", "csv/runs.csv", "csv/ski_areas.csv", "csv/spots.csv"],
 };
 
 async function mergeGeoPackageWithSQLite(
@@ -43,11 +48,6 @@ function printUsage(): void {
   );
   console.log("");
   console.log("Merges multiple output data directories into a new directory.");
-  console.log("Merges these specific files:");
-  console.log("  - ski_areas.geojson, lifts.geojson, runs.geojson");
-  console.log("  - openskimap.mbtiles");
-  console.log("  - openskidata.gpkg");
-  console.log("  - csv/lifts.csv, csv/runs.csv, csv/ski_areas.csv");
 }
 
 function validateArguments(): { outputDir: string; inputDirs: string[] } {
