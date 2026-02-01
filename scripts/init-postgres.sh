@@ -116,12 +116,13 @@ done
 
 # Clean up clustering databases older than 1 day
 echo "Checking for old clustering databases to clean up..."
-su - postgres -c "psql -t -c \"
-  SELECT 'DROP DATABASE IF EXISTS \"' || datname || '\";'
+su - postgres -c "psql -c \"
+  SELECT 'DROP DATABASE IF EXISTS \\\"' || datname || '\\\";'
   FROM pg_database
   WHERE datname LIKE 'clustering-%'
     AND (pg_stat_file('base/'||oid ||'/PG_VERSION')).modification < NOW() - INTERVAL '1 day'
-\" | psql"
+  \\gexec
+\""
 
 # Keep container running by tailing PostgreSQL logs
 echo "PostgreSQL initialization complete. Tailing logs..."
