@@ -167,7 +167,7 @@ Map {
             ],
             [
               11.1164297,
-              47.558156300000014,
+              47.5581563,
             ],
           ],
           "type": "LineString",
@@ -179,7 +179,7 @@ Map {
           "detachable": null,
           "duration": null,
           "heating": null,
-          "id": "4d07b91974c5a5b3a0ad9e1928c0a6d433c5093b",
+          "id": "e8e4058e82dd25aa12b4673471dd754a8b319f5c",
           "liftType": "t-bar",
           "name": "Skilift Oberau",
           "occupancy": null,
@@ -235,14 +235,14 @@ Map {
             ],
             [
               11.1164297,
-              47.55815630000002,
+              47.5581563,
             ],
           ],
           "type": "LineString",
         },
         "properties": {
           "color": "hsl(0, 82%, 42%)",
-          "id": "4d07b91974c5a5b3a0ad9e1928c0a6d433c5093b",
+          "id": "e8e4058e82dd25aa12b4673471dd754a8b319f5c",
           "name_and_type": "Skilift Oberau (T-bar)",
           "skiAreas": [
             "02911313f405ef0415188ceb357b415f02af5d64",
@@ -262,19 +262,19 @@ Map {
             [
               [
                 11.1164229,
-                47.55812500000001,
+                47.558125,
               ],
               [
-                11.116365499999999,
+                11.1163655,
                 47.5579742,
               ],
               [
                 11.1171866,
-                47.55764129999998,
+                47.5576413,
               ],
               [
                 11.1164229,
-                47.55812500000001,
+                47.558125,
               ],
             ],
           ],
@@ -287,7 +287,7 @@ Map {
           "downhill": 0,
           "gladed": null,
           "grooming": null,
-          "id": "06d4001a8c7266c1fef7d3925c37ca9ea4947ea5",
+          "id": "72587edf07dd3862f9086084698d82783cb1b16e",
           "lit": null,
           "name": "Oberauer Skiabfahrt",
           "oneway": true,
@@ -340,19 +340,19 @@ Map {
             [
               [
                 11.1164229,
-                47.55812500000001,
+                47.558125,
               ],
               [
-                11.116365499999999,
+                11.1163655,
                 47.5579742,
               ],
               [
                 11.1171866,
-                47.557641299999986,
+                47.5576413,
               ],
               [
                 11.1164229,
-                47.55812500000001,
+                47.558125,
               ],
             ],
           ],
@@ -365,7 +365,7 @@ Map {
           "elevationProfile": null,
           "gladed": null,
           "grooming": null,
-          "id": "06d4001a8c7266c1fef7d3925c37ca9ea4947ea5",
+          "id": "72587edf07dd3862f9086084698d82783cb1b16e",
           "lit": null,
           "name": "Oberauer Skiabfahrt",
           "oneway": true,
@@ -443,7 +443,7 @@ Map {
               "byType": {
                 "t-bar": {
                   "count": 1,
-                  "lengthInKm": 0.45532735536212093,
+                  "lengthInKm": 0.4553273553617682,
                 },
               },
             },
@@ -762,13 +762,13 @@ it("processes spot entities", async () => {
   await prepare(paths, createTestConfig());
 
   expect(
-    TestHelpers.fileContents(paths.output.spots).features.map(
-      simplifiedSpotFeature,
-    ),
-  ).toMatchInlineSnapshot(`
+  TestHelpers.fileContents(paths.output.spots).features.map(
+    simplifiedSpotFeature
+  )
+).toMatchInlineSnapshot(`
 [
   {
-    "id": "a8a3c9a787af7eaf5eb06bc2d98a5efefcc00da5",
+    "id": "0a918e17a43efba3745d4525f37ae4348f223158",
     "skiAreas": [
       "02911313f405ef0415188ceb357b415f02af5d64",
     ],
@@ -782,7 +782,7 @@ it("processes spot entities", async () => {
     "spotType": "avalanche_transceiver_checkpoint",
   },
   {
-    "id": "fa5db1e311482c3d3e5aa9fa050d048f1da67568",
+    "id": "0ff4dd19e5a6247b6b4d18e9feae2fc3ba491bf1",
     "skiAreas": [
       "02911313f405ef0415188ceb357b415f02af5d64",
     ],

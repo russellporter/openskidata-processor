@@ -1,5 +1,4 @@
 import * as Fs from "fs";
-import * as JSONStream from "JSONStream";
 import osmtogeojson from "osmtogeojson";
 
 const polygonFeatures = {
@@ -115,23 +114,16 @@ export function convertOSMToGeoJSON(osmJSON: any) {
 }
 
 async function readOSMJSON(path: string): Promise<any> {
-  return await new Promise((resolve, reject) => {
-    Fs.createReadStream(path)
-      .pipe(JSONStream.parse(null))
-      .on("root", function (data) {
-        // iron out some nasty floating point rounding errors
-        if (data.version) data.version = Math.round(data.version * 1000) / 1000;
-        data.elements.forEach(function (element: any) {
-          if (element.lat) element.lat = Math.round(element.lat * 1e12) / 1e12;
-          if (element.lon) element.lon = Math.round(element.lon * 1e12) / 1e12;
-        });
-        // convert to geojson
-        resolve(data);
-      })
-      .on("error", function (error) {
-        reject(error);
-      });
+  const data = JSON.parse(await Fs.promises.readFile(path, "utf8"));
+
+  // iron out some nasty floating point rounding errors
+  if (data.version) data.version = Math.round(data.version * 1000) / 1000;
+  data.elements.forEach(function (element: any) {
+    if (element.lat) element.lat = Math.round(element.lat * 1e12) / 1e12;
+    if (element.lon) element.lon = Math.round(element.lon * 1e12) / 1e12;
   });
+
+  return data;
 }
 
 /**

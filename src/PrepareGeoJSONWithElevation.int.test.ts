@@ -97,7 +97,7 @@ it("adds elevations to lift geometry", async () => {
           ],
           [
             11.1164297,
-            47.558156300000014,
+            47.5581563,
             1,
           ],
         ],
@@ -110,7 +110,7 @@ it("adds elevations to lift geometry", async () => {
         "detachable": null,
         "duration": null,
         "heating": null,
-        "id": "4d07b91974c5a5b3a0ad9e1928c0a6d433c5093b",
+        "id": "e8e4058e82dd25aa12b4673471dd754a8b319f5c",
         "liftType": "t-bar",
         "name": "Skilift Oberau",
         "occupancy": null,
@@ -206,11 +206,11 @@ it("adds elevations to run geometry & elevation profile", async () => {
   "coordinates": [
     [
       11.1164229,
-      47.55812500000001,
+      47.558125,
       0,
     ],
     [
-      11.116365499999999,
+      11.1163655,
       47.5579742,
       1,
     ],
@@ -273,7 +273,7 @@ it("completes without adding elevations when elevation server fails", async () =
           ],
           [
             11.1164297,
-            47.558156300000014,
+            47.5581563,
           ],
         ],
         "type": "LineString",
@@ -285,7 +285,7 @@ it("completes without adding elevations when elevation server fails", async () =
         "detachable": null,
         "duration": null,
         "heating": null,
-        "id": "4d07b91974c5a5b3a0ad9e1928c0a6d433c5093b",
+        "id": "e8e4058e82dd25aa12b4673471dd754a8b319f5c",
         "liftType": "t-bar",
         "name": "Skilift Oberau",
         "occupancy": null,
@@ -357,19 +357,19 @@ it("adds elevations to run polygons", async () => {
 
   await prepare(paths, testConfig);
 
-  expect(TestHelpers.fileContents(paths.output.runs).features[0].geometry)
-    .toMatchInlineSnapshot(`
+  expect(TestHelpers.fileContents(paths.output.runs).features[0].geometry).
+toMatchInlineSnapshot(`
 {
   "coordinates": [
     [
       [
-        6.544500899999996,
+        6.544500899999999,
         45.3230511,
         0,
       ],
       [
-        6.5434094000000025,
-        45.32317370000001,
+        6.543409400000001,
+        45.323173700000005,
         1,
       ],
       [
@@ -383,7 +383,7 @@ it("adds elevations to run polygons", async () => {
         3,
       ],
       [
-        6.544500899999996,
+        6.544500899999999,
         45.3230511,
         0,
       ],

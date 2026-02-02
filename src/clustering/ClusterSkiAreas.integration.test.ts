@@ -651,10 +651,10 @@ it("generates elevation statistics for run & lift based on lift served skiable v
   await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
 
   expect(
-    TestHelpers.fileContents(paths.output.skiAreas).features.map(
-      simplifiedSkiAreaFeatureWithStatistics,
-    ),
-  ).toMatchInlineSnapshot(`
+  TestHelpers.fileContents(paths.output.skiAreas).features.map(
+    simplifiedSkiAreaFeatureWithStatistics
+  )
+).toMatchInlineSnapshot(`
 [
   {
     "activities": [
@@ -668,7 +668,7 @@ it("generates elevation statistics for run & lift based on lift served skiable v
           "t-bar": {
             "combinedElevationChange": 100,
             "count": 1,
-            "lengthInKm": 0.4553273553619445,
+            "lengthInKm": 0.4553273553617682,
             "maxElevation": 200,
             "minElevation": 100,
           },
@@ -685,7 +685,7 @@ it("generates elevation statistics for run & lift based on lift served skiable v
               "other": {
                 "combinedElevationChange": 100,
                 "count": 1,
-                "lengthInKm": 0.46264499967438083,
+                "lengthInKm": 0.46264499967407724,
                 "maxElevation": 250,
                 "minElevation": 150,
               },
@@ -734,10 +734,10 @@ it("generates statistics for run with backcountry grooming with site membership"
   await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
 
   expect(
-    TestHelpers.fileContents(paths.output.skiAreas).features.map(
-      simplifiedSkiAreaFeatureWithStatistics,
-    ),
-  ).toMatchInlineSnapshot(`
+  TestHelpers.fileContents(paths.output.skiAreas).features.map(
+    simplifiedSkiAreaFeatureWithStatistics
+  )
+).toMatchInlineSnapshot(`
 [
   {
     "activities": [
@@ -758,7 +758,7 @@ it("generates statistics for run with backcountry grooming with site membership"
               "other": {
                 "combinedElevationChange": 100,
                 "count": 1,
-                "lengthInKm": 0.46264499967438083,
+                "lengthInKm": 0.46264499967407724,
                 "maxElevation": 250,
                 "minElevation": 150,
               },
