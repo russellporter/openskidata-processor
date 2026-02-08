@@ -1,18 +1,14 @@
 import { feature } from "@turf/helpers";
 import turfLength from "@turf/length";
 import {
+  FeatureType,
   LiftStatistics,
   RunStatistics,
   SkiAreaActivity,
   SkiAreaSnowCoverStatistics,
   SkiAreaStatistics,
 } from "openskidata-format";
-import {
-  LiftObject,
-  MapObject,
-  MapObjectType,
-  RunObject,
-} from "../clustering/MapObject";
+import { LiftObject, MapObject, RunObject } from "../clustering/MapObject";
 import { PostgresConfig, SnowCoverConfig } from "../Config";
 import { getSnowCoverHistoryFromCache } from "../utils/snowCoverHistory";
 import { VIIRSPixel } from "../utils/VIIRSPixelExtractor";
@@ -23,11 +19,11 @@ const allSkiAreaActivities = new Set([
 ]);
 
 function isRun(object: MapObject): object is RunObject {
-  return object.type === MapObjectType.Run;
+  return object.type === FeatureType.Run;
 }
 
 function isLift(object: MapObject): object is LiftObject {
-  return object.type === MapObjectType.Lift;
+  return object.type === FeatureType.Lift;
 }
 
 type MapObjectStatistics = {
@@ -125,6 +121,8 @@ function runStatistics(runs: RunObject[]): RunStatistics {
           allSkiAreaActivities.has(activity),
         ),
         distance: turfLength(feature(run.geometry)),
+        snowmaking: run.snowmaking,
+        snowfarming: run.snowfarming,
       };
     })
     .reduce(
@@ -139,10 +137,23 @@ function runStatistics(runs: RunObject[]): RunStatistics {
           const runStats = activityStatistics.byDifficulty[difficulty] || {
             count: 0,
             lengthInKm: 0,
+            snowmakingLengthInKm: 0,
+            snowfarmingLengthInKm: 0,
           };
           activityStatistics.byDifficulty[difficulty] = runStats;
 
           augmentRunOrLiftStatistics(runStats, run);
+
+          // Add snowmaking/snowfarming lengths
+          if (run.snowmaking === true) {
+            runStats.snowmakingLengthInKm =
+              (runStats.snowmakingLengthInKm || 0) + run.distance;
+          }
+          if (run.snowfarming === true) {
+            runStats.snowfarmingLengthInKm =
+              (runStats.snowfarmingLengthInKm || 0) + run.distance;
+          }
+
           augmentElevationStatistics(statistics, run);
         });
 

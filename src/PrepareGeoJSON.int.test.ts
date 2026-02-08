@@ -1,4 +1,4 @@
-import { SkiAreaActivity, SpotType } from "openskidata-format";
+import { SkiAreaActivity } from "openskidata-format";
 import { Config, getPostgresTestConfig } from "./Config";
 import prepare from "./PrepareGeoJSON";
 import * as TestHelpers from "./TestHelpers";
@@ -173,6 +173,7 @@ Map {
           "type": "LineString",
         },
         "properties": {
+          "access": null,
           "bubble": null,
           "capacity": null,
           "description": null,
@@ -214,6 +215,7 @@ Map {
               "type": "openstreetmap",
             },
           ],
+          "stations": [],
           "status": "operating",
           "type": "lift",
           "websites": [],
@@ -241,12 +243,14 @@ Map {
           "type": "LineString",
         },
         "properties": {
+          "access": null,
           "color": "hsl(0, 82%, 42%)",
           "id": "4d07b91974c5a5b3a0ad9e1928c0a6d433c5093b",
           "name_and_type": "Skilift Oberau (T-bar)",
           "skiAreas": [
             "02911313f405ef0415188ceb357b415f02af5d64",
           ],
+          "stationIds": [],
           "status": "operating",
         },
         "type": "Feature",
@@ -762,18 +766,11 @@ it("processes spot entities", async () => {
   await prepare(paths, createTestConfig());
 
   expect(
-    TestHelpers.fileContents(paths.output.spots).features.map(
-      simplifiedSpotFeature,
-    ),
-  ).toMatchInlineSnapshot(`
+  TestHelpers.fileContents(paths.output.spots).features.map(
+    simplifiedSpotFeature
+  )
+).toMatchInlineSnapshot(`
 [
-  {
-    "id": "a8a3c9a787af7eaf5eb06bc2d98a5efefcc00da5",
-    "skiAreas": [
-      "02911313f405ef0415188ceb357b415f02af5d64",
-    ],
-    "spotType": "lift_station",
-  },
   {
     "id": "f600d71632dca9be0db9329fb195db78b05a5925",
     "skiAreas": [

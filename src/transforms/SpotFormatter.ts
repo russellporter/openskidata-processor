@@ -125,6 +125,7 @@ function formatLiftStation(
     type: FeatureType.Spot,
     spotType: SpotType.LiftStation,
     name,
+    liftId: "",
     position,
     entry,
     exit,

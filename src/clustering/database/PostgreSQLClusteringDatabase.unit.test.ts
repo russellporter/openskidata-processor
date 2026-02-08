@@ -1,11 +1,9 @@
+import { FeatureType, SkiAreaActivity, SpotType } from "openskidata-format";
+import { getPostgresTestConfig } from "../../Config";
 import {
   PostgreSQLClusteringDatabase,
   PostgreSQLCursor,
 } from "./PostgreSQLClusteringDatabase";
-import { MapObjectType } from "../MapObject";
-import { SkiAreaActivity, SpotType } from "openskidata-format";
-import { getPostgresTestConfig } from "../../Config";
-import * as TestHelpers from "../../TestHelpers";
 
 jest.setTimeout(60 * 1000);
 
@@ -41,7 +39,7 @@ describe("PostgreSQLClusteringDatabase", () => {
   it("should save and retrieve a ski area object", async () => {
     const skiArea = {
       _key: "test-ski-area-1",
-      type: MapObjectType.SkiArea,
+      type: FeatureType.SkiArea,
       geometry: {
         type: "Point" as const,
         coordinates: [-122.4194, 37.7749],
@@ -73,7 +71,7 @@ describe("PostgreSQLClusteringDatabase", () => {
     const objects = [
       {
         _key: "test-1",
-        type: MapObjectType.SkiArea,
+        type: FeatureType.SkiArea,
         geometry: { type: "Point" as const, coordinates: [-122.4194, 37.7749] },
         activities: [SkiAreaActivity.Downhill],
         skiAreas: [],
@@ -84,7 +82,7 @@ describe("PostgreSQLClusteringDatabase", () => {
       },
       {
         _key: "test-2",
-        type: MapObjectType.Run,
+        type: FeatureType.Run,
         geometry: {
           type: "LineString" as const,
           coordinates: [
@@ -113,7 +111,7 @@ describe("PostgreSQLClusteringDatabase", () => {
     // Create a run marked as basis for new ski area
     const unassignedRun = {
       _key: "unassigned-run-1",
-      type: MapObjectType.Run,
+      type: FeatureType.Run,
       geometry: {
         type: "LineString" as const,
         coordinates: [
@@ -132,7 +130,7 @@ describe("PostgreSQLClusteringDatabase", () => {
     // Create a run NOT marked as basis for new ski area
     const assignedRun = {
       _key: "assigned-run-1",
-      type: MapObjectType.Run,
+      type: FeatureType.Run,
       geometry: {
         type: "LineString" as const,
         coordinates: [
@@ -174,7 +172,7 @@ describe("PostgreSQLClusteringDatabase", () => {
     expect(() => {
       new PostgreSQLCursor(
         pool,
-        "SELECT * FROM objects WHERE type = 'RUN'",
+        `SELECT * FROM objects WHERE type = '${FeatureType.Run}'`,
         [],
         (row: any) => row as any,
         1000,
@@ -189,7 +187,7 @@ describe("PostgreSQLClusteringDatabase", () => {
     expect(() => {
       new PostgreSQLCursor(
         pool,
-        "SELECT * FROM objects WHERE type = 'RUN'",
+        `SELECT * FROM objects WHERE type = '${FeatureType.Run}'`,
         [],
         (row: any) => row as any,
         Number.MAX_SAFE_INTEGER,
@@ -200,12 +198,11 @@ describe("PostgreSQLClusteringDatabase", () => {
   it("should save and retrieve spot objects", async () => {
     const spot = {
       _key: "test-spot-1",
-      type: MapObjectType.Spot,
+      type: FeatureType.Spot,
       geometry: {
         type: "Point" as const,
         coordinates: [-122.4194, 37.7749],
       },
-      spotType: SpotType.LiftStation,
       activities: [SkiAreaActivity.Downhill],
       skiAreas: [],
       source: "test",
@@ -213,6 +210,7 @@ describe("PostgreSQLClusteringDatabase", () => {
       isInSkiAreaPolygon: false,
       isInSkiAreaSite: false,
       properties: {
+        spotType: SpotType.LiftStation,
         places: [],
       },
     } as any;
@@ -224,8 +222,8 @@ describe("PostgreSQLClusteringDatabase", () => {
 
     expect(spots).toHaveLength(1);
     expect(spots[0]._key).toBe("test-spot-1");
-    expect(spots[0].spotType).toBe(SpotType.LiftStation);
     expect(spots[0].activities).toContain(SkiAreaActivity.Downhill);
+    expect(spots[0].properties.spotType).toBe(SpotType.LiftStation);
     expect(spots[0].properties.places).toEqual([]);
   });
 });

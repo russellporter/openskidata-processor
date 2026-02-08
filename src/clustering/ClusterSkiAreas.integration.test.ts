@@ -651,10 +651,10 @@ it("generates elevation statistics for run & lift based on lift served skiable v
   await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
 
   expect(
-    TestHelpers.fileContents(paths.output.skiAreas).features.map(
-      simplifiedSkiAreaFeatureWithStatistics,
-    ),
-  ).toMatchInlineSnapshot(`
+  TestHelpers.fileContents(paths.output.skiAreas).features.map(
+    simplifiedSkiAreaFeatureWithStatistics
+  )
+).toMatchInlineSnapshot(`
 [
   {
     "activities": [
@@ -688,6 +688,8 @@ it("generates elevation statistics for run & lift based on lift served skiable v
                 "lengthInKm": 0.46264499967438083,
                 "maxElevation": 250,
                 "minElevation": 150,
+                "snowfarmingLengthInKm": 0,
+                "snowmakingLengthInKm": 0,
               },
             },
           },
@@ -734,10 +736,10 @@ it("generates statistics for run with backcountry grooming with site membership"
   await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
 
   expect(
-    TestHelpers.fileContents(paths.output.skiAreas).features.map(
-      simplifiedSkiAreaFeatureWithStatistics,
-    ),
-  ).toMatchInlineSnapshot(`
+  TestHelpers.fileContents(paths.output.skiAreas).features.map(
+    simplifiedSkiAreaFeatureWithStatistics
+  )
+).toMatchInlineSnapshot(`
 [
   {
     "activities": [
@@ -761,6 +763,8 @@ it("generates statistics for run with backcountry grooming with site membership"
                 "lengthInKm": 0.46264499967438083,
                 "maxElevation": 250,
                 "minElevation": 150,
+                "snowfarmingLengthInKm": 0,
+                "snowmakingLengthInKm": 0,
               },
             },
           },
@@ -2672,27 +2676,27 @@ it("associates spots to ski areas but spots alone do not create ski areas", asyn
   await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
 
   expect(
-    TestHelpers.fileContents(paths.output.spots).features.map(
-      simplifiedSpotFeature,
-    ),
-  ).toMatchInlineSnapshot(`
-    [
-      {
-        "id": "3",
-        "skiAreas": [
-          "mock-UUID-0",
-        ],
-        "spotType": "lift_station",
-      },
-      {
-        "id": "4",
-        "skiAreas": [
-          "mock-UUID-0",
-        ],
-        "spotType": "crossing",
-      },
-    ]
-  `);
+  TestHelpers.fileContents(paths.output.spots).features.map(
+    simplifiedSpotFeature
+  )
+).toMatchInlineSnapshot(`
+[
+  {
+    "id": "3",
+    "skiAreas": [
+      "mock-UUID-0",
+    ],
+    "spotType": "lift_station",
+  },
+  {
+    "id": "4",
+    "skiAreas": [
+      "mock-UUID-0",
+    ],
+    "spotType": "crossing",
+  },
+]
+`);
 
   expect(
     TestHelpers.fileContents(paths.output.skiAreas).features.map(
@@ -2736,27 +2740,536 @@ it("does not create ski area for spots alone without runs or lifts", async () =>
   await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
 
   expect(
-    TestHelpers.fileContents(paths.output.spots).features.map(
-      simplifiedSpotFeature,
-    ),
-  ).toMatchInlineSnapshot(`
-    [
-      {
-        "id": "1",
-        "skiAreas": [],
-        "spotType": "lift_station",
-      },
-      {
-        "id": "2",
-        "skiAreas": [],
-        "spotType": "halfpipe",
-      },
-    ]
-  `);
+  TestHelpers.fileContents(paths.output.spots).features.map(
+    simplifiedSpotFeature
+  )
+).toMatchInlineSnapshot(`
+[
+  {
+    "id": "2",
+    "skiAreas": [],
+    "spotType": "halfpipe",
+  },
+]
+`);
 
   expect(
     TestHelpers.fileContents(paths.output.skiAreas).features.map(
       simplifiedSkiAreaFeature,
     ),
   ).toMatchInlineSnapshot(`[]`);
+});
+
+describe("Lift Station Association", () => {
+  it("associates lift stations with nearby lifts and snaps position to lift line", async () => {
+    const paths = TestHelpers.getFilePaths();
+    TestHelpers.mockFeatureFiles(
+      [],
+      [
+        TestHelpers.mockLiftFeature({
+          id: "lift-1",
+          name: "Gondola",
+          liftType: LiftType.Gondola,
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [0, 0, 1000],
+              [1, 1, 1500],
+            ],
+          },
+        }),
+      ],
+      [
+        TestHelpers.mockRunFeature({
+          id: "run-1",
+          name: "Run",
+          uses: [RunUse.Downhill],
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [0, 0],
+              [1, 1],
+            ],
+          },
+        }),
+      ],
+      paths.intermediate,
+      [
+        TestHelpers.mockSpotFeature({
+          id: "station-1",
+          spotType: SpotType.LiftStation,
+          name: "Base Station",
+          geometry: {
+            type: "Point",
+            coordinates: [0.01, 0.01, 1050], // Near bottom, should snap to lift line
+          },
+        }),
+      ],
+    );
+
+    await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
+
+    const spots = TestHelpers.fileContents(paths.output.spots).features;
+    const station = spots.find((s: any) => s.properties.id === "station-1");
+
+    // Station should be associated with the lift
+    expect(station.properties.liftId).toBe("lift-1");
+
+    // Station should be snapped to lift line (not at original coordinates)
+    expect(station.geometry.coordinates).not.toEqual([0.01, 0.01, 1050]);
+
+    // Position should be inferred from original elevation
+    // Lift range: 1000-1500 (range = 500)
+    // Bottom threshold: 1000 + 125 = 1125
+    // 1050 <= 1125, so position should be "bottom"
+    expect(station.properties.position).toBe("bottom");
+  });
+
+  it("infers lift station position from elevation data", async () => {
+    const paths = TestHelpers.getFilePaths();
+    TestHelpers.mockFeatureFiles(
+      [],
+      [
+        TestHelpers.mockLiftFeature({
+          id: "lift-1",
+          name: "Chairlift",
+          liftType: LiftType.ChairLift,
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [0, 0, 1000], // bottom
+              [0.5, 0.5, 1500], // mid
+              [1, 1, 2000], // top
+            ],
+          },
+        }),
+      ],
+      [
+        TestHelpers.mockRunFeature({
+          id: "run-1",
+          name: "Run",
+          uses: [RunUse.Downhill],
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [0, 0],
+              [1, 1],
+            ],
+          },
+        }),
+      ],
+      paths.intermediate,
+      [
+        TestHelpers.mockSpotFeature({
+          id: "station-bottom",
+          spotType: SpotType.LiftStation,
+          name: "Bottom Station",
+          geometry: {
+            type: "Point",
+            coordinates: [0.01, 0.01, 1050], // Bottom 25% of range (1000-2000)
+          },
+        }),
+        TestHelpers.mockSpotFeature({
+          id: "station-mid",
+          spotType: SpotType.LiftStation,
+          name: "Mid Station",
+          geometry: {
+            type: "Point",
+            coordinates: [0.5, 0.5, 1500], // Middle 50%
+          },
+        }),
+        TestHelpers.mockSpotFeature({
+          id: "station-top",
+          spotType: SpotType.LiftStation,
+          name: "Top Station",
+          geometry: {
+            type: "Point",
+            coordinates: [0.99, 0.99, 1950], // Top 25%
+          },
+        }),
+      ],
+    );
+
+    await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
+
+    const spots = TestHelpers.fileContents(paths.output.spots).features;
+
+    const bottomStation = spots.find(
+      (s: any) => s.properties.id === "station-bottom",
+    );
+    const midStation = spots.find(
+      (s: any) => s.properties.id === "station-mid",
+    );
+    const topStation = spots.find(
+      (s: any) => s.properties.id === "station-top",
+    );
+
+    // All stations should be associated with the lift
+    expect(bottomStation.properties.liftId).toBe("lift-1");
+    expect(midStation.properties.liftId).toBe("lift-1");
+    expect(topStation.properties.liftId).toBe("lift-1");
+
+    // Positions should be inferred from elevation data
+    // Lift range: 1000-2000 (range = 1000)
+    // Bottom threshold: 1000 + 250 = 1250
+    // Top threshold: 2000 - 250 = 1750
+    expect(bottomStation.properties.position).toBe("bottom"); // 1050 <= 1250
+    expect(midStation.properties.position).toBe("mid"); // 1250 < 1500 < 1750
+    expect(topStation.properties.position).toBe("top"); // 1950 >= 1750
+  });
+
+  it("removes orphaned lift stations without nearby lifts", async () => {
+    const paths = TestHelpers.getFilePaths();
+    TestHelpers.mockFeatureFiles(
+      [],
+      [
+        TestHelpers.mockLiftFeature({
+          id: "lift-1",
+          name: "Lift",
+          liftType: LiftType.TBar,
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [0, 0],
+              [1, 0],
+            ],
+          },
+        }),
+      ],
+      [
+        TestHelpers.mockRunFeature({
+          id: "run-1",
+          name: "Run",
+          uses: [RunUse.Downhill],
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [0, 0],
+              [1, 1],
+            ],
+          },
+        }),
+      ],
+      paths.intermediate,
+      [
+        TestHelpers.mockSpotFeature({
+          id: "station-nearby",
+          spotType: SpotType.LiftStation,
+          name: "Nearby Station",
+          geometry: {
+            type: "Point",
+            coordinates: [0.5, 0.0001], // Close to lift (~11m)
+          },
+        }),
+        TestHelpers.mockSpotFeature({
+          id: "station-orphaned",
+          spotType: SpotType.LiftStation,
+          name: "Orphaned Station",
+          geometry: {
+            type: "Point",
+            coordinates: [5, 5], // Far from any lift (material ropeway station)
+          },
+        }),
+      ],
+    );
+
+    await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
+
+    const spots = TestHelpers.fileContents(paths.output.spots).features;
+
+    // Nearby station should remain
+    const nearbyStation = spots.find(
+      (s: any) => s.properties.id === "station-nearby",
+    );
+    expect(nearbyStation).toBeDefined();
+    expect(nearbyStation.properties.liftId).toBe("lift-1");
+
+    // Orphaned station should be removed
+    const orphanedStation = spots.find(
+      (s: any) => s.properties.id === "station-orphaned",
+    );
+    expect(orphanedStation).toBeUndefined();
+  });
+
+  it("associates station with closest lift when multiple lifts are nearby", async () => {
+    const paths = TestHelpers.getFilePaths();
+    TestHelpers.mockFeatureFiles(
+      [],
+      [
+        TestHelpers.mockLiftFeature({
+          id: "lift-1",
+          name: "Lift 1",
+          liftType: LiftType.ChairLift,
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [0, 0],
+              [1, 0],
+            ],
+          },
+        }),
+        TestHelpers.mockLiftFeature({
+          id: "lift-2",
+          name: "Lift 2",
+          liftType: LiftType.TBar,
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [0, 0.02], // Further from station
+              [1, 0.02],
+            ],
+          },
+        }),
+      ],
+      [
+        TestHelpers.mockRunFeature({
+          id: "run-1",
+          name: "Run",
+          uses: [RunUse.Downhill],
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [0, 0],
+              [1, 1],
+            ],
+          },
+        }),
+      ],
+      paths.intermediate,
+      [
+        TestHelpers.mockSpotFeature({
+          id: "station-1",
+          spotType: SpotType.LiftStation,
+          name: "Station",
+          geometry: {
+            type: "Point",
+            coordinates: [0.5, 0.0001], // ~11m from lift-1 (within 30m threshold)
+          },
+        }),
+      ],
+    );
+
+    await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
+
+    const spots = TestHelpers.fileContents(paths.output.spots).features;
+    const station = spots.find((s: any) => s.properties.id === "station-1");
+
+    // Should associate with closest lift (lift-1)
+    expect(station.properties.liftId).toBe("lift-1");
+  });
+
+  it("associates stations with MultiLineString lifts", async () => {
+    const paths = TestHelpers.getFilePaths();
+    TestHelpers.mockFeatureFiles(
+      [],
+      [
+        TestHelpers.mockLiftFeature({
+          id: "lift-1",
+          name: "Gondola with multiple segments",
+          liftType: LiftType.Gondola,
+          geometry: {
+            type: "MultiLineString",
+            coordinates: [
+              [
+                [0, 0, 1000],
+                [0.5, 0, 1500],
+              ],
+              [
+                [0.5, 0, 1500],
+                [1, 0, 2000],
+              ],
+            ],
+          },
+        }),
+      ],
+      [
+        TestHelpers.mockRunFeature({
+          id: "run-1",
+          name: "Run",
+          uses: [RunUse.Downhill],
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [0, 0],
+              [1, 1],
+            ],
+          },
+        }),
+      ],
+      paths.intermediate,
+      [
+        TestHelpers.mockSpotFeature({
+          id: "station-1",
+          spotType: SpotType.LiftStation,
+          name: "Mid Station",
+          geometry: {
+            type: "Point",
+            coordinates: [0.5, 0.0001, 1500], // ~11m from lift (within 30m threshold), at mid elevation
+          },
+        }),
+      ],
+    );
+
+    await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
+
+    const spots = TestHelpers.fileContents(paths.output.spots).features;
+    const station = spots.find((s: any) => s.properties.id === "station-1");
+
+    expect(station.properties.liftId).toBe("lift-1");
+    // Lift range: 1000-2000 (range = 1000)
+    // Mid thresholds: 1250 < mid < 1750
+    // Station at 1500 should be "mid"
+    expect(station.properties.position).toBe("mid");
+  });
+
+  it("populates lift.stations array with associated stations", async () => {
+    const paths = TestHelpers.getFilePaths();
+    TestHelpers.mockFeatureFiles(
+      [],
+      [
+        TestHelpers.mockLiftFeature({
+          id: "lift-1",
+          name: "Gondola",
+          liftType: LiftType.Gondola,
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [0, 0, 1000],
+              [1, 1, 2000],
+            ],
+          },
+        }),
+      ],
+      [
+        TestHelpers.mockRunFeature({
+          id: "run-1",
+          name: "Run",
+          uses: [RunUse.Downhill],
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [0, 0],
+              [1, 1],
+            ],
+          },
+        }),
+      ],
+      paths.intermediate,
+      [
+        TestHelpers.mockSpotFeature({
+          id: "station-1",
+          spotType: SpotType.LiftStation,
+          name: "Bottom Station",
+          geometry: {
+            type: "Point",
+            coordinates: [0.01, 0.01, 1100], // Bottom station
+          },
+        }),
+        TestHelpers.mockSpotFeature({
+          id: "station-2",
+          spotType: SpotType.LiftStation,
+          name: "Top Station",
+          geometry: {
+            type: "Point",
+            coordinates: [0.99, 0.99, 1900], // Top station
+          },
+        }),
+      ],
+    );
+
+    await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
+
+    const lifts = TestHelpers.fileContents(paths.output.lifts).features;
+    const lift = lifts.find((l: any) => l.properties.id === "lift-1");
+
+    // Lift should have stations array populated
+    expect(lift.properties.stations).toHaveLength(2);
+
+    const stationIds = lift.properties.stations.map((s: any) => s.properties.id);
+    expect(stationIds).toContain("station-1");
+    expect(stationIds).toContain("station-2");
+
+    // Each station should have liftId pointing back to the lift
+    lift.properties.stations.forEach((station: any) => {
+      expect(station.properties.liftId).toBe("lift-1");
+    });
+
+    // Check that positions are correctly inferred
+    const bottomStation = lift.properties.stations.find(
+      (s: any) => s.properties.id === "station-1",
+    );
+    const topStation = lift.properties.stations.find(
+      (s: any) => s.properties.id === "station-2",
+    );
+    expect(bottomStation.properties.position).toBe("bottom");
+    expect(topStation.properties.position).toBe("top");
+  });
+
+  it("preserves non-lift-station spots", async () => {
+    const paths = TestHelpers.getFilePaths();
+    TestHelpers.mockFeatureFiles(
+      [],
+      [
+        TestHelpers.mockLiftFeature({
+          id: "lift-1",
+          name: "Lift",
+          liftType: LiftType.ChairLift,
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [0, 0],
+              [1, 0],
+            ],
+          },
+        }),
+      ],
+      [
+        TestHelpers.mockRunFeature({
+          id: "run-1",
+          name: "Run",
+          uses: [RunUse.Downhill],
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [0, 0],
+              [1, 1],
+            ],
+          },
+        }),
+      ],
+      paths.intermediate,
+      [
+        TestHelpers.mockSpotFeature({
+          id: "crossing-1",
+          spotType: SpotType.Crossing,
+          geometry: {
+            type: "Point",
+            coordinates: [0.5, 0.5],
+          },
+        }),
+        TestHelpers.mockSpotFeature({
+          id: "halfpipe-1",
+          spotType: SpotType.Halfpipe,
+          geometry: {
+            type: "Point",
+            coordinates: [0.3, 0.3],
+          },
+        }),
+      ],
+    );
+
+    await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
+
+    const spots = TestHelpers.fileContents(paths.output.spots).features;
+
+    // Non-lift-station spots should remain unchanged
+    const crossing = spots.find((s: any) => s.properties.id === "crossing-1");
+    const halfpipe = spots.find((s: any) => s.properties.id === "halfpipe-1");
+
+    expect(crossing).toBeDefined();
+    expect(halfpipe).toBeDefined();
+    expect(crossing.geometry.coordinates).toEqual([0.5, 0.5]);
+    expect(halfpipe.geometry.coordinates[0]).toBeCloseTo(0.3);
+    expect(halfpipe.geometry.coordinates[1]).toBeCloseTo(0.3);
+  });
 });

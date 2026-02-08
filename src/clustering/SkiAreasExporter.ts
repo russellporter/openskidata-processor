@@ -1,7 +1,7 @@
 import { createWriteStream } from "fs";
 import { SkiAreaFeature } from "openskidata-format";
 import { Readable } from "stream";
-import streamToPromise from "stream-to-promise";
+import { pipeline } from "stream/promises";
 import toFeatureCollection from "../transforms/FeatureCollection";
 import { map } from "../transforms/StreamTransforms";
 import { SkiAreaObject } from "./MapObject";
@@ -14,11 +14,11 @@ export default async function exportSkiAreasGeoJSON(
 ) {
   const skiAreasIterable = await database.streamSkiAreas();
 
-  await streamToPromise(
-    asyncIterableToStream(skiAreasIterable)
-      .pipe(map<SkiAreaObject, SkiAreaFeature>(objectToFeature))
-      .pipe(toFeatureCollection())
-      .pipe(createWriteStream(path)),
+  await pipeline(
+    asyncIterableToStream(skiAreasIterable),
+    map<SkiAreaObject, SkiAreaFeature>(objectToFeature),
+    toFeatureCollection(),
+    createWriteStream(path),
   );
 }
 

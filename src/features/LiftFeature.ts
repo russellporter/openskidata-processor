@@ -1,4 +1,4 @@
-import { LiftGeometry, Status } from "openskidata-format";
+import { Access, LiftGeometry, Status } from "openskidata-format";
 import OSMGeoJSONProperties from "./OSMGeoJSONProperties";
 
 export type OSMLiftTags = {
@@ -47,6 +47,8 @@ export type MapboxGLLiftProperties = {
   name_and_type: string | null;
   color: string;
   status: Status;
+  access: Access | null;
+  stationIds: string[];
   skiAreas: string[];
 };
 

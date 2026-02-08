@@ -276,28 +276,29 @@ describe("MapboxGLFormatter", () => {
     const mapboxGLFeature = formatter(FeatureType.Spot)(feature);
 
     expect(mapboxGLFeature).toMatchInlineSnapshot(`
-      {
-        "geometry": {
-          "coordinates": [
-            10,
-            20,
-          ],
-          "type": "Point",
-        },
-        "properties": {
-          "entry": null,
-          "exit": null,
-          "id": "spot1",
-          "name": "Lower Station",
-          "position": null,
-          "skiAreas": [
-            "ski-area-1",
-          ],
-          "spotType": "lift_station",
-        },
-        "type": "Feature",
-      }
-    `);
+{
+  "geometry": {
+    "coordinates": [
+      10,
+      20,
+    ],
+    "type": "Point",
+  },
+  "properties": {
+    "entry": null,
+    "exit": null,
+    "id": "spot1",
+    "liftId": "",
+    "name": "Lower Station",
+    "position": null,
+    "skiAreas": [
+      "ski-area-1",
+    ],
+    "spotType": "lift_station",
+  },
+  "type": "Feature",
+}
+`);
   });
 
   it("should export LiftStation spot with null name", () => {

@@ -29,6 +29,7 @@ export default async function clusterSkiAreas(
       config.geocodingServer,
       config.snowCover,
       config.postgresCache,
+      config.elevationServer,
     );
   } finally {
     await database.close();

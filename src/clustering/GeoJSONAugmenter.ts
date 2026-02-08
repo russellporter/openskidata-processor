@@ -1,36 +1,64 @@
 import { createWriteStream } from "fs";
-import { FeatureType } from "openskidata-format";
-import streamToPromise from "stream-to-promise";
+import {
+  FeatureType,
+  LiftFeature,
+  LiftStationSpotProperties,
+  RunFeature,
+  SkiAreaFeature,
+  SpotFeature,
+  SpotGeometry,
+} from "openskidata-format";
+import { pipeline } from "stream/promises";
 import { PostgresConfig, SnowCoverConfig } from "../Config";
 import { readGeoJSONFeatures } from "../io/GeoJSONReader";
 import toFeatureCollection from "../transforms/FeatureCollection";
-import { mapAsync } from "../transforms/StreamTransforms";
+import { filter, mapAsync } from "../transforms/StreamTransforms";
 import { toSkiAreaSummary } from "../transforms/toSkiAreaSummary";
 import { getSnowCoverHistoryFromCache } from "../utils/snowCoverHistory";
-import { AugmentedMapFeature, RunObject } from "./MapObject";
+import { LiftObject, RunObject } from "./MapObject";
 import objectToFeature from "./ObjectToFeature";
 import { ClusteringDatabase } from "./database/ClusteringDatabase";
 
+// TODO: just dump the features from the database instead
 export default async function augmentGeoJSONFeatures(
   inputPath: string,
   outputPath: string,
   database: ClusteringDatabase,
-  featureType: FeatureType,
   snowCoverConfig: SnowCoverConfig | null,
   postgresConfig: PostgresConfig,
 ) {
-  await streamToPromise(
-    readGeoJSONFeatures(inputPath)
-      .pipe(
-        mapAsync(async (feature: AugmentedMapFeature) => {
-          // Fetch the map object from the database
-          const mapObject = await database.getObjectById(feature.properties.id);
+  await pipeline(
+    readGeoJSONFeatures(inputPath),
+    mapAsync(
+      async (
+        feature: RunFeature | LiftFeature | SpotFeature | SkiAreaFeature,
+      ) => {
+        // Fetch the map object from the database
+        const mapObject = await database.getObjectById(feature.properties.id);
 
-          if (!mapObject) {
-            return feature;
-          }
+        if (!mapObject) {
+          // Object was removed from database (e.g., orphaned lift station)
+          return null;
+        }
 
-          // Get ski areas from the map object
+        feature.geometry = mapObject.geometry;
+
+        // Merge database properties with feature properties
+        // Database properties take precedence as fields might be updated
+        feature.properties = {
+          ...feature.properties,
+          ...mapObject.properties,
+        };
+
+        if (feature.properties.type !== mapObject.type) {
+          // Type mismatch between feature and database object, skip this feature
+          console.warn(
+            `Type mismatch for object ID ${feature.properties.id}: feature type ${feature.properties.type} does not match database type ${mapObject.type}. Skipping augmentation for this feature.`,
+          );
+          return null;
+        }
+
+        if (feature.properties.type !== FeatureType.SkiArea) {
           const skiAreaIds = mapObject.skiAreas;
           const skiAreas =
             skiAreaIds.length > 0
@@ -38,36 +66,58 @@ export default async function augmentGeoJSONFeatures(
                   .getSkiAreasByIds(skiAreaIds, false)
                   .then((cursor) => cursor.all())
               : [];
-
           feature.properties.skiAreas = skiAreas
             .map(objectToFeature)
             .map(toSkiAreaSummary);
+        }
 
-          // Set places from the map object
-          if ("properties" in mapObject && "places" in mapObject.properties) {
-            feature.properties.places = mapObject.properties.places;
+        // Add snow cover history for runs if snow cover config is provided
+        if (
+          snowCoverConfig &&
+          feature.properties.type === FeatureType.Run &&
+          mapObject.type === FeatureType.Run
+        ) {
+          const snowCoverHistory = await generateRunSnowCoverHistory(
+            mapObject as RunObject,
+            postgresConfig,
+          );
+          if (snowCoverHistory && snowCoverHistory.length > 0) {
+            feature.properties.snowCoverHistory = snowCoverHistory;
           }
+        }
 
-          // Add snow cover history for runs if snow cover config is provided
-          if (
-            snowCoverConfig &&
-            featureType === FeatureType.Run &&
-            mapObject.type === "RUN"
-          ) {
-            const snowCoverHistory = await generateRunSnowCoverHistory(
-              mapObject as RunObject,
-              postgresConfig,
-            );
-            if (snowCoverHistory && snowCoverHistory.length > 0) {
-              feature.properties.snowCoverHistory = snowCoverHistory;
-            }
-          }
+        // Populate lift stations for lift features
+        if (
+          feature.properties.type === FeatureType.Lift &&
+          mapObject.type === FeatureType.Lift
+        ) {
+          const liftObject = mapObject as LiftObject;
+          const stationIds = liftObject.stationIds;
 
-          return feature;
-        }, 10),
-      )
-      .pipe(toFeatureCollection())
-      .pipe(createWriteStream(outputPath)),
+          const stations = (
+            await Promise.all(
+              stationIds.map((id: string) => database.getObjectById(id)),
+            )
+          )
+            .filter((s) => s !== null)
+            .map((station) => {
+              return {
+                type: "Feature" as const,
+                geometry: station.geometry as SpotGeometry,
+                properties: station.properties as LiftStationSpotProperties,
+              };
+            });
+
+          feature.properties.stations = stations;
+        }
+
+        return feature;
+      },
+      10,
+    ),
+    filter((feature) => feature !== null),
+    toFeatureCollection(),
+    createWriteStream(outputPath),
   );
 }
 

@@ -3,9 +3,6 @@ import * as geohash from "ngeohash";
 import {
   extractPointsForElevationProfile,
   FeatureType,
-  LiftFeature,
-  RunFeature,
-  SpotFeature,
 } from "openskidata-format";
 import { ElevationServerConfig, PostgresConfig } from "../Config";
 import { PostgresCache } from "../utils/PostgresCache";
@@ -34,9 +31,8 @@ class ThrottledLogger {
 const throttledLogger = new ThrottledLogger();
 
 export interface ElevationProcessor {
-  processFeature: (
-    feature: RunFeature | LiftFeature | SpotFeature,
-  ) => Promise<RunFeature | LiftFeature | SpotFeature>;
+  enhanceGeometry: (geometry: GeoJSON.Geometry) => Promise<void>;
+  enhanceFeature: (feature: GeoJSON.Feature) => Promise<void>;
   close: () => Promise<void>;
 }
 
@@ -79,62 +75,61 @@ export async function createElevationProcessor(
     },
   );
 
-  const processFeature = async (
-    feature: RunFeature | LiftFeature | SpotFeature,
-  ): Promise<RunFeature | LiftFeature | SpotFeature> => {
-    const coordinates: number[][] = getCoordinates(feature);
+  const loadElevations = async (coordinates: number[][]): Promise<number[]> => {
+    // Generate geohash keys for all coordinates
+    const geohashes = coordinates.map(
+      ([lng, lat]) => geohash.encode(lat, lng, 10), // 10: +-1m accuracy
+    );
+
+    // Load elevations using DataLoader
+    const elevationResults = await Promise.all(
+      geohashes.map((hash) => elevationLoader.load(hash)),
+    );
+
+    // Round elevations, and fail if any are nulls
+    const elevations = elevationResults.map((elevation) => {
+      if (elevation === null) {
+        throw new Error("No elevation data available");
+      }
+      return roundElevation(elevation);
+    }) as number[];
+
+    return elevations;
+  };
+
+  const enhanceGeometry = async (geometry: GeoJSON.Geometry): Promise<void> => {
+    const coordinates: number[][] = getCoordinates(geometry);
+    const elevations = await loadElevations(coordinates);
+    addElevations(geometry, elevations);
+  };
+
+  const enhanceFeature = async (feature: GeoJSON.Feature): Promise<void> => {
     const geometry = feature.geometry;
     const elevationProfileCoordinates: number[][] =
+      feature.properties?.type === FeatureType.Run &&
       geometry.type === "LineString"
         ? extractPointsForElevationProfile(geometry, elevationProfileResolution)
             .coordinates
         : [];
 
-    let elevations: number[];
     try {
-      // Generate geohash keys for all coordinates
-      const allCoordinates = Array.from(coordinates).concat(
-        elevationProfileCoordinates,
-      );
-      const geohashes = allCoordinates.map(
-        ([lng, lat]) => geohash.encode(lat, lng, 10), // 10: +-1m accuracy
-      );
+      const [, profileElevations] = await Promise.all([
+        enhanceGeometry(geometry),
+        loadElevations(elevationProfileCoordinates),
+      ]);
 
-      // Load elevations using DataLoader
-      const elevationResults = await Promise.all(
-        geohashes.map((hash) => elevationLoader.load(hash)),
-      );
-
-      // Round elevations, and fail if any are nulls
-      elevations = elevationResults.map((elevation) => {
-        if (elevation === null) {
-          throw new Error("No elevation data available");
-        }
-        return roundElevation(elevation);
-      }) as number[];
+      if (feature.properties?.type === FeatureType.Run) {
+        feature.properties.elevationProfile =
+          profileElevations.length > 0
+            ? {
+                heights: profileElevations,
+                resolution: elevationProfileResolution,
+              }
+            : null;
+      }
     } catch (error) {
       console.log("Failed to load elevations", error);
-      return feature;
     }
-
-    const coordinateElevations = elevations.slice(0, coordinates.length);
-    const profileElevations = elevations.slice(
-      coordinates.length,
-      elevations.length,
-    );
-
-    if (feature.properties.type === FeatureType.Run) {
-      feature.properties.elevationProfile =
-        profileElevations.length > 0
-          ? {
-              heights: profileElevations,
-              resolution: elevationProfileResolution,
-            }
-          : null;
-    }
-
-    addElevations(feature, coordinateElevations);
-    return feature;
   };
 
   const close = async (): Promise<void> => {
@@ -145,7 +140,8 @@ export async function createElevationProcessor(
   };
 
   return {
-    processFeature,
+    enhanceFeature,
+    enhanceGeometry,
     close,
   };
 }
@@ -401,23 +397,32 @@ async function fetchElevationsFromTileserverGL(
   return results;
 }
 
-function getCoordinates(
-  feature: RunFeature | LiftFeature | SpotFeature,
-): number[][] {
+function getCoordinates(geometry: GeoJSON.Geometry): number[][] {
   let coordinates: number[][];
-  const geometryType = feature.geometry.type;
+  const geometryType = geometry.type;
   switch (geometryType) {
     case "Point":
-      coordinates = [feature.geometry.coordinates];
+      coordinates = [geometry.coordinates];
+      break;
+    case "MultiPoint":
+      coordinates = geometry.coordinates;
       break;
     case "LineString":
-      coordinates = feature.geometry.coordinates;
+      coordinates = geometry.coordinates;
       break;
     case "MultiLineString":
-      coordinates = feature.geometry.coordinates.flat();
+      coordinates = geometry.coordinates.flat();
       break;
     case "Polygon":
-      coordinates = feature.geometry.coordinates.flat();
+      coordinates = geometry.coordinates.flat();
+      break;
+    case "MultiPolygon":
+      coordinates = geometry.coordinates.flat(2);
+      break;
+    case "GeometryCollection":
+      coordinates = geometry.geometries.flatMap((subGeometry) => {
+        return getCoordinates(subGeometry);
+      });
       break;
     default:
       const exhaustiveCheck: never = geometryType;
@@ -428,33 +433,49 @@ function getCoordinates(
   return coordinates.map((coordinate) => [coordinate[0], coordinate[1]]);
 }
 
-function addElevations(
-  feature: RunFeature | LiftFeature | SpotFeature,
-  elevations: number[],
-) {
+function addElevations(geometry: GeoJSON.Geometry, elevations: number[]) {
   let i = 0;
-  const geometryType = feature.geometry.type;
+  const geometryType = geometry.type;
   switch (geometryType) {
     case "Point":
-      return addElevationToCoords(feature.geometry.coordinates, elevations[i]);
+      return addElevationToCoords(geometry.coordinates, elevations[i]);
+    case "MultiPoint":
+      return geometry.coordinates.forEach((coords) => {
+        addElevationToCoords(coords, elevations[i]);
+        i++;
+      });
     case "LineString":
-      return feature.geometry.coordinates.forEach((coords) => {
+      return geometry.coordinates.forEach((coords) => {
         addElevationToCoords(coords, elevations[i]);
         i++;
       });
     case "MultiLineString":
-      return feature.geometry.coordinates.forEach((coordsSet) => {
+      return geometry.coordinates.forEach((coordsSet) => {
         coordsSet.forEach((coords) => {
           addElevationToCoords(coords, elevations[i]);
           i++;
         });
       });
     case "Polygon":
-      return feature.geometry.coordinates.forEach((coordsSet) => {
+      return geometry.coordinates.forEach((coordsSet) => {
         coordsSet.forEach((coords) => {
           addElevationToCoords(coords, elevations[i]);
           i++;
         });
+      });
+    case "MultiPolygon":
+      return geometry.coordinates.forEach((coordsSet) => {
+        coordsSet.forEach((coordsArray) => {
+          coordsArray.forEach((coords) => {
+            addElevationToCoords(coords, elevations[i]);
+            i++;
+          });
+        });
+      });
+    case "GeometryCollection":
+      return geometry.geometries.forEach((subGeometry) => {
+        addElevations(subGeometry, elevations.slice(i));
+        i += getCoordinates(subGeometry).length;
       });
     default:
       const exhaustiveCheck: never = geometryType;

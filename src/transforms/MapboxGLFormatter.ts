@@ -136,6 +136,8 @@ export function formatter(
       ),
       color: getLiftColor(properties.status),
       status: properties.status,
+      access: properties.access,
+      stationIds: properties.stations.map((station) => station.properties.id),
       skiAreas: properties.skiAreas.map((skiArea) => skiArea.properties.id),
     };
 
@@ -164,6 +166,7 @@ export function formatter(
           properties: {
             ...baseProperties,
             name: properties.name,
+            liftId: properties.liftId,
             position: properties.position,
             entry: properties.entry,
             exit: properties.exit,

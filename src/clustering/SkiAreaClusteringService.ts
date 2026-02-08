@@ -21,15 +21,18 @@ import {
   SpotType,
   Status,
 } from "openskidata-format";
-import StreamToPromise from "stream-to-promise";
+import { Writable } from "stream";
+import { pipeline } from "stream/promises";
 import { v4 as uuid } from "uuid";
 import {
+  ElevationServerConfig,
   GeocodingServerConfig,
   PostgresConfig,
   SnowCoverConfig,
 } from "../Config";
 import { readGeoJSONFeatures } from "../io/GeoJSONReader";
 import { skiAreaStatistics } from "../statistics/SkiAreaStatistics";
+import { createElevationProcessor } from "../transforms/Elevation";
 import Geocoder from "../transforms/Geocoder";
 import { getPoints, getPositions } from "../transforms/GeoTransforms";
 import { sortPlaces, uniquePlaces } from "../transforms/PlaceUtils";
@@ -50,7 +53,6 @@ import {
   DraftSpot,
   LiftObject,
   MapObject,
-  MapObjectType,
   RunObject,
   SkiAreaObject,
   SpotObject,
@@ -80,6 +82,7 @@ export class SkiAreaClusteringService {
     geocoderConfig: GeocodingServerConfig | null,
     snowCoverConfig: SnowCoverConfig | null,
     postgresConfig: PostgresConfig,
+    elevationServerConfig: ElevationServerConfig | null,
   ): Promise<void> {
     await performanceMonitor.withOperation(
       "Loading graph into database",
@@ -98,13 +101,13 @@ export class SkiAreaClusteringService {
       geocoderConfig,
       snowCoverConfig,
       postgresConfig,
+      elevationServerConfig,
     );
 
     await performanceMonitor.withOperation("Augmenting Runs", async () => {
       await this.augmentGeoJSONFeatures(
         runsPath,
         outputRunsPath,
-        FeatureType.Run,
         snowCoverConfig,
         postgresConfig,
       );
@@ -114,7 +117,6 @@ export class SkiAreaClusteringService {
       await this.augmentGeoJSONFeatures(
         liftsPath,
         outputLiftsPath,
-        FeatureType.Lift,
         null,
         postgresConfig,
       );
@@ -124,7 +126,6 @@ export class SkiAreaClusteringService {
       await this.augmentGeoJSONFeatures(
         spotsPath,
         outputSpotsPath,
-        FeatureType.Spot,
         null,
         postgresConfig,
       );
@@ -145,18 +146,16 @@ export class SkiAreaClusteringService {
     const viirsExtractor = new VIIRSPixelExtractor();
 
     await performanceMonitor.withOperation("Loading Graph Data", async () => {
-      await Promise.all(
-        [
-          this.loadFeatures(skiAreasPath, (feature) =>
-            this.prepareSkiArea(feature),
-          ),
-          this.loadFeatures(liftsPath, (feature) => this.prepareLift(feature)),
-          this.loadFeatures(runsPath, (feature) =>
-            this.prepareRun(feature, viirsExtractor, snowCoverConfig),
-          ),
-          this.loadFeatures(spotsPath, (feature) => this.prepareSpot(feature)),
-        ].map<Promise<Buffer>>(StreamToPromise),
-      );
+      await Promise.all([
+        this.loadFeatures(skiAreasPath, (feature) =>
+          this.prepareSkiArea(feature),
+        ),
+        this.loadFeatures(liftsPath, (feature) => this.prepareLift(feature)),
+        this.loadFeatures(runsPath, (feature) =>
+          this.prepareRun(feature, viirsExtractor, snowCoverConfig),
+        ),
+        this.loadFeatures(spotsPath, (feature) => this.prepareSpot(feature)),
+      ]);
     });
 
     // Create indices after loading all features for better insert performance
@@ -165,11 +164,12 @@ export class SkiAreaClusteringService {
     });
   }
 
-  private loadFeatures(
+  private async loadFeatures(
     path: string,
     prepare: (feature: any) => DraftMapObject,
-  ): NodeJS.ReadableStream {
-    return readGeoJSONFeatures(path).pipe(
+  ): Promise<void> {
+    await pipeline(
+      readGeoJSONFeatures(path),
       mapAsync(async (feature: any) => {
         try {
           const preparedObject = prepare(feature) as MapObject;
@@ -178,6 +178,12 @@ export class SkiAreaClusteringService {
           console.log("Failed loading feature " + JSON.stringify(feature), e);
         }
       }, 10),
+      new Writable({
+        objectMode: true,
+        write(chunk, encoding, callback) {
+          callback();
+        },
+      }),
     );
   }
 
@@ -199,7 +205,7 @@ export class SkiAreaClusteringService {
       isPolygon:
         feature.geometry.type === "Polygon" ||
         feature.geometry.type === "MultiPolygon",
-      type: MapObjectType.SkiArea,
+      type: FeatureType.SkiArea,
       geometry: feature.geometry,
       skiAreas: [],
       activities: properties.activities,
@@ -211,7 +217,7 @@ export class SkiAreaClusteringService {
     const properties = feature.properties;
     return {
       _key: properties.id,
-      type: MapObjectType.Lift,
+      type: FeatureType.Lift,
       geometry: this.geometryWithoutElevations(
         feature.geometry,
       ) as LiftGeometry,
@@ -226,6 +232,7 @@ export class SkiAreaClusteringService {
       isInSkiAreaPolygon: false,
       isInSkiAreaSite: feature.properties.skiAreas.length > 0,
       liftType: properties.liftType,
+      stationIds: [],
       properties: {
         places: [],
       },
@@ -272,7 +279,7 @@ export class SkiAreaClusteringService {
 
     return {
       _key: properties.id,
-      type: MapObjectType.Run,
+      type: FeatureType.Run,
       geometry: this.geometryWithoutElevations(feature.geometry) as RunGeometry,
       geometryWithElevations: feature.geometry,
       isBasisForNewSkiArea:
@@ -287,6 +294,8 @@ export class SkiAreaClusteringService {
       isInSkiAreaSite: isInSkiAreaSite,
       activities: activities,
       difficulty: feature.properties.difficulty,
+      snowmaking: properties.snowmaking,
+      snowfarming: properties.snowfarming,
       viirsPixels: viirsPixels,
       properties: {
         places: [],
@@ -299,18 +308,15 @@ export class SkiAreaClusteringService {
 
     return {
       _key: properties.id,
-      type: MapObjectType.Spot,
+      type: FeatureType.Spot,
       geometry: feature.geometry,
-      spotType: properties.spotType,
       activities: this.getSpotActivities(properties.spotType),
       skiAreas: feature.properties.skiAreas.map(
         (skiArea) => skiArea.properties.id,
       ),
       isInSkiAreaPolygon: false,
       isInSkiAreaSite: feature.properties.skiAreas.length > 0,
-      properties: {
-        places: [],
-      },
+      properties: feature.properties,
     };
   }
 
@@ -374,6 +380,7 @@ export class SkiAreaClusteringService {
     geocoderConfig: GeocodingServerConfig | null,
     snowCoverConfig: SnowCoverConfig | null,
     postgresConfig: PostgresConfig,
+    elevationServerConfig: ElevationServerConfig | null,
   ): Promise<void> {
     await performanceMonitor.withOperation(
       "Assign ski area activities and geometry based on member objects",
@@ -440,6 +447,34 @@ export class SkiAreaClusteringService {
     await performanceMonitor.withOperation("Geocode objects", async () => {
       await this.geocodeAllObjects(geocoderConfig, postgresConfig);
     });
+
+    await performanceMonitor.withOperation(
+      "Associate lift stations with lifts",
+      async () => {
+        const { LiftStationAssociator } =
+          await import("./LiftStationAssociator");
+
+        // Create elevation processor if elevation server is configured
+        const elevationProcessor = elevationServerConfig
+          ? await createElevationProcessor(
+              elevationServerConfig,
+              postgresConfig,
+            )
+          : undefined;
+
+        try {
+          const associator = new LiftStationAssociator(
+            this.database,
+            elevationProcessor,
+          );
+          await associator.associateStationsWithLifts();
+        } finally {
+          if (elevationProcessor) {
+            await elevationProcessor.close();
+          }
+        }
+      },
+    );
 
     await performanceMonitor.withOperation(
       "Augment ski areas based on assigned lifts and runs",
@@ -730,7 +765,7 @@ export class SkiAreaClusteringService {
 
     const removeDueToNoObjects =
       options.skiArea.removeIfNoObjectsFound &&
-      !memberObjects.some((object) => object.type !== MapObjectType.SkiArea);
+      !memberObjects.some((object) => object.type !== FeatureType.SkiArea);
 
     if (removeDueToNoObjects) {
       console.log(
@@ -744,7 +779,7 @@ export class SkiAreaClusteringService {
 
     const liftsAndRuns = memberObjects.filter(
       (object): object is LiftObject | RunObject =>
-        object.type === MapObjectType.Lift || object.type === MapObjectType.Run,
+        object.type === FeatureType.Lift || object.type === FeatureType.Run,
     );
     const liftsAndRunsInSiteRelation = liftsAndRuns.filter(
       (object) => object.isInSkiAreaSite,
@@ -803,7 +838,7 @@ export class SkiAreaClusteringService {
       let geometryForSearch: GeoJSON.Geometry = object.geometry;
 
       // For ski areas, use union of member objects geometries instead of ski area geometry
-      if (object.type === MapObjectType.SkiArea) {
+      if (object.type === FeatureType.SkiArea) {
         geometryForSearch = await this.database.getObjectDerivedSkiAreaGeometry(
           object.id,
         );
@@ -1027,7 +1062,7 @@ export class SkiAreaClusteringService {
 
     if (
       activities.includes(SkiAreaActivity.Downhill) &&
-      !memberObjects.some((object) => object.type === MapObjectType.Lift)
+      !memberObjects.some((object) => object.type === FeatureType.Lift)
     ) {
       activities = activities.filter(
         (activity) => activity !== SkiAreaActivity.Downhill,
@@ -1062,7 +1097,7 @@ export class SkiAreaClusteringService {
     const draftSkiArea: DraftSkiArea = {
       _key: id,
       id: id,
-      type: MapObjectType.SkiArea,
+      type: FeatureType.SkiArea,
       skiAreas: [id],
       activities: activities,
       geometry: geometry,
@@ -1361,7 +1396,7 @@ export class SkiAreaClusteringService {
   ): SkiAreaActivity[] {
     return Array.from(
       mapObjects
-        .filter((object) => object.type !== MapObjectType.SkiArea)
+        .filter((object) => object.type !== FeatureType.SkiArea)
         .reduce((accumulatedActivities, object) => {
           object.activities.forEach((activity) => {
             if (allSkiAreaActivities.has(activity)) {
@@ -1376,19 +1411,15 @@ export class SkiAreaClusteringService {
   private async augmentGeoJSONFeatures(
     inputPath: string,
     outputPath: string,
-    featureType: FeatureType,
     snowCoverConfig: SnowCoverConfig | null,
     postgresConfig: PostgresConfig,
   ): Promise<void> {
-    console.log(
-      `Augmenting ${featureType} features from ${inputPath} to ${outputPath}`,
-    );
+    console.log(`Augmenting features from ${inputPath} to ${outputPath}`);
 
     await augmentGeoJSONFeatures(
       inputPath,
       outputPath,
       this.database,
-      featureType,
       snowCoverConfig,
       postgresConfig,
     );

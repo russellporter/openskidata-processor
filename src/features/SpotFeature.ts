@@ -35,6 +35,7 @@ export type MapboxGLSpotProperties = {
 
   // LiftStation properties
   name?: string | null;
+  liftId?: string;
   position?: LiftStationPosition | null;
   entry?: boolean | null;
   exit?: boolean | null;

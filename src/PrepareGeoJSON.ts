@@ -4,7 +4,7 @@ import { FeatureType } from "openskidata-format";
 import * as path from "path";
 import { join } from "path";
 import { Readable } from "stream";
-import StreamToPromise from "stream-to-promise";
+import { pipeline } from "stream/promises";
 import { Config, ElevationServerConfig, PostgresConfig } from "./Config";
 import clusterSkiAreas from "./clustering/ClusterSkiAreas";
 import { DataPaths, getPath } from "./io/GeoJSONFiles";
@@ -47,7 +47,13 @@ async function createElevationTransform(
     elevationServerConfig,
     postgresConfig,
   );
-  return { processor, transform: processor.processFeature };
+  return {
+    processor,
+    transform: async (feature: GeoJSON.Feature) => {
+      await processor.enhanceFeature(feature);
+      return feature;
+    },
+  };
 }
 
 async function fetchSnowCoverIfEnabled(
@@ -96,7 +102,7 @@ export default async function prepare(paths: DataPaths, config: Config) {
         async () => {
           siteProvider.loadSites(paths.input.osmJSON.skiAreaSites);
 
-          await StreamToPromise(
+          await pipeline(
             merge([
               readGeoJSONFeatures(paths.input.geoJSON.skiAreas).pipe(
                 flatMap(formatSkiArea(InputSkiAreaType.OPENSTREETMAP_LANDUSE)),
@@ -105,9 +111,9 @@ export default async function prepare(paths: DataPaths, config: Config) {
               readGeoJSONFeatures(paths.input.geoJSON.skiMapSkiAreas).pipe(
                 flatMap(formatSkiArea(InputSkiAreaType.SKIMAP_ORG)),
               ),
-            ])
-              .pipe(toFeatureCollection())
-              .pipe(createWriteStream(paths.intermediate.skiAreas)),
+            ]),
+            toFeatureCollection(),
+            createWriteStream(paths.intermediate.skiAreas),
           );
         },
       );
@@ -120,14 +126,14 @@ export default async function prepare(paths: DataPaths, config: Config) {
 
       try {
         await performanceMonitor.withOperation("Processing runs", async () => {
-          await StreamToPromise(
-            readGeoJSONFeatures(paths.input.geoJSON.runs)
-              .pipe(flatMapArray(formatRun))
-              .pipe(map(addSkiAreaSites(siteProvider)))
-              .pipe(accumulate(new RunNormalizerAccumulator()))
-              .pipe(mapAsync(elevationTransform?.transform || null, 10))
-              .pipe(toFeatureCollection())
-              .pipe(createWriteStream(paths.intermediate.runs)),
+          await pipeline(
+            readGeoJSONFeatures(paths.input.geoJSON.runs),
+            flatMapArray(formatRun),
+            map(addSkiAreaSites(siteProvider)),
+            accumulate(new RunNormalizerAccumulator()),
+            mapAsync(elevationTransform?.transform || null, 10),
+            toFeatureCollection(),
+            createWriteStream(paths.intermediate.runs),
           );
         });
 
@@ -135,24 +141,24 @@ export default async function prepare(paths: DataPaths, config: Config) {
         await fetchSnowCoverIfEnabled(config, paths.intermediate.runs);
 
         await performanceMonitor.withOperation("Processing lifts", async () => {
-          await StreamToPromise(
-            readGeoJSONFeatures(paths.input.geoJSON.lifts)
-              .pipe(flatMap(formatLift))
-              .pipe(map(addSkiAreaSites(siteProvider)))
-              .pipe(mapAsync(elevationTransform?.transform || null, 10))
-              .pipe(toFeatureCollection())
-              .pipe(createWriteStream(paths.intermediate.lifts)),
+          await pipeline(
+            readGeoJSONFeatures(paths.input.geoJSON.lifts),
+            flatMap(formatLift),
+            map(addSkiAreaSites(siteProvider)),
+            mapAsync(elevationTransform?.transform || null, 10),
+            toFeatureCollection(),
+            createWriteStream(paths.intermediate.lifts),
           );
         });
 
         await performanceMonitor.withOperation("Processing spots", async () => {
-          await StreamToPromise(
-            readGeoJSONFeatures(paths.input.geoJSON.spots)
-              .pipe(flatMapArray(formatSpots))
-              .pipe(map(addSkiAreaSites(siteProvider)))
-              .pipe(mapAsync(elevationTransform?.transform || null, 10))
-              .pipe(toFeatureCollection())
-              .pipe(createWriteStream(paths.intermediate.spots)),
+          await pipeline(
+            readGeoJSONFeatures(paths.input.geoJSON.spots),
+            flatMapArray(formatSpots),
+            map(addSkiAreaSites(siteProvider)),
+            mapAsync(elevationTransform?.transform || null, 10),
+            toFeatureCollection(),
+            createWriteStream(paths.intermediate.spots),
           );
         });
       } finally {
@@ -178,11 +184,11 @@ export default async function prepare(paths: DataPaths, config: Config) {
             FeatureType.Run,
             FeatureType.Spot,
           ].map((type) => {
-            return StreamToPromise(
-              readGeoJSONFeatures(getPath(paths.output, type))
-                .pipe(flatMap(MapboxGLFormatter.formatter(type)))
-                .pipe(toFeatureCollection())
-                .pipe(createWriteStream(getPath(paths.output.mapboxGL, type))),
+            return pipeline(
+              readGeoJSONFeatures(getPath(paths.output, type)),
+              flatMap(MapboxGLFormatter.formatter(type)),
+              toFeatureCollection(),
+              createWriteStream(getPath(paths.output.mapboxGL, type)),
             );
           }),
         );
@@ -197,15 +203,13 @@ export default async function prepare(paths: DataPaths, config: Config) {
           FeatureType.Run,
           FeatureType.Spot,
         ].map((type) => {
-          return StreamToPromise(
-            readGeoJSONFeatures(getPath(paths.output, type))
-              .pipe(flatMap(CSVFormatter.formatter(type)))
-              .pipe(CSVFormatter.createCSVWriteStream(type))
-              .pipe(
-                createWriteStream(
-                  join(paths.output.csv, CSVFormatter.getCSVFilename(type)),
-                ),
-              ),
+          return pipeline(
+            readGeoJSONFeatures(getPath(paths.output, type)),
+            flatMap(CSVFormatter.formatter(type)),
+            CSVFormatter.createCSVWriteStream(type),
+            createWriteStream(
+              join(paths.output.csv, CSVFormatter.getCSVFilename(type)),
+            ),
           );
         }),
       );

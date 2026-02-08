@@ -127,7 +127,7 @@ function getHeadersForType(type: FeatureType): string {
     case FeatureType.Run:
       return "name,ref,countries,regions,localities,ski_area_names,difficulty,color,oneway,lit,gladed,patrolled,grooming,uses,inclined_length_m,descent_m,ascent_m,average_pitch_%,max_pitch_%,min_elevation_m,max_elevation_m,difficulty_convention,wikidata_id,websites,openskimap,id,geometry,lat,lng,ski_area_ids,sources,description";
     case FeatureType.Lift:
-      return "name,ref,ref_fr_cairn,lift_type,status,countries,regions,localities,ski_area_names,oneway,duration_sec,capacity,occupancy,detachable,bubble,heating,inclined_length_m,vertical_m,speed_m_per_s,vertical_speed_m_per_s,min_elevation_m,max_elevation_m,overall_pitch_%,wikidata_id,websites,openskimap,id,geometry,lat,lng,ski_area_ids,sources,description";
+      return "name,ref,ref_fr_cairn,lift_type,status,access,countries,regions,localities,ski_area_names,oneway,duration_sec,capacity,occupancy,detachable,bubble,heating,inclined_length_m,vertical_m,speed_m_per_s,vertical_speed_m_per_s,min_elevation_m,max_elevation_m,overall_pitch_%,wikidata_id,websites,openskimap,id,geometry,lat,lng,ski_area_ids,sources,description";
     case FeatureType.SkiArea:
       return "name,countries,regions,localities,status,has_downhill,has_nordic,downhill_distance_km,nordic_distance_km,vertical_m,min_elevation_m,max_elevation_m,lift_count,surface_lifts_count,run_convention,wikidata_id,websites,openskimap,id,geometry,lat,lng,sources";
     case FeatureType.Spot:
@@ -220,6 +220,7 @@ function formatLift(feature: LiftFeature): string {
     escapeField(properties.refFRCAIRN),
     properties.liftType,
     properties.status,
+    properties.access || "",
     ...extractPlaces(properties.places),
     extractSkiAreaNames(properties.skiAreas),
     formatBoolean(properties.oneway),

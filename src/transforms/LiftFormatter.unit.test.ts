@@ -106,18 +106,18 @@ describe("LiftFormatter", () => {
   });
 
   it("drops inaccessible lift types", () => {
-    expect(
-      formatLift(
-        inputLift({
-          type: "way",
-          id: 1,
-          tags: {
-            aerialway: "chair_lift",
-            access: "private",
-          },
-        }),
-      ),
-    ).toBeNull();
+    const privateLift = formatLift(
+      inputLift({
+        type: "way",
+        id: 1,
+        tags: {
+          aerialway: "chair_lift",
+          access: "private",
+        },
+      }),
+    );
+    expect(privateLift).not.toBeNull();
+    expect(privateLift?.properties.access).toBe("private");
 
     expect(
       formatLift(
@@ -201,6 +201,34 @@ describe("LiftFormatter", () => {
         }),
       ),
     ).toBeNull();
+  });
+
+  it("sets access property to null when no access tag", () => {
+    const lift = formatLift(
+      inputLift({
+        type: "way",
+        id: 1,
+        tags: {
+          aerialway: "chair_lift",
+        },
+      }),
+    );
+    expect(lift).not.toBeNull();
+    expect(lift?.properties.access).toBeNull();
+  });
+
+  it("initializes stations property as empty array", () => {
+    const lift = formatLift(
+      inputLift({
+        type: "way",
+        id: 1,
+        tags: {
+          aerialway: "gondola",
+        },
+      }),
+    );
+    expect(lift).not.toBeNull();
+    expect(lift?.properties.stations).toEqual([]);
   });
 });
 

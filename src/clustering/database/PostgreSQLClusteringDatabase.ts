@@ -1,10 +1,10 @@
+import { FeatureType } from "openskidata-format";
 import { Pool, PoolClient } from "pg";
 import { PostgresConfig } from "../../Config";
 import { getPostgresPoolConfig } from "../../utils/getPostgresPoolConfig";
 import {
   LiftObject,
   MapObject,
-  MapObjectType,
   RunObject,
   SkiAreaObject,
   SpotObject,
@@ -45,8 +45,8 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
     INSERT INTO objects
     (key, type, source, geometry, geometry_with_elevations, geom, is_polygon, activities, ski_areas,
      is_basis_for_new_ski_area, is_in_ski_area_polygon, is_in_ski_area_site,
-     lift_type, difficulty, viirs_pixels, spot_type, properties)
-    VALUES ($1, $2, $3, $4, $5, ST_MakeValid(ST_Force2D(ST_GeomFromGeoJSON($6)), 'method=structure'), $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+     lift_type, station_ids, difficulty, viirs_pixels, spot_type, properties)
+    VALUES ($1, $2, $3, $4, $5, ST_MakeValid(ST_Force2D(ST_GeomFromGeoJSON($6)), 'method=structure'), $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
     ON CONFLICT (key) DO UPDATE SET
       type = EXCLUDED.type,
       source = EXCLUDED.source,
@@ -60,6 +60,7 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
       is_in_ski_area_polygon = EXCLUDED.is_in_ski_area_polygon,
       is_in_ski_area_site = EXCLUDED.is_in_ski_area_site,
       lift_type = EXCLUDED.lift_type,
+      station_ids = EXCLUDED.station_ids,
       difficulty = EXCLUDED.difficulty,
       viirs_pixels = EXCLUDED.viirs_pixels,
       spot_type = EXCLUDED.spot_type,
@@ -247,6 +248,7 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
    */
   private mapObjectToSQLParams(object: MapObject): any[] {
     const geometryGeoJSON = JSON.stringify(object.geometry);
+    const spotType = (object as any).properties?.spotType || null;
 
     return [
       object._key,
@@ -262,9 +264,10 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
       (object as any).isInSkiAreaPolygon ? true : false,
       (object as any).isInSkiAreaSite ? true : false,
       (object as any).liftType || null,
+      JSON.stringify((object as any).stationIds || []),
       (object as any).difficulty || null,
       JSON.stringify((object as any).viirsPixels || []),
-      (object as any).spotType || null,
+      spotType,
       JSON.stringify((object as any).properties || {}),
     ];
   }
@@ -310,6 +313,10 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
           setParts.push(`activities = $${paramIndex++}`);
           values.push(JSON.stringify(value));
           break;
+        case "stationIds":
+          setParts.push(`station_ids = $${paramIndex++}`);
+          values.push(JSON.stringify(value));
+          break;
         case "properties":
           setParts.push(`properties = $${paramIndex++}`);
           values.push(JSON.stringify(value));
@@ -346,6 +353,7 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
         is_in_ski_area_polygon BOOLEAN DEFAULT FALSE,
         is_in_ski_area_site BOOLEAN DEFAULT FALSE,
         lift_type TEXT,
+        station_ids JSONB,
         difficulty TEXT,
         viirs_pixels JSONB,
         spot_type TEXT,
@@ -384,7 +392,7 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
 
       -- Unassigned object queries (critical for clustering performance)
       CREATE INDEX IF NOT EXISTS idx_unassigned_runs ON objects(type, is_basis_for_new_ski_area)
-        WHERE type = 'RUN' AND is_basis_for_new_ski_area = true;
+        WHERE type = '${FeatureType.Run}' AND is_basis_for_new_ski_area = true;
 
       -- Source-specific queries with polygon filtering
       CREATE INDEX IF NOT EXISTS idx_source_polygon ON objects(source, is_polygon)
@@ -399,7 +407,7 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
 
       -- Spot-specific queries
       CREATE INDEX IF NOT EXISTS idx_spots ON objects(type, spot_type)
-        WHERE type = 'SPOT';
+        WHERE type = '${FeatureType.Spot}';
     `);
     console.log("✅ Created optimized composite indexes");
   }
@@ -408,6 +416,7 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
     this.ensureInitialized();
 
     const params = this.mapObjectToSQLParams(object);
+
     await this.executeQuery(
       PostgreSQLClusteringDatabase.INSERT_OBJECT_SQL,
       params,
@@ -472,12 +481,12 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
     this.ensureInitialized();
 
     // First check if this is a ski area that needs association cleanup
-    const objectType = await this.executeQuery<any[]>(
+    const objectType = (await this.executeQuery<any[]>(
       "SELECT type FROM objects WHERE key = $1",
       [key],
-    );
+    )) as { type: FeatureType }[];
 
-    if (objectType.length > 0 && objectType[0].type === "SKI_AREA") {
+    if (objectType.length > 0 && objectType[0].type === FeatureType.SkiArea) {
       // Clean up all associations to this ski area
       await this.cleanUpSkiAreaAssociations(key);
     }
@@ -521,7 +530,7 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
   ): Promise<Cursor<SkiAreaObject>> {
     const pool = this.ensureInitialized();
 
-    let query = "SELECT * FROM objects WHERE type = 'SKI_AREA'";
+    let query = `SELECT * FROM objects WHERE type = '${FeatureType.SkiArea}'`;
     const params: any[] = [];
     let paramIndex = 1;
 
@@ -570,7 +579,7 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
     const placeholders = ids
       .map((_: string, i: number) => `$${i + 1}`)
       .join(",");
-    const query = `SELECT * FROM objects WHERE type = 'SKI_AREA' AND key IN (${placeholders}) ORDER BY key`;
+    const query = `SELECT * FROM objects WHERE type = '${FeatureType.SkiArea}' AND key IN (${placeholders}) ORDER BY key`;
 
     const batchSize = useBatching
       ? PostgreSQLClusteringDatabase.DEFAULT_BATCH_SIZE
@@ -588,7 +597,7 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
   async getAllRuns(useBatching: boolean): Promise<Cursor<RunObject>> {
     const pool = this.ensureInitialized();
 
-    const query = "SELECT * FROM objects WHERE type = 'RUN' ORDER BY key";
+    const query = `SELECT * FROM objects WHERE type = '${FeatureType.Run}' ORDER BY key`;
     const batchSize = useBatching
       ? PostgreSQLClusteringDatabase.DEFAULT_BATCH_SIZE
       : Number.MAX_SAFE_INTEGER;
@@ -605,7 +614,7 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
   async getAllLifts(useBatching: boolean): Promise<Cursor<LiftObject>> {
     const pool = this.ensureInitialized();
 
-    const query = "SELECT * FROM objects WHERE type = 'LIFT' ORDER BY key";
+    const query = `SELECT * FROM objects WHERE type = '${FeatureType.Lift}' ORDER BY key`;
     const batchSize = useBatching
       ? PostgreSQLClusteringDatabase.DEFAULT_BATCH_SIZE
       : Number.MAX_SAFE_INTEGER;
@@ -622,7 +631,24 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
   async getAllSpots(useBatching: boolean): Promise<Cursor<SpotObject>> {
     const pool = this.ensureInitialized();
 
-    const query = "SELECT * FROM objects WHERE type = 'SPOT' ORDER BY key";
+    const query = `SELECT * FROM objects WHERE type = '${FeatureType.Spot}' ORDER BY key`;
+    const batchSize = useBatching
+      ? PostgreSQLClusteringDatabase.DEFAULT_BATCH_SIZE
+      : Number.MAX_SAFE_INTEGER;
+
+    return new PostgreSQLCursor<SpotObject>(
+      pool,
+      query,
+      [],
+      (row) => this.rowToMapObject(row) as SpotObject,
+      batchSize,
+    );
+  }
+
+  async getAllLiftStations(useBatching: boolean): Promise<Cursor<SpotObject>> {
+    const pool = this.ensureInitialized();
+
+    const query = `SELECT * FROM objects WHERE type = '${FeatureType.Spot}' AND spot_type = 'lift_station' ORDER BY key`;
     const batchSize = useBatching
       ? PostgreSQLClusteringDatabase.DEFAULT_BATCH_SIZE
       : Number.MAX_SAFE_INTEGER;
@@ -656,7 +682,7 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
         query = `
           SELECT * FROM objects
           WHERE ST_CoveredBy(geom, ST_Buffer(geography(ST_MakeValid(ST_Force2D(ST_GeomFromGeoJSON($${paramIndex++})), 'method=structure')), $${paramIndex++})::geometry)
-            AND type != 'SKI_AREA'
+            AND type != '${FeatureType.SkiArea}'
         `;
         params = [geometryGeoJSON, bufferMeters];
       } else {
@@ -664,7 +690,7 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
         query = `
           SELECT * FROM objects
           WHERE ST_DWithin(geography(geom), geography(ST_Force2D(ST_GeomFromGeoJSON($${paramIndex++}))), $${paramIndex++})
-            AND type != 'SKI_AREA'
+            AND type != '${FeatureType.SkiArea}'
         `;
         params = [geometryGeoJSON, bufferMeters];
       }
@@ -675,13 +701,13 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
         query = `
           SELECT * FROM objects
           WHERE ST_CoveredBy(geom, ST_MakeValid(ST_Force2D(ST_GeomFromGeoJSON($${paramIndex++})), 'method=structure'))
-            AND type != 'SKI_AREA'
+            AND type != '${FeatureType.SkiArea}'
         `;
       } else {
         query = `
           SELECT * FROM objects
           WHERE ST_Intersects(geom, ST_MakeValid(ST_Force2D(ST_GeomFromGeoJSON($${paramIndex++})), 'method=structure'))
-            AND type != 'SKI_AREA'
+            AND type != '${FeatureType.SkiArea}'
         `;
       }
       params = [geometryGeoJSON];
@@ -735,7 +761,7 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
     this.ensureInitialized();
 
     const query = `SELECT * FROM objects 
-       WHERE ski_areas @> $1::jsonb AND type != 'SKI_AREA'`;
+       WHERE ski_areas @> $1::jsonb AND type != '${FeatureType.SkiArea}'`;
     const rows = await this.executeQuery<any[]>(query, [
       JSON.stringify([skiAreaId]),
     ]);
@@ -780,7 +806,7 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
 
     const query = `
       SELECT * FROM objects 
-      WHERE type = 'RUN' 
+      WHERE type = '${FeatureType.Run}' 
         AND is_basis_for_new_ski_area = true
       LIMIT 1
     `;
@@ -797,7 +823,7 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
   async streamSkiAreas(): Promise<AsyncIterable<SkiAreaObject>> {
     this.ensureInitialized();
 
-    const query = "SELECT * FROM objects WHERE type = 'SKI_AREA'";
+    const query = `SELECT * FROM objects WHERE type = '${FeatureType.SkiArea}'`;
     const rows = await this.executeQuery<any[]>(query, []);
 
     const self = this;
@@ -822,7 +848,7 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
   private rowToMapObject(row: any): MapObject {
     const baseObject: any = {
       _key: row.key,
-      type: row.type as MapObjectType,
+      type: row.type as FeatureType,
       geometry: row.geometry,
       activities: row.activities || [],
       skiAreas: row.ski_areas || [],
@@ -834,23 +860,23 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
     };
 
     // Add type-specific fields
-    if (row.type === MapObjectType.SkiArea) {
+    if (row.type === FeatureType.SkiArea) {
       baseObject.id = row.key;
-    } else if (row.type === MapObjectType.Lift) {
+    } else if (row.type === FeatureType.Lift) {
       baseObject.geometryWithElevations =
         row.geometry_with_elevations || row.geometry;
       baseObject.liftType = row.lift_type;
+      baseObject.stationIds = row.station_ids || [];
       baseObject.isInSkiAreaSite = Boolean(row.is_in_ski_area_site);
       baseObject.properties = row.properties || { places: [] };
-    } else if (row.type === MapObjectType.Run) {
+    } else if (row.type === FeatureType.Run) {
       baseObject.geometryWithElevations =
         row.geometry_with_elevations || row.geometry;
       baseObject.difficulty = row.difficulty;
       baseObject.viirsPixels = row.viirs_pixels || [];
       baseObject.isInSkiAreaSite = Boolean(row.is_in_ski_area_site);
       baseObject.properties = row.properties || { places: [] };
-    } else if (row.type === MapObjectType.Spot) {
-      baseObject.spotType = row.spot_type;
+    } else if (row.type === FeatureType.Spot) {
       baseObject.isInSkiAreaSite = Boolean(row.is_in_ski_area_site);
       baseObject.properties = row.properties || { places: [] };
     }
@@ -868,11 +894,11 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
       const query = `
         WITH member_geometries AS (
           SELECT geom FROM objects 
-          WHERE ski_areas @> $1::jsonb AND type != 'SKI_AREA'
+          WHERE ski_areas @> $1::jsonb AND type != '${FeatureType.SkiArea}'
         ),
         ski_area_geometry AS (
           SELECT geom FROM objects 
-          WHERE key = $2 AND type = 'SKI_AREA'
+          WHERE key = $2 AND type = '${FeatureType.SkiArea}'
         ),
         union_result AS (
           SELECT
@@ -908,8 +934,7 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
       );
 
       // Fallback: just get the ski area's own geometry
-      const fallbackQuery =
-        "SELECT geometry FROM objects WHERE key = $1 AND type = 'SKI_AREA'";
+      const fallbackQuery = `SELECT geometry FROM objects WHERE key = $1 AND type = '${FeatureType.SkiArea}'`;
       const rows = await this.executeQuery<any[]>(fallbackQuery, [skiAreaId]);
 
       if (rows.length === 0) {

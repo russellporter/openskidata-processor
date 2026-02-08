@@ -188,6 +188,11 @@ const LIFT_SCHEMA: ColumnDefinition<LiftProperties>[] = [
     getValue: (p) => p.liftType,
   },
   {
+    name: "access",
+    dataType: "TEXT",
+    getValue: (p) => p.access,
+  },
+  {
     name: "ref",
     dataType: "TEXT",
     getValue: (p) => p.ref,

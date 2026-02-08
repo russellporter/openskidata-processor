@@ -1,10 +1,9 @@
-import { FeatureType, SkiAreaActivity, SourceType } from "openskidata-format";
+import { SkiAreaActivity, SourceType } from "openskidata-format";
 import { SnowCoverConfig } from "../../Config";
 import Geocoder from "../../transforms/Geocoder";
 import {
   LiftObject,
   MapObject,
-  MapObjectType,
   RunObject,
   SkiAreaObject,
   SpotObject,
@@ -85,6 +84,12 @@ export interface ClusteringDatabase {
    * @param useBatching - When false, loads all results into memory upfront. When true, streams in batches.
    */
   getAllSpots(useBatching: boolean): Promise<Cursor<SpotObject>>;
+
+  /**
+   * Get all lift stations (spots of type LiftStation)
+   * @param useBatching - When false, loads all results into memory upfront. When true, streams in batches.
+   */
+  getAllLiftStations(useBatching: boolean): Promise<Cursor<SpotObject>>;
 
   /**
    * Find objects near a given geometry

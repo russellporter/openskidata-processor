@@ -16,7 +16,6 @@ import {
   getOSMRef,
   mapOSMBoolean,
   mapOSMNumber,
-  mapOSMString,
 } from "./OSMTransforms";
 import getStatusAndValue from "./Status";
 
@@ -41,7 +40,6 @@ export function formatLift(feature: InputLiftFeature): LiftFeature | null {
 
   if (
     tags["passenger"] == "no" ||
-    tags["access"] == "private" ||
     tags["access"] == "forestry" ||
     tags["access"] == "no" ||
     tags["foot"] == "no" ||
@@ -80,6 +78,8 @@ export function formatLift(feature: InputLiftFeature): LiftFeature | null {
     bubble: mapOSMBoolean(tags["aerialway:bubble"]),
     heating: mapOSMBoolean(tags["aerialway:heating"]),
     detachable: mapOSMBoolean(tags["aerialway:detachable"]),
+    access: tags["access"] === "private" ? "private" : null,
+    stations: [],
     skiAreas: [],
     sources: [
       { type: SourceType.OPENSTREETMAP, id: osmID(feature.properties) },
