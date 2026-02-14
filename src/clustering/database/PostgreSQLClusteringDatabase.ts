@@ -43,15 +43,14 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
   // SQL statements
   private static readonly INSERT_OBJECT_SQL = `
     INSERT INTO objects
-    (key, type, source, geometry, geometry_with_elevations, geom, is_polygon, activities, ski_areas,
+    (key, type, source, geometry, geom, is_polygon, activities, ski_areas,
      is_basis_for_new_ski_area, is_in_ski_area_polygon, is_in_ski_area_site,
      lift_type, station_ids, difficulty, viirs_pixels, spot_type, properties)
-    VALUES ($1, $2, $3, $4, $5, ST_MakeValid(ST_Force2D(ST_GeomFromGeoJSON($6)), 'method=structure'), $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+    VALUES ($1, $2, $3, $4, ST_MakeValid(ST_Force2D(ST_GeomFromGeoJSON($5)), 'method=structure'), $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
     ON CONFLICT (key) DO UPDATE SET
       type = EXCLUDED.type,
       source = EXCLUDED.source,
       geometry = EXCLUDED.geometry,
-      geometry_with_elevations = EXCLUDED.geometry_with_elevations,
       geom = EXCLUDED.geom,
       is_polygon = EXCLUDED.is_polygon,
       activities = EXCLUDED.activities,
@@ -255,7 +254,6 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
       object.type,
       (object as any).source || "unknown",
       JSON.stringify(object.geometry),
-      JSON.stringify((object as any).geometryWithElevations || object.geometry),
       geometryGeoJSON,
       (object as any).isPolygon ? true : false,
       JSON.stringify(object.activities || []),
@@ -345,7 +343,6 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
         type TEXT NOT NULL,
         source TEXT NOT NULL,
         geometry JSONB NOT NULL,
-        geometry_with_elevations JSONB,
         is_polygon BOOLEAN NOT NULL,
         activities JSONB,
         ski_areas JSONB,
@@ -863,15 +860,11 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
     if (row.type === FeatureType.SkiArea) {
       baseObject.id = row.key;
     } else if (row.type === FeatureType.Lift) {
-      baseObject.geometryWithElevations =
-        row.geometry_with_elevations || row.geometry;
       baseObject.liftType = row.lift_type;
       baseObject.stationIds = row.station_ids || [];
       baseObject.isInSkiAreaSite = Boolean(row.is_in_ski_area_site);
       baseObject.properties = row.properties || { places: [] };
     } else if (row.type === FeatureType.Run) {
-      baseObject.geometryWithElevations =
-        row.geometry_with_elevations || row.geometry;
       baseObject.difficulty = row.difficulty;
       baseObject.viirsPixels = row.viirs_pixels || [];
       baseObject.isInSkiAreaSite = Boolean(row.is_in_ski_area_site);

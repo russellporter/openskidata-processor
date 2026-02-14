@@ -766,10 +766,10 @@ it("processes spot entities", async () => {
   await prepare(paths, createTestConfig());
 
   expect(
-  TestHelpers.fileContents(paths.output.spots).features.map(
-    simplifiedSpotFeature
-  )
-).toMatchInlineSnapshot(`
+    TestHelpers.fileContents(paths.output.spots).features.map(
+      simplifiedSpotFeature,
+    ),
+  ).toMatchInlineSnapshot(`
 [
   {
     "id": "f600d71632dca9be0db9329fb195db78b05a5925",

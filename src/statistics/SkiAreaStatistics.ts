@@ -115,7 +115,7 @@ function runStatistics(runs: RunObject[]): RunStatistics {
     })
     .map((run) => {
       return {
-        ...elevationStatistics(run.geometryWithElevations),
+        ...elevationStatistics(run.geometry),
         difficulty: run.difficulty,
         activities: run.activities.filter((activity) =>
           allSkiAreaActivities.has(activity),
@@ -169,8 +169,8 @@ function liftStatistics(lifts: LiftObject[]): LiftStatistics {
   return lifts
     .map((lift) => {
       return {
-        ...elevationStatistics(lift.geometryWithElevations),
-        distance: turfLength(feature(lift.geometryWithElevations)),
+        ...elevationStatistics(lift.geometry),
+        distance: turfLength(feature(lift.geometry)),
         type: lift.liftType,
       };
     })

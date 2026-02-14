@@ -651,10 +651,10 @@ it("generates elevation statistics for run & lift based on lift served skiable v
   await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
 
   expect(
-  TestHelpers.fileContents(paths.output.skiAreas).features.map(
-    simplifiedSkiAreaFeatureWithStatistics
-  )
-).toMatchInlineSnapshot(`
+    TestHelpers.fileContents(paths.output.skiAreas).features.map(
+      simplifiedSkiAreaFeatureWithStatistics,
+    ),
+  ).toMatchInlineSnapshot(`
 [
   {
     "activities": [
@@ -736,10 +736,10 @@ it("generates statistics for run with backcountry grooming with site membership"
   await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
 
   expect(
-  TestHelpers.fileContents(paths.output.skiAreas).features.map(
-    simplifiedSkiAreaFeatureWithStatistics
-  )
-).toMatchInlineSnapshot(`
+    TestHelpers.fileContents(paths.output.skiAreas).features.map(
+      simplifiedSkiAreaFeatureWithStatistics,
+    ),
+  ).toMatchInlineSnapshot(`
 [
   {
     "activities": [
@@ -2676,10 +2676,10 @@ it("associates spots to ski areas but spots alone do not create ski areas", asyn
   await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
 
   expect(
-  TestHelpers.fileContents(paths.output.spots).features.map(
-    simplifiedSpotFeature
-  )
-).toMatchInlineSnapshot(`
+    TestHelpers.fileContents(paths.output.spots).features.map(
+      simplifiedSpotFeature,
+    ),
+  ).toMatchInlineSnapshot(`
 [
   {
     "id": "3",
@@ -2740,10 +2740,10 @@ it("does not create ski area for spots alone without runs or lifts", async () =>
   await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
 
   expect(
-  TestHelpers.fileContents(paths.output.spots).features.map(
-    simplifiedSpotFeature
-  )
-).toMatchInlineSnapshot(`
+    TestHelpers.fileContents(paths.output.spots).features.map(
+      simplifiedSpotFeature,
+    ),
+  ).toMatchInlineSnapshot(`
 [
   {
     "id": "2",
@@ -3185,7 +3185,9 @@ describe("Lift Station Association", () => {
     // Lift should have stations array populated
     expect(lift.properties.stations).toHaveLength(2);
 
-    const stationIds = lift.properties.stations.map((s: any) => s.properties.id);
+    const stationIds = lift.properties.stations.map(
+      (s: any) => s.properties.id,
+    );
     expect(stationIds).toContain("station-1");
     expect(stationIds).toContain("station-2");
 

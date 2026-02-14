@@ -23,13 +23,6 @@ describe("SkiAreaStatistics", () => {
           [0, 1],
         ],
       },
-      geometryWithElevations: {
-        type: "LineString",
-        coordinates: [
-          [0, 0],
-          [0, 1],
-        ],
-      },
       skiAreas: [],
       isBasisForNewSkiArea: true,
       isInSkiAreaPolygon: false,
@@ -79,13 +72,6 @@ describe("SkiAreaStatistics", () => {
       liftType: LiftType.Gondola,
       activities: [SkiAreaActivity.Downhill],
       geometry: {
-        type: "LineString",
-        coordinates: [
-          [0, 0],
-          [0, 1],
-        ],
-      },
-      geometryWithElevations: {
         type: "LineString",
         coordinates: [
           [0, 0],
@@ -142,17 +128,6 @@ describe("SkiAreaStatistics", () => {
           ],
         ],
       },
-      geometryWithElevations: {
-        type: "Polygon",
-        coordinates: [
-          [
-            [0, 0],
-            [0, 1],
-            [1, 0],
-            [0, 0],
-          ],
-        ],
-      },
       skiAreas: [],
       isBasisForNewSkiArea: true,
       isInSkiAreaPolygon: false,
@@ -191,13 +166,6 @@ describe("SkiAreaStatistics", () => {
       activities: [SkiAreaActivity.Downhill],
       difficulty: RunDifficulty.INTERMEDIATE,
       geometry: {
-        type: "LineString",
-        coordinates: [
-          [0, 0],
-          [0, 1],
-        ],
-      },
-      geometryWithElevations: {
         type: "LineString",
         coordinates: [
           [0, 0],
@@ -246,13 +214,6 @@ describe("SkiAreaStatistics", () => {
           [0, 1],
         ],
       },
-      geometryWithElevations: {
-        type: "LineString",
-        coordinates: [
-          [0, 0],
-          [0, 1],
-        ],
-      },
       skiAreas: [],
       isBasisForNewSkiArea: true,
       isInSkiAreaPolygon: false,
@@ -289,13 +250,6 @@ describe("SkiAreaStatistics", () => {
       activities: [SkiAreaActivity.Downhill],
       difficulty: RunDifficulty.EASY,
       geometry: {
-        type: "LineString",
-        coordinates: [
-          [0, 0],
-          [0, 1],
-        ],
-      },
-      geometryWithElevations: {
         type: "LineString",
         coordinates: [
           [0, 0],
@@ -344,13 +298,6 @@ describe("SkiAreaStatistics", () => {
           [0, 1],
         ],
       },
-      geometryWithElevations: {
-        type: "LineString",
-        coordinates: [
-          [0, 0],
-          [0, 1],
-        ],
-      },
       skiAreas: [],
       isBasisForNewSkiArea: true,
       isInSkiAreaPolygon: false,
@@ -370,13 +317,6 @@ describe("SkiAreaStatistics", () => {
       activities: [SkiAreaActivity.Downhill],
       difficulty: RunDifficulty.EASY,
       geometry: {
-        type: "LineString",
-        coordinates: [
-          [0, 0],
-          [0, 0.5],
-        ],
-      },
-      geometryWithElevations: {
         type: "LineString",
         coordinates: [
           [0, 0],

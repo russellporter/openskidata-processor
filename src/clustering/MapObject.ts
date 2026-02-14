@@ -23,7 +23,6 @@ export type DraftMapObject = DraftRun | DraftLift | DraftSkiArea | DraftSpot;
 export interface DraftRun extends BaseDraftMapObject {
   type: FeatureType.Run;
   geometry: RunGeometry;
-  geometryWithElevations: RunGeometry;
   isBasisForNewSkiArea: boolean;
   isInSkiAreaPolygon: boolean;
   isInSkiAreaSite: boolean;
@@ -44,7 +43,6 @@ export type RunGeometry =
 export interface DraftLift extends BaseDraftMapObject {
   type: FeatureType.Lift;
   geometry: LiftGeometry;
-  geometryWithElevations: LiftGeometry;
   liftType: LiftType;
   isInSkiAreaPolygon: boolean;
   isInSkiAreaSite: boolean;

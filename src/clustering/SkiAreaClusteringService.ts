@@ -9,9 +9,7 @@ import {
   FeatureType,
   getRunDifficultyConvention,
   LiftFeature,
-  LiftGeometry,
   RunFeature,
-  RunGeometry,
   RunGrooming,
   RunUse,
   SkiAreaActivity,
@@ -218,10 +216,7 @@ export class SkiAreaClusteringService {
     return {
       _key: properties.id,
       type: FeatureType.Lift,
-      geometry: this.geometryWithoutElevations(
-        feature.geometry,
-      ) as LiftGeometry,
-      geometryWithElevations: feature.geometry,
+      geometry: feature.geometry,
       activities:
         properties["status"] === Status.Operating
           ? [SkiAreaActivity.Downhill]
@@ -280,8 +275,7 @@ export class SkiAreaClusteringService {
     return {
       _key: properties.id,
       type: FeatureType.Run,
-      geometry: this.geometryWithoutElevations(feature.geometry) as RunGeometry,
-      geometryWithElevations: feature.geometry,
+      geometry: feature.geometry,
       isBasisForNewSkiArea:
         (properties.uses.includes(RunUse.Downhill) ||
           properties.uses.includes(RunUse.Nordic)) &&
@@ -331,48 +325,6 @@ export class SkiAreaClusteringService {
         return [SkiAreaActivity.Downhill, SkiAreaActivity.Nordic];
       default:
         return [];
-    }
-  }
-
-  private geometryWithoutElevations(
-    geometry: GeoJSON.Geometry,
-  ): GeoJSON.Geometry {
-    switch (geometry.type) {
-      case "Point":
-        return {
-          type: "Point",
-          coordinates: [geometry.coordinates[0], geometry.coordinates[1]],
-        };
-      case "LineString":
-        return {
-          type: "LineString",
-          coordinates: geometry.coordinates.map((coordinate) => [
-            coordinate[0],
-            coordinate[1],
-          ]),
-        };
-      case "MultiLineString":
-      case "Polygon":
-        return {
-          type: geometry.type,
-          coordinates: geometry.coordinates.map((coordinates) =>
-            coordinates.map((coordinate) => [coordinate[0], coordinate[1]]),
-          ),
-        };
-      case "MultiPolygon":
-        return {
-          type: "MultiPolygon",
-          coordinates: geometry.coordinates.map((coordinates) =>
-            coordinates.map((coordinatess) =>
-              coordinatess.map((coordinatesss) => [
-                coordinatesss[0],
-                coordinatesss[1],
-              ]),
-            ),
-          ),
-        };
-      default:
-        throw new Error("Unsupported geometry type " + (geometry as any).type);
     }
   }
 

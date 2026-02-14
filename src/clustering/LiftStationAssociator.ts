@@ -39,10 +39,7 @@ export class LiftStationAssociator {
       const stationElevation = station.geometry.coordinates[2]; // Original elevation before snapping
       const inferredPosition =
         currentPosition ||
-        this.inferStationPosition(
-          stationElevation,
-          lift.geometryWithElevations,
-        );
+        this.inferStationPosition(stationElevation, lift.geometry);
 
       if (this.elevationProcessor) {
         await this.elevationProcessor.enhanceGeometry(closestPoint);
@@ -126,7 +123,7 @@ export class LiftStationAssociator {
 
     for (const lift of lifts) {
       const { point, distance } = this.findClosestPointOnLift(
-        lift.geometryWithElevations,
+        lift.geometry,
         station.geometry,
       );
 

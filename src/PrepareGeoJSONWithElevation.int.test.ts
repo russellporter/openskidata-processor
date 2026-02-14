@@ -93,10 +93,12 @@ it("adds elevations to lift geometry", async () => {
           [
             11.1223444,
             47.5572422,
+            0,
           ],
           [
             11.1164297,
             47.558156300000014,
+            1,
           ],
         ],
         "type": "LineString",
@@ -207,14 +209,17 @@ it("adds elevations to run geometry & elevation profile", async () => {
     [
       11.1164229,
       47.55812500000001,
+      0,
     ],
     [
       11.116365499999999,
       47.5579742,
+      1,
     ],
     [
       11.1171866,
       47.5556413,
+      2,
     ],
   ],
   "type": "LineString",
@@ -356,30 +361,35 @@ it("adds elevations to run polygons", async () => {
 
   await prepare(paths, testConfig);
 
-  expect(TestHelpers.fileContents(paths.output.runs).features[0].geometry).
-toMatchInlineSnapshot(`
+  expect(TestHelpers.fileContents(paths.output.runs).features[0].geometry)
+    .toMatchInlineSnapshot(`
 {
   "coordinates": [
     [
       [
         6.544500899999996,
         45.3230511,
+        0,
       ],
       [
         6.5434094000000025,
         45.32317370000001,
+        1,
       ],
       [
         6.5502579,
         45.3224134,
+        2,
       ],
       [
         6.550612,
         45.3222571,
+        3,
       ],
       [
         6.544500899999996,
         45.3230511,
+        0,
       ],
     ],
   ],
