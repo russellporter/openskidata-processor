@@ -6,7 +6,16 @@ import {
 } from "openskidata-format";
 import { LiftObject, RunObject } from "../clustering/MapObject";
 import { getPostgresTestConfig } from "../Config";
+import { mockLiftFeature, mockRunFeature } from "../TestHelpers";
 import { skiAreaStatistics } from "./SkiAreaStatistics";
+
+const lineGeometry = {
+  type: "LineString" as const,
+  coordinates: [
+    [0, 0],
+    [0, 1],
+  ],
+};
 
 describe("SkiAreaStatistics", () => {
   it("should count a run", async () => {
@@ -16,13 +25,7 @@ describe("SkiAreaStatistics", () => {
       type: FeatureType.Run,
       activities: [SkiAreaActivity.Downhill],
       difficulty: RunDifficulty.EASY,
-      geometry: {
-        type: "LineString",
-        coordinates: [
-          [0, 0],
-          [0, 1],
-        ],
-      },
+      geometry: lineGeometry,
       skiAreas: [],
       isBasisForNewSkiArea: true,
       isInSkiAreaPolygon: false,
@@ -30,9 +33,11 @@ describe("SkiAreaStatistics", () => {
       snowmaking: null,
       snowfarming: null,
       viirsPixels: [],
-      properties: {
-        places: [],
-      },
+      properties: mockRunFeature({
+        id: "1",
+        difficulty: RunDifficulty.EASY,
+        geometry: lineGeometry,
+      }).properties,
     };
 
     const statistics = await skiAreaStatistics(
@@ -71,20 +76,17 @@ describe("SkiAreaStatistics", () => {
       type: FeatureType.Lift,
       liftType: LiftType.Gondola,
       activities: [SkiAreaActivity.Downhill],
-      geometry: {
-        type: "LineString",
-        coordinates: [
-          [0, 0],
-          [0, 1],
-        ],
-      },
+      geometry: lineGeometry,
       skiAreas: [],
       stationIds: [],
       isInSkiAreaPolygon: false,
       isInSkiAreaSite: false,
-      properties: {
-        places: [],
-      },
+      properties: mockLiftFeature({
+        id: "1",
+        name: "Lift",
+        liftType: LiftType.Gondola,
+        geometry: lineGeometry,
+      }).properties,
     };
 
     const statistics = await skiAreaStatistics(
@@ -111,23 +113,25 @@ describe("SkiAreaStatistics", () => {
   });
 
   it("should not count run polygons in length calculation", async () => {
+    const polygonGeometry = {
+      type: "Polygon" as const,
+      coordinates: [
+        [
+          [0, 0],
+          [0, 1],
+          [1, 0],
+          [0, 0],
+        ],
+      ],
+    };
+
     const run: RunObject = {
       _id: "1",
       _key: "1",
       type: FeatureType.Run,
       activities: [SkiAreaActivity.Downhill],
       difficulty: RunDifficulty.EASY,
-      geometry: {
-        type: "Polygon",
-        coordinates: [
-          [
-            [0, 0],
-            [0, 1],
-            [1, 0],
-            [0, 0],
-          ],
-        ],
-      },
+      geometry: polygonGeometry,
       skiAreas: [],
       isBasisForNewSkiArea: true,
       isInSkiAreaPolygon: false,
@@ -135,9 +139,11 @@ describe("SkiAreaStatistics", () => {
       snowmaking: null,
       snowfarming: null,
       viirsPixels: [],
-      properties: {
-        places: [],
-      },
+      properties: mockRunFeature({
+        id: "1",
+        difficulty: RunDifficulty.EASY,
+        geometry: polygonGeometry,
+      }).properties,
     };
 
     const statistics = await skiAreaStatistics(
@@ -165,13 +171,7 @@ describe("SkiAreaStatistics", () => {
       type: FeatureType.Run,
       activities: [SkiAreaActivity.Downhill],
       difficulty: RunDifficulty.INTERMEDIATE,
-      geometry: {
-        type: "LineString",
-        coordinates: [
-          [0, 0],
-          [0, 1],
-        ],
-      },
+      geometry: lineGeometry,
       skiAreas: [],
       isBasisForNewSkiArea: true,
       isInSkiAreaPolygon: false,
@@ -180,7 +180,12 @@ describe("SkiAreaStatistics", () => {
       snowfarming: null,
       viirsPixels: [],
       properties: {
-        places: [],
+        ...mockRunFeature({
+          id: "1",
+          difficulty: RunDifficulty.INTERMEDIATE,
+          geometry: lineGeometry,
+        }).properties,
+        snowmaking: true,
       },
     };
 
@@ -207,13 +212,7 @@ describe("SkiAreaStatistics", () => {
       type: FeatureType.Run,
       activities: [SkiAreaActivity.Downhill],
       difficulty: RunDifficulty.ADVANCED,
-      geometry: {
-        type: "LineString",
-        coordinates: [
-          [0, 0],
-          [0, 1],
-        ],
-      },
+      geometry: lineGeometry,
       skiAreas: [],
       isBasisForNewSkiArea: true,
       isInSkiAreaPolygon: false,
@@ -222,7 +221,12 @@ describe("SkiAreaStatistics", () => {
       snowfarming: true,
       viirsPixels: [],
       properties: {
-        places: [],
+        ...mockRunFeature({
+          id: "1",
+          difficulty: RunDifficulty.ADVANCED,
+          geometry: lineGeometry,
+        }).properties,
+        snowfarming: true,
       },
     };
 
@@ -249,13 +253,7 @@ describe("SkiAreaStatistics", () => {
       type: FeatureType.Run,
       activities: [SkiAreaActivity.Downhill],
       difficulty: RunDifficulty.EASY,
-      geometry: {
-        type: "LineString",
-        coordinates: [
-          [0, 0],
-          [0, 1],
-        ],
-      },
+      geometry: lineGeometry,
       skiAreas: [],
       isBasisForNewSkiArea: true,
       isInSkiAreaPolygon: false,
@@ -263,9 +261,11 @@ describe("SkiAreaStatistics", () => {
       snowmaking: null,
       snowfarming: null,
       viirsPixels: [],
-      properties: {
-        places: [],
-      },
+      properties: mockRunFeature({
+        id: "1",
+        difficulty: RunDifficulty.EASY,
+        geometry: lineGeometry,
+      }).properties,
     };
 
     const statistics = await skiAreaStatistics(
@@ -291,13 +291,7 @@ describe("SkiAreaStatistics", () => {
       type: FeatureType.Run,
       activities: [SkiAreaActivity.Downhill],
       difficulty: RunDifficulty.EASY,
-      geometry: {
-        type: "LineString",
-        coordinates: [
-          [0, 0],
-          [0, 1],
-        ],
-      },
+      geometry: lineGeometry,
       skiAreas: [],
       isBasisForNewSkiArea: true,
       isInSkiAreaPolygon: false,
@@ -306,8 +300,21 @@ describe("SkiAreaStatistics", () => {
       snowfarming: null,
       viirsPixels: [],
       properties: {
-        places: [],
+        ...mockRunFeature({
+          id: "1",
+          difficulty: RunDifficulty.EASY,
+          geometry: lineGeometry,
+        }).properties,
+        snowmaking: true,
       },
+    };
+
+    const shortLineGeometry = {
+      type: "LineString" as const,
+      coordinates: [
+        [0, 0],
+        [0, 0.5],
+      ],
     };
 
     const run2: RunObject = {
@@ -316,13 +323,7 @@ describe("SkiAreaStatistics", () => {
       type: FeatureType.Run,
       activities: [SkiAreaActivity.Downhill],
       difficulty: RunDifficulty.EASY,
-      geometry: {
-        type: "LineString",
-        coordinates: [
-          [0, 0],
-          [0, 0.5],
-        ],
-      },
+      geometry: shortLineGeometry,
       skiAreas: [],
       isBasisForNewSkiArea: true,
       isInSkiAreaPolygon: false,
@@ -331,7 +332,12 @@ describe("SkiAreaStatistics", () => {
       snowfarming: null,
       viirsPixels: [],
       properties: {
-        places: [],
+        ...mockRunFeature({
+          id: "2",
+          difficulty: RunDifficulty.EASY,
+          geometry: shortLineGeometry,
+        }).properties,
+        snowmaking: true,
       },
     };
 

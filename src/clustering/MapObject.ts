@@ -1,9 +1,10 @@
 import {
   FeatureType,
   LiftGeometry,
+  LiftProperties,
   LiftType,
-  Place,
   RunDifficulty,
+  RunProperties,
   SkiAreaActivity,
   SkiAreaProperties,
   SourceType,
@@ -30,9 +31,7 @@ export interface DraftRun extends BaseDraftMapObject {
   snowmaking: boolean | null;
   snowfarming: boolean | null;
   viirsPixels: VIIRSPixel[];
-  properties: {
-    places: Place[];
-  };
+  properties: RunProperties;
 }
 
 export type RunGeometry =
@@ -47,9 +46,7 @@ export interface DraftLift extends BaseDraftMapObject {
   isInSkiAreaPolygon: boolean;
   isInSkiAreaSite: boolean;
   stationIds: string[];
-  properties: {
-    places: Place[];
-  };
+  properties: LiftProperties;
 }
 
 export interface DraftSpot extends BaseDraftMapObject {

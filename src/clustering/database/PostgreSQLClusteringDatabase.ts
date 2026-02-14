@@ -12,6 +12,7 @@ import {
 import {
   ClusteringDatabase,
   Cursor,
+  FeatureTypeObjectMap,
   GetSkiAreasOptions,
   SearchContext,
 } from "./ClusteringDatabase";
@@ -817,17 +818,38 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
     return run;
   }
 
-  async streamSkiAreas(): Promise<AsyncIterable<SkiAreaObject>> {
-    this.ensureInitialized();
+  streamObjects<T extends FeatureType>(
+    type: T,
+  ): AsyncIterable<FeatureTypeObjectMap[T]> {
+    const pool = this.ensureInitialized();
+    const batchSize = PostgreSQLClusteringDatabase.DEFAULT_BATCH_SIZE;
+    const rowMapper = this.rowToMapObject;
+    const query = `SELECT * FROM objects WHERE type = $1 ORDER BY key`;
 
-    const query = `SELECT * FROM objects WHERE type = '${FeatureType.SkiArea}'`;
-    const rows = await this.executeQuery<any[]>(query, []);
-
-    const self = this;
     return {
       async *[Symbol.asyncIterator]() {
-        for (const row of rows) {
-          yield self.rowToMapObject(row) as SkiAreaObject;
+        let offset = 0;
+        while (true) {
+          const client = await pool.connect();
+          let rows;
+          try {
+            const result = await client.query(
+              `${query} LIMIT $2 OFFSET $3`,
+              [type, batchSize, offset],
+            );
+            rows = result.rows;
+          } finally {
+            client.release();
+          }
+
+          for (const row of rows) {
+            yield rowMapper(row) as FeatureTypeObjectMap[T];
+          }
+
+          if (rows.length < batchSize) {
+            break;
+          }
+          offset += rows.length;
         }
       },
     };
@@ -866,6 +888,8 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
       baseObject.properties = row.properties || { places: [] };
     } else if (row.type === FeatureType.Run) {
       baseObject.difficulty = row.difficulty;
+      baseObject.snowmaking = row.properties?.snowmaking ?? null;
+      baseObject.snowfarming = row.properties?.snowfarming ?? null;
       baseObject.viirsPixels = row.viirs_pixels || [];
       baseObject.isInSkiAreaSite = Boolean(row.is_in_ski_area_site);
       baseObject.properties = row.properties || { places: [] };

@@ -42,7 +42,12 @@ import {
   SearchContext,
 } from "./database/ClusteringDatabase";
 import { performanceMonitor } from "./database/PerformanceMonitor";
-import augmentGeoJSONFeatures from "./GeoJSONAugmenter";
+import {
+  exportLiftsGeoJSON,
+  exportRunsGeoJSON,
+  exportSkiAreasGeoJSON,
+  exportSpotsGeoJSON,
+} from "./FeatureExporter";
 import {
   DraftLift,
   DraftMapObject,
@@ -56,7 +61,6 @@ import {
   SpotObject,
 } from "./MapObject";
 import mergeSkiAreaObjects from "./MergeSkiAreaObjects";
-import exportSkiAreasGeoJSON from "./SkiAreasExporter";
 
 const maxDistanceInKilometers = 0.5;
 
@@ -102,35 +106,25 @@ export class SkiAreaClusteringService {
       elevationServerConfig,
     );
 
-    await performanceMonitor.withOperation("Augmenting Runs", async () => {
-      await this.augmentGeoJSONFeatures(
-        runsPath,
+    await performanceMonitor.withOperation("Exporting Runs", async () => {
+      await exportRunsGeoJSON(
         outputRunsPath,
+        this.database,
         snowCoverConfig,
         postgresConfig,
       );
     });
 
-    await performanceMonitor.withOperation("Augmenting Lifts", async () => {
-      await this.augmentGeoJSONFeatures(
-        liftsPath,
-        outputLiftsPath,
-        null,
-        postgresConfig,
-      );
+    await performanceMonitor.withOperation("Exporting Lifts", async () => {
+      await exportLiftsGeoJSON(outputLiftsPath, this.database);
     });
 
-    await performanceMonitor.withOperation("Augmenting Spots", async () => {
-      await this.augmentGeoJSONFeatures(
-        spotsPath,
-        outputSpotsPath,
-        null,
-        postgresConfig,
-      );
+    await performanceMonitor.withOperation("Exporting Spots", async () => {
+      await exportSpotsGeoJSON(outputSpotsPath, this.database);
     });
 
     await performanceMonitor.withOperation("Exporting Ski Areas", async () => {
-      await this.exportSkiAreasGeoJSON(outputSkiAreasPath);
+      await exportSkiAreasGeoJSON(outputSkiAreasPath, this.database);
     });
   }
 
@@ -229,6 +223,9 @@ export class SkiAreaClusteringService {
       liftType: properties.liftType,
       stationIds: [],
       properties: {
+        ...feature.properties,
+        skiAreas: [],
+        stations: [],
         places: [],
       },
     };
@@ -292,7 +289,10 @@ export class SkiAreaClusteringService {
       snowfarming: properties.snowfarming,
       viirsPixels: viirsPixels,
       properties: {
+        ...feature.properties,
+        skiAreas: [],
         places: [],
+        snowCoverHistory: undefined,
       },
     };
   }
@@ -1142,7 +1142,7 @@ export class SkiAreaClusteringService {
               ...object.properties,
               places,
             },
-          });
+          } as Partial<MapObject>);
         } catch (error) {
           console.log(
             `Failed geocoding ${object.type} ${object._key}: ${error instanceof Error ? error.message : String(error)}`,
@@ -1360,25 +1360,4 @@ export class SkiAreaClusteringService {
     );
   }
 
-  private async augmentGeoJSONFeatures(
-    inputPath: string,
-    outputPath: string,
-    snowCoverConfig: SnowCoverConfig | null,
-    postgresConfig: PostgresConfig,
-  ): Promise<void> {
-    console.log(`Augmenting features from ${inputPath} to ${outputPath}`);
-
-    await augmentGeoJSONFeatures(
-      inputPath,
-      outputPath,
-      this.database,
-      snowCoverConfig,
-      postgresConfig,
-    );
-  }
-
-  private async exportSkiAreasGeoJSON(outputPath: string): Promise<void> {
-    console.log(`Exporting ski areas to ${outputPath}`);
-    await exportSkiAreasGeoJSON(outputPath, this.database);
-  }
 }

@@ -772,6 +772,13 @@ it("processes spot entities", async () => {
   ).toMatchInlineSnapshot(`
 [
   {
+    "id": "4f5a803958dbab90d2aac06681d5a5d7ef1bcf5a",
+    "skiAreas": [
+      "02911313f405ef0415188ceb357b415f02af5d64",
+    ],
+    "spotType": "crossing",
+  },
+  {
     "id": "f600d71632dca9be0db9329fb195db78b05a5925",
     "skiAreas": [
       "02911313f405ef0415188ceb357b415f02af5d64",
@@ -784,13 +791,6 @@ it("processes spot entities", async () => {
       "02911313f405ef0415188ceb357b415f02af5d64",
     ],
     "spotType": "halfpipe",
-  },
-  {
-    "id": "4f5a803958dbab90d2aac06681d5a5d7ef1bcf5a",
-    "skiAreas": [
-      "02911313f405ef0415188ceb357b415f02af5d64",
-    ],
-    "spotType": "crossing",
   },
 ]
 `);

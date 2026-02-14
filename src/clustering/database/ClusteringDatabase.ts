@@ -1,4 +1,4 @@
-import { SkiAreaActivity, SourceType } from "openskidata-format";
+import { FeatureType, SkiAreaActivity, SourceType } from "openskidata-format";
 import { SnowCoverConfig } from "../../Config";
 import Geocoder from "../../transforms/Geocoder";
 import {
@@ -8,6 +8,13 @@ import {
   SkiAreaObject,
   SpotObject,
 } from "../MapObject";
+
+export type FeatureTypeObjectMap = {
+  [FeatureType.Run]: RunObject;
+  [FeatureType.Lift]: LiftObject;
+  [FeatureType.Spot]: SpotObject;
+  [FeatureType.SkiArea]: SkiAreaObject;
+};
 
 export interface ClusteringDatabase {
   /**
@@ -121,9 +128,11 @@ export interface ClusteringDatabase {
   getNextUnassignedRun(): Promise<MapObject | null>;
 
   /**
-   * Stream all ski areas for export
+   * Stream all objects of a given type for export, in batches to limit memory usage.
    */
-  streamSkiAreas(): Promise<AsyncIterable<SkiAreaObject>>;
+  streamObjects<T extends FeatureType>(
+    type: T,
+  ): AsyncIterable<FeatureTypeObjectMap[T]>;
 
   /**
    * Get a map object by ID
