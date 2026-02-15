@@ -200,7 +200,8 @@ it("adds elevations to run geometry & elevation profile", async () => {
     13,
     2,
   ],
-  "resolution": 25,
+  "resolution": 23.661411045918097,
+  "targetResolution": 25,
 }
 `);
   expect(feature.geometry).toMatchInlineSnapshot(`

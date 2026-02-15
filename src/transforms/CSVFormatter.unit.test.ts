@@ -151,7 +151,8 @@ describe("CSVFormatter", () => {
             ],
             elevationProfile: {
               heights: [2000, 1800],
-              resolution: 1000,
+              resolution: 208.37647096918965,
+              targetResolution: 1000,
             },
             sources: [{ type: SourceType.OPENSTREETMAP, id: "123" }],
             websites: [],

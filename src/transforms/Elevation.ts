@@ -105,17 +105,16 @@ export async function createElevationProcessor(
 
   const enhanceFeature = async (feature: GeoJSON.Feature): Promise<void> => {
     const geometry = feature.geometry;
-    const elevationProfileCoordinates: number[][] =
+    const elevationProfile =
       feature.properties?.type === FeatureType.Run &&
       geometry.type === "LineString"
         ? extractPointsForElevationProfile(geometry, elevationProfileResolution)
-            .coordinates
-        : [];
+        : null;
 
     try {
       const [, profileElevations] = await Promise.all([
         enhanceGeometry(geometry),
-        loadElevations(elevationProfileCoordinates),
+        loadElevations(elevationProfile?.geometry.coordinates || []),
       ]);
 
       if (feature.properties?.type === FeatureType.Run) {
@@ -123,7 +122,8 @@ export async function createElevationProcessor(
           profileElevations.length > 0
             ? {
                 heights: profileElevations,
-                resolution: elevationProfileResolution,
+                resolution: elevationProfile!.resolutionInMeters,
+                targetResolution: elevationProfileResolution,
               }
             : null;
       }
