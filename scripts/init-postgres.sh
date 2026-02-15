@@ -91,28 +91,12 @@ fi
 
 # Start PostgreSQL as the main process
 echo "Starting PostgreSQL..."
-if ! su - postgres -c "/usr/lib/postgresql/17/bin/pg_ctl -D /var/lib/postgresql/data -l /var/log/postgresql/postgresql-17-main.log start"; then
+if ! su - postgres -c "/usr/lib/postgresql/17/bin/pg_ctl -t 180 -w -D /var/lib/postgresql/data -l /var/log/postgresql/postgresql-17-main.log start"; then
     echo "ERROR: Failed to start PostgreSQL"
     echo "Startup logs:"
     cat /var/log/postgresql/postgresql-17-main.log 2>&1 || echo "Log file not found"
     exit 1
 fi
-
-# Wait for PostgreSQL to be ready
-echo "Waiting for PostgreSQL to be ready..."
-for i in {1..30}; do
-    if su - postgres -c "pg_isready -q"; then
-        echo "PostgreSQL is ready"
-        break
-    fi
-    if [ $i -eq 30 ]; then
-        echo "ERROR: PostgreSQL failed to become ready within 30 seconds"
-        echo "Startup logs:"
-        cat /var/log/postgresql/postgresql-17-main.log 2>&1 || echo "Log file not found"
-        exit 1
-    fi
-    sleep 1
-done
 
 # Clean up clustering databases older than 1 day
 echo "Checking for old clustering databases to clean up..."
