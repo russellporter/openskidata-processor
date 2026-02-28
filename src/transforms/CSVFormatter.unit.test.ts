@@ -131,6 +131,7 @@ describe("CSVFormatter", () => {
             patrolled: true,
             snowmaking: null,
             snowfarming: null,
+            tunnel: null,
             grooming: null,
             description: null,
             skiAreas: [
@@ -196,6 +197,7 @@ describe("CSVFormatter", () => {
             duration: 600,
             oneway: null,
             detachable: true,
+            tunnel: null,
             description: null,
             access: null,
             stations: [],

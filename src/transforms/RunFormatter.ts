@@ -62,6 +62,7 @@ export function formatRun(feature: InputRunFeature): RunFeature[] {
     patrolled: mapOSMBoolean(getOrElse(tags, "piste:patrolled", "patrolled")),
     snowmaking: mapOSMBoolean(tags["piste:snowmaking"]),
     snowfarming: mapOSMBoolean(tags["piste:snowfarming"]),
+    tunnel: tags["tunnel"] !== undefined ? true : null,
     lit: mapOSMBoolean(getOrElse(tags, "piste:lit", "lit")),
     grooming: getGrooming(tags),
     skiAreas: [],

@@ -84,6 +84,7 @@ export function mergedProperties(
       .map((p) => p.snowfarming)
       .reduce(snowfarmingReducer),
     grooming: allProperties.map((p) => p.grooming).reduce(groomingReducer),
+    tunnel: allProperties.map((p) => p.tunnel).reduce(tunnelReducer),
     skiAreas: uniquedByID(allProperties.flatMap((p) => p.skiAreas)),
     elevationProfile: allProperties[0].elevationProfile,
     sources: uniquedSources(
@@ -200,6 +201,8 @@ const patrolledReducer = priorityReducer([true, false, null]);
 const snowmakingReducer = priorityReducer([true, false, null]);
 
 const snowfarmingReducer = priorityReducer([true, false, null]);
+
+const tunnelReducer = priorityReducer([true, false, null]);
 
 const litReducer = priorityReducer([true, false, null]);
 

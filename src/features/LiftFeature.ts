@@ -40,6 +40,7 @@ export type OSMLiftTags = {
   "aerialway:summer:access"?: string;
 
   website?: string;
+  tunnel?: string;
 };
 
 export type MapboxGLLiftProperties = {
@@ -50,6 +51,7 @@ export type MapboxGLLiftProperties = {
   access: Access | null;
   stationIds: string[];
   skiAreas: string[];
+  tunnel: boolean | null;
 };
 
 export type InputLiftGeometry =

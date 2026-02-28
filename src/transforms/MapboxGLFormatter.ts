@@ -97,6 +97,7 @@ export function formatter(
       grooming: properties.grooming,
       snowmaking: properties.snowmaking,
       snowfarming: properties.snowfarming,
+      tunnel: properties.tunnel,
       skiAreas: properties.skiAreas.map((skiArea) => skiArea.properties.id),
     };
 
@@ -139,6 +140,7 @@ export function formatter(
       access: properties.access,
       stationIds: properties.stations.map((station) => station.properties.id),
       skiAreas: properties.skiAreas.map((skiArea) => skiArea.properties.id),
+      tunnel: properties.tunnel,
     };
 
     return {
