@@ -37,6 +37,7 @@ export type OSMRunTags = {
   "piste:oneway"?: string;
 
   website?: string;
+  tunnel?: string;
 };
 
 export type InputRunGeometry =
@@ -65,6 +66,7 @@ export type MapboxGLRunProperties = {
   grooming: RunGrooming | null;
   snowmaking: boolean | null;
   snowfarming: boolean | null;
+  tunnel: boolean | null;
   // Run uses. Multiple uses are supported by rendering parallel lines for each use.
   // The value is the offset of the line from the baseline. The average of all offsets is always 0.
   downhill?: number;

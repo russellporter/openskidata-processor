@@ -78,6 +78,7 @@ export function formatLift(feature: InputLiftFeature): LiftFeature | null {
     bubble: mapOSMBoolean(tags["aerialway:bubble"]),
     heating: mapOSMBoolean(tags["aerialway:heating"]),
     detachable: mapOSMBoolean(tags["aerialway:detachable"]),
+    tunnel: tags["tunnel"] !== undefined ? true : null,
     access: tags["access"] === "private" ? "private" : null,
     stations: [],
     skiAreas: [],

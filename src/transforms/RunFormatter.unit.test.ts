@@ -59,6 +59,7 @@ describe("RunFormatter", () => {
     },
   ],
   "status": "operating",
+  "tunnel": null,
   "type": "run",
   "uses": [
     "downhill",
