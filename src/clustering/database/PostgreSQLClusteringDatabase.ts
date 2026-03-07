@@ -833,10 +833,11 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
           const client = await pool.connect();
           let rows;
           try {
-            const result = await client.query(
-              `${query} LIMIT $2 OFFSET $3`,
-              [type, batchSize, offset],
-            );
+            const result = await client.query(`${query} LIMIT $2 OFFSET $3`, [
+              type,
+              batchSize,
+              offset,
+            ]);
             rows = result.rows;
           } finally {
             client.release();

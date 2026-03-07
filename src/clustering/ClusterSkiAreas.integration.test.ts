@@ -1781,10 +1781,10 @@ it("merges OSM ski area containing multiple Skimap.org ski areas when it has obj
 
   // Both Skimap.org areas merge into the OSM area since both are inside its polygon.
   expect(
-  TestHelpers.fileContents(paths.output.skiAreas).features.map(
-    simplifiedSkiAreaFeatureWithSources
-  )
-).toMatchInlineSnapshot(`
+    TestHelpers.fileContents(paths.output.skiAreas).features.map(
+      simplifiedSkiAreaFeatureWithSources,
+    ),
+  ).toMatchInlineSnapshot(`
 [
   {
     "activities": [
@@ -1915,10 +1915,10 @@ it("merges Skimap.org ski areas into both sub-area and super-area OSM polygons",
   // Super-OSM gets both runs (they're inside its polygon) and both Skimap.org areas
   // find it as a merge target, producing 3 ski areas total.
   expect(
-  TestHelpers.fileContents(paths.output.skiAreas).
-  features.map(simplifiedSkiAreaFeatureWithSources).
-  sort(orderedByID)
-).toMatchInlineSnapshot(`
+    TestHelpers.fileContents(paths.output.skiAreas)
+      .features.map(simplifiedSkiAreaFeatureWithSources)
+      .sort(orderedByID),
+  ).toMatchInlineSnapshot(`
 [
   {
     "activities": [

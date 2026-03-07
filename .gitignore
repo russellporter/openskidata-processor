@@ -5,3 +5,4 @@ dist/
 cache/
 output/
 npm-debug.log
+snow-cover/venv/

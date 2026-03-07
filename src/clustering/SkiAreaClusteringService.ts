@@ -1289,5 +1289,4 @@ export class SkiAreaClusteringService {
         }, new Set<SkiAreaActivity>()),
     );
   }
-
 }
