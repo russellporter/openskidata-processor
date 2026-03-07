@@ -342,13 +342,6 @@ export class SkiAreaClusteringService {
     );
 
     await performanceMonitor.withOperation(
-      "Remove ambiguous duplicate ski areas",
-      async () => {
-        await this.removeAmbiguousDuplicateSkiAreas();
-      },
-    );
-
-    await performanceMonitor.withOperation(
       "Assign objects in OSM polygon ski areas",
       async () => {
         await this.assignObjectsToSkiAreas({
@@ -508,69 +501,6 @@ export class SkiAreaClusteringService {
           }),
         );
       },
-    );
-  }
-
-  private async removeAmbiguousDuplicateSkiAreas(): Promise<void> {
-    const cursor = await this.database.getSkiAreas({
-      onlyPolygons: true,
-      onlySource: SourceType.OPENSTREETMAP,
-      useBatching: false, // Load all upfront since we remove objects during iteration
-    });
-
-    // Process multiple batches concurrently for better performance
-    const concurrentBatches = Math.min(3, require("os").cpus().length);
-    const activeBatches = new Set<Promise<void>>();
-
-    let skiAreas: SkiAreaObject[] | null;
-    while ((skiAreas = await cursor.nextBatch())) {
-      const batchPromise = this.processBatchForDuplicateRemoval(skiAreas);
-      activeBatches.add(batchPromise);
-
-      // Clean up completed batches
-      batchPromise.finally(() => activeBatches.delete(batchPromise));
-
-      // Limit concurrent batches
-      if (activeBatches.size >= concurrentBatches) {
-        await Promise.race(activeBatches);
-      }
-    }
-
-    // Wait for all remaining batches to complete
-    await Promise.all(activeBatches);
-  }
-
-  private async processBatchForDuplicateRemoval(
-    skiAreas: SkiAreaObject[],
-  ): Promise<void> {
-    await Promise.all(
-      skiAreas.map(async (skiArea) => {
-        if (
-          skiArea.geometry.type !== "Polygon" &&
-          skiArea.geometry.type !== "MultiPolygon"
-        ) {
-          throw new AssertionError({
-            message:
-              "getSkiAreas query should have only returned ski areas with a Polygon geometry.",
-          });
-        }
-
-        const otherSkiAreasCursor = await this.database.getSkiAreas({
-          onlySource: SourceType.SKIMAP_ORG,
-          onlyInPolygon: skiArea.geometry,
-          useBatching: false, // We need all results upfront.
-        });
-
-        const otherSkiAreas = await otherSkiAreasCursor.all();
-        if (otherSkiAreas.length > 1) {
-          console.log(
-            "Removing OpenStreetMap ski area as it contains multiple Skimap.org ski areas and can't be merged correctly.",
-          );
-          console.log(JSON.stringify(skiArea));
-
-          await this.database.removeObject(skiArea._key);
-        }
-      }),
     );
   }
 

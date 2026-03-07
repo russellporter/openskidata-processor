@@ -1659,7 +1659,7 @@ it("prefers OSM sourced websites when merging Skimap.org ski area with OpenStree
 `);
 });
 
-it("removes OpenStreetMap ski areas that span across multiple Skimap.org ski areas", async () => {
+it("keeps Skimap.org ski areas separate when OSM super-area has no objects", async () => {
   const paths = TestHelpers.getFilePaths();
   TestHelpers.mockFeatureFiles(
     [
@@ -1689,7 +1689,7 @@ it("removes OpenStreetMap ski areas that span across multiple Skimap.org ski are
       TestHelpers.mockSkiAreaFeature({
         id: "3",
         activities: [SkiAreaActivity.Downhill],
-        sources: [{ type: SourceType.SKIMAP_ORG, id: "2" }],
+        sources: [{ type: SourceType.SKIMAP_ORG, id: "3" }],
         geometry: { type: "Point", coordinates: [0.75, 0.75] },
       }),
     ],
@@ -1700,6 +1700,7 @@ it("removes OpenStreetMap ski areas that span across multiple Skimap.org ski are
 
   await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
 
+  // OSM area is removed (no runs/lifts inside it), leaving the two Skimap.org areas separate.
   expect(
     TestHelpers.fileContents(paths.output.skiAreas)
       .features.map(simplifiedSkiAreaFeature)
@@ -1722,6 +1723,260 @@ it("removes OpenStreetMap ski areas that span across multiple Skimap.org ski are
       },
     ]
   `);
+});
+
+it("merges OSM ski area containing multiple Skimap.org ski areas when it has objects inside it", async () => {
+  const paths = TestHelpers.getFilePaths();
+  TestHelpers.mockFeatureFiles(
+    [
+      TestHelpers.mockSkiAreaFeature({
+        id: "1",
+        activities: [SkiAreaActivity.Downhill],
+        sources: [{ type: SourceType.OPENSTREETMAP, id: "1" }],
+        geometry: {
+          type: "Polygon",
+          coordinates: [
+            [
+              [0, 0],
+              [1, 0],
+              [1, 1],
+              [0, 1],
+              [0, 0],
+            ],
+          ],
+        },
+      }),
+      TestHelpers.mockSkiAreaFeature({
+        id: "2",
+        activities: [SkiAreaActivity.Downhill],
+        sources: [{ type: SourceType.SKIMAP_ORG, id: "2" }],
+        geometry: { type: "Point", coordinates: [0.25, 0.25] },
+      }),
+      TestHelpers.mockSkiAreaFeature({
+        id: "3",
+        activities: [SkiAreaActivity.Downhill],
+        sources: [{ type: SourceType.SKIMAP_ORG, id: "3" }],
+        geometry: { type: "Point", coordinates: [0.75, 0.75] },
+      }),
+    ],
+    [],
+    [
+      TestHelpers.mockRunFeature({
+        id: "4",
+        name: "Run",
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [0.1, 0.1],
+            [0.9, 0.9],
+          ],
+        },
+        uses: [RunUse.Downhill],
+      }),
+    ],
+    paths.intermediate,
+  );
+
+  await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
+
+  // Both Skimap.org areas merge into the OSM area since both are inside its polygon.
+  expect(
+  TestHelpers.fileContents(paths.output.skiAreas).features.map(
+    simplifiedSkiAreaFeatureWithSources
+  )
+).toMatchInlineSnapshot(`
+[
+  {
+    "activities": [
+      "downhill",
+    ],
+    "id": "1",
+    "name": "Name",
+    "sources": [
+      {
+        "id": "1",
+        "type": "openstreetmap",
+      },
+      {
+        "id": "2",
+        "type": "skimap.org",
+      },
+      {
+        "id": "3",
+        "type": "skimap.org",
+      },
+    ],
+  },
+]
+`);
+});
+
+it("merges Skimap.org ski areas into both sub-area and super-area OSM polygons", async () => {
+  const paths = TestHelpers.getFilePaths();
+  TestHelpers.mockFeatureFiles(
+    [
+      TestHelpers.mockSkiAreaFeature({
+        id: "1",
+        activities: [SkiAreaActivity.Downhill],
+        sources: [{ type: SourceType.OPENSTREETMAP, id: "1" }],
+        geometry: {
+          type: "Polygon",
+          coordinates: [
+            [
+              [0, 0],
+              [0.5, 0],
+              [0.5, 0.5],
+              [0, 0.5],
+              [0, 0],
+            ],
+          ],
+        },
+      }),
+      TestHelpers.mockSkiAreaFeature({
+        id: "2",
+        activities: [SkiAreaActivity.Downhill],
+        sources: [{ type: SourceType.OPENSTREETMAP, id: "2" }],
+        geometry: {
+          type: "Polygon",
+          coordinates: [
+            [
+              [0.5, 0.5],
+              [1, 0.5],
+              [1, 1],
+              [0.5, 1],
+              [0.5, 0.5],
+            ],
+          ],
+        },
+      }),
+      TestHelpers.mockSkiAreaFeature({
+        id: "3",
+        activities: [SkiAreaActivity.Downhill],
+        sources: [{ type: SourceType.OPENSTREETMAP, id: "3" }],
+        geometry: {
+          type: "Polygon",
+          coordinates: [
+            [
+              [0, 0],
+              [1, 0],
+              [1, 1],
+              [0, 1],
+              [0, 0],
+            ],
+          ],
+        },
+      }),
+      TestHelpers.mockSkiAreaFeature({
+        id: "4",
+        activities: [SkiAreaActivity.Downhill],
+        sources: [{ type: SourceType.SKIMAP_ORG, id: "4" }],
+        geometry: { type: "Point", coordinates: [0.25, 0.25] },
+      }),
+      TestHelpers.mockSkiAreaFeature({
+        id: "5",
+        activities: [SkiAreaActivity.Downhill],
+        sources: [{ type: SourceType.SKIMAP_ORG, id: "5" }],
+        geometry: { type: "Point", coordinates: [0.75, 0.75] },
+      }),
+    ],
+    [],
+    [
+      TestHelpers.mockRunFeature({
+        id: "6",
+        name: "Run A",
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [0.1, 0.1],
+            [0.4, 0.4],
+          ],
+        },
+        uses: [RunUse.Downhill],
+      }),
+      TestHelpers.mockRunFeature({
+        id: "7",
+        name: "Run B",
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [0.6, 0.6],
+            [0.9, 0.9],
+          ],
+        },
+        uses: [RunUse.Downhill],
+      }),
+    ],
+    paths.intermediate,
+  );
+
+  await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
+
+  // Sub-OSM-A merges with Skimap.org A, sub-OSM-B merges with Skimap.org B.
+  // Super-OSM gets both runs (they're inside its polygon) and both Skimap.org areas
+  // find it as a merge target, producing 3 ski areas total.
+  expect(
+  TestHelpers.fileContents(paths.output.skiAreas).
+  features.map(simplifiedSkiAreaFeatureWithSources).
+  sort(orderedByID)
+).toMatchInlineSnapshot(`
+[
+  {
+    "activities": [
+      "downhill",
+    ],
+    "id": "1",
+    "name": "Name",
+    "sources": [
+      {
+        "id": "1",
+        "type": "openstreetmap",
+      },
+      {
+        "id": "4",
+        "type": "skimap.org",
+      },
+    ],
+  },
+  {
+    "activities": [
+      "downhill",
+    ],
+    "id": "2",
+    "name": "Name",
+    "sources": [
+      {
+        "id": "2",
+        "type": "openstreetmap",
+      },
+      {
+        "id": "5",
+        "type": "skimap.org",
+      },
+    ],
+  },
+  {
+    "activities": [
+      "downhill",
+    ],
+    "id": "3",
+    "name": "Name",
+    "sources": [
+      {
+        "id": "3",
+        "type": "openstreetmap",
+      },
+      {
+        "id": "4",
+        "type": "skimap.org",
+      },
+      {
+        "id": "5",
+        "type": "skimap.org",
+      },
+    ],
+  },
+]
+`);
 });
 
 it("adds activities to OpenStreetMap ski areas based on the associated runs", async () => {
