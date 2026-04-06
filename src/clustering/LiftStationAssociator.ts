@@ -103,7 +103,7 @@ export class LiftStationAssociator {
       station.geometry,
       {
         id: station._key,
-        activities: station.activities,
+        activities: [],
         searchType: "intersects",
         isFixedSearchArea: true,
         alreadyVisited: [],
