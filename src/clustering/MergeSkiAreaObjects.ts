@@ -76,6 +76,7 @@ function mergeSkiAreaProperties(
     wikidataID: primarySkiArea.wikidataID || otherSkiArea.wikidataID,
     statistics: primarySkiArea.statistics,
     places: uniquePlaces([...primarySkiArea.places, ...otherSkiArea.places]),
+    viewportHint: primarySkiArea.viewportHint,
   };
 }
 

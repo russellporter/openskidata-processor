@@ -1,5 +1,6 @@
 import * as fs from "fs";
 import {
+  computeViewportHint,
   FeatureType,
   LiftFeature,
   LiftGeometry,
@@ -220,6 +221,7 @@ export function mockRunFeature<G extends InputRunGeometry>(options: {
       websites: options.websites || [],
       wikidataID: options.wikidataID || null,
       places: options.places || [],
+      viewportHint: computeViewportHint([options.geometry]),
     },
     geometry: options.geometry,
   };
@@ -265,6 +267,7 @@ export function mockLiftFeature<G extends LiftGeometry>(options: {
       websites: options.websites || [],
       wikidataID: options.wikidataID || null,
       places: options.places || [],
+      viewportHint: computeViewportHint([options.geometry]),
     },
     geometry: options.geometry,
   };
@@ -289,6 +292,7 @@ export function mockSpotFeature<G extends SpotGeometry>(
     skiAreas: options.skiAreas || [],
     sources: options.sources || [],
     places: options.places || [],
+    viewportHint: computeViewportHint([options.geometry]),
   };
 
   let properties: SpotProperties;
@@ -372,6 +376,7 @@ export function mockSkiAreaFeature<G extends SkiAreaGeometry>(
       websites: options.websites || [],
       wikidataID: options.wikidataID || null,
       places: [],
+      viewportHint: computeViewportHint([options.geometry]),
     },
     geometry: options.geometry,
   };

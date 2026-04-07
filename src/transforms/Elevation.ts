@@ -1,6 +1,7 @@
 import DataLoader from "dataloader";
 import * as geohash from "ngeohash";
 import {
+  computeViewportHint,
   extractPointsForElevationProfile,
   FeatureType,
 } from "openskidata-format";
@@ -129,6 +130,15 @@ export async function createElevationProcessor(
       }
     } catch (error) {
       console.log("Failed to load elevations", error);
+    }
+
+    // Compute the viewport hint from the (now elevation-enriched) geometry. If elevation
+    // loading failed above the geometry is still 2D, which yields bearing: null — a valid
+    // graceful degradation that the client handles by falling back to a top-down view.
+    if (feature.properties) {
+      (feature.properties as any).viewportHint = computeViewportHint([
+        geometry,
+      ]);
     }
   };
 

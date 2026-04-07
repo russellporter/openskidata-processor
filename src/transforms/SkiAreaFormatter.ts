@@ -1,4 +1,5 @@
 import {
+  computeViewportHint,
   FeatureType,
   RunDifficultyConvention,
   SkiAreaFeature,
@@ -102,6 +103,7 @@ function formatOpenStreetMapLanduse(
       osmFeature.properties.tags,
       status,
       getRunDifficultyConvention(osmFeature),
+      osmFeature.geometry,
     ),
   );
 }
@@ -117,16 +119,18 @@ function formatOpenStreetMapSite(site: OSMSkiAreaSite): SkiAreaFeature | null {
     return null;
   }
 
+  const siteGeometry = placeholderSiteGeometry(site.id);
   return buildFeature(
     // super hacky thing, we don't know the coordinates of the site at this point.
     // later on the correct geometry will be set when doing clustering.
     // to get a stable identifier for the site, build a geometry based on its ID (which is then hashed by `buildFeature`)
-    placeholderSiteGeometry(site.id),
+    siteGeometry,
     propertiesForOpenStreetMapSkiArea(
       osmID(site),
       site.tags,
       status,
       RunDifficultyConvention.NORTH_AMERICA, // also bogus, will be updated later when we know the real geometry
+      siteGeometry,
     ),
   );
 }
@@ -140,11 +144,13 @@ function formatSkiMapOrg(
   );
 }
 
+
 function propertiesForOpenStreetMapSkiArea(
   osmID: string,
   tags: OSMSkiAreaTags,
   status: Status,
   runConvention: RunDifficultyConvention,
+  geometry: GeoJSON.Geometry,
 ): Omit<SkiAreaProperties, "id"> {
   return {
     type: FeatureType.SkiArea,
@@ -161,6 +167,8 @@ function propertiesForOpenStreetMapSkiArea(
     wikidataID: getOSMFirstValue(tags, "wikidata"),
     runConvention: runConvention,
     places: [],
+    // 2D placeholder; overwritten with member-geometry hint in augmentSkiAreaBasedOnAssignedLiftsAndRuns.
+    viewportHint: computeViewportHint([geometry]),
   };
 }
 
@@ -184,5 +192,7 @@ function propertiesForSkiMapOrgSkiArea(
     // TODO: #153 Get Wikidata ID from Skimap.org ID (https://github.com/russellporter/openskimap.org/issues/153)
     wikidataID: null,
     places: [],
+    // 2D placeholder; overwritten with member-geometry hint in augmentSkiAreaBasedOnAssignedLiftsAndRuns.
+    viewportHint: computeViewportHint([feature.geometry]),
   };
 }

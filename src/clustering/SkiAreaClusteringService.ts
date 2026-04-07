@@ -6,6 +6,7 @@ import nearestPoint from "@turf/nearest-point";
 import { AssertionError } from "assert";
 import * as GeoJSON from "geojson";
 import {
+  computeViewportHint,
   FeatureType,
   getRunDifficultyConvention,
   LiftFeature,
@@ -996,6 +997,8 @@ export class SkiAreaClusteringService {
         websites: [],
         wikidataID: null,
         places: [],
+        // 2D placeholder; overwritten with member-geometry hint in augmentSkiAreaBasedOnAssignedLiftsAndRuns.
+        viewportHint: computeViewportHint([geometry]),
       },
     };
 
@@ -1184,10 +1187,18 @@ export class SkiAreaClusteringService {
       postgresConfig,
       snowCoverConfig,
     );
+    // Compute the viewport hint from member run/lift geometries (which have 3D coordinates
+    // from elevation enhancement). Falls back to the ski area's own geometry when there
+    // are no members (e.g. Skimap.org-only ski area with no associated runs/lifts yet).
+    const memberGeometries = memberObjects.map((obj) => obj.geometry);
+    const viewportHint = computeViewportHint(
+      memberGeometries.length > 0 ? memberGeometries : [skiArea.geometry],
+    )!;
     const updatedProperties = {
       ...skiArea.properties,
       statistics,
       runConvention: getRunDifficultyConvention(skiArea.geometry),
+      viewportHint,
     };
 
     // Collect places from member runs and lifts

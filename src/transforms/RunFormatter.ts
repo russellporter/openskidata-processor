@@ -1,4 +1,5 @@
 import {
+  computeViewportHint,
   FeatureType,
   getRunDifficultyConvention,
   RunDifficulty,
@@ -74,6 +75,8 @@ export function formatRun(feature: InputRunFeature): RunFeature[] {
     wikidataID: getOSMFirstValue(tags, "wikidata"),
     places: [],
     elevationProfile: null,
+    // 2D placeholder; overwritten with elevation-aware hint in enhanceFeature.
+    viewportHint: computeViewportHint([feature.geometry]),
   };
 
   // Handle MultiPolygon by splitting into separate Polygon features

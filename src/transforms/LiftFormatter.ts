@@ -1,4 +1,5 @@
 import {
+  computeViewportHint,
   FeatureType,
   LiftFeature,
   LiftProperties,
@@ -88,12 +89,11 @@ export function formatLift(feature: InputLiftFeature): LiftFeature | null {
     websites: [tags.website].filter(notEmpty),
     wikidataID: getOSMFirstValue(tags, "wikidata"),
     places: [],
+    // 2D placeholder; overwritten with elevation-aware hint in enhanceFeature.
+    viewportHint: computeViewportHint([feature.geometry]),
   };
 
-  return buildFeature(
-    feature.geometry as GeoJSON.LineString | GeoJSON.MultiLineString,
-    properties,
-  );
+  return buildFeature(feature.geometry, properties);
 }
 
 function getStatusAndLiftType(tags: OSMLiftTags) {

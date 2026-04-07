@@ -98,6 +98,7 @@ export function mergedProperties(
         .map((properties) => properties.wikidataID)
         .find((id) => id !== null) || null,
     places: uniquePlaces(allProperties.flatMap((p) => p.places)),
+    viewportHint: allProperties[0].viewportHint,
   };
 }
 

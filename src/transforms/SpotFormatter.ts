@@ -2,6 +2,7 @@ import centroid from "@turf/centroid";
 import {
   AvalancheTransceiverCheckpointSpotProperties,
   AvalancheTransceiverTrainingSpotProperties,
+  computeViewportHint,
   CrossingSpotProperties,
   DismountRequirement,
   FeatureType,
@@ -19,7 +20,7 @@ import { getOSMName } from "./OSMTransforms";
 
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 
-type CommonSpotProperties = "id" | "skiAreas" | "sources" | "places";
+type CommonSpotProperties = "id" | "skiAreas" | "sources" | "places" | "viewportHint";
 
 export function formatSpots(feature: InputSpotFeature): SpotFeature[] {
   const tags = feature.properties.tags || {};
@@ -28,12 +29,14 @@ export function formatSpots(feature: InputSpotFeature): SpotFeature[] {
   const geometry = centroid(feature).geometry;
 
   // Common properties for all spot types
+  // viewportHint is a 2D placeholder; overwritten with elevation-aware hint in enhanceFeature.
   const commonProperties = {
     skiAreas: [],
     sources: [
       { type: SourceType.OPENSTREETMAP, id: osmID(feature.properties) },
     ],
     places: [],
+    viewportHint: computeViewportHint([geometry]),
   };
 
   // Call all format functions and collect non-null results
