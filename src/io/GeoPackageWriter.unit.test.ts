@@ -5,6 +5,7 @@ import {
   RunFeature,
   SkiAreaFeature,
 } from "openskidata-format";
+import { mockViewportHint } from "../testUtils";
 import { promises as fs } from "fs";
 import { GeoPackageAPI } from "@ngageoint/geopackage";
 import tmp from "tmp";
@@ -73,6 +74,7 @@ describe("GeoPackageWriter", () => {
           websites: [],
           wikidataID: null,
           places: [],
+          viewportHint: mockViewportHint(),
         },
       },
     ];
@@ -130,6 +132,7 @@ describe("GeoPackageWriter", () => {
           websites: [],
           wikidataID: null,
           places: [],
+          viewportHint: mockViewportHint(),
         },
       },
     ];
@@ -175,6 +178,7 @@ describe("GeoPackageWriter", () => {
           runConvention: "europe" as any,
           websites: ["https://example.com"],
           wikidataID: null,
+          viewportHint: mockViewportHint(),
         },
       },
     ];
@@ -243,6 +247,7 @@ describe("GeoPackageWriter", () => {
           runConvention: "europe" as any,
           websites: [],
           wikidataID: null,
+          viewportHint: mockViewportHint(),
         },
       },
     ];
@@ -308,6 +313,7 @@ describe("GeoPackageWriter", () => {
           websites: [],
           wikidataID: null,
           places: [],
+          viewportHint: mockViewportHint(),
         },
       },
     ];
@@ -362,6 +368,7 @@ describe("GeoPackageWriter", () => {
           websites: [],
           wikidataID: null,
           places: [],
+          viewportHint: mockViewportHint(),
         },
       },
       {
@@ -397,6 +404,7 @@ describe("GeoPackageWriter", () => {
           websites: [],
           wikidataID: null,
           places: [],
+          viewportHint: mockViewportHint(),
         },
       },
     ];
@@ -448,6 +456,7 @@ describe("GeoPackageWriter", () => {
           websites: [],
           wikidataID: null,
           places: [],
+          viewportHint: mockViewportHint(),
         },
       },
     ];
@@ -479,6 +488,7 @@ describe("GeoPackageWriter", () => {
           runConvention: "europe" as any,
           websites: [],
           wikidataID: null,
+          viewportHint: mockViewportHint(),
         },
       },
       {
@@ -507,6 +517,7 @@ describe("GeoPackageWriter", () => {
           runConvention: "europe" as any,
           websites: [],
           wikidataID: null,
+          viewportHint: mockViewportHint(),
         },
       },
       {
@@ -527,6 +538,7 @@ describe("GeoPackageWriter", () => {
           runConvention: "europe" as any,
           websites: [],
           wikidataID: null,
+          viewportHint: mockViewportHint(),
         },
       },
     ];
@@ -612,6 +624,7 @@ describe("GeoPackageWriter", () => {
           websites: [],
           wikidataID: null,
           places: [],
+          viewportHint: mockViewportHint(),
         },
       },
       {
@@ -659,6 +672,7 @@ describe("GeoPackageWriter", () => {
           websites: [],
           wikidataID: null,
           places: [],
+          viewportHint: mockViewportHint(),
         },
       },
     ];
@@ -766,6 +780,7 @@ describe("GeoPackageWriter", () => {
           websites: [],
           wikidataID: null,
           places: [],
+          viewportHint: mockViewportHint(),
         },
       },
     ];
@@ -827,6 +842,7 @@ describe("GeoPackageWriter", () => {
           websites: [],
           wikidataID: null,
           places: [],
+          viewportHint: mockViewportHint(),
         },
       },
     ];

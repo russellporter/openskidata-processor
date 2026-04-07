@@ -64,6 +64,16 @@ describe("RunFormatter", () => {
   "uses": [
     "downhill",
   ],
+  "viewportHint": {
+    "bearing": null,
+    "center": [
+      0.5,
+      0.5,
+    ],
+    "minCameraY": -55660,
+    "rotatedHeightMeters": 111320,
+    "rotatedWidthMeters": 111315.76127550355,
+  },
   "websites": [],
   "wikidataID": null,
 }

@@ -13,7 +13,7 @@ import uniquedSources from "../UniqueSources";
 
 const ignoredPropertiesForComparison: Set<string> = new Set<
   keyof RunProperties
->(["id", "sources", "skiAreas", "elevationProfile", "places"]);
+>(["id", "sources", "skiAreas", "elevationProfile", "places", "viewportHint"]);
 
 export function isPartOfSameRun(
   leftFeature: RunFeature,

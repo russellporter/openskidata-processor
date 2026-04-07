@@ -32,8 +32,8 @@ describe("SkiAreaFormatter", () => {
       },
     };
 
-    expect(formatSkiArea(InputSkiAreaType.OPENSTREETMAP_LANDUSE)(feature))
-      .toMatchInlineSnapshot(`
+    expect(formatSkiArea(InputSkiAreaType.OPENSTREETMAP_LANDUSE)(feature)).
+toMatchInlineSnapshot(`
 {
   "geometry": {
     "coordinates": [
@@ -72,6 +72,16 @@ describe("SkiAreaFormatter", () => {
     ],
     "status": "operating",
     "type": "skiArea",
+    "viewportHint": {
+      "bearing": null,
+      "center": [
+        0.5,
+        0.5,
+      ],
+      "minCameraY": -55660,
+      "rotatedHeightMeters": 111320,
+      "rotatedWidthMeters": 111315.76127550355,
+    },
     "websites": [
       "http://example.com",
     ],
@@ -158,8 +168,8 @@ describe("SkiAreaFormatter", () => {
       },
     };
 
-    expect(formatSkiArea(InputSkiAreaType.SKIMAP_ORG)(feature))
-      .toMatchInlineSnapshot(`
+    expect(formatSkiArea(InputSkiAreaType.SKIMAP_ORG)(feature)).
+toMatchInlineSnapshot(`
 {
   "geometry": {
     "coordinates": [
@@ -184,6 +194,16 @@ describe("SkiAreaFormatter", () => {
     ],
     "status": "operating",
     "type": "skiArea",
+    "viewportHint": {
+      "bearing": null,
+      "center": [
+        0,
+        0,
+      ],
+      "minCameraY": 0,
+      "rotatedHeightMeters": 0,
+      "rotatedWidthMeters": 0,
+    },
     "websites": [
       "http://example.com",
     ],
@@ -204,8 +224,8 @@ describe("SkiAreaFormatter", () => {
       },
     };
 
-    expect(formatSkiArea(InputSkiAreaType.OPENSTREETMAP_SITE)(site))
-      .toMatchInlineSnapshot(`
+    expect(formatSkiArea(InputSkiAreaType.OPENSTREETMAP_SITE)(site)).
+toMatchInlineSnapshot(`
 {
   "geometry": {
     "coordinates": [
@@ -229,6 +249,16 @@ describe("SkiAreaFormatter", () => {
     ],
     "status": "operating",
     "type": "skiArea",
+    "viewportHint": {
+      "bearing": null,
+      "center": [
+        360,
+        360,
+      ],
+      "minCameraY": 0,
+      "rotatedHeightMeters": 0,
+      "rotatedWidthMeters": 0,
+    },
     "websites": [],
     "wikidataID": null,
   },

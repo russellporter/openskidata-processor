@@ -11,6 +11,7 @@ import {
   SourceType,
   Status,
 } from "openskidata-format";
+import { mockViewportHint } from "../testUtils";
 import { Transform } from "stream";
 import {
   createCSVWriteStream,
@@ -94,6 +95,7 @@ describe("CSVFormatter", () => {
               minElevation: 1200,
               maxElevation: 2400,
             },
+            viewportHint: mockViewportHint(),
           },
         };
 
@@ -159,6 +161,7 @@ describe("CSVFormatter", () => {
             websites: [],
             wikidataID: null,
             places: [],
+            viewportHint: mockViewportHint(),
           },
         };
 
@@ -221,6 +224,7 @@ describe("CSVFormatter", () => {
             websites: [],
             wikidataID: null,
             places: [],
+            viewportHint: mockViewportHint(),
           },
         };
 

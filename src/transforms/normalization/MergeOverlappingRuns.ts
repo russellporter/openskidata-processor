@@ -1,5 +1,6 @@
 import _ from "lodash";
-import { RunProperties } from "openskidata-format";
+import { computeViewportHint, RunProperties } from "openskidata-format";
+import * as topojsonClient from "topojson-client";
 import * as TopoJSON from "topojson-specification";
 import { mergedProperties } from "./RunJoining";
 
@@ -67,11 +68,16 @@ export function mergeOverlappingRuns(data: RunTopology) {
           (!_.isEqual(properties, lastArcProperties) || forceSplit) &&
           accumulatedArcs.length > 0
         ) {
-          data.objects.runs.geometries.push({
+          const newGeometry: TopoJSON.LineString<RunProperties> = {
             type: "LineString",
             properties: propertiesForArcData(lastArcProperties),
             arcs: accumulatedArcs,
-          });
+          };
+          const geoJSONFeature = topojsonClient.feature(data, newGeometry);
+          if (geoJSONFeature.geometry) {
+            newGeometry.properties!.viewportHint = computeViewportHint([geoJSONFeature.geometry]);
+          }
+          data.objects.runs.geometries.push(newGeometry);
 
           accumulatedArcs = [];
         }

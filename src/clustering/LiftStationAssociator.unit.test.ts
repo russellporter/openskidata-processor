@@ -1,4 +1,5 @@
 import { FeatureType, LiftType, SkiAreaActivity, SpotType, Status } from "openskidata-format";
+import { mockViewportHint } from "../testUtils";
 import { LiftStationAssociator } from "./LiftStationAssociator";
 import { ClusteringDatabase, Cursor, SearchContext } from "./database/ClusteringDatabase";
 import { LiftObject, MapObject, SpotObject } from "./MapObject";
@@ -59,6 +60,7 @@ function makeLift(activities: SkiAreaActivity[]): LiftObject {
       websites: [],
       wikidataID: null,
       places: [],
+      viewportHint: mockViewportHint(),
     },
   };
 }
@@ -88,6 +90,7 @@ function makeStation(): SpotObject {
       skiAreas: [],
       sources: [],
       places: [],
+      viewportHint: mockViewportHint(),
     },
   };
 }

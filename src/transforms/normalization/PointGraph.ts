@@ -1,4 +1,5 @@
 import * as _ from "lodash";
+import { computeViewportHint } from "openskidata-format";
 import { RunLineFeature } from "../../features/RunFeature";
 import PointMultiMap from "./PointMultiMap";
 import { isPartOfSameRun, mergedProperties } from "./RunJoining";
@@ -60,6 +61,8 @@ export default class PointGraph {
       },
       [],
     );
+
+    feature.properties.viewportHint = computeViewportHint([feature.geometry]);
 
     return feature;
   }
