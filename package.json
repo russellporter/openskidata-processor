@@ -42,7 +42,7 @@
     "osmtogeojson": "3.0.0-beta.5",
     "parallel-transform": "^1",
     "pg": "^8.12.0",
-    "sharp": "^0.33.0",
+    "sharp": "^0.33.5",
     "tmp": "^0.2.4",
     "topojson-client": "^3",
     "topojson-server": "^3",

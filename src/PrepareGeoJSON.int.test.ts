@@ -219,6 +219,16 @@ Map {
           "status": "operating",
           "tunnel": null,
           "type": "lift",
+          "viewportHint": {
+            "bearing": null,
+            "center": [
+              11.11938705,
+              47.55769924999999,
+            ],
+            "minCameraY": -50.87880600015609,
+            "rotatedHeightMeters": 101.75761200110317,
+            "rotatedWidthMeters": 444.3359945090548,
+          },
           "websites": [],
           "wikidataID": null,
         },
@@ -414,6 +424,16 @@ Map {
           "uses": [
             "downhill",
           ],
+          "viewportHint": {
+            "bearing": null,
+            "center": [
+              11.11677605,
+              47.557883149999995,
+            ],
+            "minCameraY": -26.92274200020875,
+            "rotatedHeightMeters": 53.845484001208476,
+            "rotatedWidthMeters": 61.68410985385404,
+          },
           "websites": [],
           "wikidataID": null,
         },
@@ -461,6 +481,16 @@ Map {
           },
           "status": null,
           "type": "skiArea",
+          "viewportHint": {
+            "bearing": null,
+            "center": [
+              11.119354949999998,
+              47.557699250000006,
+            ],
+            "minCameraY": -50.878806000947066,
+            "rotatedHeightMeters": 101.75761200189413,
+            "rotatedWidthMeters": 449.15895608745416,
+          },
           "websites": [],
           "wikidataID": null,
         },

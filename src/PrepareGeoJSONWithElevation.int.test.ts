@@ -130,6 +130,16 @@ it("adds elevations to lift geometry", async () => {
         "status": "operating",
         "tunnel": null,
         "type": "lift",
+        "viewportHint": {
+          "bearing": 312.89672520119075,
+          "center": [
+            11.11938705,
+            47.55769924999999,
+          ],
+          "minCameraY": -197.8883671355343,
+          "rotatedHeightMeters": 395.7767342717046,
+          "rotatedWidthMeters": 227.90440472769652,
+        },
         "websites": [],
         "wikidataID": null,
       },
@@ -309,6 +319,16 @@ it("completes without adding elevations when elevation server fails", async () =
         "status": "operating",
         "tunnel": null,
         "type": "lift",
+        "viewportHint": {
+          "bearing": null,
+          "center": [
+            11.11938705,
+            47.55769924999999,
+          ],
+          "minCameraY": -50.87880600015609,
+          "rotatedHeightMeters": 101.75761200110317,
+          "rotatedWidthMeters": 444.3359945090548,
+        },
         "websites": [],
         "wikidataID": null,
       },
