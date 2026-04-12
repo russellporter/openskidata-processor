@@ -1,5 +1,6 @@
 import {
   decodeMapboxElevation,
+  decodeTerrariumElevation,
   elevationAtPixel,
   bilinearInterpolate,
 } from "./ElevationDecoder";
@@ -35,6 +36,37 @@ describe("decodeMapboxElevation", () => {
   });
 });
 
+describe("decodeTerrariumElevation", () => {
+  it("decodes sea level (0m)", () => {
+    // 0 = r*256 + g + b/256 - 32768
+    // r=128, g=0, b=0 => 128*256 + 0 + 0 - 32768 = 0
+    const elevation = decodeTerrariumElevation(128, 0, 0);
+    expect(elevation).toBeCloseTo(0, 1);
+  });
+
+  it("decodes RGB (0, 0, 0) as -32768m", () => {
+    const elevation = decodeTerrariumElevation(0, 0, 0);
+    expect(elevation).toBe(-32768);
+  });
+
+  it("decodes known elevation values", () => {
+    // elevation = r*256 + g + b/256 - 32768
+    // For r=128, g=10, b=0: 128*256 + 10 + 0 - 32768 = 10
+    const elevation = decodeTerrariumElevation(128, 10, 0);
+    expect(elevation).toBeCloseTo(10, 1);
+  });
+
+  it("decodes high elevation", () => {
+    // Mount Everest ~8849m
+    // 8849 = r*256 + g + b/256 - 32768
+    // r*256 + g = 8849 + 32768 = 41617
+    // 41617 / 256 = 162 remainder 145
+    // r=162, g=145, b=0
+    const elevation = decodeTerrariumElevation(162, 145, 0);
+    expect(elevation).toBeCloseTo(8849, 1);
+  });
+});
+
 describe("elevationAtPixel", () => {
   const channels = 3;
 
@@ -54,10 +86,22 @@ describe("elevationAtPixel", () => {
     // 2x2 buffer: (0,0)=sea, (1,0)=high, (0,1)=sea, (1,1)=high
     const buf = makeBuffer([seaLevel, high, seaLevel, high]);
 
-    expect(elevationAtPixel(buf, 0, 0, 2, channels)).toBeCloseTo(0, 1);
-    expect(elevationAtPixel(buf, 1, 0, 2, channels)).toBeCloseTo(9.6, 1);
-    expect(elevationAtPixel(buf, 0, 1, 2, channels)).toBeCloseTo(0, 1);
-    expect(elevationAtPixel(buf, 1, 1, 2, channels)).toBeCloseTo(9.6, 1);
+    expect(elevationAtPixel(buf, 0, 0, 2, channels, "mapbox")).toBeCloseTo(
+      0,
+      1,
+    );
+    expect(elevationAtPixel(buf, 1, 0, 2, channels, "mapbox")).toBeCloseTo(
+      9.6,
+      1,
+    );
+    expect(elevationAtPixel(buf, 0, 1, 2, channels, "mapbox")).toBeCloseTo(
+      0,
+      1,
+    );
+    expect(elevationAtPixel(buf, 1, 1, 2, channels, "mapbox")).toBeCloseTo(
+      9.6,
+      1,
+    );
   });
 });
 

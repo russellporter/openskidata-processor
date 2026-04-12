@@ -77,10 +77,25 @@ The processor supports three types of elevation servers. All types share the fol
 **Common configuration:**
 
 - `ELEVATION_SERVER_URL` - Base URL of the elevation server
-- `ELEVATION_SERVER_TYPE` - Server type: `racemap`, `tileserver-gl`, or `tile`
+- `ELEVATION_SERVER_TYPE` - Server type: `tile`, `racemap`, `tileserver-gl`
 - `ELEVATION_SERVER_BATCH_SIZE` - Maximum number of coordinates to batch in a single request (default: 10000)
 
 **Server types:**
+
+#### Terrain Tiles
+
+For direct access to terrain tiles (Mapbox Terrain-RGB or compatible format). The processor fetches and caches tiles locally for better performance.
+
+```bash
+ELEVATION_SERVER_URL="https://tiles.mapterhorn.com/{z}/{x}/{y}.webp"
+ELEVATION_SERVER_TYPE="tile"
+ELEVATION_SERVER_TILE_ENCODING="terrarium" # Tile encoding format: 'mapbox' or 'terrarium' (default: mapbox)
+ELEVATION_SERVER_ZOOM="14,12"              # Comma-separated list of zoom levels to try in order (default: 12)
+ELEVATION_TILE_SIZE="512"                  # Tile size in pixels (default: 512)
+ELEVATION_TILE_CACHE_DIR="data/tile-cache" # Local cache directory (default: data/tile-cache)
+ELEVATION_TILE_CACHE_MAX_TILES="100000"    # Maximum tiles to cache (default: 100000)
+ELEVATION_TILE_CONCURRENCY="4"             # Parallel tile downloads (default: 4)
+```
 
 #### Racemap
 
@@ -103,20 +118,6 @@ ELEVATION_SERVER_ZOOM="14,12"  # Comma-separated list of zoom levels to try in o
 ```
 
 The processor will attempt each zoom level in order, falling back to the next zoom level for coordinates that return null (no data available).
-
-#### Terrain Tiles
-
-For direct access to terrain tiles (Mapbox Terrain-RGB or compatible format). The processor fetches and caches tiles locally for better performance.
-
-```bash
-ELEVATION_SERVER_URL="https://example.com/tiles/{z}/{x}/{y}.png"
-ELEVATION_SERVER_TYPE="tile"
-ELEVATION_SERVER_ZOOM="14,12"              # Comma-separated list of zoom levels to try in order (default: 12)
-ELEVATION_TILE_SIZE="512"                  # Tile size in pixels (default: 512)
-ELEVATION_TILE_CACHE_DIR="data/tile-cache" # Local cache directory (default: data/tile-cache)
-ELEVATION_TILE_CACHE_MAX_TILES="100000"     # Maximum tiles to cache (default: 100000)
-ELEVATION_TILE_CONCURRENCY="4"             # Parallel tile downloads (default: 4)
-```
 
 ### Reverse geocoding
 

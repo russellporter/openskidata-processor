@@ -53,6 +53,7 @@ export async function createElevationProcessor(
   if (elevationServerConfig.type === "tile") {
     terrainTileSource = new TerrainTileElevationSource({
       urlTemplate: elevationServerConfig.url,
+      encoding: elevationServerConfig.tileEncoding,
       tileSize: elevationServerConfig.tileSize,
       cacheDir: elevationServerConfig.tileCacheDir,
       cacheMaxTiles: elevationServerConfig.tileCacheMaxTiles,

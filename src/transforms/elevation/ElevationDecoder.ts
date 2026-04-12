@@ -1,9 +1,23 @@
+export type TileEncoding = "mapbox" | "terrarium";
+
 /**
  * Decodes elevation from Mapbox Terrain RGB encoding.
  * Formula: elevation = -10000 + (r * 65536 + g * 256 + b) * 0.1
  */
 export function decodeMapboxElevation(r: number, g: number, b: number): number {
   return -10000 + (r * 65536 + g * 256 + b) * 0.1;
+}
+
+/**
+ * Decodes elevation from Terrarium encoding.
+ * Formula: elevation = (r * 256 + g + b / 256) - 32768
+ */
+export function decodeTerrariumElevation(
+  r: number,
+  g: number,
+  b: number,
+): number {
+  return r * 256 + g + b / 256 - 32768;
 }
 
 /**
@@ -15,12 +29,18 @@ export function elevationAtPixel(
   y: number,
   width: number,
   channels: number,
+  encoding: TileEncoding,
 ): number {
   const offset = (y * width + x) * channels;
   const r = rawBuffer[offset];
   const g = rawBuffer[offset + 1];
   const b = rawBuffer[offset + 2];
-  return decodeMapboxElevation(r, g, b);
+  switch (encoding) {
+    case "mapbox":
+      return decodeMapboxElevation(r, g, b);
+    case "terrarium":
+      return decodeTerrariumElevation(r, g, b);
+  }
 }
 
 /**

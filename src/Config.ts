@@ -33,6 +33,7 @@ export type TileElevationServerConfig = {
   type: "tile";
   url: string;
   zoom: number[];
+  tileEncoding: "mapbox" | "terrarium";
   tileSize: number;
   tileCacheDir: string;
   tileCacheMaxTiles: number;
@@ -169,11 +170,14 @@ function buildElevationServerConfig(url: string): ElevationServerConfig {
       return { type, url, batchSize };
     case "tileserver-gl":
       return { type, url, zoom: parseZoom(), batchSize };
-    case "tile":
+    case "tile": {
+      const tileEncoding = (process.env["ELEVATION_SERVER_TILE_ENCODING"] ??
+        "mapbox") as "mapbox" | "terrarium";
       return {
         type,
         url,
         zoom: parseZoom(),
+        tileEncoding,
         tileSize: process.env["ELEVATION_TILE_SIZE"]
           ? parseInt(process.env["ELEVATION_TILE_SIZE"])
           : 512,
@@ -187,6 +191,7 @@ function buildElevationServerConfig(url: string): ElevationServerConfig {
           : 4,
         batchSize,
       };
+    }
     default: {
       const exhaustiveCheck: never = type;
       throw new Error(`Unknown elevation server type: ${exhaustiveCheck}`);

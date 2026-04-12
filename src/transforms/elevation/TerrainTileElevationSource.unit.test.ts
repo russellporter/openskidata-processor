@@ -65,6 +65,7 @@ describe("TerrainTileElevationSource", () => {
 
     const source = new TerrainTileElevationSource({
       urlTemplate: "https://tiles.example.com/terrain/{z}/{x}/{y}.webp",
+      encoding: "mapbox",
       tileSize: 512,
       cacheDir: tmpDir,
       cacheMaxTiles: 100,
@@ -91,6 +92,7 @@ describe("TerrainTileElevationSource", () => {
 
     const source = new TerrainTileElevationSource({
       urlTemplate: "https://tiles.example.com/terrain/{z}/{x}/{y}.webp",
+      encoding: "mapbox",
       tileSize: 512,
       cacheDir: tmpDir,
       cacheMaxTiles: 100,
@@ -116,6 +118,7 @@ describe("TerrainTileElevationSource", () => {
 
     const source = new TerrainTileElevationSource({
       urlTemplate: "https://tiles.example.com/terrain/{z}/{x}/{y}.webp",
+      encoding: "mapbox",
       tileSize: 512,
       cacheDir: tmpDir,
       cacheMaxTiles: 100,
@@ -141,6 +144,7 @@ describe("TerrainTileElevationSource", () => {
 
     const source = new TerrainTileElevationSource({
       urlTemplate: "https://tiles.example.com/terrain/{z}/{x}/{y}.webp",
+      encoding: "mapbox",
       tileSize: 512,
       cacheDir: tmpDir,
       cacheMaxTiles: 100,
@@ -177,6 +181,7 @@ describe("TerrainTileElevationSource", () => {
 
     const source = new TerrainTileElevationSource({
       urlTemplate: "https://tiles.example.com/terrain/{z}/{x}/{y}.webp",
+      encoding: "mapbox",
       tileSize: 512,
       cacheDir: tmpDir,
       cacheMaxTiles: 100,
@@ -250,6 +255,7 @@ describe("TerrainTileElevationSource", () => {
 
     const source = new TerrainTileElevationSource({
       urlTemplate: "https://tiles.example.com/terrain/{z}/{x}/{y}.webp",
+      encoding: "mapbox",
       tileSize,
       cacheDir: tmpDir,
       cacheMaxTiles: 100,
@@ -302,6 +308,7 @@ describe("TerrainTileElevationSource", () => {
 
     const source = new TerrainTileElevationSource({
       urlTemplate: "https://tiles.example.com/terrain/{z}/{x}/{y}.webp",
+      encoding: "mapbox",
       tileSize,
       cacheDir: tmpDir,
       cacheMaxTiles: 100,

@@ -4,7 +4,11 @@ import {
   getInterpolationSetup,
   InterpolationSetup,
 } from "./TileCoordinates";
-import { elevationAtPixel, bilinearInterpolate } from "./ElevationDecoder";
+import {
+  elevationAtPixel,
+  bilinearInterpolate,
+  TileEncoding,
+} from "./ElevationDecoder";
 import { TileDiskCache } from "./TileDiskCache";
 
 type Result<T, E = string> = { ok: true; value: T } | { ok: false; error: E };
@@ -15,6 +19,7 @@ const CHANNELS = 3; // RGB
 
 export interface TerrainTileConfig {
   urlTemplate: string;
+  encoding: TileEncoding;
   tileSize: number;
   cacheDir: string;
   cacheMaxTiles: number;
@@ -180,6 +185,7 @@ export class TerrainTileElevationSource {
               corner.pixelY,
               tile.width,
               CHANNELS,
+              this.config.encoding,
             ),
           );
         }
