@@ -75,7 +75,9 @@ export function mergeOverlappingRuns(data: RunTopology) {
           };
           const geoJSONFeature = topojsonClient.feature(data, newGeometry);
           if (geoJSONFeature.geometry) {
-            newGeometry.properties!.viewportHint = computeViewportHint([geoJSONFeature.geometry]);
+            newGeometry.properties!.viewportHint = computeViewportHint([
+              geoJSONFeature.geometry,
+            ]);
           }
           data.objects.runs.geometries.push(newGeometry);
 

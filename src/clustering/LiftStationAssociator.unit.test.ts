@@ -1,7 +1,17 @@
-import { FeatureType, LiftType, SkiAreaActivity, SpotType, Status } from "openskidata-format";
+import {
+  FeatureType,
+  LiftType,
+  SkiAreaActivity,
+  SpotType,
+  Status,
+} from "openskidata-format";
 import { mockViewportHint } from "../testUtils";
 import { LiftStationAssociator } from "./LiftStationAssociator";
-import { ClusteringDatabase, Cursor, SearchContext } from "./database/ClusteringDatabase";
+import {
+  ClusteringDatabase,
+  Cursor,
+  SearchContext,
+} from "./database/ClusteringDatabase";
 import { LiftObject, MapObject, SpotObject } from "./MapObject";
 
 function makeCursor<T>(items: T[]): Cursor<T> {
@@ -95,7 +105,10 @@ function makeStation(): SpotObject {
   };
 }
 
-function makeDatabase(lifts: LiftObject[], station: SpotObject): {
+function makeDatabase(
+  lifts: LiftObject[],
+  station: SpotObject,
+): {
   database: ClusteringDatabase;
   capturedContexts: SearchContext[];
   updatedObjects: Array<{ key: string; updates: any }>;
@@ -129,7 +142,10 @@ function makeDatabase(lifts: LiftObject[], station: SpotObject): {
     markObjectsAsPartOfSkiArea: async () => {},
     getNextUnassignedRun: async () => null,
     streamObjects: async function* () {},
-    getObjectDerivedSkiAreaGeometry: async () => ({ type: "Point", coordinates: [0, 0] }),
+    getObjectDerivedSkiAreaGeometry: async () => ({
+      type: "Point",
+      coordinates: [0, 0],
+    }),
   };
 
   return { database, capturedContexts, updatedObjects };
@@ -140,7 +156,10 @@ describe("LiftStationAssociator", () => {
     it("queries for nearby lifts without activity filtering", async () => {
       const proposedLift = makeLift([]); // proposed lifts have no activities
       const station = makeStation();
-      const { database, capturedContexts } = makeDatabase([proposedLift], station);
+      const { database, capturedContexts } = makeDatabase(
+        [proposedLift],
+        station,
+      );
 
       const associator = new LiftStationAssociator(database);
       await associator.associateStationsWithLifts();
@@ -152,7 +171,10 @@ describe("LiftStationAssociator", () => {
     it("snaps station to a proposed lift", async () => {
       const proposedLift = makeLift([]); // proposed lifts have no activities
       const station = makeStation();
-      const { database, updatedObjects } = makeDatabase([proposedLift], station);
+      const { database, updatedObjects } = makeDatabase(
+        [proposedLift],
+        station,
+      );
 
       const associator = new LiftStationAssociator(database);
       await associator.associateStationsWithLifts();
@@ -164,7 +186,10 @@ describe("LiftStationAssociator", () => {
     it("snaps station to an operating lift", async () => {
       const operatingLift = makeLift([SkiAreaActivity.Downhill]);
       const station = makeStation();
-      const { database, updatedObjects } = makeDatabase([operatingLift], station);
+      const { database, updatedObjects } = makeDatabase(
+        [operatingLift],
+        station,
+      );
 
       const associator = new LiftStationAssociator(database);
       await associator.associateStationsWithLifts();

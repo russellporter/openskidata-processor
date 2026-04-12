@@ -144,7 +144,6 @@ function formatSkiMapOrg(
   );
 }
 
-
 function propertiesForOpenStreetMapSkiArea(
   osmID: string,
   tags: OSMSkiAreaTags,
