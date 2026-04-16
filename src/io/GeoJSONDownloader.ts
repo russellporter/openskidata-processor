@@ -146,7 +146,7 @@ async function _downloadToFile(
   targetPath: string,
 ): Promise<void> {
   const response = await fetch(sourceURL, {
-    headers: { Referer: "https://openskimap.org" },
+    headers: { Referer: "https://openskimap.org", "User-Agent": "openskidata-processor (+https://openskimap.org)" },
     signal: AbortSignal.timeout(30 * 60 * 1000),
   });
 
