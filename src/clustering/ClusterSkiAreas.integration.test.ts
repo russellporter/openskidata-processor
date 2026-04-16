@@ -2610,7 +2610,7 @@ it("keeps landuse based ski area when there is a site with insufficient overlap"
         geometry: {
           type: "LineString",
           coordinates: [
-            [1, 0],
+            [0, 0],
             [1, 1],
           ],
         },
@@ -2622,8 +2622,8 @@ it("keeps landuse based ski area when there is a site with insufficient overlap"
         geometry: {
           type: "LineString",
           coordinates: [
+            [0, 1],
             [1, 0],
-            [1, 1],
           ],
         },
         name: "Run",

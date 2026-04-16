@@ -65,6 +65,11 @@ import mergeSkiAreaObjects from "./MergeSkiAreaObjects";
 
 const maxDistanceInKilometers = 0.5;
 
+function objectLengthKm(obj: LiftObject | RunObject): number {
+  const raw = length(turf.feature(obj.geometry));
+  return obj.geometry.type === "Polygon" ? raw / 3 : raw;
+}
+
 export const allSkiAreaActivities = new Set([
   SkiAreaActivity.Downhill,
   SkiAreaActivity.Nordic,
@@ -668,17 +673,27 @@ export class SkiAreaClusteringService {
       (object) => object.isInSkiAreaSite,
     );
 
+    const totalLength = liftsAndRuns.reduce(
+      (sum, obj) => sum + objectLengthKm(obj),
+      0,
+    );
+    const siteRelationLength = liftsAndRunsInSiteRelation.reduce(
+      (sum, obj) => sum + objectLengthKm(obj),
+      0,
+    );
+
     const removeDueToSignificantObjectsInSiteRelation =
       options.skiArea.removeIfSubstantialNumberOfObjectsInSkiAreaSite &&
-      liftsAndRunsInSiteRelation.length / liftsAndRuns.length > 0.5;
+      totalLength > 0 &&
+      siteRelationLength / totalLength > 0.5;
 
     if (removeDueToSignificantObjectsInSiteRelation) {
       console.log(
         `Removing ski area (${JSON.stringify(
           skiArea.properties.sources,
-        )}) as a substantial number of objects were in a site=piste relation (${
-          liftsAndRunsInSiteRelation.length
-        } / ${liftsAndRuns.length}).`,
+        )}) as a substantial length of objects were in a site=piste relation (${
+          siteRelationLength.toFixed(2)
+        }km / ${totalLength.toFixed(2)}km).`,
       );
       await this.database.removeObject(skiArea._key);
       return null;
