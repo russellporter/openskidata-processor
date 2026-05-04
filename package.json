@@ -46,7 +46,7 @@
     "tmp": "^0.2.4",
     "topojson-client": "^3",
     "topojson-server": "^3",
-    "uuid": "^10"
+    "uuid": "^14"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
