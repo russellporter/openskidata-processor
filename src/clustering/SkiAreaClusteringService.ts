@@ -22,7 +22,7 @@ import {
 } from "openskidata-format";
 import { Writable } from "stream";
 import { pipeline } from "stream/promises";
-import { v4 as uuid } from "uuid";
+import { uuid } from "../utils/uuid";
 import {
   ElevationServerConfig,
   GeocodingServerConfig,

@@ -24,8 +24,8 @@ import { toSkiAreaSummary } from "../transforms/toSkiAreaSummary";
 import clusterSkiAreas from "./ClusterSkiAreas";
 
 let mockUuidCount = 0;
-jest.mock("uuid", () => {
-  return { v4: () => "mock-UUID-" + mockUuidCount++ };
+jest.mock("../utils/uuid", () => {
+  return { uuid: () => "mock-UUID-" + mockUuidCount++ };
 });
 
 // Increase timeout to give time to set up PostgreSQL database
