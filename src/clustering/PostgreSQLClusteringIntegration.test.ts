@@ -19,9 +19,9 @@ import { Config, getPostgresTestConfig } from "../Config";
 jest.setTimeout(60 * 1000);
 
 let mockUuidCount = 0;
-jest.mock("uuid", () => {
+jest.mock("../utils/uuid", () => {
   return {
-    v4: () => "mock-UUID-" + mockUuidCount++,
+    uuid: () => "mock-UUID-" + mockUuidCount++,
   };
 });
 
