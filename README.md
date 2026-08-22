@@ -171,6 +171,14 @@ Riggs, G. A. & Hall, D. K. (2023). VIIRS/NPP Snow Cover Daily L3 Global 375m SIN
 
 Pass `GENERATE_TILES=1` to enable generation of Mapbox Vector Tiles (MVT) output. This will output an `.mbtiles` file in the output directory.
 
+### Ski passes
+
+Ski areas can be annotated with the multi-resort season passes they are on (Ikon, Epic, Indy, Mountain Collective and others), taken from a community maintained "masterchart" spreadsheet of each pass's roster.
+
+Set `SKI_PASS_CSV_URL` to a CSV export of that spreadsheet to enable it. This adds `skiPasses`, `averageSnowfallInCm` and `skiableAreaInSqKm` to each ski area, and writes the passes themselves as `ski_passes.json` plus a `csv/ski_passes.csv` join table of every ski area on every pass.
+
+The join is deterministic, so it can run unattended: roster entries are matched to ski areas by name within the region the chart gives, and an entry that cannot be resolved to exactly one ski area is never guessed at. Those are listed in `src/skiPasses/overrides.json`, either mapped by source ID to the ski areas they cover (a roster entry can cover a network of them) or recorded as unmatchable with a reason. A roster entry that is neither matched nor listed there fails the run, so the file stays current as the rosters change. Set `SKI_PASS_OVERRIDES_PATH` to use a different file.
+
 ## Issue reporting
 
 Feature requests and bug reports are tracked in the [main project repo](https://github.com/russellporter/openskimap.org/issues/).

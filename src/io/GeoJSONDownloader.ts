@@ -19,6 +19,7 @@ import convertOSMFileToGeoJSON from "./OSMToGeoJSONConverter";
 export default async function downloadAndConvertToGeoJSON(
   folder: string,
   bbox: GeoJSON.BBox | null,
+  skiPassChartURL: string | null = null,
 ): Promise<InputDataPaths> {
   return await performanceMonitor.withPhase("Phase 1: Download", async () => {
     const paths = new InputDataPaths(folder);
@@ -61,6 +62,16 @@ export default async function downloadAndConvertToGeoJSON(
         downloadSkiMapOrgSkiAreas(paths.geoJSON.skiMapSkiAreas, bbox),
       ]);
     });
+
+    if (skiPassChartURL !== null) {
+      await performanceMonitor.withOperation(
+        "Downloading ski pass chart",
+        async () => {
+          // The chart is a worldwide roster with no geometry, so the bounding box does not apply.
+          await downloadToFile(skiPassChartURL, paths.skiPassChart);
+        },
+      );
+    }
 
     // Conversions are done serially for lower memory pressure.
     await performanceMonitor.withOperation("Converting to JSON", async () => {
@@ -146,7 +157,10 @@ async function _downloadToFile(
   targetPath: string,
 ): Promise<void> {
   const response = await fetch(sourceURL, {
-    headers: { Referer: "https://openskimap.org", "User-Agent": "openskidata-processor (+https://openskimap.org)" },
+    headers: {
+      Referer: "https://openskimap.org",
+      "User-Agent": "openskidata-processor (+https://openskimap.org)",
+    },
     signal: AbortSignal.timeout(30 * 60 * 1000),
   });
 

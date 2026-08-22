@@ -38,6 +38,8 @@ export interface MapboxGLSkiAreaProperties {
   vertical: number | null;
   downhillDistance: number | null;
   nordicDistance: number | null;
+  // Semicolon separated ski pass IDs, for filtering. Absent when the ski area is on no pass.
+  ski_passes?: string;
 }
 
 export type InputSkiMapOrgSkiAreaFeature = GeoJSON.Feature<

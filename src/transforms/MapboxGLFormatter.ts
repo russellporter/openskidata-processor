@@ -238,6 +238,16 @@ export function formatter(
       mapboxGLProperties.has_nordic = true;
     }
 
+    // Ski pass data is added by the optional ski pass enrichment phase, and is not yet part of
+    // `SkiAreaProperties` in openskidata-format.
+    const skiPasses = (
+      properties as typeof properties & { skiPasses?: { passID: string }[] }
+    ).skiPasses;
+    const passIDs = unique((skiPasses ?? []).map((pass) => pass.passID));
+    if (passIDs.length > 0) {
+      mapboxGLProperties.ski_passes = passIDs.join(";");
+    }
+
     return {
       type: feature.type,
       geometry: centralPointsInFeature(feature.geometry),

@@ -48,6 +48,13 @@ export type ElevationServerConfig =
 
 export type TilesConfig = { mbTilesPath: string; tilesDir: string };
 
+export type SkiPassConfig = {
+  // CSV export of the ski pass chart (a spreadsheet of each pass's roster of ski areas)
+  csvURL: string;
+  // Hand-maintained mappings for roster entries the name matcher cannot resolve
+  overridesPath: string;
+};
+
 export type PostgresConfig = {
   host: string;
   port: number;
@@ -76,6 +83,8 @@ export interface Config {
   tiles: TilesConfig | null;
   // PostgreSQL cache configuration
   postgresCache: PostgresConfig;
+  // Ski pass (multi-resort season pass) data integration
+  skiPasses: SkiPassConfig | null;
 }
 
 export function configFromEnvironment(): Config {
@@ -140,6 +149,15 @@ export function configFromEnvironment(): Config {
           }
         : null,
     postgresCache: getPostgresConfig(),
+    skiPasses: process.env.SKI_PASS_CSV_URL
+      ? {
+          csvURL: process.env.SKI_PASS_CSV_URL,
+          // Checked into the repository rather than built, so it is read from the source tree.
+          overridesPath:
+            process.env.SKI_PASS_OVERRIDES_PATH ??
+            path.join("src", "skiPasses", "overrides.json"),
+        }
+      : null,
   };
 }
 
