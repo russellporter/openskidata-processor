@@ -46,8 +46,9 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
     INSERT INTO objects
     (key, type, source, geometry, geom, is_polygon, activities, ski_areas,
      is_basis_for_new_ski_area, is_in_ski_area_polygon, is_in_ski_area_site,
-     lift_type, station_ids, difficulty, viirs_pixels, spot_type, properties)
-    VALUES ($1, $2, $3, $4, ST_MakeValid(ST_Force2D(ST_GeomFromGeoJSON($5)), 'method=structure'), $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+     site_ski_areas, lift_type, station_ids, difficulty, viirs_pixels, spot_type,
+     properties)
+    VALUES ($1, $2, $3, $4, ST_MakeValid(ST_Force2D(ST_GeomFromGeoJSON($5)), 'method=structure'), $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
     ON CONFLICT (key) DO UPDATE SET
       type = EXCLUDED.type,
       source = EXCLUDED.source,
@@ -59,6 +60,7 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
       is_basis_for_new_ski_area = EXCLUDED.is_basis_for_new_ski_area,
       is_in_ski_area_polygon = EXCLUDED.is_in_ski_area_polygon,
       is_in_ski_area_site = EXCLUDED.is_in_ski_area_site,
+      site_ski_areas = EXCLUDED.site_ski_areas,
       lift_type = EXCLUDED.lift_type,
       station_ids = EXCLUDED.station_ids,
       difficulty = EXCLUDED.difficulty,
@@ -262,6 +264,7 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
       (object as any).isBasisForNewSkiArea ? true : false,
       (object as any).isInSkiAreaPolygon ? true : false,
       (object as any).isInSkiAreaSite ? true : false,
+      JSON.stringify((object as any).siteSkiAreas || []),
       (object as any).liftType || null,
       JSON.stringify((object as any).stationIds || []),
       (object as any).difficulty || null,
@@ -350,6 +353,7 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
         is_basis_for_new_ski_area BOOLEAN DEFAULT FALSE,
         is_in_ski_area_polygon BOOLEAN DEFAULT FALSE,
         is_in_ski_area_site BOOLEAN DEFAULT FALSE,
+        site_ski_areas JSONB,
         lift_type TEXT,
         station_ids JSONB,
         difficulty TEXT,
@@ -886,6 +890,7 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
       baseObject.liftType = row.lift_type;
       baseObject.stationIds = row.station_ids || [];
       baseObject.isInSkiAreaSite = Boolean(row.is_in_ski_area_site);
+      baseObject.siteSkiAreas = row.site_ski_areas || [];
       baseObject.properties = row.properties || { places: [] };
     } else if (row.type === FeatureType.Run) {
       baseObject.difficulty = row.difficulty;
@@ -893,9 +898,11 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
       baseObject.snowfarming = row.properties?.snowfarming ?? null;
       baseObject.viirsPixels = row.viirs_pixels || [];
       baseObject.isInSkiAreaSite = Boolean(row.is_in_ski_area_site);
+      baseObject.siteSkiAreas = row.site_ski_areas || [];
       baseObject.properties = row.properties || { places: [] };
     } else if (row.type === FeatureType.Spot) {
       baseObject.isInSkiAreaSite = Boolean(row.is_in_ski_area_site);
+      baseObject.siteSkiAreas = row.site_ski_areas || [];
       baseObject.properties = row.properties || { places: [] };
     }
 

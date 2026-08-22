@@ -27,6 +27,9 @@ export interface DraftRun extends BaseDraftMapObject {
   isBasisForNewSkiArea: boolean;
   isInSkiAreaPolygon: boolean;
   isInSkiAreaSite: boolean;
+  // IDs of the site=piste relations this object is a member of. Unlike `skiAreas`,
+  // this is set once when the object is loaded and is never appended to during clustering.
+  siteSkiAreas: string[];
   difficulty: RunDifficulty | null;
   snowmaking: boolean | null;
   snowfarming: boolean | null;
@@ -45,6 +48,7 @@ export interface DraftLift extends BaseDraftMapObject {
   liftType: LiftType;
   isInSkiAreaPolygon: boolean;
   isInSkiAreaSite: boolean;
+  siteSkiAreas: string[];
   stationIds: string[];
   properties: LiftProperties;
 }
@@ -54,6 +58,7 @@ export interface DraftSpot extends BaseDraftMapObject {
   geometry: SpotGeometry;
   isInSkiAreaPolygon: boolean;
   isInSkiAreaSite: boolean;
+  siteSkiAreas: string[];
   properties: SpotProperties;
 }
 

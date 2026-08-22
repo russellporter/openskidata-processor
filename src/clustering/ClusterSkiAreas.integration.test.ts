@@ -2681,6 +2681,225 @@ it("keeps landuse based ski area when there is a site with insufficient overlap"
   `);
 });
 
+it("keeps an umbrella landuse ski area spanning several sites, while removing the landuse ski areas that duplicate a single site", async () => {
+  const paths = TestHelpers.getFilePaths();
+
+  // Three neighbouring sub-areas, each mapped both as a site=piste relation and as a
+  // landuse=winter_sports polygon, plus an umbrella landuse polygon covering all of
+  // them. Each site accounts for only a third of the umbrella's runs, so the umbrella
+  // is not a duplicate of any single site and must be kept.
+  const subAreas = ["west", "middle", "east"].map((name, index) => {
+    const longitude = index * 0.1;
+    return {
+      site: TestHelpers.mockSkiAreaSiteFeature({
+        id: `${name}-site`,
+        osmID: index + 1,
+        name: `${name} site`,
+        activities: [],
+        sources: [
+          { type: SourceType.OPENSTREETMAP, id: `relation/${index + 1}` },
+        ],
+      }),
+      landuse: TestHelpers.mockSkiAreaFeature({
+        id: `${name}-landuse`,
+        name: `${name} landuse`,
+        activities: [],
+        sources: [{ type: SourceType.OPENSTREETMAP, id: `way/${index + 1}` }],
+        geometry: {
+          type: "Polygon",
+          coordinates: [
+            [
+              [longitude - 0.005, -0.005],
+              [longitude + 0.015, -0.005],
+              [longitude + 0.015, 0.005],
+              [longitude - 0.005, 0.005],
+              [longitude - 0.005, -0.005],
+            ],
+          ],
+        },
+      }),
+      longitude: longitude,
+      name: name,
+    };
+  });
+
+  const umbrellaLanduse = TestHelpers.mockSkiAreaFeature({
+    id: "umbrella-landuse",
+    name: "Umbrella",
+    activities: [],
+    sources: [{ type: SourceType.OPENSTREETMAP, id: "relation/4" }],
+    geometry: {
+      type: "Polygon",
+      coordinates: [
+        [
+          [-0.01, -0.01],
+          [0.22, -0.01],
+          [0.22, 0.01],
+          [-0.01, 0.01],
+          [-0.01, -0.01],
+        ],
+      ],
+    },
+  });
+
+  const runs = subAreas.flatMap((subArea) =>
+    [0, 0.002].map((latitude, index) =>
+      TestHelpers.mockRunFeature({
+        id: `${subArea.name}-run-${index + 1}`,
+        name: `${subArea.name}-run-${index + 1}`,
+        uses: [RunUse.Downhill],
+        difficulty: RunDifficulty.EASY,
+        skiAreas: [subArea.site],
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [subArea.longitude, latitude],
+            [subArea.longitude + 0.01, latitude],
+          ],
+        },
+      }),
+    ),
+  );
+
+  TestHelpers.mockFeatureFiles(
+    [
+      ...subAreas.map((subArea) => subArea.site),
+      ...subAreas.map((subArea) => subArea.landuse),
+      umbrellaLanduse,
+    ],
+    [],
+    runs,
+    paths.intermediate,
+  );
+
+  await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
+
+  // The three landuse polygons duplicating a single site each are removed, the
+  // umbrella polygon spanning all three sites is kept.
+  expect(
+    TestHelpers.fileContents(paths.output.skiAreas)
+      .features.map(simplifiedSkiAreaFeatureWithSources)
+      .sort((left: { name: string }, right: { name: string }) =>
+        left.name.localeCompare(right.name),
+      ),
+  ).toMatchInlineSnapshot(`
+[
+  {
+    "activities": [
+      "downhill",
+    ],
+    "id": "east-site",
+    "name": "east site",
+    "sources": [
+      {
+        "id": "relation/3",
+        "type": "openstreetmap",
+      },
+    ],
+  },
+  {
+    "activities": [
+      "downhill",
+    ],
+    "id": "middle-site",
+    "name": "middle site",
+    "sources": [
+      {
+        "id": "relation/2",
+        "type": "openstreetmap",
+      },
+    ],
+  },
+  {
+    "activities": [
+      "downhill",
+    ],
+    "id": "umbrella-landuse",
+    "name": "Umbrella",
+    "sources": [
+      {
+        "id": "relation/4",
+        "type": "openstreetmap",
+      },
+    ],
+  },
+  {
+    "activities": [
+      "downhill",
+    ],
+    "id": "west-site",
+    "name": "west site",
+    "sources": [
+      {
+        "id": "relation/1",
+        "type": "openstreetmap",
+      },
+    ],
+  },
+]
+`);
+
+  // Runs belong to both their own site and the umbrella ski area.
+  expect(
+    TestHelpers.fileContents(paths.output.runs)
+      .features.map(simplifiedRunFeature)
+      .sort((left: { id: string }, right: { id: string }) =>
+        left.id.localeCompare(right.id),
+      ),
+  ).toMatchInlineSnapshot(`
+[
+  {
+    "id": "east-run-1",
+    "name": "east-run-1",
+    "skiAreas": [
+      "east-site",
+      "umbrella-landuse",
+    ],
+  },
+  {
+    "id": "east-run-2",
+    "name": "east-run-2",
+    "skiAreas": [
+      "east-site",
+      "umbrella-landuse",
+    ],
+  },
+  {
+    "id": "middle-run-1",
+    "name": "middle-run-1",
+    "skiAreas": [
+      "middle-site",
+      "umbrella-landuse",
+    ],
+  },
+  {
+    "id": "middle-run-2",
+    "name": "middle-run-2",
+    "skiAreas": [
+      "middle-site",
+      "umbrella-landuse",
+    ],
+  },
+  {
+    "id": "west-run-1",
+    "name": "west-run-1",
+    "skiAreas": [
+      "umbrella-landuse",
+      "west-site",
+    ],
+  },
+  {
+    "id": "west-run-2",
+    "name": "west-run-2",
+    "skiAreas": [
+      "umbrella-landuse",
+      "west-site",
+    ],
+  },
+]
+`);
+});
+
 it("keeps site=piste ski area with only backcountry runs", async () => {
   const paths = TestHelpers.getFilePaths();
   const siteSkiArea = TestHelpers.mockSkiAreaSiteFeature({

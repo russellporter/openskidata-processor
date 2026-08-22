@@ -226,6 +226,9 @@ export class SkiAreaClusteringService {
       ),
       isInSkiAreaPolygon: false,
       isInSkiAreaSite: feature.properties.skiAreas.length > 0,
+      siteSkiAreas: feature.properties.skiAreas.map(
+        (skiArea) => skiArea.properties.id,
+      ),
       liftType: properties.liftType,
       stationIds: [],
       properties: {
@@ -289,6 +292,9 @@ export class SkiAreaClusteringService {
       ),
       isInSkiAreaPolygon: false,
       isInSkiAreaSite: isInSkiAreaSite,
+      siteSkiAreas: feature.properties.skiAreas.map(
+        (skiArea) => skiArea.properties.id,
+      ),
       activities: activities,
       difficulty: feature.properties.difficulty,
       snowmaking: properties.snowmaking,
@@ -316,6 +322,9 @@ export class SkiAreaClusteringService {
       ),
       isInSkiAreaPolygon: false,
       isInSkiAreaSite: feature.properties.skiAreas.length > 0,
+      siteSkiAreas: feature.properties.skiAreas.map(
+        (skiArea) => skiArea.properties.id,
+      ),
       properties: feature.properties,
     };
   }
@@ -669,31 +678,47 @@ export class SkiAreaClusteringService {
       (object): object is LiftObject | RunObject =>
         object.type === FeatureType.Lift || object.type === FeatureType.Run,
     );
-    const liftsAndRunsInSiteRelation = liftsAndRuns.filter(
-      (object) => object.isInSkiAreaSite,
-    );
-
     const totalLength = liftsAndRuns.reduce(
       (sum, obj) => sum + objectLengthKm(obj),
       0,
     );
-    const siteRelationLength = liftsAndRunsInSiteRelation.reduce(
-      (sum, obj) => sum + objectLengthKm(obj),
-      0,
-    );
+
+    // Coverage is measured against each site=piste relation individually, not against
+    // all of them combined. A landuse polygon that duplicates a single site relation
+    // should give way to that relation, but an umbrella polygon spanning several
+    // sub-areas that each have their own site relation is not a duplicate of any of
+    // them and must be kept (e.g. OSM relation 7772597, Kleinwalsertal-Oberstdorf).
+    const lengthBySiteSkiArea = new Map<string, number>();
+    for (const object of liftsAndRuns) {
+      const objectLength = objectLengthKm(object);
+      for (const siteSkiAreaID of object.siteSkiAreas) {
+        lengthBySiteSkiArea.set(
+          siteSkiAreaID,
+          (lengthBySiteSkiArea.get(siteSkiAreaID) ?? 0) + objectLength,
+        );
+      }
+    }
+
+    let largestSiteRelationLength = 0;
+    for (const siteRelationLength of lengthBySiteSkiArea.values()) {
+      largestSiteRelationLength = Math.max(
+        largestSiteRelationLength,
+        siteRelationLength,
+      );
+    }
 
     const removeDueToSignificantObjectsInSiteRelation =
       options.skiArea.removeIfSubstantialNumberOfObjectsInSkiAreaSite &&
       totalLength > 0 &&
-      siteRelationLength / totalLength > 0.5;
+      largestSiteRelationLength / totalLength > 0.5;
 
     if (removeDueToSignificantObjectsInSiteRelation) {
       console.log(
         `Removing ski area (${JSON.stringify(
           skiArea.properties.sources,
-        )}) as a substantial length of objects were in a site=piste relation (${
-          siteRelationLength.toFixed(2)
-        }km / ${totalLength.toFixed(2)}km).`,
+        )}) as a substantial length of objects were in a single site=piste relation (${largestSiteRelationLength.toFixed(
+          2,
+        )}km / ${totalLength.toFixed(2)}km).`,
       );
       await this.database.removeObject(skiArea._key);
       return null;

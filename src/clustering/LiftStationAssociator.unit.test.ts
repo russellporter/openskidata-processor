@@ -45,6 +45,7 @@ function makeLift(activities: SkiAreaActivity[]): LiftObject {
     liftType: LiftType.ChairLift,
     isInSkiAreaPolygon: false,
     isInSkiAreaSite: false,
+    siteSkiAreas: [],
     stationIds: [],
     properties: {
       type: FeatureType.Lift,
@@ -88,6 +89,7 @@ function makeStation(): SpotObject {
     skiAreas: [],
     isInSkiAreaPolygon: false,
     isInSkiAreaSite: false,
+    siteSkiAreas: [],
     properties: {
       type: FeatureType.Spot,
       id: "station-1",
