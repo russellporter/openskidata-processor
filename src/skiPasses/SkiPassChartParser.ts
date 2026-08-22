@@ -1,0 +1,370 @@
+import { parse } from "csv-parse/sync";
+import { SkiPassDefinition, skiPassForBlockTitle } from "./SkiPassDefinitions";
+import {
+  SkiPassChartStatistics,
+  SkiPassMembership,
+  SkiPassRosterEntry,
+} from "./SkiPassTypes";
+
+const CM_PER_INCH = 2.54;
+const SQ_KM_PER_ACRE = 0.00404686;
+const METERS_PER_FOOT = 0.3048;
+
+// A chart with fewer blocks or rows than this has almost certainly changed shape rather than
+// legitimately shrunk, so parsing fails instead of silently dropping most of the rosters.
+const MINIMUM_ROSTER_BLOCKS = 8;
+const MINIMUM_ROSTER_ENTRIES = 400;
+
+// The header row is found by structure rather than by a fixed index, since the chart's preamble
+// rows change. It is the first row containing several "Location" / ski area name header pairs.
+// The pair matters: the chart's preamble also has a row of "LOCATION" section labels.
+const MINIMUM_ROSTER_HEADER_PAIRS = 3;
+const MAXIMUM_HEADER_ROW_INDEX = 20;
+
+type Grid = string[][];
+
+function cell(grid: Grid, row: number, column: number): string {
+  const values = grid[row];
+  if (values === undefined) {
+    return "";
+  }
+  return values[column] ?? "";
+}
+
+/** Collapses the line breaks the chart uses inside header cells, and lowercases. */
+function headerKey(value: string): string {
+  return value.replace(/\s+/g, " ").trim().toLowerCase();
+}
+
+function columnCount(grid: Grid): number {
+  return grid.reduce((max, row) => Math.max(max, row.length), 0);
+}
+
+/** Columns where a "Location" header is followed by the roster's ski area name header. */
+function findRosterHeaderColumns(grid: Grid, row: number): number[] {
+  const columns: number[] = [];
+  for (let column = 0; column < columnCount(grid); column++) {
+    const isLocation = headerKey(cell(grid, row, column)) === "location";
+    const nameHeader = headerKey(cell(grid, row, column + 1));
+    if (
+      isLocation &&
+      (nameHeader === "mountain" || nameHeader === "ski area")
+    ) {
+      columns.push(column);
+    }
+  }
+  return columns;
+}
+
+function findHeaderRow(grid: Grid): number {
+  const limit = Math.min(grid.length, MAXIMUM_HEADER_ROW_INDEX);
+  for (let row = 0; row < limit; row++) {
+    if (
+      findRosterHeaderColumns(grid, row).length >= MINIMUM_ROSTER_HEADER_PAIRS
+    ) {
+      return row;
+    }
+  }
+  throw new Error(
+    "Could not find the ski pass chart header row: no row has several 'Location' / ski area name header pairs.",
+  );
+}
+
+interface RosterBlock {
+  pass: SkiPassDefinition;
+  /** Column of the block's "Location" header. The name column is the next one. */
+  startColumn: number;
+  /** Column after the last one belonging to this block. */
+  endColumn: number;
+}
+
+function findRosterBlocks(grid: Grid, headerRow: number): RosterBlock[] {
+  const totalColumns = columnCount(grid);
+  const startColumns = findRosterHeaderColumns(grid, headerRow);
+
+  return startColumns.map((startColumn, index) => {
+    const endColumn = startColumns[index + 1] ?? totalColumns;
+    return {
+      pass: skiPassForBlockTitle(findBlockTitle(grid, startColumn, endColumn)),
+      startColumn,
+      endColumn,
+    };
+  });
+}
+
+/**
+ * The roster title is the first non-empty cell of the chart's title row within the block's
+ * columns. Blocks lay their title above their own columns, though not always above the first one.
+ */
+function findBlockTitle(
+  grid: Grid,
+  startColumn: number,
+  endColumn: number,
+): string {
+  for (let column = startColumn; column < endColumn; column++) {
+    const value = cell(grid, 0, column).trim();
+    if (value.length > 0) {
+      return value;
+    }
+  }
+  throw new Error(
+    `Ski pass chart roster block at column ${startColumn} has no title.`,
+  );
+}
+
+function parseNumber(value: string): number | null {
+  // Values carry thousands separators, trailing units and the occasional soft hyphen.
+  const digits = value.replace(/[^0-9.]/g, "");
+  if (digits.length === 0) {
+    return null;
+  }
+  const parsed = Number.parseFloat(digits);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+/** Converts and rounds, so unit conversion does not leave floating point noise in the output. */
+function convert(
+  value: string,
+  factor: number,
+  decimals: number,
+): number | null {
+  const parsed = parseNumber(value);
+  if (parsed === null) {
+    return null;
+  }
+  const scale = 10 ** decimals;
+  return Math.round(parsed * factor * scale) / scale;
+}
+
+interface BlockColumns {
+  name: number;
+  base: number | null;
+  summit: number | null;
+  skiableAcres: number | null;
+  averageSnowfallInches: number | null;
+  yearJoined: number | null;
+  tiers: { column: number; tier: string | null }[];
+}
+
+function resolveColumns(
+  grid: Grid,
+  headerRow: number,
+  block: RosterBlock,
+): BlockColumns {
+  const columns: BlockColumns = {
+    name: block.startColumn + 1,
+    base: null,
+    summit: null,
+    skiableAcres: null,
+    averageSnowfallInches: null,
+    yearJoined: null,
+    tiers: [],
+  };
+
+  const yearJoinedKey =
+    block.pass.yearJoinedColumn === null
+      ? null
+      : headerKey(block.pass.yearJoinedColumn);
+
+  for (let column = block.startColumn + 2; column < block.endColumn; column++) {
+    const key = headerKey(cell(grid, headerRow, column));
+    if (key.length === 0) {
+      continue;
+    }
+
+    // Stat headers are matched loosely: they wrap across several lines in the chart, so their
+    // exact spacing is not something to depend on.
+    if (columns.base === null && key.startsWith("base")) {
+      columns.base = column;
+    } else if (columns.summit === null && key.startsWith("summit")) {
+      columns.summit = column;
+    } else if (columns.skiableAcres === null && key.includes("skiable acres")) {
+      columns.skiableAcres = column;
+    } else if (
+      columns.averageSnowfallInches === null &&
+      key.startsWith("average snowfall")
+    ) {
+      columns.averageSnowfallInches = column;
+    }
+
+    if (yearJoinedKey !== null && key === yearJoinedKey) {
+      columns.yearJoined = column;
+    }
+
+    const tierColumn = block.pass.tierColumns.find(
+      (candidate) => headerKey(candidate.header) === key,
+    );
+    if (tierColumn !== undefined) {
+      columns.tiers.push({ column, tier: tierColumn.tier });
+    }
+  }
+
+  return columns;
+}
+
+function readStatistics(
+  grid: Grid,
+  row: number,
+  columns: BlockColumns,
+): SkiPassChartStatistics {
+  return {
+    averageSnowfallInCm:
+      columns.averageSnowfallInches === null
+        ? null
+        : convert(
+            cell(grid, row, columns.averageSnowfallInches),
+            CM_PER_INCH,
+            1,
+          ),
+    skiableAreaInSqKm:
+      columns.skiableAcres === null
+        ? null
+        : convert(cell(grid, row, columns.skiableAcres), SQ_KM_PER_ACRE, 3),
+  };
+}
+
+function readMemberships(
+  grid: Grid,
+  row: number,
+  block: RosterBlock,
+  columns: BlockColumns,
+): SkiPassMembership[] {
+  const yearJoined =
+    columns.yearJoined === null
+      ? null
+      : parseNumber(cell(grid, row, columns.yearJoined));
+
+  const memberships = columns.tiers
+    .map((tierColumn) => ({
+      tier: tierColumn.tier,
+      access: cell(grid, row, tierColumn.column).replace(/\s+/g, " ").trim(),
+    }))
+    .filter((tier) => tier.access.length > 0)
+    .map((tier) => ({
+      passID: block.pass.id,
+      passName: block.pass.name,
+      tier: tier.tier,
+      access: tier.access,
+      yearJoined,
+    }));
+
+  if (memberships.length > 0) {
+    return memberships;
+  }
+
+  // Some rosters (Ikon Midwest) have no per-tier access columns at all. Appearing in the roster
+  // is itself the membership.
+  return [
+    {
+      passID: block.pass.id,
+      passName: block.pass.name,
+      tier: null,
+      access: null,
+      yearJoined,
+    },
+  ];
+}
+
+/**
+ * A ski area can appear in more than one of a pass's roster blocks (the Mountain Collective
+ * roster and its "partners not on Ikon" annex overlap), which repeats its memberships.
+ */
+function uniqueMemberships(
+  memberships: SkiPassMembership[],
+): SkiPassMembership[] {
+  const seen = new Set<string>();
+  return memberships.filter((membership) => {
+    const key = `${membership.passID} ${membership.tier}`;
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
+}
+
+/**
+ * Parses the ski pass chart CSV into one entry per (ski pass, ski area) pair.
+ *
+ * The chart is a wide spreadsheet holding each pass's roster as a block of columns laid out side
+ * by side. Blocks are located structurally, by their "Location" / "Mountain" header pair, so that
+ * a block being added, removed or moved does not shift the others.
+ */
+export function parseSkiPassChart(contents: string): SkiPassRosterEntry[] {
+  const grid = parse(contents, {
+    relaxColumnCount: true,
+    skipEmptyLines: false,
+  }) as Grid;
+
+  if (grid.length === 0) {
+    throw new Error("Ski pass chart is empty.");
+  }
+
+  const headerRow = findHeaderRow(grid);
+  const blocks = findRosterBlocks(grid, headerRow);
+  if (blocks.length < MINIMUM_ROSTER_BLOCKS) {
+    throw new Error(
+      `Ski pass chart has only ${blocks.length} roster blocks, expected at least ${MINIMUM_ROSTER_BLOCKS}. The chart layout has likely changed.`,
+    );
+  }
+
+  const entries = new Map<string, SkiPassRosterEntry>();
+  for (const block of blocks) {
+    const columns = resolveColumns(grid, headerRow, block);
+    // The location cell is only filled in on the first row of each group.
+    let location = "";
+    for (let row = headerRow + 1; row < grid.length; row++) {
+      const rowLocation = cell(grid, row, block.startColumn).trim();
+      if (rowLocation.length > 0) {
+        location = rowLocation;
+      }
+      const mountain = cell(grid, row, columns.name)
+        .replace(/\s+/g, " ")
+        .trim();
+      if (mountain.length === 0) {
+        continue;
+      }
+      if (location.length === 0) {
+        throw new Error(
+          `Ski pass chart roster "${block.pass.name}" lists "${mountain}" with no location.`,
+        );
+      }
+
+      const memberships = readMemberships(grid, row, block, columns);
+      const key = [block.pass.id, location, mountain].join(" ");
+      const existing = entries.get(key);
+      if (existing !== undefined) {
+        existing.memberships.push(...memberships);
+        continue;
+      }
+
+      entries.set(key, {
+        passID: block.pass.id,
+        passName: block.pass.name,
+        location,
+        mountain,
+        memberships,
+        statistics: readStatistics(grid, row, columns),
+        baseElevationInMeters:
+          columns.base === null
+            ? null
+            : convert(cell(grid, row, columns.base), METERS_PER_FOOT, 1),
+        summitElevationInMeters:
+          columns.summit === null
+            ? null
+            : convert(cell(grid, row, columns.summit), METERS_PER_FOOT, 1),
+      });
+    }
+  }
+
+  const parsed = [...entries.values()].map((entry) => ({
+    ...entry,
+    memberships: uniqueMemberships(entry.memberships),
+  }));
+  if (parsed.length < MINIMUM_ROSTER_ENTRIES) {
+    throw new Error(
+      `Ski pass chart yielded only ${parsed.length} roster entries, expected at least ${MINIMUM_ROSTER_ENTRIES}. The chart layout has likely changed.`,
+    );
+  }
+  return parsed;
+}

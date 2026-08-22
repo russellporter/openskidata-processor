@@ -1,0 +1,138 @@
+{
+  "$comment": [
+    "Roster entries the name matcher cannot resolve on its own.",
+    "Ski areas are referenced as 'sourceType:sourceId', which is stable across runs, unlike the ski area ID.",
+    "'matches' may list several ski areas: a roster entry can cover a network of them.",
+    "'unmatchable' records roster entries with no ski area in the data, so the run does not fail on them.",
+    "Any roster entry that is neither matched nor listed here fails the run."
+  ],
+  "matches": [
+    {
+      "location": "Canada - British Columbia",
+      "mountain": "Baldy Mountain Resort",
+      "skiAreas": ["skimap.org:37"],
+      "note": "Known as Mt. Baldy Family Ski Area in the data."
+    },
+    {
+      "location": "Europe - Austria",
+      "mountain": "Innsbruck Ski & City Network",
+      "skiAreas": [
+        "openstreetmap:relation/6151454",
+        "openstreetmap:relation/6151431",
+        "openstreetmap:relation/6151487",
+        "openstreetmap:way/539214952",
+        "openstreetmap:relation/6125772",
+        "openstreetmap:way/539220541",
+        "openstreetmap:relation/5974835",
+        "openstreetmap:way/539209006"
+      ],
+      "note": "Nordkette, Patscherkofel, Axamer Lizum - Muttereralm, Rangger Köpfl, Glungezer, Kühtai, Schlick 2000, Stubaier Gletscher."
+    },
+    {
+      "location": "Europe - Austria",
+      "mountain": "Kitzbühel",
+      "skiAreas": ["openstreetmap:relation/10938000"],
+      "note": "Named KitzSki in the data."
+    },
+    {
+      "location": "Europe - Austria",
+      "mountain": "Rauriser-Hochalmbahnen",
+      "skiAreas": ["openstreetmap:way/341989985"],
+      "note": "Named Raurisertal in the data."
+    },
+    {
+      "location": "Europe - Austria",
+      "mountain": "Ski Welt",
+      "skiAreas": ["openstreetmap:relation/4643831"],
+      "note": "Named SkiWelt Wilder Kaiser - Brixental in the data."
+    },
+    {
+      "location": "Europe - France",
+      "mountain": "Chamonix Mont-Blanc Valley",
+      "skiAreas": [
+        "openstreetmap:way/642247840",
+        "openstreetmap:way/642251577",
+        "openstreetmap:way/642249053",
+        "openstreetmap:way/642259707",
+        "openstreetmap:way/642256846",
+        "openstreetmap:way/642233789",
+        "openstreetmap:way/642252996",
+        "openstreetmap:way/294934330"
+      ],
+      "note": "Brévent/Flégère, Les Grands Montets, Balme - Vallorcine, Aiguille du Midi, Les Planards, Le Tourchet, Les Chosalets, La Poya."
+    },
+    {
+      "location": "Europe - France",
+      "mountain": "Valmorel (Le Grand Domaine)",
+      "skiAreas": [
+        "openstreetmap:relation/20046699",
+        "openstreetmap:relation/5993118"
+      ],
+      "note": "Valmorel and Le Grand Domaine are duplicates of each other in the data (both carry skimap.org:793)."
+    },
+    {
+      "location": "Europe - Germany",
+      "mountain": "Oberstdorf-Kleinwalsertal",
+      "skiAreas": [
+        "openstreetmap:relation/18841519",
+        "openstreetmap:relation/18841440"
+      ],
+      "note": "Fellhorn/Kanzelwand and Nebelhorn."
+    },
+    {
+      "location": "Europe - Switzerland",
+      "mountain": "St. Moritz",
+      "skiAreas": [
+        "openstreetmap:relation/9061197",
+        "openstreetmap:relation/9056262",
+        "openstreetmap:relation/9061196"
+      ],
+      "note": "Corviglia, Corvatsch-Furtschellas, Diavolezza-Lagalb."
+    },
+    {
+      "location": "Japan (Fukushima)",
+      "mountain": "Nekoma Mountain",
+      "skiAreas": ["openstreetmap:way/322310180"],
+      "note": "Named Hoshino Resorts Nekoma Mountain in the data."
+    },
+    {
+      "location": "U.S. - Michigan",
+      "mountain": "The Highlands",
+      "skiAreas": ["openstreetmap:way/997160539"],
+      "note": "Still named Boyne Highlands Resort in the data."
+    },
+    {
+      "location": "U.S. - Vermont",
+      "mountain": "Middlebury Snowbowl",
+      "skiAreas": ["openstreetmap:way/32644222"],
+      "note": "Named Middlebury College Snow Bowl in the data."
+    },
+    {
+      "location": "U.S. - West Virginia",
+      "mountain": "Canaan Valley",
+      "skiAreas": [
+        "openstreetmap:way/908172888",
+        "openstreetmap:relation/12130404"
+      ],
+      "note": "Canaan Valley Ski Resort and Canaan Valley Resort are duplicates of each other in the data (both carry skimap.org:180)."
+    },
+    {
+      "location": "U.S. - West Virginia",
+      "mountain": "Silver Creek (Snowshoe)",
+      "skiAreas": ["openstreetmap:relation/5883752", "skimap.org:181"],
+      "note": "Silver Creek is part of Snowshoe Mountain, which appears twice in the data."
+    }
+  ],
+  "unmatchable": [
+    {
+      "location": "Japan (Gunma)",
+      "mountain": "Mt. T",
+      "reason": "No ski area of this name in OpenStreetMap or Skimap.org."
+    },
+    {
+      "location": "U.S. - North Dakota",
+      "mountain": "Thrill Hills",
+      "reason": "No ski area of this name in OpenStreetMap or Skimap.org."
+    }
+  ]
+}
