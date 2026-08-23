@@ -168,6 +168,7 @@ describe("GeoPackageWriter", () => {
         },
         properties: {
           type: FeatureType.SkiArea,
+          skiPasses: [],
           id: "test-area-1",
           name: "Test Ski Area",
           activities: ["downhill" as any],
@@ -237,6 +238,7 @@ describe("GeoPackageWriter", () => {
         },
         properties: {
           type: FeatureType.SkiArea,
+          skiPasses: [],
           id: "test-area-2",
           name: "Complex Ski Area",
           activities: ["downhill" as any],
@@ -478,6 +480,7 @@ describe("GeoPackageWriter", () => {
         },
         properties: {
           type: FeatureType.SkiArea,
+          skiPasses: [],
           id: "test-area-3",
           name: "Point Ski Area",
           activities: ["downhill" as any],
@@ -507,6 +510,7 @@ describe("GeoPackageWriter", () => {
         },
         properties: {
           type: FeatureType.SkiArea,
+          skiPasses: [],
           id: "test-area-4",
           name: "Polygon Ski Area",
           activities: ["downhill" as any],
@@ -528,6 +532,7 @@ describe("GeoPackageWriter", () => {
         },
         properties: {
           type: FeatureType.SkiArea,
+          skiPasses: [],
           id: "test-area-5",
           name: "Another Point Ski Area",
           activities: ["downhill" as any],
@@ -743,6 +748,7 @@ describe("GeoPackageWriter", () => {
               geometry: { type: "Point", coordinates: [0, 0] },
               properties: {
                 type: FeatureType.SkiArea,
+                skiPasses: [],
                 id: "123",
                 name: null,
                 activities: [],
@@ -755,6 +761,7 @@ describe("GeoPackageWriter", () => {
               geometry: { type: "Point", coordinates: [1, 1] },
               properties: {
                 type: FeatureType.SkiArea,
+                skiPasses: [],
                 // id is completely missing from this object
                 name: "Unnamed Resort",
                 activities: [],
@@ -767,6 +774,7 @@ describe("GeoPackageWriter", () => {
               geometry: { type: "Point", coordinates: [2, 2] },
               properties: {
                 type: FeatureType.SkiArea,
+                skiPasses: [],
                 id: "456",
                 name: "Complete Resort",
                 activities: [],

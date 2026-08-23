@@ -173,11 +173,15 @@ Pass `GENERATE_TILES=1` to enable generation of Mapbox Vector Tiles (MVT) output
 
 ### Ski passes
 
-Ski areas can be annotated with the multi-resort season passes they are on (Ikon, Epic, Indy, Mountain Collective and others), taken from a community maintained "masterchart" spreadsheet of each pass's roster.
+Ski areas are annotated with the multi-resort season passes they are on (Ikon, Epic, Indy, Mountain Collective and others), taken from [The Storm Skiing Journal's ski pass chart](https://docs.google.com/spreadsheets/d/1G2-l2DVg7-QwroOi7EqRDrJYJ4ICYLcJbLx-nARJdrA/edit?gid=677843907#gid=677843907), a spreadsheet of each pass's roster.
 
-Set `SKI_PASS_CSV_URL` to a CSV export of that spreadsheet to enable it. This adds `skiPasses`, `averageSnowfallInCm` and `skiableAreaInSqKm` to each ski area, and writes the passes themselves as `ski_passes.json` plus a `csv/ski_passes.csv` join table of every ski area on every pass.
+This adds `skiPasses` to each ski area, and writes the passes themselves as `ski_passes.json` plus a `csv/ski_passes.csv` join table of every ski area on every pass. Each membership and each pass carries a `stormskiing.com` source identifying the chart cell it came from, so `getSourceURL` links straight to it.
 
-The join is deterministic, so it can run unattended: roster entries are matched to ski areas by name within the region the chart gives, and an entry that cannot be resolved to exactly one ski area is never guessed at. Those are listed in `src/skiPasses/overrides.json`, either mapped by source ID to the ski areas they cover (a roster entry can cover a network of them) or recorded as unmatchable with a reason. A roster entry that is neither matched nor listed there fails the run, so the file stays current as the rosters change. Set `SKI_PASS_OVERRIDES_PATH` to use a different file.
+The chart is downloaded from its CSV export by default. Set `SKI_PASS_CSV_URL` to read a different export, or to the empty string to skip ski passes entirely.
+
+The join is deterministic, so it can run unattended: roster entries are matched to ski areas by name within the region the chart gives, and an entry that cannot be resolved to exactly one ski area is never guessed at. Those are listed in `src/skiPasses/overrides.json`, either mapped by source ID to the ski areas they cover (a roster entry can cover a network of them) or recorded as unmatchable with a reason. Set `SKI_PASS_OVERRIDES_PATH` to use a different file.
+
+On a run over every ski area, a roster entry that is neither matched nor listed in the override file fails the run, so the file stays current as the rosters change. When `BBOX` limits the run to an extract, an unresolved entry cannot be told apart from one whose ski area is simply outside it, so those are reported on each pass's `unresolvedRosterEntries` instead. `merge_outputs` combines regional `ski_passes.json` files by taking the union of each pass's ski areas, keeping an entry unresolved only where no region resolved it.
 
 ## Issue reporting
 

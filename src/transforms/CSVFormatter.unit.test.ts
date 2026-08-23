@@ -40,6 +40,28 @@ describe("CSVFormatter", () => {
               { type: SourceType.SKIMAP_ORG, id: "456" },
             ],
             runConvention: RunDifficultyConvention.EUROPE,
+            skiPasses: [
+              {
+                passID: "ikon",
+                passName: "Ikon Pass",
+                tier: null,
+                access: "U",
+                yearJoined: 2018,
+                sources: [
+                  { type: SourceType.STORM_SKIING, id: "677843907!AI64" },
+                ],
+              },
+              {
+                passID: "ikon",
+                passName: "Ikon Pass",
+                tier: "base",
+                access: "U",
+                yearJoined: 2018,
+                sources: [
+                  { type: SourceType.STORM_SKIING, id: "677843907!AI64" },
+                ],
+              },
+            ],
             websites: ["https://testskiarea.com"],
             wikidataID: null,
             places: [
@@ -101,7 +123,9 @@ describe("CSVFormatter", () => {
 
         const csv = formatter(FeatureType.SkiArea)(skiAreaFeature);
 
-        expect(csv).toMatchInlineSnapshot(`"Test Ski Area,United States,Colorado,Vail,operating,yes,yes,15,8,1200,1200,2400,4,,europe,,https://testskiarea.com,https://openskimap.org/?obj=test-ski-area,test-ski-area,Point,20.000000,10.000000,https://www.openstreetmap.org/123 https://www.skimap.org/SkiAreas/view/456,,,"`);
+        expect(csv).toMatchInlineSnapshot(
+          `"Test Ski Area,United States,Colorado,Vail,operating,yes,yes,15,8,1200,1200,2400,4,,europe,,https://testskiarea.com,https://openskimap.org/?obj=test-ski-area,test-ski-area,Point,20.000000,10.000000,https://www.openstreetmap.org/123 https://www.skimap.org/SkiAreas/view/456,ikon"`,
+        );
       });
     });
 
@@ -253,7 +277,7 @@ describe("CSVFormatter", () => {
       stream.write("test-data-2");
       stream.end(() => {
         expect(output).toMatchInlineSnapshot(`
-"name,countries,regions,localities,status,has_downhill,has_nordic,downhill_distance_km,nordic_distance_km,vertical_m,min_elevation_m,max_elevation_m,lift_count,surface_lifts_count,run_convention,wikidata_id,websites,openskimap,id,geometry,lat,lng,sources,ski_passes,average_snowfall_cm,skiable_area_sq_km
+"name,countries,regions,localities,status,has_downhill,has_nordic,downhill_distance_km,nordic_distance_km,vertical_m,min_elevation_m,max_elevation_m,lift_count,surface_lifts_count,run_convention,wikidata_id,websites,openskimap,id,geometry,lat,lng,sources,ski_passes
 test-data-1
 test-data-2
 "

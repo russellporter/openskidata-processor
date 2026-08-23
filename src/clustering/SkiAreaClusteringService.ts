@@ -1033,6 +1033,7 @@ export class SkiAreaClusteringService {
         activities: activities,
         status: Status.Operating,
         sources: [],
+        skiPasses: [],
         runConvention: getRunDifficultyConvention(geometry),
         websites: [],
         wikidataID: null,

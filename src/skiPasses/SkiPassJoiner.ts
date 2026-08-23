@@ -1,9 +1,15 @@
-import SkiAreaNameMatcher, { MatchableSkiArea } from "./SkiAreaNameMatcher";
-import { SkiPassOverrideIndex } from "./SkiPassOverrides";
 import {
   SkiPass,
-  SkiPassMatch,
+  SkiPassID,
   SkiPassMembership,
+  Source,
+} from "openskidata-format";
+import uniquedSources from "../transforms/UniqueSources";
+import SkiAreaNameMatcher, { MatchableSkiArea } from "./SkiAreaNameMatcher";
+import { SkiPassChart } from "./SkiPassChartParser";
+import { SkiPassOverrideIndex } from "./SkiPassOverrides";
+import {
+  SkiPassMatch,
   SkiPassRosterEntry,
   SkiPassSkiAreaData,
 } from "./SkiPassTypes";
@@ -35,28 +41,38 @@ function compareEntries(a: SkiPassRosterEntry, b: SkiPassRosterEntry): number {
  * The join is deterministic: the same chart and ski areas always produce the same result, and a
  * roster entry that cannot be resolved to a ski area is reported rather than guessed at. Entries
  * that the name matcher cannot resolve have to be listed in the override file, either mapped to
- * the ski areas they cover or recorded as unmatchable; anything else fails the run.
+ * the ski areas they cover or recorded as unmatchable; anything else fails a run over every ski
+ * area.
  */
 export default class SkiPassJoiner {
+  /**
+   * `coversEverySkiArea` is false when the ski areas are a geographic extract rather than the
+   * whole world, which is the only case where an unresolved roster entry is not an error.
+   */
   constructor(
-    private readonly entries: SkiPassRosterEntry[],
+    private readonly chart: SkiPassChart,
     private readonly overrides: SkiPassOverrideIndex,
+    private readonly coversEverySkiArea: boolean = true,
   ) {}
 
   join(skiAreas: JoinableSkiArea[]): SkiPassJoinResult {
+    const entries = this.chart.entries;
     const matcher = new SkiAreaNameMatcher(skiAreas);
     const bySource = indexBySource(skiAreas);
-    const byID = new Map(skiAreas.map((skiArea) => [skiArea.id, skiArea]));
 
-    const matches = [...this.entries]
+    const matches = [...entries]
       .sort(compareEntries)
       .map((entry) => this.matchEntry(entry, matcher, bySource));
 
-    failOnUnresolved(matches, this.overrides.unusedOverrides(this.entries));
+    reportUnresolved(
+      matches,
+      this.overrides.unusedOverrides(entries),
+      this.coversEverySkiArea,
+    );
 
     return {
       skiAreaData: collectSkiAreaData(matches),
-      passes: collectPasses(this.entries, matches, byID),
+      passes: collectPasses(entries, matches, this.chart.sourcesByPassID),
       matches,
     };
   }
@@ -71,6 +87,10 @@ export default class SkiPassJoiner {
       const skiAreas = override.skiAreas.flatMap((source) => {
         const found = bySource.get(source);
         if (found === undefined || found.length === 0) {
+          // On a geographic extract the ski area is simply outside it, which is not an error.
+          if (!this.coversEverySkiArea) {
+            return [];
+          }
           throw new Error(
             `Ski pass override for "${entry.mountain}" (${entry.location}) refers to ${source}, which is not a ski area in this data. Update src/skiPasses/overrides.json.`,
           );
@@ -132,9 +152,10 @@ function unique(values: string[]): string[] {
   return [...new Set(values)];
 }
 
-function failOnUnresolved(
+function reportUnresolved(
   matches: SkiPassMatch[],
   unusedOverrides: string[],
+  coversEverySkiArea: boolean,
 ): void {
   const unresolved = matches.filter(
     (match) => match.tier !== "unmatchable" && match.skiAreaIDs.length === 0,
@@ -157,37 +178,30 @@ function failOnUnresolved(
           : ""),
     )
     .join("\n");
+
+  if (!coversEverySkiArea) {
+    // The ski areas are a geographic extract, so an entry outside it is indistinguishable from
+    // one with no ski area at all. Only a run over every ski area can tell the difference.
+    console.warn(
+      `${unresolved.length} ski pass roster entries have no ski area in this extract:\n${details}`,
+    );
+    return;
+  }
+
   throw new Error(
     `${unresolved.length} ski pass roster entries could not be matched to a ski area. ` +
       `Add each one to src/skiPasses/overrides.json, either mapped to the ski areas it covers or as unmatchable:\n${details}`,
   );
 }
 
-/**
- * The chart's claimed figures describe one ski area, so they are only attached when a roster
- * entry resolved to exactly one. A network entry such as the Innsbruck pass describes the network
- * as a whole, which is not a statistic about any of its ski areas.
- */
 function collectSkiAreaData(
   matches: SkiPassMatch[],
 ): Map<string, SkiPassSkiAreaData> {
   const data = new Map<string, SkiPassSkiAreaData>();
   for (const match of matches) {
-    const describesOneSkiArea = match.skiAreaIDs.length === 1;
     for (const skiAreaID of match.skiAreaIDs) {
-      const existing = data.get(skiAreaID) ?? {
-        skiPasses: [],
-        averageSnowfallInCm: null,
-        skiableAreaInSqKm: null,
-      };
+      const existing = data.get(skiAreaID) ?? { skiPasses: [] };
       existing.skiPasses.push(...match.entry.memberships);
-      if (describesOneSkiArea) {
-        // Several roster entries can describe the same ski area, with figures that disagree
-        // slightly. The first is kept, and entries are processed in a stable order.
-        existing.averageSnowfallInCm ??=
-          match.entry.statistics.averageSnowfallInCm;
-        existing.skiableAreaInSqKm ??= match.entry.statistics.skiableAreaInSqKm;
-      }
       data.set(skiAreaID, existing);
     }
   }
@@ -198,25 +212,33 @@ function collectSkiAreaData(
   return data;
 }
 
-/** A ski area can be listed in several rosters of the same pass (East and West halves, say). */
+/**
+ * A ski area can be listed in several rosters of the same pass (East and West halves, say), or
+ * be covered by several roster entries. Each listing is a source for the same membership.
+ */
 function uniqueMemberships(
   memberships: SkiPassMembership[],
 ): SkiPassMembership[] {
-  const seen = new Set<string>();
-  return memberships.filter((membership) => {
+  const merged = new Map<string, SkiPassMembership>();
+  for (const membership of memberships) {
     const key = `${membership.passID} ${membership.tier}`;
-    if (seen.has(key)) {
-      return false;
+    const existing = merged.get(key);
+    if (existing === undefined) {
+      merged.set(key, { ...membership });
+      continue;
     }
-    seen.add(key);
-    return true;
-  });
+    existing.sources = uniquedSources([
+      ...existing.sources,
+      ...membership.sources,
+    ]);
+  }
+  return [...merged.values()];
 }
 
 function collectPasses(
   entries: SkiPassRosterEntry[],
   matches: SkiPassMatch[],
-  byID: Map<string, JoinableSkiArea>,
+  sourcesByPassID: Map<SkiPassID, Source[]>,
 ): SkiPass[] {
   const passNames = new Map<string, string>();
   for (const entry of entries) {
@@ -229,18 +251,18 @@ function collectPasses(
       const passMatches = matches.filter((match) => match.entry.passID === id);
       const skiAreaIDs = unique(
         passMatches.flatMap((match) => match.skiAreaIDs),
-      ).sort((a, b) =>
-        (byID.get(a)?.name ?? a).localeCompare(byID.get(b)?.name ?? b),
-      );
+      ).sort();
       return {
+        type: "skiPass" as const,
         id,
         name,
+        sources: sourcesByPassID.get(id) ?? [],
         skiAreaCount: skiAreaIDs.length,
         skiAreaIDs,
         unresolvedRosterEntries: passMatches
           .filter((match) => match.skiAreaIDs.length === 0)
           .map((match) => ({
-            mountain: match.entry.mountain,
+            name: match.entry.mountain,
             location: match.entry.location,
             reason: match.reason ?? "no matching ski area",
           })),

@@ -1,6 +1,7 @@
 import { writeFile } from "node:fs/promises";
+import { SkiPass } from "openskidata-format";
 import { escapeField } from "../transforms/CSVFormatter";
-import { SkiPass, SkiPassMatch } from "./SkiPassTypes";
+import { SkiPassMatch } from "./SkiPassTypes";
 
 const CSV_HEADERS = [
   "pass_id",

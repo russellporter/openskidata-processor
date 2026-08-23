@@ -372,6 +372,7 @@ export function mockSkiAreaFeature<G extends SkiAreaGeometry>(
           ? options.sources
           : [{ id: "1", type: SourceType.SKIMAP_ORG }],
       runConvention: RunDifficultyConvention.EUROPE,
+      skiPasses: [],
       statistics: options.statistics,
       websites: options.websites || [],
       wikidataID: options.wikidataID || null,

@@ -2,7 +2,9 @@ import * as fs from "fs";
 import { createReadStream, createWriteStream } from "fs";
 import * as path from "path";
 import { createInterface } from "readline";
+import { SkiPass, SkiPassUnresolvedRosterEntry } from "openskidata-format";
 import { GeoPackageMerger } from "../io/GeoPackageMerger";
+import uniquedSources from "../transforms/UniqueSources";
 import { runCommand } from "../utils/ProcessRunner";
 
 interface MergeStats {
@@ -10,6 +12,7 @@ interface MergeStats {
   csvFiles: number;
   gpkgFiles: number;
   mbtilesFiles: number;
+  skiPassFiles: number;
 }
 
 const SPECIFIC_FILES = {
@@ -21,7 +24,14 @@ const SPECIFIC_FILES = {
   ],
   mbtiles: ["openskimap.mbtiles"],
   gpkg: ["openskidata.gpkg"],
-  csv: ["csv/lifts.csv", "csv/runs.csv", "csv/ski_areas.csv", "csv/spots.csv"],
+  csv: [
+    "csv/lifts.csv",
+    "csv/runs.csv",
+    "csv/ski_areas.csv",
+    "csv/spots.csv",
+    "csv/ski_passes.csv",
+  ],
+  skiPasses: ["ski_passes.json"],
 };
 
 async function mergeGeoPackageWithSQLite(
@@ -519,6 +529,90 @@ async function mergeMbtilesFiles(
   return mergeCount;
 }
 
+/**
+ * Every region's run reads the same worldwide ski pass chart, so each one produces the same
+ * passes covering only the ski areas within its own extract. Merging takes the union of the ski
+ * areas per pass, and keeps a roster entry unresolved only where every region left it unresolved:
+ * a region reports the entries outside its own extent as unresolved too.
+ */
+export function mergeSkiPasses(inputs: SkiPass[][]): SkiPass[] {
+  const merged = new Map<string, SkiPass>();
+  const unresolved = new Map<
+    string,
+    Map<string, SkiPassUnresolvedRosterEntry>
+  >();
+
+  for (const passes of inputs) {
+    for (const pass of passes) {
+      const stillUnresolved = new Map(
+        pass.unresolvedRosterEntries.map((entry) => [
+          rosterEntryKey(entry),
+          entry,
+        ]),
+      );
+
+      const existing = merged.get(pass.id);
+      if (existing === undefined) {
+        merged.set(pass.id, { ...pass, unresolvedRosterEntries: [] });
+        unresolved.set(pass.id, stillUnresolved);
+        continue;
+      }
+
+      existing.skiAreaIDs = [
+        ...new Set([...existing.skiAreaIDs, ...pass.skiAreaIDs]),
+      ].sort();
+      existing.skiAreaCount = existing.skiAreaIDs.length;
+      existing.sources = uniquedSources([...existing.sources, ...pass.sources]);
+
+      // Intersect: whatever this region resolved is resolved.
+      const previous = unresolved.get(pass.id)!;
+      for (const key of previous.keys()) {
+        if (!stillUnresolved.has(key)) {
+          previous.delete(key);
+        }
+      }
+    }
+  }
+
+  for (const pass of merged.values()) {
+    pass.unresolvedRosterEntries = [...unresolved.get(pass.id)!.values()];
+  }
+  return [...merged.values()].sort((a, b) => a.id.localeCompare(b.id));
+}
+
+function rosterEntryKey(entry: SkiPassUnresolvedRosterEntry): string {
+  return `${entry.location}\u0000${entry.name}`;
+}
+
+async function mergeSkiPassFiles(
+  inputDirs: string[],
+  outputDir: string,
+): Promise<number> {
+  const inputs: SkiPass[][] = [];
+
+  for (const inputDir of inputDirs) {
+    for (const inputPath of findSpecificFiles(
+      inputDir,
+      SPECIFIC_FILES.skiPasses,
+    )) {
+      console.log(
+        `Processing ski passes: ${path.relative(inputDir, inputPath)}`,
+      );
+      inputs.push(JSON.parse(fs.readFileSync(inputPath, "utf8")) as SkiPass[]);
+    }
+  }
+
+  if (inputs.length === 0) {
+    return 0;
+  }
+
+  fs.writeFileSync(
+    path.join(outputDir, SPECIFIC_FILES.skiPasses[0]),
+    JSON.stringify(mergeSkiPasses(inputs), null, 2) + "\n",
+  );
+  return inputs.length;
+}
+
 async function main(): Promise<void> {
   try {
     const { outputDir, inputDirs } = validateArguments();
@@ -532,6 +626,7 @@ async function main(): Promise<void> {
       csvFiles: 0,
       gpkgFiles: 0,
       mbtilesFiles: 0,
+      skiPassFiles: 0,
     };
 
     // Merge each file type
@@ -547,12 +642,16 @@ async function main(): Promise<void> {
     console.log("\n=== Merging MBTiles files ===");
     stats.mbtilesFiles = await mergeMbtilesFiles(inputDirs, outputDir);
 
+    console.log("\n=== Merging ski passes ===");
+    stats.skiPassFiles = await mergeSkiPassFiles(inputDirs, outputDir);
+
     console.log("\n=== Merge Complete ===");
     console.log(`Successfully merged:`);
     console.log(`  - ${stats.geoJsonFiles} GeoJSON files`);
     console.log(`  - ${stats.csvFiles} CSV files`);
     console.log(`  - ${stats.gpkgFiles} GeoPackage files`);
     console.log(`  - ${stats.mbtilesFiles} MBTiles files`);
+    console.log(`  - ${stats.skiPassFiles} ski pass files`);
     console.log(`Output directory: ${outputDir}`);
   } catch (error) {
     console.error("Merge failed:", error);

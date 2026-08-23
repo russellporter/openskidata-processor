@@ -71,6 +71,8 @@ function mergeSkiAreaProperties(
       primarySkiArea.sources.concat(otherSkiArea.sources),
     ),
     status: primarySkiArea.status || otherSkiArea.status,
+    // Attached after clustering, so there is nothing to merge yet.
+    skiPasses: [],
     type: primarySkiArea.type,
     websites: mergedWebsites(primarySkiArea, otherSkiArea),
     wikidataID: primarySkiArea.wikidataID || otherSkiArea.wikidataID,

@@ -1,14 +1,17 @@
 import { parse } from "csv-parse/sync";
-import { SkiPassDefinition, skiPassForBlockTitle } from "./SkiPassDefinitions";
+import { SkiPassID, SkiPassMembership, Source } from "openskidata-format";
+import { skiPassChartSource } from "./SkiPassCellReference";
 import {
-  SkiPassChartStatistics,
-  SkiPassMembership,
-  SkiPassRosterEntry,
-} from "./SkiPassTypes";
+  SkiPassDefinition,
+  skiPassesForBlockTitle,
+} from "./SkiPassDefinitions";
+import { SkiPassRosterEntry } from "./SkiPassTypes";
+import uniquedSources from "../transforms/UniqueSources";
 
-const CM_PER_INCH = 2.54;
-const SQ_KM_PER_ACRE = 0.00404686;
 const METERS_PER_FOOT = 0.3048;
+
+/** The chart's title row, which holds each roster block's title. */
+const TITLE_ROW = 0;
 
 // A chart with fewer blocks or rows than this has almost certainly changed shape rather than
 // legitimately shrunk, so parsing fails instead of silently dropping most of the rosters.
@@ -76,19 +79,32 @@ interface RosterBlock {
   startColumn: number;
   /** Column after the last one belonging to this block. */
   endColumn: number;
+  /** The cell holding this block's title, which is the pass's source in the chart. */
+  titleSource: Source;
 }
 
-function findRosterBlocks(grid: Grid, headerRow: number): RosterBlock[] {
+/**
+ * One block per (roster block, ski pass) pair. A block usually lists a single pass, but the
+ * chart has a combined roster listing two, and each pass reads its own columns from it.
+ */
+function findRosterBlocks(
+  grid: Grid,
+  headerRow: number,
+  gid: string,
+): RosterBlock[] {
   const totalColumns = columnCount(grid);
   const startColumns = findRosterHeaderColumns(grid, headerRow);
 
-  return startColumns.map((startColumn, index) => {
+  return startColumns.flatMap((startColumn, index) => {
     const endColumn = startColumns[index + 1] ?? totalColumns;
-    return {
-      pass: skiPassForBlockTitle(findBlockTitle(grid, startColumn, endColumn)),
+    const title = findBlockTitle(grid, startColumn, endColumn);
+    const titleSource = skiPassChartSource(gid, TITLE_ROW, title.column);
+    return skiPassesForBlockTitle(title.value).map((pass) => ({
+      pass,
       startColumn,
       endColumn,
-    };
+      titleSource,
+    }));
   });
 }
 
@@ -100,11 +116,11 @@ function findBlockTitle(
   grid: Grid,
   startColumn: number,
   endColumn: number,
-): string {
+): { value: string; column: number } {
   for (let column = startColumn; column < endColumn; column++) {
-    const value = cell(grid, 0, column).trim();
+    const value = cell(grid, TITLE_ROW, column).trim();
     if (value.length > 0) {
-      return value;
+      return { value, column };
     }
   }
   throw new Error(
@@ -140,8 +156,6 @@ interface BlockColumns {
   name: number;
   base: number | null;
   summit: number | null;
-  skiableAcres: number | null;
-  averageSnowfallInches: number | null;
   yearJoined: number | null;
   tiers: { column: number; tier: string | null }[];
 }
@@ -155,8 +169,6 @@ function resolveColumns(
     name: block.startColumn + 1,
     base: null,
     summit: null,
-    skiableAcres: null,
-    averageSnowfallInches: null,
     yearJoined: null,
     tiers: [],
   };
@@ -172,19 +184,12 @@ function resolveColumns(
       continue;
     }
 
-    // Stat headers are matched loosely: they wrap across several lines in the chart, so their
-    // exact spacing is not something to depend on.
+    // Elevation headers are matched loosely: they wrap across several lines in the chart, so
+    // their exact spacing is not something to depend on. Not every block has them.
     if (columns.base === null && key.startsWith("base")) {
       columns.base = column;
     } else if (columns.summit === null && key.startsWith("summit")) {
       columns.summit = column;
-    } else if (columns.skiableAcres === null && key.includes("skiable acres")) {
-      columns.skiableAcres = column;
-    } else if (
-      columns.averageSnowfallInches === null &&
-      key.startsWith("average snowfall")
-    ) {
-      columns.averageSnowfallInches = column;
     }
 
     if (yearJoinedKey !== null && key === yearJoinedKey) {
@@ -202,37 +207,20 @@ function resolveColumns(
   return columns;
 }
 
-function readStatistics(
-  grid: Grid,
-  row: number,
-  columns: BlockColumns,
-): SkiPassChartStatistics {
-  return {
-    averageSnowfallInCm:
-      columns.averageSnowfallInches === null
-        ? null
-        : convert(
-            cell(grid, row, columns.averageSnowfallInches),
-            CM_PER_INCH,
-            1,
-          ),
-    skiableAreaInSqKm:
-      columns.skiableAcres === null
-        ? null
-        : convert(cell(grid, row, columns.skiableAcres), SQ_KM_PER_ACRE, 3),
-  };
-}
-
 function readMemberships(
   grid: Grid,
   row: number,
   block: RosterBlock,
   columns: BlockColumns,
+  gid: string,
 ): SkiPassMembership[] {
   const yearJoined =
     columns.yearJoined === null
       ? null
       : parseNumber(cell(grid, row, columns.yearJoined));
+
+  // The ski area's name cell is the row's most useful landing point in the chart.
+  const sources = [skiPassChartSource(gid, row, columns.name)];
 
   const memberships = columns.tiers
     .map((tierColumn) => ({
@@ -246,6 +234,7 @@ function readMemberships(
       tier: tier.tier,
       access: tier.access,
       yearJoined,
+      sources,
     }));
 
   if (memberships.length > 0) {
@@ -261,6 +250,7 @@ function readMemberships(
       tier: null,
       access: null,
       yearJoined,
+      sources,
     },
   ];
 }
@@ -272,15 +262,27 @@ function readMemberships(
 function uniqueMemberships(
   memberships: SkiPassMembership[],
 ): SkiPassMembership[] {
-  const seen = new Set<string>();
-  return memberships.filter((membership) => {
+  const merged = new Map<string, SkiPassMembership>();
+  for (const membership of memberships) {
     const key = `${membership.passID} ${membership.tier}`;
-    if (seen.has(key)) {
-      return false;
+    const existing = merged.get(key);
+    if (existing === undefined) {
+      merged.set(key, membership);
+      continue;
     }
-    seen.add(key);
-    return true;
-  });
+    // The rows describe the same membership, so keep both cells as its sources.
+    existing.sources = uniquedSources([
+      ...existing.sources,
+      ...membership.sources,
+    ]);
+  }
+  return [...merged.values()];
+}
+
+export interface SkiPassChart {
+  entries: SkiPassRosterEntry[];
+  /** The chart's roster block title cells, per ski pass. */
+  sourcesByPassID: Map<SkiPassID, Source[]>;
 }
 
 /**
@@ -289,8 +291,11 @@ function uniqueMemberships(
  * The chart is a wide spreadsheet holding each pass's roster as a block of columns laid out side
  * by side. Blocks are located structurally, by their "Location" / "Mountain" header pair, so that
  * a block being added, removed or moved does not shift the others.
+ *
+ * `gid` identifies the sheet within the chart's spreadsheet, so that every value read can be
+ * traced back to the cell it came from.
  */
-export function parseSkiPassChart(contents: string): SkiPassRosterEntry[] {
+export function parseSkiPassChart(contents: string, gid: string): SkiPassChart {
   const grid = parse(contents, {
     relaxColumnCount: true,
     skipEmptyLines: false,
@@ -301,15 +306,25 @@ export function parseSkiPassChart(contents: string): SkiPassRosterEntry[] {
   }
 
   const headerRow = findHeaderRow(grid);
-  const blocks = findRosterBlocks(grid, headerRow);
-  if (blocks.length < MINIMUM_ROSTER_BLOCKS) {
+  const blocks = findRosterBlocks(grid, headerRow, gid);
+  const blockCount = new Set(blocks.map((block) => block.startColumn)).size;
+  if (blockCount < MINIMUM_ROSTER_BLOCKS) {
     throw new Error(
-      `Ski pass chart has only ${blocks.length} roster blocks, expected at least ${MINIMUM_ROSTER_BLOCKS}. The chart layout has likely changed.`,
+      `Ski pass chart has only ${blockCount} roster blocks, expected at least ${MINIMUM_ROSTER_BLOCKS}. The chart layout has likely changed.`,
     );
   }
 
+  const sourcesByPassID = new Map<SkiPassID, Source[]>();
   const entries = new Map<string, SkiPassRosterEntry>();
   for (const block of blocks) {
+    sourcesByPassID.set(
+      block.pass.id,
+      uniquedSources([
+        ...(sourcesByPassID.get(block.pass.id) ?? []),
+        block.titleSource,
+      ]),
+    );
+
     const columns = resolveColumns(grid, headerRow, block);
     // The location cell is only filled in on the first row of each group.
     let location = "";
@@ -330,7 +345,7 @@ export function parseSkiPassChart(contents: string): SkiPassRosterEntry[] {
         );
       }
 
-      const memberships = readMemberships(grid, row, block, columns);
+      const memberships = readMemberships(grid, row, block, columns, gid);
       const key = [block.pass.id, location, mountain].join(" ");
       const existing = entries.get(key);
       if (existing !== undefined) {
@@ -344,7 +359,6 @@ export function parseSkiPassChart(contents: string): SkiPassRosterEntry[] {
         location,
         mountain,
         memberships,
-        statistics: readStatistics(grid, row, columns),
         baseElevationInMeters:
           columns.base === null
             ? null
@@ -366,5 +380,5 @@ export function parseSkiPassChart(contents: string): SkiPassRosterEntry[] {
       `Ski pass chart yielded only ${parsed.length} roster entries, expected at least ${MINIMUM_ROSTER_ENTRIES}. The chart layout has likely changed.`,
     );
   }
-  return parsed;
+  return { entries: parsed, sourcesByPassID };
 }

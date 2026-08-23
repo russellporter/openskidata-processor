@@ -182,7 +182,9 @@ export default async function prepare(paths: DataPaths, config: Config) {
       async () => {
         await enrichSkiAreasWithSkiPasses(
           paths.input.skiPassChart,
+          skiPassConfig.chartSheetID,
           skiPassConfig.overridesPath,
+          config.bbox === null,
           {
             skiAreas: paths.output.skiAreas,
             skiPassesJSON: paths.output.skiPasses,

@@ -27,7 +27,6 @@ function rosterEntry(
     location: "U.S. - Vermont",
     mountain,
     memberships: [],
-    statistics: { averageSnowfallInCm: null, skiableAreaInSqKm: null },
     baseElevationInMeters: null,
     summitElevationInMeters: null,
     ...options,

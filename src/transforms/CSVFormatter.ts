@@ -15,6 +15,7 @@ import {
   SkiAreaActivity,
   SkiAreaFeature,
   SkiAreaStatistics,
+  SkiPassMembership,
   SkiAreaSummaryFeature,
   Source,
   SpotFeature,
@@ -129,7 +130,7 @@ function getHeadersForType(type: FeatureType): string {
     case FeatureType.Lift:
       return "name,ref,ref_fr_cairn,lift_type,status,access,countries,regions,localities,ski_area_names,oneway,duration_sec,capacity,occupancy,detachable,bubble,heating,inclined_length_m,vertical_m,speed_m_per_s,vertical_speed_m_per_s,min_elevation_m,max_elevation_m,overall_pitch_%,wikidata_id,websites,openskimap,id,geometry,lat,lng,ski_area_ids,sources,description";
     case FeatureType.SkiArea:
-      return "name,countries,regions,localities,status,has_downhill,has_nordic,downhill_distance_km,nordic_distance_km,vertical_m,min_elevation_m,max_elevation_m,lift_count,surface_lifts_count,run_convention,wikidata_id,websites,openskimap,id,geometry,lat,lng,sources,ski_passes,average_snowfall_cm,skiable_area_sq_km";
+      return "name,countries,regions,localities,status,has_downhill,has_nordic,downhill_distance_km,nordic_distance_km,vertical_m,min_elevation_m,max_elevation_m,lift_count,surface_lifts_count,run_convention,wikidata_id,websites,openskimap,id,geometry,lat,lng,sources,ski_passes";
     case FeatureType.Spot:
       return "id,spot_type,longitude,latitude,sources,ski_areas,countries,regions,localities,dismount,name,position,entry,exit";
     default:
@@ -289,32 +290,15 @@ function formatSkiArea(feature: SkiAreaFeature): string {
     properties.id,
     ...getGeometry(feature),
     formatSources(properties.sources),
-    ...formatSkiPassColumns(feature),
+    formatSkiPasses(properties.skiPasses),
   ].join(",");
 }
 
-/**
- * Ski pass data is added by the ski pass enrichment phase, which is optional, and is not yet part
- * of `SkiAreaProperties` in openskidata-format.
- */
-function formatSkiPassColumns(feature: SkiAreaFeature): string[] {
-  const properties = feature.properties as SkiAreaFeature["properties"] & {
-    skiPasses?: { passID: string }[];
-    averageSnowfallInCm?: number | null;
-    skiableAreaInSqKm?: number | null;
-  };
-  const passIDs = [
-    ...new Set((properties.skiPasses ?? []).map((pass) => pass.passID)),
-  ];
-  return [
-    escapeField(passIDs.join(";")),
-    properties.averageSnowfallInCm != null
-      ? Math.round(properties.averageSnowfallInCm).toString()
-      : "",
-    properties.skiableAreaInSqKm != null
-      ? properties.skiableAreaInSqKm.toFixed(2)
-      : "",
-  ];
+/** The passes a ski area is on, deduplicated across their tiers. */
+function formatSkiPasses(skiPasses: SkiPassMembership[]): string {
+  return escapeField(
+    [...new Set(skiPasses.map((membership) => membership.passID))].join(";"),
+  );
 }
 
 /**

@@ -1,4 +1,11 @@
-import { SkiAreaActivity } from "openskidata-format";
+import { copyFileSync, readFileSync } from "fs";
+import {
+  SkiAreaActivity,
+  SkiPass,
+  SourceType,
+  Status,
+} from "openskidata-format";
+import { join } from "path";
 import { Config, getPostgresTestConfig } from "./Config";
 import prepare from "./PrepareGeoJSON";
 import * as TestHelpers from "./TestHelpers";
@@ -461,6 +468,7 @@ Map {
           "name": "Rabenkopflift Oberau",
           "places": [],
           "runConvention": "europe",
+          "skiPasses": [],
           "sources": [
             {
               "id": "13666",
@@ -829,4 +837,79 @@ it("processes spot entities", async () => {
   },
 ]
 `);
+});
+
+it("attaches ski pass data and writes the ski passes", async () => {
+  const paths = TestHelpers.getFilePaths();
+  TestHelpers.mockInputFiles(
+    {
+      skiMapSkiAreas: [
+        {
+          type: "Feature",
+          properties: {
+            id: "13666",
+            name: "Rabenkopflift Oberau",
+            status: Status.Operating,
+            activities: [SkiAreaActivity.Downhill],
+            scalerank: 1,
+            official_website: null,
+          },
+          geometry: { type: "Point", coordinates: [11.122066, 47.557111] },
+        },
+      ],
+      openStreetMapSkiAreas: [],
+      openStreetMapSkiAreaSites: [],
+      lifts: [],
+      runs: [],
+    },
+    paths.input,
+  );
+  // The real chart, so the roster the pipeline ships against is the one under test.
+  copyFileSync(
+    join(__dirname, "skiPasses", "__fixtures__", "skiPassChart.csv"),
+    paths.input.skiPassChart,
+  );
+
+  await prepare(paths, {
+    ...createTestConfig(),
+    // The input is a small extract, so roster entries outside it are reported, not fatal.
+    bbox: [11.1, 47.5, 11.2, 47.6],
+    skiPasses: {
+      csvURL: "https://example.com/chart.csv",
+      chartSheetID: "677843907",
+      overridesPath: join(__dirname, "skiPasses", "overrides.json"),
+    },
+  });
+
+  const skiAreas = TestHelpers.fileContents(paths.output.skiAreas);
+  expect(skiAreas.features[0].properties.skiPasses).toEqual([]);
+
+  const passes = TestHelpers.fileContents(paths.output.skiPasses) as SkiPass[];
+  expect(passes.map((pass) => pass.id)).toEqual([
+    "epic",
+    "ikon",
+    "ikon-2-day",
+    "ikon-midwest",
+    "indy",
+    "mountain-collective",
+    "new-england",
+    "powder-alliance",
+    "power",
+    "snow-pass",
+    "snow-triple-play-east",
+  ]);
+  expect(passes.every((pass) => pass.type === "skiPass")).toBe(true);
+  expect(passes.find((pass) => pass.id === "snow-pass")?.sources).toEqual([
+    { type: SourceType.STORM_SKIING, id: "677843907!JK1" },
+    { type: SourceType.STORM_SKIING, id: "677843907!KR1" },
+  ]);
+  // Nothing in this extract matches, so every roster entry is reported as unresolved.
+  expect(
+    passes.find((pass) => pass.id === "snow-pass")?.unresolvedRosterEntries,
+  ).toHaveLength(25);
+
+  // The ski pass CSV is written even when no ski area is on a pass, with only its header.
+  expect(readFileSync(paths.output.skiPassesCSV, "utf8")).toBe(
+    "pass_id,pass_name,ski_area_id,ski_area_name,roster_name,roster_location,tier,access,year_joined,match_tier\n",
+  );
 });

@@ -1,36 +1,12 @@
 /**
- * Types for ski pass (multi-resort season pass) data.
- *
- * These mirror the types that will be added to `openskidata-format`. Once that package is
- * released with `skiPasses`, `averageSnowfallInCm` and `skiableAreaInSqKm` on
- * `SkiAreaProperties`, these local definitions can be replaced by imports.
+ * Types used while parsing the ski pass chart and joining it to ski areas. The entities the
+ * pipeline outputs — `SkiPass` and `SkiPassMembership` — come from `openskidata-format`.
  */
 
-/** Stable identifier for a ski pass, e.g. "ikon". Declared in SkiPassDefinitions. */
-export type SkiPassID = string;
-
-/** A ski area's membership of one tier of one ski pass. */
-export interface SkiPassMembership {
-  passID: SkiPassID;
-  passName: string;
-  /** Tier within the pass, e.g. "base" or "session". Null for the pass's standard tier. */
-  tier: string | null;
-  /**
-   * Access code, copied verbatim from the chart, e.g. "5, 26, 27" or "U".
-   * The chart documents these per-roster in free text, so they are not parsed.
-   */
-  access: string | null;
-  yearJoined: number | null;
-}
-
-/** Claimed resort figures from the ski pass chart, converted to metric. */
-export interface SkiPassChartStatistics {
-  averageSnowfallInCm: number | null;
-  skiableAreaInSqKm: number | null;
-}
+import { SkiPassID, SkiPassMembership } from "openskidata-format";
 
 /** Everything the joiner attaches to a single ski area. */
-export interface SkiPassSkiAreaData extends SkiPassChartStatistics {
+export interface SkiPassSkiAreaData {
   skiPasses: SkiPassMembership[];
 }
 
@@ -43,7 +19,6 @@ export interface SkiPassRosterEntry {
   /** Ski area name as written in the chart. */
   mountain: string;
   memberships: SkiPassMembership[];
-  statistics: SkiPassChartStatistics;
   /** Base elevation in meters, used only as a tie-breaker when matching. */
   baseElevationInMeters: number | null;
   /** Summit elevation in meters, used only as a tie-breaker when matching. */
@@ -73,18 +48,4 @@ export interface SkiPassMatch {
   candidateNames: string[];
   /** Populated for `unmatchable` entries. */
   reason: string | null;
-}
-
-/** Aggregated view of one ski pass, for the ski pass entity output. */
-export interface SkiPass {
-  id: SkiPassID;
-  name: string;
-  skiAreaCount: number;
-  skiAreaIDs: string[];
-  /** Roster entries that could not be resolved to a ski area, with the reason. */
-  unresolvedRosterEntries: {
-    mountain: string;
-    location: string;
-    reason: string;
-  }[];
 }

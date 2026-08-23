@@ -1,4 +1,4 @@
-import { SkiPassID } from "./SkiPassTypes";
+import { SkiPassID } from "openskidata-format";
 
 /**
  * Column in a roster block that records access to a tier of the block's ski pass.
@@ -99,9 +99,23 @@ export const skiPassDefinitions: SkiPassDefinition[] = [
   {
     id: "snow-triple-play-east",
     name: "Snow Triple Play East",
-    chartBlockTitles: ["SNOW TRIPLE PLAY EAST ROSTER"],
+    chartBlockTitles: [
+      "SNOW TRIPLE PLAY EAST ROSTER",
+      "SNOW PASS + SNOW TRIPLE PLAY ROSTER",
+    ],
     tierColumns: [{ header: "Snow Triple Play East", tier: null }],
-    yearJoinedColumn: null,
+    // Only the combined roster has this column; the pass's own roster records no join year.
+    yearJoinedColumn: "Year Joined Snow Triple Play",
+  },
+  {
+    id: "snow-pass",
+    name: "Snow Pass",
+    chartBlockTitles: [
+      "SNOW PASS ROSTER",
+      "SNOW PASS + SNOW TRIPLE PLAY ROSTER",
+    ],
+    tierColumns: [{ header: "Snow Pass", tier: null }],
+    yearJoinedColumn: "Year Joined Snow Pass",
   },
   {
     id: "power",
@@ -144,12 +158,15 @@ export const skiPassDefinitions: SkiPassDefinition[] = [
   },
 ];
 
-const definitionsByBlockTitle = new Map<string, SkiPassDefinition>(
-  skiPassDefinitions.flatMap((definition) =>
-    definition.chartBlockTitles.map(
-      (title) => [normalizeBlockTitle(title), definition] as const,
-    ),
-  ),
+const definitionsByBlockTitle = skiPassDefinitions.reduce(
+  (index, definition) => {
+    for (const title of definition.chartBlockTitles) {
+      const key = normalizeBlockTitle(title);
+      index.set(key, [...(index.get(key) ?? []), definition]);
+    }
+    return index;
+  },
+  new Map<string, SkiPassDefinition[]>(),
 );
 
 export function normalizeBlockTitle(title: string): string {
@@ -157,15 +174,18 @@ export function normalizeBlockTitle(title: string): string {
 }
 
 /**
- * Resolves a roster block title to its ski pass. Throws for an unrecognized block, so that a new
- * or renamed roster in the chart fails the run rather than being silently dropped.
+ * Resolves a roster block title to the ski passes it lists. Usually one, but the chart has a
+ * combined roster of the ski areas that are on both the Snow Pass and Snow Triple Play East.
+ *
+ * Throws for an unrecognized block, so that a new or renamed roster in the chart fails the run
+ * rather than being silently dropped.
  */
-export function skiPassForBlockTitle(title: string): SkiPassDefinition {
-  const definition = definitionsByBlockTitle.get(normalizeBlockTitle(title));
-  if (definition === undefined) {
+export function skiPassesForBlockTitle(title: string): SkiPassDefinition[] {
+  const definitions = definitionsByBlockTitle.get(normalizeBlockTitle(title));
+  if (definitions === undefined) {
     throw new Error(
       `Unknown ski pass roster block "${title}". Add it to skiPassDefinitions or remove it from the chart.`,
     );
   }
-  return definition;
+  return definitions;
 }

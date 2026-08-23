@@ -47,20 +47,11 @@ function toJoinableSkiArea(feature: SkiAreaFeature): JoinableSkiArea | null {
   };
 }
 
-/**
- * `skiPasses`, `averageSnowfallInCm` and `skiableAreaInSqKm` are not yet part of
- * `SkiAreaProperties` in openskidata-format. Attaching them is confined to this one place so that
- * the cast can be dropped once that package is released.
- */
 function attachSkiPassData(
   feature: SkiAreaFeature,
   data: SkiPassSkiAreaData | undefined,
 ): SkiAreaFeature {
-  const properties = feature.properties as SkiAreaFeature["properties"] &
-    SkiPassSkiAreaData;
-  properties.skiPasses = data?.skiPasses ?? [];
-  properties.averageSnowfallInCm = data?.averageSnowfallInCm ?? null;
-  properties.skiableAreaInSqKm = data?.skiableAreaInSqKm ?? null;
+  feature.properties.skiPasses = data?.skiPasses ?? [];
   return feature;
 }
 
@@ -84,13 +75,19 @@ function summarize(matches: SkiPassMatch[]): string {
  */
 export default async function enrichSkiAreasWithSkiPasses(
   chartPath: string,
+  chartSheetID: string,
   overridesPath: string,
+  coversEverySkiArea: boolean,
   paths: SkiPassOutputPaths,
 ): Promise<void> {
-  const entries = parseSkiPassChart(await readFile(chartPath, "utf8"));
+  const chart = parseSkiPassChart(
+    await readFile(chartPath, "utf8"),
+    chartSheetID,
+  );
   const joiner = new SkiPassJoiner(
-    entries,
+    chart,
     loadSkiPassOverrides(overridesPath),
+    coversEverySkiArea,
   );
 
   const candidates: JoinableSkiArea[] = [];
@@ -127,6 +124,6 @@ export default async function enrichSkiAreasWithSkiPasses(
   await writeSkiPassesCSV(paths.skiPassesCSV, result.matches);
 
   console.log(
-    `Joined ${entries.length} ski pass roster entries covering ${result.skiAreaData.size} ski areas (${summarize(result.matches)})`,
+    `Joined ${chart.entries.length} ski pass roster entries covering ${result.skiAreaData.size} ski areas (${summarize(result.matches)})`,
   );
 }
