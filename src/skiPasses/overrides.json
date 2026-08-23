@@ -92,13 +92,13 @@
       "mountain": "Valle d'Aosta",
       "skiAreas": [
         "openstreetmap:way/447819146",
-        "openstreetmap:relation/3545279",
-        "openstreetmap:relation/5752851",
-        "openstreetmap:relation/12402754",
         "openstreetmap:way/540681046",
-        "openstreetmap:relation/19220067"
+        "openstreetmap:relation/5752851",
+        "openstreetmap:relation/5752780",
+        "openstreetmap:relation/12402754",
+        "openstreetmap:relation/3545279"
       ],
-      "note": "The chart lists the Aosta Valley as one destination. Mapped to its major lift-served resorts: Courmayeur, Pila, La Thuile, Monterosa Ski, Breuil-Cervinia and Valtournenche."
+      "note": "The five destinations Ikon lists at ikonpass.com/en/destinations/valle-daosta: Courmayeur Mont Blanc, Cervino, Espace San Bernardo (La Thuile and La Rosière), Monterosa Ski and Pila."
     },
     {
       "location": "Europe - Switzerland",

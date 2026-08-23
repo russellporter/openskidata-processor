@@ -122,6 +122,23 @@ describe("joining the ski pass chart to real ski areas", () => {
     }
   });
 
+  it("covers the ski areas the pass names for a regional destination", () => {
+    // https://www.ikonpass.com/en/destinations/valle-daosta names five: Courmayeur Mont Blanc,
+    // Cervino, Espace San Bernardo (La Thuile and La Rosière), Monterosa Ski and Pila.
+    const valleDAosta = result.matches.find(
+      (match) => match.entry.mountain === "Valle d'Aosta",
+    );
+    expect(valleDAosta?.tier).toBe("override");
+    expect(valleDAosta?.skiAreaNames.sort()).toEqual([
+      "Courmayeur",
+      "La Rosière",
+      "La Thuile ski",
+      "Monterosa Ski",
+      "Pila ski",
+      "Zermatt - Breuil-Cervinia, Breuil-Cervinia Ski Paradise",
+    ]);
+  });
+
   it("spreads a network roster entry over the ski areas it covers", () => {
     const innsbruck = result.matches.find(
       (match) => match.entry.mountain === "Innsbruck Ski & City Network",
