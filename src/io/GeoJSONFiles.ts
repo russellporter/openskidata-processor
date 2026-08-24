@@ -85,6 +85,8 @@ export class GeoJSONOutputPaths implements CommonGeoJSONPaths {
   readonly mapboxGL: CommonGeoJSONPaths;
   readonly csv: string;
   readonly geoPackage: string;
+  // Dataset-wide provenance and counts, consumed by openskidata.org.
+  readonly metadata: string;
   // Ski passes are not geographic features, so they are their own dataset rather than a layer.
   readonly skiPasses: string;
   readonly skiPassesCSV: string;
@@ -109,6 +111,7 @@ export class GeoJSONOutputPaths implements CommonGeoJSONPaths {
       mkdirSync(this.csv);
     }
     this.geoPackage = join(folder, "openskidata.gpkg");
+    this.metadata = join(folder, "metadata.json");
     this.skiPasses = join(folder, "ski_passes.json");
     this.skiPassesCSV = join(this.csv, "ski_passes.csv");
   }

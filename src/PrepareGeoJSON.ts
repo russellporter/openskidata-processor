@@ -1,4 +1,5 @@
 import { createWriteStream, existsSync, unlinkSync } from "fs";
+import { writeFile } from "fs/promises";
 import merge from "merge2";
 import { FeatureType } from "openskidata-format";
 import * as path from "path";
@@ -7,6 +8,7 @@ import { Readable } from "stream";
 import { pipeline } from "stream/promises";
 import { Config, ElevationServerConfig, PostgresConfig } from "./Config";
 import clusterSkiAreas from "./clustering/ClusterSkiAreas";
+import { readDownloadMetadata } from "./io/DownloadMetadata";
 import { DataPaths, getPath } from "./io/GeoJSONFiles";
 import { readGeoJSONFeatures } from "./io/GeoJSONReader";
 import { convertGeoJSONToGeoPackage } from "./io/GeoPackageWriter";
@@ -28,13 +30,22 @@ import {
   addSkiAreaSites,
 } from "./transforms/SkiAreaSiteProvider";
 import {
+  collectFileSizes,
+  MetadataCollector,
+} from "./statistics/DatasetMetadata";
+import {
   accumulate,
   flatMap,
   flatMapArray,
+  get,
   map,
   mapAsync,
 } from "./transforms/StreamTransforms";
 import { RunNormalizerAccumulator } from "./transforms/accumulator/RunNormalizerAccumulator";
+
+function getFormatVersion(): string {
+  return require("openskidata-format/package.json").version;
+}
 
 async function createElevationTransform(
   elevationServerConfig: ElevationServerConfig | null,
@@ -94,6 +105,7 @@ async function fetchSnowCoverIfEnabled(
 }
 
 export default async function prepare(paths: DataPaths, config: Config) {
+  const metadataCollector = new MetadataCollector();
   await performanceMonitor.withPhase(
     "Phase 2: GeoJSON Preparation",
     async () => {
@@ -227,6 +239,9 @@ export default async function prepare(paths: DataPaths, config: Config) {
         ].map((type) => {
           return pipeline(
             readGeoJSONFeatures(getPath(paths.output, type)),
+            // Tally dataset-wide figures for metadata.json here rather than in
+            // a pass of their own, since every feature already streams past.
+            get(metadataCollector.collector(type)),
             flatMap(CSVFormatter.formatter(type)),
             CSVFormatter.createCSVWriteStream(type),
             createWriteStream(
@@ -284,6 +299,50 @@ export default async function prepare(paths: DataPaths, config: Config) {
         );
       });
     }
+
+    // Written last, once every file it describes is on disk.
+    await performanceMonitor.withOperation("Writing metadata", async () => {
+      const downloadMetadata = await readDownloadMetadata(config.workingDir);
+
+      const datasets: Record<string, FeatureType> = {
+        skiAreas: FeatureType.SkiArea,
+        runs: FeatureType.Run,
+        lifts: FeatureType.Lift,
+        spots: FeatureType.Spot,
+      };
+      const byDataset = (
+        toPath: (type: FeatureType) => string,
+      ): Record<string, string> =>
+        Object.fromEntries(
+          Object.entries(datasets).map(([key, type]) => [key, toPath(type)]),
+        );
+
+      const files = await collectFileSizes({
+        geojson: byDataset((type) => getPath(paths.output, type)),
+        csv: byDataset((type) =>
+          join(paths.output.csv, CSVFormatter.getCSVFilename(type)),
+        ),
+        geoPackage: paths.output.geoPackage,
+      });
+
+      await writeFile(
+        paths.output.metadata,
+        JSON.stringify(
+          metadataCollector.metadata({
+            formatVersion: getFormatVersion(),
+            bbox: config.bbox,
+            startedAt: downloadMetadata?.startedAt ?? null,
+            openStreetMapDataTimestamp:
+              downloadMetadata?.openStreetMap.dataTimestamp ?? null,
+            skiMapOrgDownloadedAt:
+              downloadMetadata?.skiMapOrg.downloadedAt ?? null,
+            files,
+          }),
+          null,
+          2,
+        ) + "\n",
+      );
+    });
   });
 
   console.log("Done preparing");

@@ -13,6 +13,11 @@ import {
   skiMapSkiAreasURL,
   spotsDownloadConfig,
 } from "./DownloadURLs";
+import {
+  earliestTimestamp,
+  readOSMDataTimestamp,
+  writeDownloadMetadata,
+} from "./DownloadMetadata";
 import { InputDataPaths } from "./GeoJSONFiles";
 import convertOSMFileToGeoJSON from "./OSMToGeoJSONConverter";
 
@@ -23,6 +28,8 @@ export default async function downloadAndConvertToGeoJSON(
 ): Promise<InputDataPaths> {
   return await performanceMonitor.withPhase("Phase 1: Download", async () => {
     const paths = new InputDataPaths(folder);
+    const startedAt = new Date().toISOString();
+    let skiMapOrgDownloadedAt = startedAt;
 
     // Serialize downloads using the same endpoint so we don't get rate limited by the Overpass API
     await performanceMonitor.withOperation("Downloading OSM data", async () => {
@@ -59,7 +66,10 @@ export default async function downloadAndConvertToGeoJSON(
             bbox,
           );
         })(),
-        downloadSkiMapOrgSkiAreas(paths.geoJSON.skiMapSkiAreas, bbox),
+        (async () => {
+          await downloadSkiMapOrgSkiAreas(paths.geoJSON.skiMapSkiAreas, bbox);
+          skiMapOrgDownloadedAt = new Date().toISOString();
+        })(),
       ]);
     });
 
@@ -83,6 +93,36 @@ export default async function downloadAndConvertToGeoJSON(
       );
       await convertOSMFileToGeoJSON(paths.osmJSON.spots, paths.geoJSON.spots);
     });
+
+    // Record where the input data came from so the separately invoked prepare
+    // step can report it. Provenance is not worth failing the run over, so any
+    // problem here is logged and swallowed.
+    await performanceMonitor.withOperation(
+      "Recording download metadata",
+      async () => {
+        try {
+          const dataTimestamp = earliestTimestamp(
+            await Promise.all(
+              [
+                paths.osmJSON.runs,
+                paths.osmJSON.lifts,
+                paths.osmJSON.skiAreas,
+                paths.osmJSON.skiAreaSites,
+                paths.osmJSON.spots,
+              ].map(readOSMDataTimestamp),
+            ),
+          );
+
+          await writeDownloadMetadata(folder, {
+            startedAt,
+            openStreetMap: { dataTimestamp },
+            skiMapOrg: { downloadedAt: skiMapOrgDownloadedAt },
+          });
+        } catch (error) {
+          console.log("Failed recording download metadata:", error);
+        }
+      },
+    );
 
     performanceMonitor.logTimeline();
 
