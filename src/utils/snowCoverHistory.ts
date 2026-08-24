@@ -374,8 +374,60 @@ export async function getSnowCoverHistory(
   return aggregatePixelHistories(pixelsData);
 }
 
+// Snow cover history is looked up once per ski area (and again per activity), so the
+// archive is shared instead of standing up a fresh connection pool for every lookup.
+// Keyed by database and table prefix, since tests share a database but not a prefix.
+const snowCoverArchives = new Map<
+  string,
+  Promise<PostgresCache<VIIRSCacheData[]>>
+>();
+
+async function getSnowCoverArchive(
+  postgresConfig: PostgresConfig,
+): Promise<PostgresCache<VIIRSCacheData[]>> {
+  const key = `${postgresConfig.cacheDatabase}|${postgresConfig.tablePrefix}`;
+
+  let archive = snowCoverArchives.get(key);
+  if (archive === undefined) {
+    // Store the in-flight promise so concurrent callers share one initialization.
+    archive = (async () => {
+      const cache = new PostgresCache<VIIRSCacheData[]>(
+        "snow_cover",
+        postgresConfig,
+        0,
+      );
+      try {
+        await cache.initialize();
+      } catch (error) {
+        snowCoverArchives.delete(key);
+        throw error;
+      }
+      return cache;
+    })();
+    snowCoverArchives.set(key, archive);
+  }
+
+  return await archive;
+}
+
 /**
- * Create a snow cover archive instance and get history for given pixels.
+ * Close any shared snow cover archives. Call during shutdown.
+ */
+export async function closeSnowCoverCaches(): Promise<void> {
+  const archives = Array.from(snowCoverArchives.values());
+  snowCoverArchives.clear();
+
+  for (const archive of archives) {
+    try {
+      await (await archive).close();
+    } catch (error) {
+      console.warn(`Failed closing snow cover archive: ${error}`);
+    }
+  }
+}
+
+/**
+ * Get snow cover history for given pixels from the shared snow cover archive.
  *
  * @param pixels Array of VIIRS pixels in format [hTile, vTile, col, row]
  * @returns Aggregated snow cover history across all pixels
@@ -384,15 +436,6 @@ export async function getSnowCoverHistoryFromCache(
   pixels: VIIRSPixel[],
   postgresConfig: PostgresConfig,
 ): Promise<SnowCoverHistory> {
-  const archive = new PostgresCache<VIIRSCacheData[]>(
-    "snow_cover",
-    postgresConfig,
-    0,
-  );
-  try {
-    await archive.initialize();
-    return await getSnowCoverHistory(archive, pixels);
-  } finally {
-    await archive.close();
-  }
+  const archive = await getSnowCoverArchive(postgresConfig);
+  return await getSnowCoverHistory(archive, pixels);
 }

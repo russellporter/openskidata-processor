@@ -36,6 +36,7 @@ import Geocoder from "../transforms/Geocoder";
 import { getPoints, getPositions } from "../transforms/GeoTransforms";
 import { sortPlaces, uniquePlaces } from "../transforms/PlaceUtils";
 import { mapAsync } from "../transforms/StreamTransforms";
+import { mapWithConcurrency } from "../utils/mapWithConcurrency";
 import { isPlaceholderGeometry } from "../utils/PlaceholderSiteGeometry";
 import { VIIRSPixelExtractor } from "../utils/VIIRSPixelExtractor";
 import {
@@ -64,6 +65,10 @@ import {
 import mergeSkiAreaObjects from "./MergeSkiAreaObjects";
 
 const maxDistanceInKilometers = 0.5;
+
+// Ski areas are loaded all at once when we may remove them during iteration, so the
+// per-ski-area work has to be throttled explicitly. Matches the clustering pool size.
+const maxConcurrentSkiAreas = 10;
 
 function objectLengthKm(obj: LiftObject | RunObject): number {
   const raw = length(turf.feature(obj.geometry));
@@ -1186,8 +1191,10 @@ export class SkiAreaClusteringService {
     return performanceMonitor.measure(
       "Augment batch of ski areas",
       async () => {
-        await Promise.all(
-          skiAreas.map(async (skiArea) => {
+        await mapWithConcurrency(
+          skiAreas,
+          maxConcurrentSkiAreas,
+          async (skiArea) => {
             const mapObjects = await this.database.getObjectsForSkiArea(
               skiArea.id,
             );
@@ -1198,7 +1205,7 @@ export class SkiAreaClusteringService {
               snowCoverConfig,
               postgresConfig,
             );
-          }),
+          },
         );
       },
     );
@@ -1278,8 +1285,10 @@ export class SkiAreaClusteringService {
     let totalCount = 0;
 
     while ((skiAreas = await cursor.nextBatch())) {
-      await Promise.all(
-        skiAreas.map(async (skiArea) => {
+      await mapWithConcurrency(
+        skiAreas,
+        maxConcurrentSkiAreas,
+        async (skiArea) => {
           totalCount++;
           if (
             skiArea.geometry.type === "Point" &&
@@ -1291,7 +1300,7 @@ export class SkiAreaClusteringService {
             await this.database.removeObject(skiArea._key);
             removeCount++;
           }
-        }),
+        },
       );
     }
   }

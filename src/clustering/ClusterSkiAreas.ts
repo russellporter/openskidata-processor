@@ -3,6 +3,7 @@ import {
   GeoJSONIntermediatePaths,
   GeoJSONOutputPaths,
 } from "../io/GeoJSONFiles";
+import { closeSnowCoverCaches } from "../utils/snowCoverHistory";
 import { PostgreSQLClusteringDatabase } from "./database/PostgreSQLClusteringDatabase";
 import { SkiAreaClusteringService } from "./SkiAreaClusteringService";
 
@@ -32,6 +33,7 @@ export default async function clusterSkiAreas(
       config.elevationServer,
     );
   } finally {
+    await closeSnowCoverCaches();
     await database.close();
   }
 }
