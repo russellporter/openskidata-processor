@@ -2,6 +2,8 @@
 
 This is a data pipeline that consumes OpenStreetMap & Skimap.org data and produces GeoJSON & Mapbox GL tiles for usage on [OpenSkiMap.org](https://github.com/russellporter/openskimap.org).
 
+Data outputs are available for download at [OpenSkiData.org](https://openskidata.org)
+
 ## Installation & Usage
 
 ### Docker (Recommended)
