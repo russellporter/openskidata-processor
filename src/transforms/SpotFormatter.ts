@@ -21,11 +21,7 @@ import { getOSMName } from "./OSMTransforms.js";
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 
 type CommonSpotProperties =
-  | "id"
-  | "skiAreas"
-  | "sources"
-  | "places"
-  | "viewportHint";
+  "id" | "skiAreas" | "sources" | "places" | "viewportHint";
 
 export function formatSpots(feature: InputSpotFeature): SpotFeature[] {
   const tags = feature.properties.tags || {};

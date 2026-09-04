@@ -39,10 +39,19 @@ jobs:
       - name: Type check
         run: docker compose exec -T app npm run check-types
 
+      - name: Check formatting
+        run: docker compose exec -T app npx prettier --check . --ignore-path .gitignore
+
+      - name: Verify every module loads under Node ESM
+        run: docker compose exec -T app npm run smoke-import
+
       - name: Run tests
         run: docker compose exec -T app npm test
         env:
           CI: true
+
+      - name: Audit dependencies
+        run: docker compose exec -T app npm audit --audit-level=critical
 
       - name: Cleanup
         if: always()

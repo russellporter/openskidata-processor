@@ -18,10 +18,7 @@ export type OSMSpotTags = {
 };
 
 export type InputSpotGeometry =
-  | GeoJSON.Point
-  | GeoJSON.Polygon
-  | GeoJSON.MultiPolygon
-  | GeoJSON.LineString;
+  GeoJSON.Point | GeoJSON.Polygon | GeoJSON.MultiPolygon | GeoJSON.LineString;
 
 export type InputSpotFeature = GeoJSON.Feature<
   InputSpotGeometry,

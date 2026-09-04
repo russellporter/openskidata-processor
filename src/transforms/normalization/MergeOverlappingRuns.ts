@@ -9,8 +9,7 @@ export type RunTopology = TopoJSON.Topology<{
 }>;
 
 type RunLine =
-  | TopoJSON.LineString<RunProperties>
-  | TopoJSON.MultiLineString<RunProperties>;
+  TopoJSON.LineString<RunProperties> | TopoJSON.MultiLineString<RunProperties>;
 
 interface ArcData {
   runs: RunArc[];

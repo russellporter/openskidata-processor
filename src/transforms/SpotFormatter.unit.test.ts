@@ -404,10 +404,7 @@ function inputSpot(
 function inputSpotWithGeometry(
   properties: OSMGeoJSONProperties<OSMSpotTags>,
   geometry:
-    | GeoJSON.Point
-    | GeoJSON.Polygon
-    | GeoJSON.MultiPolygon
-    | GeoJSON.LineString,
+    GeoJSON.Point | GeoJSON.Polygon | GeoJSON.MultiPolygon | GeoJSON.LineString,
 ): InputSpotFeature {
   return {
     type: "Feature",

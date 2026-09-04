@@ -7,10 +7,14 @@ numpy>=1.21.0
 requests>=2.28.0
 h5py>=3.7.0
 
+# Postgres cache (src/postgres_cache.py)
+asyncpg>=0.29.0
+
+# GDAL Python bindings, used by scripts/hdf-to-geotiff.py via `from osgeo import gdal`.
+# Not installable standalone from PyPI in the general case: the wheel must match the
+# libgdal installed on the system, so install GDAL first and then a matching version.
+# gdal>=3.6.0
+
 # Testing dependencies
 pytest>=7.0.0
 pytest-cov>=4.0.0
-
-# Optional dependencies (for existing Earth Engine code)
-earthengine-api>=0.1.350
-geemap>=0.24.0

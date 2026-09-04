@@ -10,7 +10,7 @@ function columnLetters(column: number): string {
   }
 
   let letters = "";
-  for (let remaining = column + 1; remaining > 0; ) {
+  for (let remaining = column + 1; remaining > 0;) {
     const digit = (remaining - 1) % 26;
     letters = String.fromCharCode(65 + digit) + letters;
     remaining = (remaining - 1 - digit) / 26;

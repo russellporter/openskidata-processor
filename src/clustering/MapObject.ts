@@ -38,9 +38,7 @@ export interface DraftRun extends BaseDraftMapObject {
 }
 
 export type RunGeometry =
-  | GeoJSON.LineString
-  | GeoJSON.Polygon
-  | GeoJSON.MultiLineString;
+  GeoJSON.LineString | GeoJSON.Polygon | GeoJSON.MultiLineString;
 
 export interface DraftLift extends BaseDraftMapObject {
   type: FeatureType.Lift;
@@ -72,9 +70,7 @@ export interface DraftSkiArea extends BaseDraftMapObject {
 }
 
 export type SkiAreaGeometry =
-  | GeoJSON.Point
-  | GeoJSON.Polygon
-  | GeoJSON.MultiPolygon;
+  GeoJSON.Point | GeoJSON.Polygon | GeoJSON.MultiPolygon;
 
 interface BaseDraftMapObject {
   _key: string;

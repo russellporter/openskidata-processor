@@ -197,9 +197,7 @@ function parseBatchSize(): number {
 
 function buildElevationServerConfig(url: string): ElevationServerConfig {
   const type = (process.env["ELEVATION_SERVER_TYPE"] ?? "racemap") as
-    | "racemap"
-    | "tileserver-gl"
-    | "tile";
+    "racemap" | "tileserver-gl" | "tile";
 
   const batchSize = parseBatchSize();
 
