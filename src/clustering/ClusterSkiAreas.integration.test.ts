@@ -23,18 +23,29 @@ import {
 import { toSkiAreaSummary } from "../transforms/toSkiAreaSummary";
 import clusterSkiAreas from "./ClusterSkiAreas";
 
-let mockUuidCount = 0;
-jest.mock("../utils/uuid", () => {
-  return { uuid: () => "mock-UUID-" + mockUuidCount++ };
+// vi.mock factories are hoisted above module-level declarations, so the counter
+// has to be hoisted with them. Keeping it in a holder (rather than inside the
+// factory) preserves the per-test reset that beforeEach relies on.
+const uuidMock = vi.hoisted(() => {
+  let count = 0;
+  return {
+    reset: () => {
+      count = 0;
+    },
+    uuid: () => "mock-UUID-" + count++,
+  };
+});
+vi.mock("../utils/uuid", () => {
+  return { uuid: uuidMock.uuid };
 });
 
 // Increase timeout to give time to set up PostgreSQL database
-jest.setTimeout(60 * 1000);
+vi.setConfig({ testTimeout: 60 * 1000 });
 
 let testConfig: Config;
 
 beforeEach(async () => {
-  mockUuidCount = 0;
+  uuidMock.reset();
   testConfig = {
     workingDir: TestHelpers.getTempWorkingDir(),
     outputDir: "output",

@@ -3,17 +3,6 @@
   "version": "1.0.0",
   "description": "Data pipeline for processing OpenStreetMap and Skimap.org data into OpenSkiData and OpenSkiMap tiles",
   "main": "run.sh",
-  "jest": {
-    "preset": "ts-jest",
-    "testEnvironment": "node",
-    "testPathIgnorePatterns": [
-      "/node_modules/",
-      "/dist/"
-    ],
-    "prettierPath": null,
-    "detectOpenHandles": true,
-    "globalSetup": "<rootDir>/src/testSetup.ts"
-  },
   "prettier": {},
   "dependencies": {
     "@ngageoint/geopackage": "^4.2.8",
@@ -51,7 +40,6 @@
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
     "@types/geojson": "^7946",
-    "@types/jest": "^29",
     "@types/lodash": "^4",
     "@types/merge2": "^1",
     "@types/ngeohash": "^0.6.2",
@@ -63,20 +51,19 @@
     "@types/topojson-client": "^3",
     "@types/topojson-server": "^3",
     "concurrently": "^9.2.4",
-    "jest": "^29",
     "nock": "^14.0.0",
     "prettier": "^3",
-    "ts-jest": "^29",
     "tsx": "^4.22.4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^5.0.0"
   },
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
     "dev:all": "concurrently \"npm run dev\" \"/usr/local/bin/init-postgres.sh\"",
     "format": "prettier --write . --ignore-path .gitignore",
-    "test": "jest",
-    "record-tests": "jest -u",
+    "test": "vitest run",
+    "record-tests": "vitest run -u",
     "check-types": "tsc --project tsconfig.typecheck.json",
     "download": "node --optimize_for_size --max_old_space_size=${MAX_OLD_SPACE_SIZE:-4096} dist/scripts/download.js",
     "prepare-geojson": "node --optimize_for_size --max_old_space_size=${MAX_OLD_SPACE_SIZE:-4096} dist/scripts/prepare_geojson.js",
@@ -86,5 +73,8 @@
     "clear-cache": "node dist/scripts/clear_cache.js"
   },
   "author": "Russell Porter",
-  "license": "ISC"
+  "license": "ISC",
+  "engines": {
+    "node": ">=24"
+  }
 }

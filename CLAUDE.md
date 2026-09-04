@@ -14,9 +14,12 @@ This project runs in a containerized environment. All commands should be execute
 - Build: `docker compose exec app npm run build`
 - Format code: `docker compose exec app npm run format`
 - Test all: `docker compose exec app npm test`
-- Test single file: `docker compose exec app npx jest path/to/file.test.ts`
+- Test single file: `docker compose exec app npx vitest run path/to/file.test.ts`
 - Type check: `docker compose exec app npm run check-types`
 - Update test snapshots: `docker compose exec app npm run record-tests`
+- Install/change dependencies: `docker compose exec app npm install <pkg>` — **never on the
+  host**. docker-compose bind-mounts the repo, so `node_modules` is shared; a host install
+  replaces the Linux native binaries (better-sqlite3, sharp) with macOS ones.
 - Run processor: `docker compose exec app ./run.sh`
 - Processing scripts:
   - `docker compose exec app npm run download`
@@ -42,4 +45,6 @@ Use a larger BBOX to test performance implications of a change:
 - Async/await for Promise-based operations
 - Comprehensive test coverage for both unit and integration
 - Uses Prettier for code formatting
+- Tests run on Vitest with `globals: true`, serially (`fileParallelism: false`) because
+  every test file shares the single `openskidata_test` database
 - Heavy use of type annotations and generics for null-safety

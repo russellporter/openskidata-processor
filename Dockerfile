@@ -22,7 +22,7 @@ WORKDIR /tmp/tippecanoe
 RUN make -j$(nproc) && make install
 
 # Base stage with common dependencies
-FROM node:22-trixie AS base
+FROM node:24-trixie AS base
 
 # Copy Tippecanoe binaries
 COPY --from=tippecanoe-builder /usr/local/bin/tippecanoe /usr/local/bin/tippecanoe

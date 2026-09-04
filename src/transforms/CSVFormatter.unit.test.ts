@@ -262,7 +262,7 @@ describe("CSVFormatter", () => {
   });
 
   describe("createCSVWriteStream", () => {
-    it("creates a transform stream that adds headers", (done) => {
+    it("creates a transform stream that adds headers", async () => {
       const stream = createCSVWriteStream(FeatureType.SkiArea);
       let output = "";
 
@@ -277,15 +277,14 @@ describe("CSVFormatter", () => {
       stream.pipe(mockWriteStream);
       stream.write("test-data-1");
       stream.write("test-data-2");
-      stream.end(() => {
-        expect(output).toMatchInlineSnapshot(`
+      await new Promise<void>((resolve) => stream.end(resolve));
+
+      expect(output).toMatchInlineSnapshot(`
 "name,countries,regions,localities,status,has_downhill,has_nordic,downhill_distance_km,nordic_distance_km,vertical_m,min_elevation_m,max_elevation_m,lift_count,surface_lifts_count,run_convention,wikidata_id,websites,openskimap,id,geometry,lat,lng,sources,ski_passes
 test-data-1
 test-data-2
 "
 `);
-        done();
-      });
     });
   });
 

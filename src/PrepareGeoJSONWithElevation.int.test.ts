@@ -4,7 +4,7 @@ import { Config, getPostgresTestConfig } from "./Config";
 import prepare from "./PrepareGeoJSON";
 import * as TestHelpers from "./TestHelpers";
 
-jest.setTimeout(60 * 1000);
+vi.setConfig({ testTimeout: 60 * 1000 });
 
 // Configure nock to work with fetch/undici
 nock.disableNetConnect();

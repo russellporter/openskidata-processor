@@ -5,7 +5,7 @@
     "esModuleInterop": true,
     "target": "es2022",
     "module": "commonjs",
-    "types": ["node", "jest"],
+    "types": ["node", "vitest/globals"],
     "baseUrl": ".",
     "paths": {
       "*": ["types/*"]

@@ -13,14 +13,14 @@ import { SnowCoverHistory } from "openskidata-format";
 describe("snowCoverHistory utilities", () => {
   beforeEach(() => {
     // Mock console methods
-    jest.spyOn(console, "warn").mockImplementation(() => {});
-    jest.spyOn(console, "error").mockImplementation(() => {});
-    jest.spyOn(console, "debug").mockImplementation(() => {});
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(console, "debug").mockImplementation(() => {});
   });
 
   afterEach(() => {
     // Restore console methods
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   describe("weekToDayAndYear (1-indexed weeks)", () => {

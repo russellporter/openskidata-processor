@@ -141,5 +141,3 @@ function tailPoint(feature: RunLineFeature) {
   const coords = feature.geometry.coordinates;
   return coords[coords.length - 1];
 }
-
-module.exports = PointGraph;

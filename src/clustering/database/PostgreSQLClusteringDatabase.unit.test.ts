@@ -5,7 +5,7 @@ import {
   PostgreSQLCursor,
 } from "./PostgreSQLClusteringDatabase";
 
-jest.setTimeout(60 * 1000);
+vi.setConfig({ testTimeout: 60 * 1000 });
 
 describe("PostgreSQLClusteringDatabase", () => {
   let database: PostgreSQLClusteringDatabase;
@@ -19,9 +19,11 @@ describe("PostgreSQLClusteringDatabase", () => {
         "test",
       ]);
     } catch (error) {
-      // Skip tests if PostgreSQL is not available
-      console.warn("PostgreSQL not available, skipping tests:", error);
-      pending("PostgreSQL not available");
+      // These tests require PostgreSQL; both CI and the dev container provide it.
+      // This previously called Jasmine's pending(), which neither jest-circus nor
+      // Vitest defines, so an unavailable database already surfaced as a
+      // ReferenceError. Fail with the actual cause instead.
+      throw new Error(`PostgreSQL is required for these tests: ${error}`);
     }
   });
 
