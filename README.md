@@ -177,7 +177,7 @@ Pass `GENERATE_TILES=1` to enable generation of Mapbox Vector Tiles (MVT) output
 
 Ski areas are annotated with the multi-resort season passes they are on (Ikon, Epic, Indy, Mountain Collective and others), taken from [The Storm Skiing Journal's ski pass chart](https://docs.google.com/spreadsheets/d/1G2-l2DVg7-QwroOi7EqRDrJYJ4ICYLcJbLx-nARJdrA/edit?gid=677843907#gid=677843907), a spreadsheet of each pass's roster.
 
-This adds `skiPasses` to each ski area, and writes the passes themselves as `ski_passes.json` plus a `csv/ski_passes.csv` join table of every ski area on every pass. Each membership and each pass carries a `stormskiing.com` source identifying the chart cell it came from, so `getSourceURL` links straight to it.
+This adds `skiPasses` to each ski area, and writes a catalogue of pass brands and purchasable passes as `ski_passes.json` plus a `csv/ski_passes.csv` join table of every ski area on every actual pass. Each membership and each pass carries a `stormskiing.com` source identifying the chart cell it came from, so `getSourceURL` links straight to it.
 
 The chart is downloaded from its CSV export by default. Set `SKI_PASS_CSV_URL` to read a different export, or to the empty string to skip ski passes entirely.
 

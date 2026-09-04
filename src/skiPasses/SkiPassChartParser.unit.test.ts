@@ -27,7 +27,10 @@ function find(
 }
 
 describe("parseSkiPassChart", () => {
-  const { entries, sourcesByPassID } = parseSkiPassChart(csv, CHART_SHEET_ID);
+  const { entries, sourcesByPassID, brands } = parseSkiPassChart(
+    csv,
+    CHART_SHEET_ID,
+  );
 
   it("finds every roster in the chart", () => {
     const counts = new Map<string, number>();
@@ -35,77 +38,96 @@ describe("parseSkiPassChart", () => {
       counts.set(entry.passID, (counts.get(entry.passID) ?? 0) + 1);
     }
     expect(Object.fromEntries([...counts].sort())).toEqual({
-      epic: 71,
-      ikon: 98,
+      "epic-day-22": 22,
+      "epic-day-32": 32,
+      "epic-day-all": 47,
+      "epic-keystone-plus": 3,
+      "epic-local": 52,
+      "epic-military": 43,
+      "epic-northeast-midweek": 21,
+      "epic-northeast-value": 21,
+      "epic-ohio": 4,
+      "epic-standard": 71,
+      "epic-summit-value": 2,
+      "epic-tahoe-local": 9,
+      "epic-tahoe-value": 3,
       "ikon-2-day": 9,
+      "ikon-base": 80,
       "ikon-midwest": 10,
-      indy: 233,
-      "mountain-collective": 32,
-      "new-england": 11,
+      "ikon-session": 53,
+      "ikon-standard": 98,
+      "indy-learn-to-turn": 40,
+      "indy-plus": 232,
+      "indy-standard": 232,
+      "mountain-collective": 31,
+      "new-england-afternoon": 3,
+      "new-england-bronze": 3,
+      "new-england-college": 4,
+      "new-england-college-limited": 3,
+      "new-england-day": 4,
+      "new-england-gold": 11,
+      "new-england-nitro-limited": 3,
+      "new-england-nitro-unlimited": 3,
+      "new-england-silver": 3,
+      "new-england-super-senior-child": 4,
       "powder-alliance": 20,
-      power: 15,
-      "snow-pass": 25,
-      "snow-triple-play-east": 25,
+      "power-core": 10,
+      "power-select": 13,
+      "power-standard": 15,
+      "snow-pass": 14,
+      "snow-triple-play-east": 23,
     });
   });
 
   it("records the roster block title cell as each pass's source", () => {
     expect(
-      Object.fromEntries(
-        [...sourcesByPassID]
-          .sort()
-          .map(([passID, sources]) => [
-            passID,
-            sources.map((source) => source.id),
-          ]),
-      ),
-    ).toEqual({
-      epic: ["677843907!EA1"],
-      ikon: ["677843907!AH1"],
-      "ikon-2-day": ["677843907!BO1"],
-      "ikon-midwest": ["677843907!CU1"],
-      indy: ["677843907!A1"],
-      // Two roster blocks: the main one and the "partners not on Ikon" annex.
-      "mountain-collective": ["677843907!FP1", "677843907!GY1"],
-      "new-england": ["677843907!OS1"],
-      "powder-alliance": ["677843907!NJ1"],
-      power: ["677843907!LZ1"],
-      // The chart has a roster of each pass alone and a combined roster of both.
-      "snow-pass": ["677843907!JK1", "677843907!KR1"],
-      "snow-triple-play-east": ["677843907!ID1", "677843907!KR1"],
-    });
+      sourcesByPassID.get("ikon-base")?.map((source) => source.id),
+    ).toEqual(["677843907!AH1"]);
+    // Two roster blocks: the main one and the "partners not on Ikon" annex.
+    expect(
+      sourcesByPassID.get("mountain-collective")?.map((source) => source.id),
+    ).toEqual(["677843907!FP1", "677843907!GY1"]);
+    // The chart has a roster of each pass alone and a combined roster of both.
+    expect(
+      sourcesByPassID.get("snow-pass")?.map((source) => source.id),
+    ).toEqual(["677843907!JK1", "677843907!KR1"]);
+    expect([...sourcesByPassID.keys()]).toHaveLength(38);
   });
 
   it("sources each membership at the ski area's cell in the roster", () => {
-    expect(find(entries, "ikon", "Winter Park").memberships[0].sources).toEqual(
-      [{ type: SourceType.STORM_SKIING, id: "677843907!AI64" }],
-    );
+    expect(
+      find(entries, "ikon-standard", "Winter Park").memberships[0].sources,
+    ).toEqual([{ type: SourceType.STORM_SKIING, id: "677843907!AI64" }]);
   });
 
   it("fills the location down the rows of a group", () => {
     // Only the first ski area of each location group carries the location in the chart.
-    expect(find(entries, "indy", "Castle Mountain").location).toBe(
+    expect(find(entries, "indy-standard", "Castle Mountain").location).toBe(
       "Canada - Alberta",
     );
-    expect(find(entries, "indy", "Pass Powderkeg").location).toBe(
+    expect(find(entries, "indy-standard", "Pass Powderkeg").location).toBe(
       "Canada - Alberta",
     );
   });
 
-  it("reads one membership per populated tier column", () => {
-    expect(find(entries, "ikon", "Mt. Buller").memberships).toEqual([
+  it("turns each populated product column into its own pass membership", () => {
+    expect(find(entries, "ikon-standard", "Mt. Buller").memberships).toEqual([
       {
-        passID: "ikon",
-        passName: "Ikon Pass",
-        tier: null,
+        passID: "ikon-standard",
+        passName: "Ikon",
+        brandID: "ikon",
+        brandName: "Ikon Pass",
         access: "7, 26, 27",
         yearJoined: 2018,
         sources: [{ type: SourceType.STORM_SKIING, id: "677843907!AI8" }],
       },
+    ]);
+    expect(find(entries, "ikon-base", "Mt. Buller").memberships).toEqual([
       {
-        passID: "ikon",
-        passName: "Ikon Pass",
-        tier: "base",
+        passID: "ikon-base",
+        passName: "Ikon Base",
+        brandID: "ikon",
+        brandName: "Ikon Pass",
         access: "5, 26, 27",
         yearJoined: 2018,
         sources: [{ type: SourceType.STORM_SKIING, id: "677843907!AI8" }],
@@ -113,13 +135,14 @@ describe("parseSkiPassChart", () => {
     ]);
   });
 
-  it("records a membership for a roster with no tier columns at all", () => {
+  it("records a membership for a roster with no access column", () => {
     expect(find(entries, "ikon-midwest", "Boyne Mountain").memberships).toEqual(
       [
         {
           passID: "ikon-midwest",
           passName: "Ikon Pass Midwest",
-          tier: null,
+          brandID: "ikon",
+          brandName: "Ikon Pass",
           access: null,
           yearJoined: null,
           sources: [{ type: SourceType.STORM_SKIING, id: "677843907!CV8" }],
@@ -128,20 +151,19 @@ describe("parseSkiPassChart", () => {
     );
   });
 
-  it("ignores the cross-references a roster carries for other passes", () => {
-    // Cypress's row in the New England roster also fills in its Ikon columns. Those describe the
-    // Ikon pass, whose own roster already lists Cypress, so the New England entry must not pick
-    // them up as memberships of its own.
-    const newEngland = find(entries, "new-england", "Cypress");
-    expect([...new Set(newEngland.memberships.map((m) => m.passID))]).toEqual([
-      "new-england",
-    ]);
+  it("does not invent a pass when every product column is blank", () => {
+    // Cypress is on New England Gold, but the other nine product columns are blank.
     expect(
       entries
         .filter((entry) => entry.mountain === "Cypress")
         .map((entry) => entry.passID)
         .sort(),
-    ).toEqual(["ikon", "new-england"]);
+    ).toEqual([
+      "ikon-base",
+      "ikon-session",
+      "ikon-standard",
+      "new-england-gold",
+    ]);
   });
 
   it("merges a ski area listed in two rosters of the same pass", () => {
@@ -162,8 +184,17 @@ describe("parseSkiPassChart", () => {
 
   it("reads a roster block that lists two passes at once", () => {
     // The combined roster covers the ski areas on both the Snow Pass and Snow Triple Play East.
-    const snowPass = find(entries, "snow-pass", "Bromont");
-    const triplePlay = find(entries, "snow-triple-play-east", "Bromont");
+    const snowPassMountains = new Set(
+      entries
+        .filter((entry) => entry.passID === "snow-pass")
+        .map((entry) => entry.mountain),
+    );
+    const triplePlay = entries.find(
+      (entry) =>
+        entry.passID === "snow-triple-play-east" &&
+        snowPassMountains.has(entry.mountain),
+    )!;
+    const snowPass = find(entries, "snow-pass", triplePlay.mountain);
     expect(snowPass.memberships.map((m) => m.passID)).toEqual(["snow-pass"]);
     expect(triplePlay.memberships.map((m) => m.passID)).toEqual([
       "snow-triple-play-east",
@@ -171,7 +202,7 @@ describe("parseSkiPassChart", () => {
   });
 
   it("converts the chart's imperial elevations to metric", () => {
-    const castle = find(entries, "indy", "Castle Mountain");
+    const castle = find(entries, "indy-standard", "Castle Mountain");
     // 4,675 ft base, 7,529 ft summit.
     expect(castle.baseElevationInMeters).toBeCloseTo(1424.9, 1);
     expect(castle.summitElevationInMeters).toBeCloseTo(2294.8, 1);
@@ -188,5 +219,15 @@ describe("parseSkiPassChart", () => {
     expect(() => parseSkiPassChart(renamed, CHART_SHEET_ID)).toThrow(
       /Unknown ski pass roster block/,
     );
+  });
+
+  it("publishes only the configured natural pass brands", () => {
+    expect(brands.map((brand) => [brand.id, brand.name])).toEqual([
+      ["indy", "Indy Pass"],
+      ["ikon", "Ikon Pass"],
+      ["epic", "Epic Pass"],
+      ["power", "Power Pass"],
+      ["new-england", "New England Pass"],
+    ]);
   });
 });

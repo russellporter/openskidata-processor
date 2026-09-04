@@ -8,7 +8,29 @@ const IKON_SOURCES = [{ type: SourceType.STORM_SKIING, id: "1!AH1" }];
 
 /** The chart a set of roster entries would have come from, all on the Ikon roster. */
 function chart(entries: SkiPassRosterEntry[]): SkiPassChart {
-  return { entries, sourcesByPassID: new Map([["ikon", IKON_SOURCES]]) };
+  return {
+    entries,
+    passes: [
+      {
+        id: "ikon-standard",
+        name: "Ikon",
+        brandID: "ikon",
+        brandName: "Ikon Pass",
+        chartBlockTitles: ["IKON PASS ROSTER"],
+        accessColumn: "Ikon",
+        yearJoinedColumn: "YEAR JOINED IKON",
+      },
+    ],
+    brands: [
+      {
+        type: "skiPassBrand",
+        id: "ikon",
+        name: "Ikon Pass",
+        sources: IKON_SOURCES,
+      },
+    ],
+    sourcesByPassID: new Map([["ikon-standard", IKON_SOURCES]]),
+  };
 }
 
 function skiArea(
@@ -35,15 +57,16 @@ function rosterEntry(
   options: Partial<SkiPassRosterEntry> = {},
 ): SkiPassRosterEntry {
   return {
-    passID: "ikon",
-    passName: "Ikon Pass",
+    passID: "ikon-standard",
+    passName: "Ikon",
     location: "U.S. - Vermont",
     mountain,
     memberships: [
       {
-        passID: "ikon",
-        passName: "Ikon Pass",
-        tier: null,
+        passID: "ikon-standard",
+        passName: "Ikon",
+        brandID: "ikon",
+        brandName: "Ikon Pass",
         access: "7",
         yearJoined: 2018,
         sources: [{ type: SourceType.STORM_SKIING, id: cell }],
@@ -67,9 +90,10 @@ describe("SkiPassJoiner", () => {
     expect(result.skiAreaData.get("1")).toEqual({
       skiPasses: [
         {
-          passID: "ikon",
-          passName: "Ikon Pass",
-          tier: null,
+          passID: "ikon-standard",
+          passName: "Ikon",
+          brandID: "ikon",
+          brandName: "Ikon Pass",
           access: "7",
           yearJoined: 2018,
           sources: [{ type: SourceType.STORM_SKIING, id: "1!B2" }],
@@ -78,14 +102,50 @@ describe("SkiPassJoiner", () => {
     });
   });
 
+  it("counts the ski areas an actual pass covers", () => {
+    const result = new SkiPassJoiner(
+      chart([rosterEntry("Stowe", "1!B2"), rosterEntry("Sugarbush", "1!B3")]),
+      noOverrides,
+    ).join([skiArea("1", "Stowe"), skiArea("2", "Sugarbush")]);
+
+    expect(result.catalog.passes[0].skiAreaCount).toBe(2);
+  });
+
+  it("counts a ski area once however many roster entries name it", () => {
+    const result = new SkiPassJoiner(
+      chart([
+        rosterEntry("Mountain High: East", "1!B2"),
+        rosterEntry("Mountain High: West", "1!B3"),
+      ]),
+      new SkiPassOverrideIndex({
+        matches: [
+          {
+            location: "U.S. - Vermont",
+            mountain: "Mountain High: East",
+            skiAreas: ["skimap.org:1"],
+          },
+          {
+            location: "U.S. - Vermont",
+            mountain: "Mountain High: West",
+            skiAreas: ["skimap.org:1"],
+          },
+        ],
+        unmatchable: [],
+      }),
+    ).join([skiArea("1", "Mountain High")]);
+
+    expect(result.catalog.passes[0].skiAreaCount).toBe(1);
+  });
+
   it("gives the pass the chart's sources for it", () => {
     const result = new SkiPassJoiner(
       chart([rosterEntry("Stowe")]),
       noOverrides,
     ).join([skiArea("1", "Stowe Mountain Resort")]);
 
-    expect(result.passes[0].type).toBe("skiPass");
-    expect(result.passes[0].sources).toEqual(IKON_SOURCES);
+    expect(result.catalog.passes[0].type).toBe("skiPass");
+    expect(result.catalog.passes[0].sources).toEqual(IKON_SOURCES);
+    expect(result.catalog.brands[0].type).toBe("skiPassBrand");
   });
 
   it("fans a network roster entry out to every ski area it covers", () => {
@@ -105,7 +165,7 @@ describe("SkiPassJoiner", () => {
     ).join([skiArea("1", "Stowe"), skiArea("2", "Sugarbush")]);
 
     expect([...result.skiAreaData.keys()].sort()).toEqual(["1", "2"]);
-    expect(result.passes[0].skiAreaCount).toBe(2);
+    expect(result.catalog.passes[0].skiAreaCount).toBe(2);
   });
 
   it("does not duplicate a membership when two roster entries name one ski area", () => {
@@ -124,7 +184,7 @@ describe("SkiPassJoiner", () => {
       { type: SourceType.STORM_SKIING, id: "1!B2" },
       { type: SourceType.STORM_SKIING, id: "1!B3" },
     ]);
-    expect(result.passes[0].skiAreaCount).toBe(1);
+    expect(result.catalog.passes[0].skiAreaCount).toBe(1);
   });
 
   it("fails on a roster entry it cannot resolve, naming it", () => {
@@ -152,7 +212,7 @@ describe("SkiPassJoiner", () => {
     ).join([skiArea("1", "Stowe")]);
 
     expect(result.skiAreaData.size).toBe(0);
-    expect(result.passes[0].unresolvedRosterEntries).toEqual([
+    expect(result.catalog.passes[0].unresolvedRosterEntries).toEqual([
       {
         name: "Thrill Hills",
         location: "U.S. - Vermont",

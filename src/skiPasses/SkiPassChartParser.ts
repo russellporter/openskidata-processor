@@ -1,8 +1,14 @@
 import { parse } from "csv-parse/sync";
-import { SkiPassID, SkiPassMembership, Source } from "openskidata-format";
+import {
+  SkiPassBrand,
+  SkiPassID,
+  SkiPassMembership,
+  Source,
+} from "openskidata-format";
 import { skiPassChartSource } from "./SkiPassCellReference";
 import {
   SkiPassDefinition,
+  skiPassBrandDefinitions,
   skiPassesForBlockTitle,
 } from "./SkiPassDefinitions";
 import { SkiPassRosterEntry } from "./SkiPassTypes";
@@ -157,7 +163,7 @@ interface BlockColumns {
   base: number | null;
   summit: number | null;
   yearJoined: number | null;
-  tiers: { column: number; tier: string | null }[];
+  access: number | null;
 }
 
 function resolveColumns(
@@ -170,7 +176,7 @@ function resolveColumns(
     base: null,
     summit: null,
     yearJoined: null,
-    tiers: [],
+    access: null,
   };
 
   const yearJoinedKey =
@@ -196,12 +202,18 @@ function resolveColumns(
       columns.yearJoined = column;
     }
 
-    const tierColumn = block.pass.tierColumns.find(
-      (candidate) => headerKey(candidate.header) === key,
-    );
-    if (tierColumn !== undefined) {
-      columns.tiers.push({ column, tier: tierColumn.tier });
+    if (
+      block.pass.accessColumn !== null &&
+      headerKey(block.pass.accessColumn) === key
+    ) {
+      columns.access = column;
     }
+  }
+
+  if (block.pass.accessColumn !== null && columns.access === null) {
+    throw new Error(
+      `Ski pass chart roster "${block.pass.name}" has no "${block.pass.accessColumn}" access column.`,
+    );
   }
 
   return columns;
@@ -222,33 +234,23 @@ function readMemberships(
   // The ski area's name cell is the row's most useful landing point in the chart.
   const sources = [skiPassChartSource(gid, row, columns.name)];
 
-  const memberships = columns.tiers
-    .map((tierColumn) => ({
-      tier: tierColumn.tier,
-      access: cell(grid, row, tierColumn.column).replace(/\s+/g, " ").trim(),
-    }))
-    .filter((tier) => tier.access.length > 0)
-    .map((tier) => ({
-      passID: block.pass.id,
-      passName: block.pass.name,
-      tier: tier.tier,
-      access: tier.access,
-      yearJoined,
-      sources,
-    }));
+  const access =
+    columns.access === null
+      ? null
+      : cell(grid, row, columns.access).replace(/\s+/g, " ").trim();
 
-  if (memberships.length > 0) {
-    return memberships;
+  // In a multi-product roster, an empty product column means the ski area is not on that pass.
+  if (access !== null && access.length === 0) {
+    return [];
   }
 
-  // Some rosters (Ikon Midwest) have no per-tier access columns at all. Appearing in the roster
-  // is itself the membership.
   return [
     {
       passID: block.pass.id,
       passName: block.pass.name,
-      tier: null,
-      access: null,
+      brandID: block.pass.brandID,
+      brandName: block.pass.brandName,
+      access,
       yearJoined,
       sources,
     },
@@ -264,7 +266,7 @@ function uniqueMemberships(
 ): SkiPassMembership[] {
   const merged = new Map<string, SkiPassMembership>();
   for (const membership of memberships) {
-    const key = `${membership.passID} ${membership.tier}`;
+    const key = membership.passID;
     const existing = merged.get(key);
     if (existing === undefined) {
       merged.set(key, membership);
@@ -281,6 +283,10 @@ function uniqueMemberships(
 
 export interface SkiPassChart {
   entries: SkiPassRosterEntry[];
+  /** Actual pass definitions encountered in the chart. */
+  passes: SkiPassDefinition[];
+  /** Visual groupings of related passes. */
+  brands: SkiPassBrand[];
   /** The chart's roster block title cells, per ski pass. */
   sourcesByPassID: Map<SkiPassID, Source[]>;
 }
@@ -346,6 +352,9 @@ export function parseSkiPassChart(contents: string, gid: string): SkiPassChart {
       }
 
       const memberships = readMemberships(grid, row, block, columns, gid);
+      if (memberships.length === 0) {
+        continue;
+      }
       const key = [block.pass.id, location, mountain].join(" ");
       const existing = entries.get(key);
       if (existing !== undefined) {
@@ -380,5 +389,17 @@ export function parseSkiPassChart(contents: string, gid: string): SkiPassChart {
       `Ski pass chart yielded only ${parsed.length} roster entries, expected at least ${MINIMUM_ROSTER_ENTRIES}. The chart layout has likely changed.`,
     );
   }
-  return { entries: parsed, sourcesByPassID };
+  const passes = [
+    ...new Map(blocks.map((block) => [block.pass.id, block.pass])).values(),
+  ];
+  const brands = skiPassBrandDefinitions.map((brand) => ({
+    type: "skiPassBrand" as const,
+    ...brand,
+    sources: uniquedSources(
+      blocks
+        .filter((block) => block.pass.brandID === brand.id)
+        .map((block) => block.titleSource),
+    ),
+  }));
+  return { entries: parsed, passes, brands, sourcesByPassID };
 }

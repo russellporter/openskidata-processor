@@ -38,7 +38,18 @@ export interface MapboxGLSkiAreaProperties {
   vertical: number | null;
   downhillDistance: number | null;
   nordicDistance: number | null;
-  // Semicolon separated ski pass IDs, for filtering. Absent when the ski area is on no pass.
+  /**
+   * Ski pass membership, for filtering. Holds each pass the ski area is on ("epic") and each
+   * tier of it the ski area is covered by ("epic:local", or "epic:" for the pass's standard
+   * tier).
+   *
+   * The pass and its standard tier are kept distinct because they filter differently: a ski area
+   * covered only by Epic Local is on the Epic Pass, but not on the unrestricted Epic tier.
+   *
+   * Semicolon separated, and also delimited at both ends, so that a whole entry can be matched
+   * with a substring test: ";ikon;" matches only the Ikon Pass, where "ikon" would also match
+   * "ikon-2-day" and "ikon-midwest". Absent when the ski area is on no pass.
+   */
   ski_passes?: string;
 }
 

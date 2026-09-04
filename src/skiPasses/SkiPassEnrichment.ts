@@ -120,7 +120,7 @@ export default async function enrichSkiAreasWithSkiPasses(
   );
   await rename(temporaryPath, paths.skiAreas);
 
-  await writeSkiPassesJSON(paths.skiPassesJSON, result.passes);
+  await writeSkiPassesJSON(paths.skiPassesJSON, result.catalog);
   await writeSkiPassesCSV(paths.skiPassesCSV, result.matches);
 
   console.log(

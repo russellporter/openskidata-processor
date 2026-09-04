@@ -1,12 +1,13 @@
 import {
   SkiPass,
-  SkiPassID,
+  SkiPassCatalog,
   SkiPassMembership,
   Source,
 } from "openskidata-format";
 import uniquedSources from "../transforms/UniqueSources";
 import SkiAreaNameMatcher, { MatchableSkiArea } from "./SkiAreaNameMatcher";
 import { SkiPassChart } from "./SkiPassChartParser";
+import { SkiPassDefinition } from "./SkiPassDefinitions";
 import { SkiPassOverrideIndex } from "./SkiPassOverrides";
 import {
   SkiPassMatch,
@@ -23,7 +24,7 @@ export interface JoinableSkiArea extends MatchableSkiArea {
 export interface SkiPassJoinResult {
   /** Ski pass data to attach, keyed by ski area ID. Ski areas on no pass are absent. */
   skiAreaData: Map<string, SkiPassSkiAreaData>;
-  passes: SkiPass[];
+  catalog: SkiPassCatalog;
   matches: SkiPassMatch[];
 }
 
@@ -72,7 +73,14 @@ export default class SkiPassJoiner {
 
     return {
       skiAreaData: collectSkiAreaData(matches),
-      passes: collectPasses(entries, matches, this.chart.sourcesByPassID),
+      catalog: {
+        brands: this.chart.brands,
+        passes: collectPasses(
+          this.chart.passes,
+          matches,
+          this.chart.sourcesByPassID,
+        ),
+      },
       matches,
     };
   }
@@ -221,7 +229,7 @@ function uniqueMemberships(
 ): SkiPassMembership[] {
   const merged = new Map<string, SkiPassMembership>();
   for (const membership of memberships) {
-    const key = `${membership.passID} ${membership.tier}`;
+    const key = membership.passID;
     const existing = merged.get(key);
     if (existing === undefined) {
       merged.set(key, { ...membership });
@@ -236,27 +244,26 @@ function uniqueMemberships(
 }
 
 function collectPasses(
-  entries: SkiPassRosterEntry[],
+  definitions: SkiPassDefinition[],
   matches: SkiPassMatch[],
-  sourcesByPassID: Map<SkiPassID, Source[]>,
+  sourcesByPassID: Map<string, Source[]>,
 ): SkiPass[] {
-  const passNames = new Map<string, string>();
-  for (const entry of entries) {
-    passNames.set(entry.passID, entry.passName);
-  }
-
-  return [...passNames.entries()]
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([id, name]) => {
-      const passMatches = matches.filter((match) => match.entry.passID === id);
+  return [...definitions]
+    .sort((a, b) => a.id.localeCompare(b.id))
+    .map((definition) => {
+      const passMatches = matches.filter(
+        (match) => match.entry.passID === definition.id,
+      );
       const skiAreaIDs = unique(
         passMatches.flatMap((match) => match.skiAreaIDs),
       ).sort();
       return {
         type: "skiPass" as const,
-        id,
-        name,
-        sources: sourcesByPassID.get(id) ?? [],
+        id: definition.id,
+        name: definition.name,
+        brandID: definition.brandID,
+        brandName: definition.brandName,
+        sources: sourcesByPassID.get(definition.id) ?? [],
         skiAreaCount: skiAreaIDs.length,
         skiAreaIDs,
         unresolvedRosterEntries: passMatches

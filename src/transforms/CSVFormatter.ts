@@ -294,7 +294,7 @@ function formatSkiArea(feature: SkiAreaFeature): string {
   ].join(",");
 }
 
-/** The passes a ski area is on, deduplicated across their tiers. */
+/** The actual passes a ski area is on. */
 function formatSkiPasses(skiPasses: SkiPassMembership[]): string {
   return escapeField(
     [...new Set(skiPasses.map((membership) => membership.passID))].join(";"),

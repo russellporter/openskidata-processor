@@ -81,6 +81,71 @@ describe("MapboxGLFormatter", () => {
     expect(mapboxGLFeature?.properties.maxElevation).toBe(1023);
   });
 
+  it("should omit ski passes for a ski area on none", () => {
+    const feature = TestHelpers.mockSkiAreaFeature({
+      geometry: { type: "Point", coordinates: [1, 1] },
+      skiPasses: [],
+    });
+
+    const mapboxGLFeature = formatter(FeatureType.SkiArea)(feature);
+
+    expect(mapboxGLFeature?.properties).not.toHaveProperty("ski_passes");
+  });
+
+  it("should export one delimited entry per actual pass", () => {
+    const feature = TestHelpers.mockSkiAreaFeature({
+      geometry: { type: "Point", coordinates: [1, 1] },
+      skiPasses: [
+        skiPassMembership("epic-standard", "Epic", "epic", "Epic Pass"),
+        skiPassMembership("epic-local", "Epic Local", "epic", "Epic Pass"),
+        skiPassMembership("ikon-base", "Ikon Base", "ikon", "Ikon Pass"),
+      ],
+    });
+
+    const mapboxGLFeature = formatter(FeatureType.SkiArea)(feature);
+
+    expect(mapboxGLFeature?.properties.ski_passes).toBe(
+      ";epic-standard;epic-local;ikon-base;",
+    );
+  });
+
+  it("should export only the actual pass the ski area is covered by", () => {
+    const feature = TestHelpers.mockSkiAreaFeature({
+      geometry: { type: "Point", coordinates: [1, 1] },
+      skiPasses: [
+        skiPassMembership("epic-local", "Epic Local", "epic", "Epic Pass"),
+      ],
+    });
+
+    const mapboxGLFeature = formatter(FeatureType.SkiArea)(feature);
+
+    expect(mapboxGLFeature?.properties.ski_passes).toBe(";epic-local;");
+    expect(mapboxGLFeature?.properties.ski_passes).not.toContain(
+      ";epic-standard;",
+    );
+  });
+
+  it("should delimit ski pass entries so one pass ID cannot match another", () => {
+    const feature = TestHelpers.mockSkiAreaFeature({
+      geometry: { type: "Point", coordinates: [1, 1] },
+      skiPasses: [
+        skiPassMembership(
+          "ikon-midwest",
+          "Ikon Pass Midwest",
+          "ikon",
+          "Ikon Pass",
+        ),
+      ],
+    });
+
+    const mapboxGLFeature = formatter(FeatureType.SkiArea)(feature);
+
+    // The map filters for a pass by looking for ";<id>;" within this string, so a ski area on
+    // Ikon Midwest must not look like one on Ikon.
+    expect(mapboxGLFeature?.properties.ski_passes).not.toContain(";ikon;");
+    expect(mapboxGLFeature?.properties.ski_passes).toContain(";ikon-midwest;");
+  });
+
   it("should export run with ref", () => {
     const feature = TestHelpers.mockRunFeature({
       geometry: { type: "LineString", coordinates: [[1, 1]] },
@@ -462,3 +527,20 @@ describe("MapboxGLFormatter", () => {
     expect(mapboxGLFeature?.properties.skiAreas).toEqual(["area-1", "area-2"]);
   });
 });
+
+function skiPassMembership(
+  passID: string,
+  passName: string,
+  brandID: string | null,
+  brandName: string | null,
+) {
+  return {
+    passID,
+    passName,
+    brandID,
+    brandName,
+    access: null,
+    yearJoined: null,
+    sources: [],
+  };
+}

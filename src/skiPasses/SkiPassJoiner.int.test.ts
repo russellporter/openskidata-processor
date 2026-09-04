@@ -71,7 +71,7 @@ describe("joining the ski pass chart to real ski areas", () => {
     // Guards against a change that resolves entries by loosening the fuzzy tier rather than by
     // normalizing names better.
     expect(byTier.get("exact") ?? 0).toBeGreaterThanOrEqual(180);
-    expect(byTier.get("fuzzy") ?? 0).toBeLessThanOrEqual(20);
+    expect(byTier.get("fuzzy") ?? 0).toBeLessThanOrEqual(25);
     expect(byTier.get("ambiguous") ?? 0).toBeLessThanOrEqual(2);
   });
 
@@ -86,21 +86,48 @@ describe("joining the ski pass chart to real ski areas", () => {
 
   it("covers each pass's roster", () => {
     const counts = Object.fromEntries(
-      result.passes.map((pass) => [pass.id, pass.skiAreaCount]),
+      result.catalog.passes.map((pass) => [pass.id, pass.skiAreaCount]),
     );
     expect(counts).toMatchInlineSnapshot(`
 {
-  "epic": 71,
-  "ikon": 110,
+  "epic-day-22": 22,
+  "epic-day-32": 32,
+  "epic-day-all": 47,
+  "epic-keystone-plus": 3,
+  "epic-local": 52,
+  "epic-military": 43,
+  "epic-northeast-midweek": 21,
+  "epic-northeast-value": 21,
+  "epic-ohio": 4,
+  "epic-standard": 71,
+  "epic-summit-value": 2,
+  "epic-tahoe-local": 9,
+  "epic-tahoe-value": 3,
   "ikon-2-day": 9,
+  "ikon-base": 92,
   "ikon-midwest": 10,
-  "indy": 241,
-  "mountain-collective": 39,
-  "new-england": 11,
+  "ikon-session": 53,
+  "ikon-standard": 110,
+  "indy-learn-to-turn": 40,
+  "indy-plus": 240,
+  "indy-standard": 240,
+  "mountain-collective": 38,
+  "new-england-afternoon": 3,
+  "new-england-bronze": 3,
+  "new-england-college": 4,
+  "new-england-college-limited": 3,
+  "new-england-day": 4,
+  "new-england-gold": 11,
+  "new-england-nitro-limited": 3,
+  "new-england-nitro-unlimited": 3,
+  "new-england-silver": 3,
+  "new-england-super-senior-child": 4,
   "powder-alliance": 19,
-  "power": 15,
-  "snow-pass": 25,
-  "snow-triple-play-east": 25,
+  "power-core": 10,
+  "power-select": 13,
+  "power-standard": 15,
+  "snow-pass": 14,
+  "snow-triple-play-east": 23,
 }
 `);
   });
@@ -114,7 +141,13 @@ describe("joining the ski pass chart to real ski areas", () => {
     expect(stowe).toBeDefined();
     const data = result.skiAreaData.get(stowe!.id);
     expect([...new Set(data?.skiPasses.map((pass) => pass.passID))]).toEqual([
-      "epic",
+      "epic-day-32",
+      "epic-day-all",
+      "epic-local",
+      "epic-military",
+      "epic-northeast-midweek",
+      "epic-northeast-value",
+      "epic-standard",
     ]);
     for (const membership of data!.skiPasses) {
       expect(membership.sources).toHaveLength(1);

@@ -1,31 +1,32 @@
 import { writeFile } from "node:fs/promises";
-import { SkiPass } from "openskidata-format";
+import { SkiPassCatalog } from "openskidata-format";
 import { escapeField } from "../transforms/CSVFormatter";
 import { SkiPassMatch } from "./SkiPassTypes";
 
 const CSV_HEADERS = [
+  "brand_id",
+  "brand_name",
   "pass_id",
   "pass_name",
   "ski_area_id",
   "ski_area_name",
   "roster_name",
   "roster_location",
-  "tier",
   "access",
   "year_joined",
   "match_tier",
 ].join(",");
 
-/** The ski passes themselves, with the ski areas each one covers. */
+/** The brands and actual passes, with the ski areas each pass covers. */
 export async function writeSkiPassesJSON(
   path: string,
-  passes: SkiPass[],
+  catalog: SkiPassCatalog,
 ): Promise<void> {
-  await writeFile(path, JSON.stringify(passes, null, 2) + "\n");
+  await writeFile(path, JSON.stringify(catalog, null, 2) + "\n");
 }
 
 /**
- * One row per ski pass tier a ski area is on, which is the shape that loads directly into a
+ * One row per actual ski pass a ski area is on, which is the shape that loads directly into a
  * spreadsheet or a database table. `match_tier` records how the join was made, so a questionable
  * row can be traced back without re-running the pipeline.
  */
@@ -37,13 +38,14 @@ export async function writeSkiPassesCSV(
     match.skiAreaIDs.flatMap((skiAreaID, index) =>
       match.entry.memberships.map((membership) =>
         [
+          escapeField(membership.brandID),
+          escapeField(membership.brandName),
           escapeField(membership.passID),
           escapeField(membership.passName),
           escapeField(skiAreaID),
           escapeField(match.skiAreaNames[index]),
           escapeField(match.entry.mountain),
           escapeField(match.entry.location),
-          escapeField(membership.tier),
           escapeField(membership.access),
           membership.yearJoined ?? "",
           escapeField(match.tier),

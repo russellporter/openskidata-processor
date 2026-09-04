@@ -238,11 +238,11 @@ export function formatter(
       mapboxGLProperties.has_nordic = true;
     }
 
-    const passIDs = unique(
+    const passEntries = unique(
       properties.skiPasses.map((membership) => membership.passID),
     );
-    if (passIDs.length > 0) {
-      mapboxGLProperties.ski_passes = passIDs.join(";");
+    if (passEntries.length > 0) {
+      mapboxGLProperties.ski_passes = `;${passEntries.join(";")};`;
     }
 
     return {

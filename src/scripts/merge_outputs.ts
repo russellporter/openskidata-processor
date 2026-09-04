@@ -2,7 +2,12 @@ import * as fs from "fs";
 import { createReadStream, createWriteStream } from "fs";
 import * as path from "path";
 import { createInterface } from "readline";
-import { SkiPass, SkiPassUnresolvedRosterEntry } from "openskidata-format";
+import {
+  SkiPass,
+  SkiPassBrand,
+  SkiPassCatalog,
+  SkiPassUnresolvedRosterEntry,
+} from "openskidata-format";
 import { GeoPackageMerger } from "../io/GeoPackageMerger";
 import uniquedSources from "../transforms/UniqueSources";
 import { runCommand } from "../utils/ProcessRunner";
@@ -535,15 +540,17 @@ async function mergeMbtilesFiles(
  * areas per pass, and keeps a roster entry unresolved only where every region left it unresolved:
  * a region reports the entries outside its own extent as unresolved too.
  */
-export function mergeSkiPasses(inputs: SkiPass[][]): SkiPass[] {
+export function mergeSkiPasses(inputs: SkiPassCatalog[]): SkiPassCatalog {
   const merged = new Map<string, SkiPass>();
   const unresolved = new Map<
     string,
     Map<string, SkiPassUnresolvedRosterEntry>
   >();
 
-  for (const passes of inputs) {
-    for (const pass of passes) {
+  const brands = mergeSkiPassBrands(inputs.map((input) => input.brands));
+
+  for (const catalog of inputs) {
+    for (const pass of catalog.passes) {
       const stillUnresolved = new Map(
         pass.unresolvedRosterEntries.map((entry) => [
           rosterEntryKey(entry),
@@ -556,6 +563,14 @@ export function mergeSkiPasses(inputs: SkiPass[][]): SkiPass[] {
         merged.set(pass.id, { ...pass, unresolvedRosterEntries: [] });
         unresolved.set(pass.id, stillUnresolved);
         continue;
+      }
+
+      if (
+        existing.name !== pass.name ||
+        existing.brandID !== pass.brandID ||
+        existing.brandName !== pass.brandName
+      ) {
+        throw new Error(`Conflicting definitions for ski pass "${pass.id}".`);
       }
 
       existing.skiAreaIDs = [
@@ -577,6 +592,44 @@ export function mergeSkiPasses(inputs: SkiPass[][]): SkiPass[] {
   for (const pass of merged.values()) {
     pass.unresolvedRosterEntries = [...unresolved.get(pass.id)!.values()];
   }
+  return {
+    brands,
+    passes: [...merged.values()].sort((a, b) => a.id.localeCompare(b.id)),
+  };
+}
+
+/** Brand definitions are global; merge their sources but reject inconsistent regional views. */
+function mergeSkiPassBrands(inputs: SkiPassBrand[][]): SkiPassBrand[] {
+  const merged = new Map<string, SkiPassBrand>();
+  for (const brands of inputs) {
+    for (const brand of brands) {
+      const existing = merged.get(brand.id);
+      if (existing === undefined) {
+        merged.set(brand.id, { ...brand });
+      } else {
+        if (existing.name !== brand.name) {
+          throw new Error(
+            `Conflicting definitions for ski pass brand "${brand.id}".`,
+          );
+        }
+        existing.sources = uniquedSources([
+          ...existing.sources,
+          ...brand.sources,
+        ]);
+      }
+    }
+  }
+  const expectedIDs = [...merged.keys()].sort().join(",");
+  for (const brands of inputs) {
+    if (
+      brands
+        .map((brand) => brand.id)
+        .sort()
+        .join(",") !== expectedIDs
+    ) {
+      throw new Error("Regional ski pass catalogs contain different brands.");
+    }
+  }
   return [...merged.values()].sort((a, b) => a.id.localeCompare(b.id));
 }
 
@@ -588,7 +641,7 @@ async function mergeSkiPassFiles(
   inputDirs: string[],
   outputDir: string,
 ): Promise<number> {
-  const inputs: SkiPass[][] = [];
+  const inputs: SkiPassCatalog[] = [];
 
   for (const inputDir of inputDirs) {
     for (const inputPath of findSpecificFiles(
@@ -598,7 +651,9 @@ async function mergeSkiPassFiles(
       console.log(
         `Processing ski passes: ${path.relative(inputDir, inputPath)}`,
       );
-      inputs.push(JSON.parse(fs.readFileSync(inputPath, "utf8")) as SkiPass[]);
+      inputs.push(
+        JSON.parse(fs.readFileSync(inputPath, "utf8")) as SkiPassCatalog,
+      );
     }
   }
 

@@ -1,7 +1,7 @@
 import { copyFileSync, readFileSync } from "fs";
 import {
   SkiAreaActivity,
-  SkiPass,
+  SkiPassCatalog,
   SourceType,
   Status,
 } from "openskidata-format";
@@ -884,20 +884,19 @@ it("attaches ski pass data and writes the ski passes", async () => {
   const skiAreas = TestHelpers.fileContents(paths.output.skiAreas);
   expect(skiAreas.features[0].properties.skiPasses).toEqual([]);
 
-  const passes = TestHelpers.fileContents(paths.output.skiPasses) as SkiPass[];
-  expect(passes.map((pass) => pass.id)).toEqual([
-    "epic",
-    "ikon",
-    "ikon-2-day",
-    "ikon-midwest",
+  const catalog = TestHelpers.fileContents(
+    paths.output.skiPasses,
+  ) as SkiPassCatalog;
+  const passes = catalog.passes;
+  expect(catalog.brands.map((brand) => brand.id)).toEqual([
     "indy",
-    "mountain-collective",
-    "new-england",
-    "powder-alliance",
+    "ikon",
+    "epic",
     "power",
-    "snow-pass",
-    "snow-triple-play-east",
+    "new-england",
   ]);
+  expect(passes).toHaveLength(38);
+  expect(passes.map((pass) => pass.id)).toContain("ikon-base");
   expect(passes.every((pass) => pass.type === "skiPass")).toBe(true);
   expect(passes.find((pass) => pass.id === "snow-pass")?.sources).toEqual([
     { type: SourceType.STORM_SKIING, id: "677843907!JK1" },
@@ -906,10 +905,10 @@ it("attaches ski pass data and writes the ski passes", async () => {
   // Nothing in this extract matches, so every roster entry is reported as unresolved.
   expect(
     passes.find((pass) => pass.id === "snow-pass")?.unresolvedRosterEntries,
-  ).toHaveLength(25);
+  ).toHaveLength(14);
 
   // The ski pass CSV is written even when no ski area is on a pass, with only its header.
   expect(readFileSync(paths.output.skiPassesCSV, "utf8")).toBe(
-    "pass_id,pass_name,ski_area_id,ski_area_name,roster_name,roster_location,tier,access,year_joined,match_tier\n",
+    "brand_id,brand_name,pass_id,pass_name,ski_area_id,ski_area_name,roster_name,roster_location,access,year_joined,match_tier\n",
   );
 });
