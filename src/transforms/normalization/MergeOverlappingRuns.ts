@@ -1,4 +1,4 @@
-import _ from "lodash";
+import { isDeepStrictEqual } from "util";
 import { computeViewportHint, RunProperties } from "openskidata-format";
 import * as topojsonClient from "topojson-client";
 import * as TopoJSON from "topojson-specification";
@@ -24,7 +24,7 @@ interface RunArc {
 // Finds overlapping run segments and merges them
 export function mergeOverlappingRuns(data: RunTopology) {
   const geometries = data.objects.runs.geometries as any;
-  const lines = _.remove(
+  const lines = removeInPlace(
     geometries,
     function (geometry: TopoJSON.GeometryObject<RunProperties>) {
       return (
@@ -36,13 +36,13 @@ export function mergeOverlappingRuns(data: RunTopology) {
   // store mapping of arc ID to merged properties for that arc
   const arcProperties: { [key: number]: ArcData } = {};
 
-  _.forEach(lines, (line) => {
+  lines.forEach((line) => {
     const properties = line.properties;
     if (properties === undefined) {
       throw "Missing properties";
     }
 
-    _.forEach(getArcsList(line), (arcs) => {
+    getArcsList(line).forEach((arcs) => {
       forEachArc(arcs, (arc, isReversed) => {
         const arcData = arcProperties[arc] || { runs: [] };
         arcData.runs.push({
@@ -54,8 +54,8 @@ export function mergeOverlappingRuns(data: RunTopology) {
     });
   });
 
-  _.forEach(lines, (line) => {
-    _.forEach(getArcsList(line), (arcs) => {
+  lines.forEach((line) => {
+    getArcsList(line).forEach((arcs) => {
       let lastArcProperties: ArcData | null = null;
       let accumulatedArcs: number[] = [];
 
@@ -65,7 +65,7 @@ export function mergeOverlappingRuns(data: RunTopology) {
       ) {
         if (
           lastArcProperties !== null &&
-          (!_.isEqual(properties, lastArcProperties) || forceSplit) &&
+          (!isDeepStrictEqual(properties, lastArcProperties) || forceSplit) &&
           accumulatedArcs.length > 0
         ) {
           const newGeometry: TopoJSON.LineString<RunProperties> = {
@@ -115,7 +115,7 @@ function forEachArc(
   arcs: number[],
   callback: (arc: number, isReversed: boolean) => void,
 ) {
-  _.forEach(arcs, function (arc) {
+  arcs.forEach(function (arc) {
     arc = Number(arc);
     const isReversed = arc < 0;
     if (isReversed) {
@@ -168,4 +168,19 @@ function getArcsList(geometry: RunLine) {
   } else {
     return geometry.arcs;
   }
+}
+
+/**
+ * Removes every element matching `predicate` from `array` in place and returns
+ * them in their original order. Replaces lodash's `remove`.
+ */
+function removeInPlace<T>(array: T[], predicate: (value: T) => boolean): T[] {
+  const removed: T[] = [];
+  for (let i = array.length - 1; i >= 0; i--) {
+    if (predicate(array[i])) {
+      removed.unshift(array[i]);
+      array.splice(i, 1);
+    }
+  }
+  return removed;
 }

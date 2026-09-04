@@ -1,4 +1,4 @@
-import * as _ from "lodash";
+import { isDeepStrictEqual } from "util";
 import { RunGeometry, RunProperties } from "openskidata-format";
 import { RunLineFeature } from "../../features/RunFeature";
 import notEmpty from "../../utils/notEmpty";
@@ -12,7 +12,9 @@ import PointGraph from "./PointGraph";
 // downstream processing (e.g. elevation profile extraction) throws when it
 // tries to divide by the zero-length.
 function isDegenerateLineString(coords: number[][]): boolean {
-  return coords.length < 2 || coords.every((c) => _.isEqual(c, coords[0]));
+  return (
+    coords.length < 2 || coords.every((c) => isDeepStrictEqual(c, coords[0]))
+  );
 }
 
 export default function combineRunSegments(

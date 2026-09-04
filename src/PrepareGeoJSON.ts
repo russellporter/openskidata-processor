@@ -1,6 +1,5 @@
 import { createWriteStream, existsSync, unlinkSync } from "fs";
 import { writeFile } from "fs/promises";
-import merge from "merge2";
 import { FeatureType } from "openskidata-format";
 import * as path from "path";
 import { join } from "path";
@@ -35,6 +34,7 @@ import {
 } from "./statistics/DatasetMetadata";
 import {
   accumulate,
+  concat,
   flatMap,
   flatMapArray,
   get,
@@ -116,7 +116,7 @@ export default async function prepare(paths: DataPaths, config: Config) {
           siteProvider.loadSites(paths.input.osmJSON.skiAreaSites);
 
           await pipeline(
-            merge([
+            concat(
               readGeoJSONFeatures(paths.input.geoJSON.skiAreas).pipe(
                 flatMap(formatSkiArea(InputSkiAreaType.OPENSTREETMAP_LANDUSE)),
               ),
@@ -124,7 +124,7 @@ export default async function prepare(paths: DataPaths, config: Config) {
               readGeoJSONFeatures(paths.input.geoJSON.skiMapSkiAreas).pipe(
                 flatMap(formatSkiArea(InputSkiAreaType.SKIMAP_ORG)),
               ),
-            ]),
+            ),
             toFeatureCollection(),
             createWriteStream(paths.intermediate.skiAreas),
           );

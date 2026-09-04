@@ -10,9 +10,7 @@
     {
       "location": "Canada - British Columbia",
       "mountain": "Baldy Mountain Resort",
-      "skiAreas": [
-        "skimap.org:37"
-      ],
+      "skiAreas": ["skimap.org:37"],
       "note": "Known as Mt. Baldy Family Ski Area in the data."
     },
     {
@@ -33,25 +31,19 @@
     {
       "location": "Europe - Austria",
       "mountain": "Kitzbühel",
-      "skiAreas": [
-        "openstreetmap:relation/10938000"
-      ],
+      "skiAreas": ["openstreetmap:relation/10938000"],
       "note": "Named KitzSki in the data."
     },
     {
       "location": "Europe - Austria",
       "mountain": "Rauriser-Hochalmbahnen",
-      "skiAreas": [
-        "openstreetmap:way/341989985"
-      ],
+      "skiAreas": ["openstreetmap:way/341989985"],
       "note": "Named Raurisertal in the data."
     },
     {
       "location": "Europe - Austria",
       "mountain": "Ski Welt",
-      "skiAreas": [
-        "openstreetmap:relation/4643831"
-      ],
+      "skiAreas": ["openstreetmap:relation/4643831"],
       "note": "Named SkiWelt Wilder Kaiser - Brixental in the data."
     },
     {
@@ -113,25 +105,19 @@
     {
       "location": "Japan (Fukushima)",
       "mountain": "Nekoma Mountain",
-      "skiAreas": [
-        "openstreetmap:way/322310180"
-      ],
+      "skiAreas": ["openstreetmap:way/322310180"],
       "note": "Named Hoshino Resorts Nekoma Mountain in the data."
     },
     {
       "location": "U.S. - Michigan",
       "mountain": "The Highlands",
-      "skiAreas": [
-        "openstreetmap:way/997160539"
-      ],
+      "skiAreas": ["openstreetmap:way/997160539"],
       "note": "Still named Boyne Highlands Resort in the data."
     },
     {
       "location": "U.S. - Vermont",
       "mountain": "Middlebury Snowbowl",
-      "skiAreas": [
-        "openstreetmap:way/32644222"
-      ],
+      "skiAreas": ["openstreetmap:way/32644222"],
       "note": "Named Middlebury College Snow Bowl in the data."
     },
     {
@@ -146,10 +132,7 @@
     {
       "location": "U.S. - West Virginia",
       "mountain": "Silver Creek (Snowshoe)",
-      "skiAreas": [
-        "openstreetmap:relation/5883752",
-        "skimap.org:181"
-      ],
+      "skiAreas": ["openstreetmap:relation/5883752", "skimap.org:181"],
       "note": "Silver Creek is part of Snowshoe Mountain, which appears twice in the data."
     }
   ],

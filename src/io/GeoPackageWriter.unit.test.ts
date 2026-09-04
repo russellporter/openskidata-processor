@@ -6,28 +6,29 @@ import {
   SkiAreaFeature,
 } from "openskidata-format";
 import { mockViewportHint } from "../testUtils";
-import { promises as fs } from "fs";
+import { promises as fs, mkdtempSync } from "fs";
+import { tmpdir } from "os";
+import { join } from "path";
 import { GeoPackageAPI } from "@ngageoint/geopackage";
-import tmp from "tmp";
 
 describe("GeoPackageWriter", () => {
+  let testDir: string;
   let testGeoPackagePath: string;
   let writer: GeoPackageWriter;
 
   beforeEach(async () => {
     writer = new GeoPackageWriter();
-    // Generate unique test file path for each test
-    testGeoPackagePath = tmp.tmpNameSync({ postfix: ".gpkg" });
+    // GeoPackageAPI.create requires a path that does not exist yet, so create the
+    // directory and name the file inside it.
+    testDir = mkdtempSync(join(tmpdir(), "geopackage-writer-"));
+    testGeoPackagePath = join(testDir, "test.gpkg");
   });
 
   afterEach(async () => {
     await writer.close();
     // Clean up test file
-    try {
-      await fs.unlink(testGeoPackagePath);
-    } catch (error) {
-      // File doesn't exist, that's fine
-    }
+    await fs.unlink(testGeoPackagePath).catch(() => {});
+    await fs.rmdir(testDir).catch(() => {});
   });
 
   it("should create a GeoPackage file", async () => {

@@ -1,4 +1,4 @@
-import * as _ from "lodash";
+import { isDeepStrictEqual } from "util";
 import { computeViewportHint } from "openskidata-format";
 import { RunLineFeature } from "../../features/RunFeature";
 import PointMultiMap from "./PointMultiMap";
@@ -37,7 +37,7 @@ export default class PointGraph {
       return null;
     }
 
-    feature = _.cloneDeep(feature);
+    feature = structuredClone(feature);
 
     feature.properties = mergedProperties(
       features.map((f) => f.feature.properties),
@@ -47,12 +47,14 @@ export default class PointGraph {
       (coordinates: number[][], featureInfo) => {
         const feature = featureInfo.feature;
         const coordsLength = coordinates.length;
-        let featureCoords = _.cloneDeep(feature.geometry.coordinates);
+        let featureCoords = structuredClone(feature.geometry.coordinates);
         if (featureInfo.reversed) {
           featureCoords.reverse();
         }
         if (coordsLength > 0) {
-          if (!_.isEqual(featureCoords[0], coordinates[coordsLength - 1])) {
+          if (
+            !isDeepStrictEqual(featureCoords[0], coordinates[coordsLength - 1])
+          ) {
             throw "mismatched coords in PointGraph";
           }
           featureCoords = featureCoords.slice(1);

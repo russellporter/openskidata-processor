@@ -26,8 +26,9 @@ import {
   SpotType,
   Status,
 } from "openskidata-format";
+import { mkdtempSync } from "fs";
+import * as os from "os";
 import * as path from "path";
-import * as tmp from "tmp";
 import { SkiAreaGeometry } from "./clustering/MapObject";
 import { InputLiftFeature } from "./features/LiftFeature";
 import { InputRunFeature, InputRunGeometry } from "./features/RunFeature";
@@ -48,7 +49,7 @@ import placeholderSiteGeometry from "./utils/PlaceholderSiteGeometry";
 export interface FolderContents extends Map<string, any> {}
 
 export function getFilePaths(): DataPaths {
-  const dir = tmp.dirSync().name;
+  const dir = mkdtempSync(path.join(os.tmpdir(), "openskidata-paths-"));
   return {
     input: new InputDataPaths(path.join(dir, "input")),
     intermediate: new GeoJSONIntermediatePaths(path.join(dir, "intermediate")),
@@ -61,7 +62,7 @@ export function getFilePaths(): DataPaths {
  * Each call returns a new, isolated directory to prevent test interference.
  */
 export function getTempWorkingDir(): string {
-  return tmp.dirSync().name;
+  return mkdtempSync(path.join(os.tmpdir(), "openskidata-working-"));
 }
 
 export function mockInputFiles(

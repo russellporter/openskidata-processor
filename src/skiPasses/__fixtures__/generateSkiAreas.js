@@ -23,7 +23,9 @@ process.stdin.on("end", () => {
         .filter((code) => code !== null),
       minElevationInMeters: properties.statistics?.minElevation ?? null,
       maxElevationInMeters: properties.statistics?.maxElevation ?? null,
-      sources: properties.sources.map((source) => `${source.type}:${source.id}`),
+      sources: properties.sources.map(
+        (source) => `${source.type}:${source.id}`,
+      ),
     }))
     .sort((a, b) => a.id.localeCompare(b.id));
 

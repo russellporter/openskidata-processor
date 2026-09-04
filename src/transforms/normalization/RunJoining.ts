@@ -1,4 +1,4 @@
-import _ from "lodash";
+import { isDeepStrictEqual } from "util";
 import {
   FeatureType,
   Place,
@@ -15,31 +15,31 @@ const ignoredPropertiesForComparison: Set<string> = new Set<
   keyof RunProperties
 >(["id", "sources", "skiAreas", "elevationProfile", "places", "viewportHint"]);
 
+/**
+ * A copy of `properties` without the keys that must not take part in run
+ * comparison. Only top-level keys are dropped, matching the customizer this
+ * replaced, which short-circuited to "equal" solely when the parent object was
+ * the properties object itself.
+ */
+function withoutIgnoredProperties(
+  properties: RunProperties,
+): Partial<RunProperties> {
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(properties)) {
+    if (!ignoredPropertiesForComparison.has(key)) {
+      result[key] = value;
+    }
+  }
+  return result as Partial<RunProperties>;
+}
+
 export function isPartOfSameRun(
   leftFeature: RunFeature,
   rightFeature: RunFeature,
 ): boolean {
-  return _.isEqualWith(
-    leftFeature.properties,
-    rightFeature.properties,
-    (
-      left: any,
-      right: any,
-      indexOrKey: _.PropertyName | undefined,
-      leftParent: any,
-      rightParent: any,
-      stack: any,
-    ) => {
-      if (
-        leftParent === leftFeature.properties &&
-        typeof indexOrKey === "string" &&
-        ignoredPropertiesForComparison.has(indexOrKey)
-      ) {
-        return true;
-      }
-
-      return undefined;
-    },
+  return isDeepStrictEqual(
+    withoutIgnoredProperties(leftFeature.properties),
+    withoutIgnoredProperties(rightFeature.properties),
   );
 }
 
@@ -149,7 +149,7 @@ function sanitizeUniqueAndJoin(values: (string | null)[]): string | null {
       }),
   );
 
-  return uniqueValues.size > 0 ? _.join(Array.from(uniqueValues), ", ") : null;
+  return uniqueValues.size > 0 ? Array.from(uniqueValues).join(", ") : null;
 }
 function sortPriority<T>(values: T[]): Map<T, number> {
   const map = new Map<T, number>();

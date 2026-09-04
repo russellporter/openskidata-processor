@@ -1,10 +1,11 @@
 import { GeoPackageMerger } from "./GeoPackageMerger";
 import { GeoPackageWriter } from "./GeoPackageWriter";
-import { promises as fs } from "fs";
+import { promises as fs, mkdtempSync } from "fs";
+import { tmpdir } from "os";
+import { join } from "path";
 import { FeatureType, LiftType } from "openskidata-format";
 import { GeoPackageAPI } from "@ngageoint/geopackage";
 import { mockLiftFeature } from "../TestHelpers";
-import tmp from "tmp";
 
 describe("GeoPackageMerger", () => {
   let merger: GeoPackageMerger;
@@ -21,7 +22,7 @@ describe("GeoPackageMerger", () => {
     sourceWriter = new GeoPackageWriter();
 
     // Generate unique test directory for each test
-    testDir = tmp.dirSync().name;
+    testDir = mkdtempSync(join(tmpdir(), "geopackage-merger-"));
     targetGpkgPath = `${testDir}/target.gpkg`;
     sourceGpkgPath = `${testDir}/source.gpkg`;
   });
@@ -35,6 +36,7 @@ describe("GeoPackageMerger", () => {
       fs.unlink(targetGpkgPath).catch(() => {}),
       fs.unlink(sourceGpkgPath).catch(() => {}),
     ]);
+    await fs.rmdir(testDir).catch(() => {});
   });
 
   async function getFeatureCount(

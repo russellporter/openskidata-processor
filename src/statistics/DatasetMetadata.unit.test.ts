@@ -188,7 +188,12 @@ describe("MetadataCollector", () => {
     const collector = new MetadataCollector();
     const add = collector.collector(FeatureType.SkiArea);
 
-    add(skiArea({ id: "both", activities: [SkiAreaActivity.Downhill, SkiAreaActivity.Nordic] }));
+    add(
+      skiArea({
+        id: "both",
+        activities: [SkiAreaActivity.Downhill, SkiAreaActivity.Nordic],
+      }),
+    );
     add(skiArea({ id: "downhill", activities: [SkiAreaActivity.Downhill] }));
     add(skiArea({ id: "neither", activities: [] }));
 
@@ -297,9 +302,9 @@ describe("MetadataCollector", () => {
       geoPackage: 8910,
     };
 
-    expect(new MetadataCollector().metadata({ ...options, files }).files).toEqual(
-      files,
-    );
+    expect(
+      new MetadataCollector().metadata({ ...options, files }).files,
+    ).toEqual(files);
   });
 
   it("records the bounding box so a partial extract is identifiable", () => {
