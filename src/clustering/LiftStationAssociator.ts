@@ -4,9 +4,9 @@ import {
   LiftGeometry,
   LiftStationPosition,
 } from "openskidata-format";
-import { ElevationProcessor } from "../transforms/Elevation";
-import { LiftObject, SpotObject } from "./MapObject";
-import { ClusteringDatabase } from "./database/ClusteringDatabase";
+import { ElevationProcessor } from "../transforms/Elevation.js";
+import { LiftObject, SpotObject } from "./MapObject.js";
+import { ClusteringDatabase } from "./database/ClusteringDatabase.js";
 
 export class LiftStationAssociator {
   private static readonly THRESHOLD_KM = 0.03; // 30 meters

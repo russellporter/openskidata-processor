@@ -1,5 +1,5 @@
-import SkiAreaNameMatcher, { MatchableSkiArea } from "./SkiAreaNameMatcher";
-import { SkiPassRosterEntry } from "./SkiPassTypes";
+import SkiAreaNameMatcher, { MatchableSkiArea } from "./SkiAreaNameMatcher.js";
+import { SkiPassRosterEntry } from "./SkiPassTypes.js";
 
 function skiArea(
   id: string,

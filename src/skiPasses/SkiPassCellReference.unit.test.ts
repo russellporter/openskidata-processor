@@ -1,5 +1,5 @@
 import { getSourceURL } from "openskidata-format";
-import { skiPassChartSource } from "./SkiPassCellReference";
+import { skiPassChartSource } from "./SkiPassCellReference.js";
 
 function reference(gid: string, row: number, column: number): string {
   return skiPassChartSource(gid, row, column).id;

@@ -1,4 +1,4 @@
-import { mapWithConcurrency } from "./mapWithConcurrency";
+import { mapWithConcurrency } from "./mapWithConcurrency.js";
 
 describe("mapWithConcurrency", () => {
   it("preserves input order", async () => {

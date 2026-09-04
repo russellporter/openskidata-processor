@@ -1,5 +1,7 @@
 import * as Fs from "fs";
-import * as JSONStream from "JSONStream";
+import { chain } from "stream-chain";
+import { parser } from "stream-json";
+import Assembler from "stream-json/assembler.js";
 import osmtogeojson from "osmtogeojson";
 
 const polygonFeatures = {
@@ -114,24 +116,39 @@ export function convertOSMToGeoJSON(osmJSON: any) {
   });
 }
 
-async function readOSMJSON(path: string): Promise<any> {
-  return await new Promise((resolve, reject) => {
-    Fs.createReadStream(path)
-      .pipe(JSONStream.parse(null))
-      .on("root", function (data) {
-        // iron out some nasty floating point rounding errors
-        if (data.version) data.version = Math.round(data.version * 1000) / 1000;
-        data.elements.forEach(function (element: any) {
-          if (element.lat) element.lat = Math.round(element.lat * 1e12) / 1e12;
-          if (element.lon) element.lon = Math.round(element.lon * 1e12) / 1e12;
-        });
-        // convert to geojson
-        resolve(data);
-      })
-      .on("error", function (error) {
-        reject(error);
-      });
+/**
+ * Reads a whole Overpass JSON document.
+ *
+ * osmtogeojson needs the entire object, so this does materialize it, but it is
+ * assembled from a token stream rather than via JSON.parse of the file contents.
+ * That matters at planet scale: JSON.parse would first need the file as a single
+ * JavaScript string, and V8 caps string length well below the size these
+ * extracts reach.
+ */
+interface OverpassJSON {
+  version?: number;
+  elements: { lat?: number; lon?: number }[];
+}
+
+async function readOSMJSON(path: string): Promise<OverpassJSON> {
+  const tokens = chain([Fs.createReadStream(path), parser()]);
+
+  const assembler = new Assembler<OverpassJSON>();
+  for await (const token of tokens) {
+    assembler.consume(token);
+  }
+  const data = assembler.current;
+  if (data === null) {
+    throw new Error(`No JSON document found in ${path}`);
+  }
+
+  // iron out some nasty floating point rounding errors
+  if (data.version) data.version = Math.round(data.version * 1000) / 1000;
+  data.elements.forEach((element) => {
+    if (element.lat) element.lat = Math.round(element.lat * 1e12) / 1e12;
+    if (element.lon) element.lon = Math.round(element.lon * 1e12) / 1e12;
   });
+  return data;
 }
 
 /**

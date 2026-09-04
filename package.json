@@ -2,6 +2,7 @@
   "name": "openskidata-processor",
   "version": "1.0.0",
   "description": "Data pipeline for processing OpenStreetMap and Skimap.org data into OpenSkiData and OpenSkiMap tiles",
+  "type": "module",
   "main": "run.sh",
   "prettier": {},
   "dependencies": {
@@ -28,7 +29,9 @@
     "openskidata-format": "^14.0.0",
     "osmtogeojson": "3.0.0-beta.5",
     "pg": "^8.12.0",
-    "sharp": "^0.35.0",
+    "sharp": "^0.35.4",
+    "stream-chain": "^4.2.5",
+    "stream-json": "^3.6.0",
     "topojson-client": "^3",
     "topojson-server": "^3"
   },
@@ -49,7 +52,7 @@
     "vitest": "^5.0.0"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "rm -rf dist && tsc",
     "dev": "tsc --watch",
     "dev:all": "concurrently \"npm run dev\" \"/usr/local/bin/init-postgres.sh\"",
     "format": "prettier --write . --ignore-path .gitignore",
@@ -61,7 +64,8 @@
     "debug-geocode": "node dist/scripts/debug_geocode.js",
     "merge-outputs": "node dist/scripts/merge_outputs.js",
     "extract-tiles": "node dist/scripts/extract_tiles.js",
-    "clear-cache": "node dist/scripts/clear_cache.js"
+    "clear-cache": "node dist/scripts/clear_cache.js",
+    "smoke-import": "node scripts/smoke-import.mjs"
   },
   "author": "Russell Porter",
   "license": "ISC",

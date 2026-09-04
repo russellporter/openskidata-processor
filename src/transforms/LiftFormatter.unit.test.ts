@@ -1,7 +1,7 @@
 import { LiftType } from "openskidata-format";
-import { InputLiftFeature, OSMLiftTags } from "../features/LiftFeature";
-import OSMGeoJSONProperties from "../features/OSMGeoJSONProperties";
-import { formatLift } from "./LiftFormatter";
+import { InputLiftFeature, OSMLiftTags } from "../features/LiftFeature.js";
+import OSMGeoJSONProperties from "../features/OSMGeoJSONProperties.js";
+import { formatLift } from "./LiftFormatter.js";
 
 describe("LiftFormatter", () => {
   it("formats funicular", () => {

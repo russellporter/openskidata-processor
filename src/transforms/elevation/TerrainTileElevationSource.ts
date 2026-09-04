@@ -3,13 +3,13 @@ import {
   lonLatToTilePixel,
   getInterpolationSetup,
   InterpolationSetup,
-} from "./TileCoordinates";
+} from "./TileCoordinates.js";
 import {
   elevationAtPixel,
   bilinearInterpolate,
   TileEncoding,
-} from "./ElevationDecoder";
-import { TileDiskCache } from "./TileDiskCache";
+} from "./ElevationDecoder.js";
+import { TileDiskCache } from "./TileDiskCache.js";
 
 type Result<T, E = string> = { ok: true; value: T } | { ok: false; error: E };
 

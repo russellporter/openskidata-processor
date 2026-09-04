@@ -1,11 +1,11 @@
-import { GeoPackageWriter } from "./GeoPackageWriter";
+import { GeoPackageWriter } from "./GeoPackageWriter.js";
 import {
   FeatureType,
   LiftFeature,
   RunFeature,
   SkiAreaFeature,
 } from "openskidata-format";
-import { mockViewportHint } from "../testUtils";
+import { mockViewportHint } from "../testUtils.js";
 import { promises as fs, mkdtempSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";

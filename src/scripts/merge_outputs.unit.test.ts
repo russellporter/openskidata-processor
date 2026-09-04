@@ -1,5 +1,5 @@
 import { SkiPass, SkiPassCatalog, SourceType } from "openskidata-format";
-import { mergeSkiPasses } from "./merge_outputs";
+import { mergeSkiPasses } from "./merge_outputs.js";
 
 function pass(options: Partial<SkiPass> = {}): SkiPass {
   return {

@@ -1,5 +1,5 @@
 import { PoolConfig } from "pg";
-import { PostgresConfig } from "../Config";
+import { PostgresConfig } from "../Config.js";
 
 export function getPostgresPoolConfig(
   database: string,

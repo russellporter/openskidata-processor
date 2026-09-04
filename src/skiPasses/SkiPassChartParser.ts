@@ -5,14 +5,14 @@ import {
   SkiPassMembership,
   Source,
 } from "openskidata-format";
-import { skiPassChartSource } from "./SkiPassCellReference";
+import { skiPassChartSource } from "./SkiPassCellReference.js";
 import {
   SkiPassDefinition,
   skiPassBrandDefinitions,
   skiPassesForBlockTitle,
-} from "./SkiPassDefinitions";
-import { SkiPassRosterEntry } from "./SkiPassTypes";
-import uniquedSources from "../transforms/UniqueSources";
+} from "./SkiPassDefinitions.js";
+import { SkiPassRosterEntry } from "./SkiPassTypes.js";
+import uniquedSources from "../transforms/UniqueSources.js";
 
 const METERS_PER_FOOT = 0.3048;
 

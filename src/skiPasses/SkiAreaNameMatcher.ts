@@ -1,5 +1,5 @@
-import { SkiPassRegion, parseSkiPassLocation } from "./SkiPassLocations";
-import { SkiPassMatchTier, SkiPassRosterEntry } from "./SkiPassTypes";
+import { SkiPassRegion, parseSkiPassLocation } from "./SkiPassLocations.js";
+import { SkiPassMatchTier, SkiPassRosterEntry } from "./SkiPassTypes.js";
 
 /** A ski area the matcher can match a roster entry against. */
 export interface MatchableSkiArea {

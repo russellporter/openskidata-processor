@@ -13,10 +13,10 @@ import {
   SpotFeature,
   SpotType,
 } from "openskidata-format";
-import { osmID } from "../features/OSMGeoJSONProperties";
-import { InputSpotFeature, OSMSpotTags } from "../features/SpotFeature";
-import buildFeature from "./FeatureBuilder";
-import { getOSMName } from "./OSMTransforms";
+import { osmID } from "../features/OSMGeoJSONProperties.js";
+import { InputSpotFeature, OSMSpotTags } from "../features/SpotFeature.js";
+import buildFeature from "./FeatureBuilder.js";
+import { getOSMName } from "./OSMTransforms.js";
 
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 

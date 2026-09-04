@@ -1,6 +1,6 @@
 import { Pool } from "pg";
-import { PostgresConfig } from "../Config";
-import { getPostgresPoolConfig } from "./getPostgresPoolConfig";
+import { PostgresConfig } from "../Config.js";
+import { getPostgresPoolConfig } from "./getPostgresPoolConfig.js";
 
 export interface CacheEntry<T> {
   key: string;

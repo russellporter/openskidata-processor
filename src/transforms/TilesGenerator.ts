@@ -1,8 +1,8 @@
 import * as path from "path";
-import { performanceMonitor } from "../clustering/database/PerformanceMonitor";
-import { TilesConfig } from "../Config";
-import { CommonGeoJSONPaths } from "../io/GeoJSONFiles";
-import { runCommand } from "../utils/ProcessRunner";
+import { performanceMonitor } from "../clustering/database/PerformanceMonitor.js";
+import { TilesConfig } from "../Config.js";
+import { CommonGeoJSONPaths } from "../io/GeoJSONFiles.js";
+import { runCommand } from "../utils/ProcessRunner.js";
 
 export async function generateTiles(
   geoJSONPaths: CommonGeoJSONPaths,

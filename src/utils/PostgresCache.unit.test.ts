@@ -1,5 +1,5 @@
-import { getPostgresTestConfig } from "../Config";
-import { PostgresCache } from "./PostgresCache";
+import { getPostgresTestConfig } from "../Config.js";
+import { PostgresCache } from "./PostgresCache.js";
 
 describe("PostgresCache", () => {
   let cache: PostgresCache<any>;

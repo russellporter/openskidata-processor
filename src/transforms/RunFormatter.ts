@@ -11,12 +11,12 @@ import {
   SourceType,
   Status,
 } from "openskidata-format";
-import { osmID } from "../features/OSMGeoJSONProperties";
-import { InputRunFeature, OSMRunTags } from "../features/RunFeature";
-import notEmpty from "../utils/notEmpty";
-import buildFeature from "./FeatureBuilder";
-import { isValidGeometryInFeature } from "./GeoTransforms";
-import { Omit } from "./Omit";
+import { osmID } from "../features/OSMGeoJSONProperties.js";
+import { InputRunFeature, OSMRunTags } from "../features/RunFeature.js";
+import notEmpty from "../utils/notEmpty.js";
+import buildFeature from "./FeatureBuilder.js";
+import { isValidGeometryInFeature } from "./GeoTransforms.js";
+import { Omit } from "./Omit.js";
 import {
   getOrElse,
   getOSMFirstValue,
@@ -24,8 +24,8 @@ import {
   getOSMRef,
   mapOSMBoolean,
   mapOSMString,
-} from "./OSMTransforms";
-import getStatusAndValue from "./Status";
+} from "./OSMTransforms.js";
+import getStatusAndValue from "./Status.js";
 
 export function formatRun(feature: InputRunFeature): RunFeature[] {
   if (feature.geometry.type === "Point") {

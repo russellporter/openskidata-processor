@@ -1,6 +1,6 @@
 import { pipeline } from "stream/promises";
 import { Readable, Writable } from "stream";
-import { mapAsync } from "./StreamTransforms";
+import { mapAsync } from "./StreamTransforms.js";
 
 async function collect<T>(
   input: T[],

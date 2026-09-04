@@ -1,5 +1,5 @@
 import { Place } from "openskidata-format";
-import { sortPlaces, uniquePlaces } from "./PlaceUtils";
+import { sortPlaces, uniquePlaces } from "./PlaceUtils.js";
 
 describe("PlaceUtils", () => {
   describe("sortPlaces", () => {

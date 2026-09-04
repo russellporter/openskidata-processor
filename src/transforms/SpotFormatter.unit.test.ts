@@ -5,9 +5,9 @@ import {
   LiftStationSpotProperties,
   SpotType,
 } from "openskidata-format";
-import OSMGeoJSONProperties from "../features/OSMGeoJSONProperties";
-import { InputSpotFeature, OSMSpotTags } from "../features/SpotFeature";
-import { formatSpots } from "./SpotFormatter";
+import OSMGeoJSONProperties from "../features/OSMGeoJSONProperties.js";
+import { InputSpotFeature, OSMSpotTags } from "../features/SpotFeature.js";
+import { formatSpots } from "./SpotFormatter.js";
 
 describe("SpotFormatter", () => {
   describe("Crossing", () => {

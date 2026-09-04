@@ -6,19 +6,19 @@ import {
   LiftType,
   SourceType,
 } from "openskidata-format";
-import { InputLiftFeature, OSMLiftTags } from "../features/LiftFeature";
-import { osmID } from "../features/OSMGeoJSONProperties";
-import notEmpty from "../utils/notEmpty";
-import buildFeature from "./FeatureBuilder";
-import { isValidGeometryInFeature } from "./GeoTransforms";
+import { InputLiftFeature, OSMLiftTags } from "../features/LiftFeature.js";
+import { osmID } from "../features/OSMGeoJSONProperties.js";
+import notEmpty from "../utils/notEmpty.js";
+import buildFeature from "./FeatureBuilder.js";
+import { isValidGeometryInFeature } from "./GeoTransforms.js";
 import {
   getOSMFirstValue,
   getOSMName,
   getOSMRef,
   mapOSMBoolean,
   mapOSMNumber,
-} from "./OSMTransforms";
-import getStatusAndValue from "./Status";
+} from "./OSMTransforms.js";
+import getStatusAndValue from "./Status.js";
 
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 

@@ -10,8 +10,8 @@ import {
   SpotType,
   Status,
 } from "openskidata-format";
-import { Config, getPostgresTestConfig } from "../Config";
-import * as TestHelpers from "../TestHelpers";
+import { Config, getPostgresTestConfig } from "../Config.js";
+import * as TestHelpers from "../TestHelpers.js";
 import {
   simplifiedLiftFeature,
   simplifiedRunFeature,
@@ -19,9 +19,9 @@ import {
   simplifiedSkiAreaFeatureWithSources,
   simplifiedSkiAreaFeatureWithStatistics,
   simplifiedSpotFeature,
-} from "../TestHelpers";
-import { toSkiAreaSummary } from "../transforms/toSkiAreaSummary";
-import clusterSkiAreas from "./ClusterSkiAreas";
+} from "../TestHelpers.js";
+import { toSkiAreaSummary } from "../transforms/toSkiAreaSummary.js";
+import clusterSkiAreas from "./ClusterSkiAreas.js";
 
 // vi.mock factories are hoisted above module-level declarations, so the counter
 // has to be hoisted with them. Keeping it in a holder (rather than inside the
@@ -667,52 +667,52 @@ it("generates elevation statistics for run & lift based on lift served skiable v
       simplifiedSkiAreaFeatureWithStatistics,
     ),
   ).toMatchInlineSnapshot(`
-[
-  {
-    "activities": [
-      "downhill",
-    ],
-    "id": "mock-UUID-0",
-    "name": null,
-    "statistics": {
-      "lifts": {
-        "byType": {
-          "t-bar": {
-            "combinedElevationChange": 100,
-            "count": 1,
-            "lengthInKm": 0.4553273553619445,
+    [
+      {
+        "activities": [
+          "downhill",
+        ],
+        "id": "mock-UUID-0",
+        "name": null,
+        "statistics": {
+          "lifts": {
+            "byType": {
+              "t-bar": {
+                "combinedElevationChange": 100,
+                "count": 1,
+                "lengthInKm": 0.4553273553617682,
+                "maxElevation": 200,
+                "minElevation": 100,
+              },
+            },
             "maxElevation": 200,
             "minElevation": 100,
           },
-        },
-        "maxElevation": 200,
-        "minElevation": 100,
-      },
-      "maxElevation": 200,
-      "minElevation": 150,
-      "runs": {
-        "byActivity": {
-          "downhill": {
-            "byDifficulty": {
-              "other": {
-                "combinedElevationChange": 100,
-                "count": 1,
-                "lengthInKm": 0.46264499967438083,
-                "maxElevation": 250,
-                "minElevation": 150,
-                "snowfarmingLengthInKm": 0,
-                "snowmakingLengthInKm": 0,
+          "maxElevation": 200,
+          "minElevation": 150,
+          "runs": {
+            "byActivity": {
+              "downhill": {
+                "byDifficulty": {
+                  "other": {
+                    "combinedElevationChange": 100,
+                    "count": 1,
+                    "lengthInKm": 0.46264499967407724,
+                    "maxElevation": 250,
+                    "minElevation": 150,
+                    "snowfarmingLengthInKm": 0,
+                    "snowmakingLengthInKm": 0,
+                  },
+                },
               },
             },
+            "maxElevation": 250,
+            "minElevation": 150,
           },
         },
-        "maxElevation": 250,
-        "minElevation": 150,
       },
-    },
-  },
-]
-`);
+    ]
+  `);
 });
 
 it("generates statistics for run with backcountry grooming with site membership", async () => {
@@ -752,42 +752,42 @@ it("generates statistics for run with backcountry grooming with site membership"
       simplifiedSkiAreaFeatureWithStatistics,
     ),
   ).toMatchInlineSnapshot(`
-[
-  {
-    "activities": [
-      "downhill",
-    ],
-    "id": "1",
-    "name": "Name",
-    "statistics": {
-      "lifts": {
-        "byType": {},
-      },
-      "maxElevation": 250,
-      "minElevation": 150,
-      "runs": {
-        "byActivity": {
-          "downhill": {
-            "byDifficulty": {
-              "other": {
-                "combinedElevationChange": 100,
-                "count": 1,
-                "lengthInKm": 0.46264499967438083,
-                "maxElevation": 250,
-                "minElevation": 150,
-                "snowfarmingLengthInKm": 0,
-                "snowmakingLengthInKm": 0,
+    [
+      {
+        "activities": [
+          "downhill",
+        ],
+        "id": "1",
+        "name": "Name",
+        "statistics": {
+          "lifts": {
+            "byType": {},
+          },
+          "maxElevation": 250,
+          "minElevation": 150,
+          "runs": {
+            "byActivity": {
+              "downhill": {
+                "byDifficulty": {
+                  "other": {
+                    "combinedElevationChange": 100,
+                    "count": 1,
+                    "lengthInKm": 0.46264499967407724,
+                    "maxElevation": 250,
+                    "minElevation": 150,
+                    "snowfarmingLengthInKm": 0,
+                    "snowmakingLengthInKm": 0,
+                  },
+                },
               },
             },
+            "maxElevation": 250,
+            "minElevation": 150,
           },
         },
-        "maxElevation": 250,
-        "minElevation": 150,
       },
-    },
-  },
-]
-`);
+    ]
+  `);
 });
 
 it("allows point & multilinestring lifts to be processed", async () => {

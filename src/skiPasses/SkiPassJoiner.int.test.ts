@@ -1,9 +1,9 @@
 import { readFileSync } from "fs";
 import { SourceType } from "openskidata-format";
 import { join } from "path";
-import { parseSkiPassChart } from "./SkiPassChartParser";
-import SkiPassJoiner, { JoinableSkiArea } from "./SkiPassJoiner";
-import { SkiPassOverrideIndex, SkiPassOverrides } from "./SkiPassOverrides";
+import { parseSkiPassChart } from "./SkiPassChartParser.js";
+import SkiPassJoiner, { JoinableSkiArea } from "./SkiPassJoiner.js";
+import { SkiPassOverrideIndex, SkiPassOverrides } from "./SkiPassOverrides.js";
 
 /**
  * The real ski pass chart joined against a snapshot of the real ski areas, so that a change to
@@ -25,14 +25,17 @@ const RESOLVED_ENTRIES_FLOOR = 545;
 const RESOLVED_SKI_AREAS_FLOOR = 435;
 
 const csv = readFileSync(
-  join(__dirname, "__fixtures__", "skiPassChart.csv"),
+  join(import.meta.dirname, "__fixtures__", "skiPassChart.csv"),
   "utf8",
 );
 const skiAreas = JSON.parse(
-  readFileSync(join(__dirname, "__fixtures__", "skiAreas.json"), "utf8"),
+  readFileSync(
+    join(import.meta.dirname, "__fixtures__", "skiAreas.json"),
+    "utf8",
+  ),
 ) as JoinableSkiArea[];
 const overrides = JSON.parse(
-  readFileSync(join(__dirname, "overrides.json"), "utf8"),
+  readFileSync(join(import.meta.dirname, "overrides.json"), "utf8"),
 ) as SkiPassOverrides;
 
 const chart = parseSkiPassChart(csv, CHART_SHEET_ID);

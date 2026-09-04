@@ -1,5 +1,5 @@
 import { Duplex, PassThrough, Readable, Transform, Writable } from "stream";
-import Accumulator from "./accumulator/Accumulator";
+import Accumulator from "./accumulator/Accumulator.js";
 
 export function map<X, Y>(mapper: (input: X) => Y): Transform {
   return new Transform({

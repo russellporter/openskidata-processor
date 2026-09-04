@@ -1,22 +1,22 @@
 import { FeatureType } from "openskidata-format";
 import { Pool, PoolClient } from "pg";
-import { PostgresConfig } from "../../Config";
-import { getPostgresPoolConfig } from "../../utils/getPostgresPoolConfig";
+import { PostgresConfig } from "../../Config.js";
+import { getPostgresPoolConfig } from "../../utils/getPostgresPoolConfig.js";
 import {
   LiftObject,
   MapObject,
   RunObject,
   SkiAreaObject,
   SpotObject,
-} from "../MapObject";
+} from "../MapObject.js";
 import {
   ClusteringDatabase,
   Cursor,
   FeatureTypeObjectMap,
   GetSkiAreasOptions,
   SearchContext,
-} from "./ClusteringDatabase";
-import { performanceMonitor } from "./PerformanceMonitor";
+} from "./ClusteringDatabase.js";
+import { performanceMonitor } from "./PerformanceMonitor.js";
 
 /**
  * PostgreSQL implementation of ClusteringDatabase using PostGIS for spatial queries.

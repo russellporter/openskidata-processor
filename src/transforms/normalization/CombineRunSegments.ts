@@ -1,8 +1,8 @@
 import { isDeepStrictEqual } from "util";
 import { RunGeometry, RunProperties } from "openskidata-format";
-import { RunLineFeature } from "../../features/RunFeature";
-import notEmpty from "../../utils/notEmpty";
-import PointGraph from "./PointGraph";
+import { RunLineFeature } from "../../features/RunFeature.js";
+import notEmpty from "../../utils/notEmpty.js";
+import PointGraph from "./PointGraph.js";
 
 // TopoJSON quantizes coordinates to a fixed grid during topology construction.
 // Very short run segments can have all their coordinates snap to the same grid

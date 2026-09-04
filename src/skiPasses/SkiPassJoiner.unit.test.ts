@@ -1,8 +1,8 @@
 import { SourceType } from "openskidata-format";
-import { SkiPassChart } from "./SkiPassChartParser";
-import SkiPassJoiner, { JoinableSkiArea } from "./SkiPassJoiner";
-import { SkiPassOverrideIndex } from "./SkiPassOverrides";
-import { SkiPassRosterEntry } from "./SkiPassTypes";
+import { SkiPassChart } from "./SkiPassChartParser.js";
+import SkiPassJoiner, { JoinableSkiArea } from "./SkiPassJoiner.js";
+import { SkiPassOverrideIndex } from "./SkiPassOverrides.js";
+import { SkiPassRosterEntry } from "./SkiPassTypes.js";
 
 const IKON_SOURCES = [{ type: SourceType.STORM_SKIING, id: "1!AH1" }];
 

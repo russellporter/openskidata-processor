@@ -1,4 +1,4 @@
-import { RunLineFeature } from "../../features/RunFeature";
+import { RunLineFeature } from "../../features/RunFeature.js";
 
 export default class PointMultiMap {
   private readonly _internal: Map<string, Set<RunLineFeature>>;

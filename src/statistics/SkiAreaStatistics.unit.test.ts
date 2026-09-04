@@ -4,10 +4,10 @@ import {
   RunDifficulty,
   SkiAreaActivity,
 } from "openskidata-format";
-import { LiftObject, RunObject } from "../clustering/MapObject";
-import { getPostgresTestConfig } from "../Config";
-import { mockLiftFeature, mockRunFeature } from "../TestHelpers";
-import { skiAreaStatistics } from "./SkiAreaStatistics";
+import { LiftObject, RunObject } from "../clustering/MapObject.js";
+import { getPostgresTestConfig } from "../Config.js";
+import { mockLiftFeature, mockRunFeature } from "../TestHelpers.js";
+import { skiAreaStatistics } from "./SkiAreaStatistics.js";
 
 const lineGeometry = {
   type: "LineString" as const,

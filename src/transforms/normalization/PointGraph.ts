@@ -1,8 +1,8 @@
 import { isDeepStrictEqual } from "util";
 import { computeViewportHint } from "openskidata-format";
-import { RunLineFeature } from "../../features/RunFeature";
-import PointMultiMap from "./PointMultiMap";
-import { isPartOfSameRun, mergedProperties } from "./RunJoining";
+import { RunLineFeature } from "../../features/RunFeature.js";
+import PointMultiMap from "./PointMultiMap.js";
+import { isPartOfSameRun, mergedProperties } from "./RunJoining.js";
 
 enum Direction {
   FORWARD,

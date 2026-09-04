@@ -1,13 +1,13 @@
 import { readFileSync } from "fs";
 import { SourceType } from "openskidata-format";
 import { join } from "path";
-import { parseSkiPassChart } from "./SkiPassChartParser";
-import { SkiPassRosterEntry } from "./SkiPassTypes";
+import { parseSkiPassChart } from "./SkiPassChartParser.js";
+import { SkiPassRosterEntry } from "./SkiPassTypes.js";
 
 const CHART_SHEET_ID = "677843907";
 
 const csv = readFileSync(
-  join(__dirname, "__fixtures__", "skiPassChart.csv"),
+  join(import.meta.dirname, "__fixtures__", "skiPassChart.csv"),
   "utf8",
 );
 

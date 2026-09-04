@@ -20,22 +20,22 @@ import {
 import {
   MapboxGLLiftFeature,
   MapboxGLLiftProperties,
-} from "../features/LiftFeature";
+} from "../features/LiftFeature.js";
 import {
   MapboxGLRunFeature,
   MapboxGLRunProperties,
   MapboxGLRunUse,
-} from "../features/RunFeature";
+} from "../features/RunFeature.js";
 import {
   MapboxGLSkiAreaFeature,
   MapboxGLSkiAreaProperties,
-} from "../features/SkiAreaFeature";
+} from "../features/SkiAreaFeature.js";
 import {
   MapboxGLSpotFeature,
   MapboxGLSpotProperties,
-} from "../features/SpotFeature";
-import unique from "../utils/unique";
-import { centralPointsInFeature } from "./GeoTransforms";
+} from "../features/SpotFeature.js";
+import unique from "../utils/unique.js";
+import { centralPointsInFeature } from "./GeoTransforms.js";
 
 export function formatter(
   type: FeatureType.SkiArea,

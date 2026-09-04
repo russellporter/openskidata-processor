@@ -1,4 +1,4 @@
-import { lonLatToTilePixel, getInterpolationSetup } from "./TileCoordinates";
+import { lonLatToTilePixel, getInterpolationSetup } from "./TileCoordinates.js";
 
 describe("lonLatToTilePixel", () => {
   it("converts (0, 0) at zoom 0 with tileSize 512", () => {

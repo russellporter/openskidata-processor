@@ -2,7 +2,7 @@ import { isDeepStrictEqual } from "util";
 import { computeViewportHint, RunProperties } from "openskidata-format";
 import * as topojsonClient from "topojson-client";
 import * as TopoJSON from "topojson-specification";
-import { mergedProperties } from "./RunJoining";
+import { mergedProperties } from "./RunJoining.js";
 
 export type RunTopology = TopoJSON.Topology<{
   runs: TopoJSON.GeometryCollection<RunProperties>;

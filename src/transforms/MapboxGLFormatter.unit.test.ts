@@ -6,8 +6,8 @@ import {
   RunUse,
   SpotType,
 } from "openskidata-format";
-import * as TestHelpers from "../TestHelpers";
-import { formatter } from "./MapboxGLFormatter";
+import * as TestHelpers from "../TestHelpers.js";
+import { formatter } from "./MapboxGLFormatter.js";
 describe("MapboxGLFormatter", () => {
   it("should export basic ski area", () => {
     const feature = TestHelpers.mockSkiAreaFeature({

@@ -1,5 +1,5 @@
 import { FeatureCollection, Feature } from "geojson";
-import { VIIRSPixelExtractor } from "./VIIRSPixelExtractor";
+import { VIIRSPixelExtractor } from "./VIIRSPixelExtractor.js";
 
 /**
  * Extract unique VIIRS pixels from a GeoJSON FeatureCollection.

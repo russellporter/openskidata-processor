@@ -1,4 +1,4 @@
-import { SkiAreaObject } from "./MapObject";
+import { SkiAreaObject } from "./MapObject.js";
 
 export interface SkiAreasCursor {
   all(): Promise<SkiAreaObject[]>;

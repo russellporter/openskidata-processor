@@ -1,13 +1,13 @@
 import { FeatureType, SkiAreaActivity, SourceType } from "openskidata-format";
-import { SnowCoverConfig } from "../../Config";
-import Geocoder from "../../transforms/Geocoder";
+import { SnowCoverConfig } from "../../Config.js";
+import Geocoder from "../../transforms/Geocoder.js";
 import {
   LiftObject,
   MapObject,
   RunObject,
   SkiAreaObject,
   SpotObject,
-} from "../MapObject";
+} from "../MapObject.js";
 
 export type FeatureTypeObjectMap = {
   [FeatureType.Run]: RunObject;

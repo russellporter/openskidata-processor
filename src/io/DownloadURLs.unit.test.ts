@@ -1,4 +1,4 @@
-import * as URL from "./DownloadURLs";
+import * as URL from "./DownloadURLs.js";
 
 describe("DownloadURLs", () => {
   it("provides expected URLs", () => {

@@ -1,7 +1,7 @@
 import * as readline from "readline";
 import { Pool } from "pg";
-import { configFromEnvironment } from "../Config";
-import { getPostgresPoolConfig } from "../utils/getPostgresPoolConfig";
+import { configFromEnvironment } from "../Config.js";
+import { getPostgresPoolConfig } from "../utils/getPostgresPoolConfig.js";
 
 // List of known cache types from the codebase
 const CACHE_TYPES = ["elevation", "geocoding", "snow_cover"];

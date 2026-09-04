@@ -1,7 +1,7 @@
 import { RunGrooming, RunUse } from "openskidata-format";
-import OSMGeoJSONProperties from "../features/OSMGeoJSONProperties";
-import { InputRunFeature, OSMRunTags } from "../features/RunFeature";
-import { formatRun } from "./RunFormatter";
+import OSMGeoJSONProperties from "../features/OSMGeoJSONProperties.js";
+import { InputRunFeature, OSMRunTags } from "../features/RunFeature.js";
+import { formatRun } from "./RunFormatter.js";
 
 describe("RunFormatter", () => {
   it("filters out runs with 'piste:abandoned' tag", () => {

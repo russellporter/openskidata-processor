@@ -5,14 +5,14 @@ import {
   SpotType,
   Status,
 } from "openskidata-format";
-import { mockViewportHint } from "../testUtils";
-import { LiftStationAssociator } from "./LiftStationAssociator";
+import { mockViewportHint } from "../testUtils.js";
+import { LiftStationAssociator } from "./LiftStationAssociator.js";
 import {
   ClusteringDatabase,
   Cursor,
   SearchContext,
-} from "./database/ClusteringDatabase";
-import { LiftObject, MapObject, SpotObject } from "./MapObject";
+} from "./database/ClusteringDatabase.js";
+import { LiftObject, MapObject, SpotObject } from "./MapObject.js";
 
 function makeCursor<T>(items: T[]): Cursor<T> {
   let done = false;

@@ -1,4 +1,4 @@
-import overpassBBoxQuery from "../utils/overpassBBoxQuery";
+import overpassBBoxQuery from "../utils/overpassBBoxQuery.js";
 
 export interface OSMDownloadConfig {
   query: (bbox: GeoJSON.BBox | null) => string;

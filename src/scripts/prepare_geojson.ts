@@ -1,10 +1,10 @@
-import { configFromEnvironment } from "../Config";
+import { configFromEnvironment } from "../Config.js";
 import {
   GeoJSONIntermediatePaths,
   GeoJSONOutputPaths,
   InputDataPaths,
-} from "../io/GeoJSONFiles";
-import prepare from "../PrepareGeoJSON";
+} from "../io/GeoJSONFiles.js";
+import prepare from "../PrepareGeoJSON.js";
 
 const config = configFromEnvironment();
 

@@ -1,4 +1,4 @@
-import { runCommand } from "../utils/ProcessRunner";
+import { runCommand } from "../utils/ProcessRunner.js";
 
 async function main(): Promise<void> {
   const args = process.argv.slice(2);

@@ -11,7 +11,7 @@ import {
 } from "@turf/helpers";
 import length from "@turf/length";
 import nearestPointOnLine from "@turf/nearest-point-on-line";
-import OSMGeoJSONProperties from "../features/OSMGeoJSONProperties";
+import OSMGeoJSONProperties from "../features/OSMGeoJSONProperties.js";
 
 export function centralPointsInFeature(
   geojson: GeoJSON.Point | GeoJSON.Polygon,

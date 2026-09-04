@@ -1,8 +1,8 @@
 import { addWeeks, getDayOfYear, startOfYear, subDays } from "date-fns";
 import { SnowCoverHistory } from "openskidata-format";
-import { PostgresConfig } from "../Config";
-import { PostgresCache } from "./PostgresCache";
-import { VIIRSPixel } from "./VIIRSPixelExtractor";
+import { PostgresConfig } from "../Config.js";
+import { PostgresCache } from "./PostgresCache.js";
+import { VIIRSPixel } from "./VIIRSPixelExtractor.js";
 
 export interface VIIRSCacheData {
   year: number;

@@ -1,9 +1,9 @@
 import { FeatureType, SkiAreaActivity, SpotType } from "openskidata-format";
-import { getPostgresTestConfig } from "../../Config";
+import { getPostgresTestConfig } from "../../Config.js";
 import {
   PostgreSQLClusteringDatabase,
   PostgreSQLCursor,
-} from "./PostgreSQLClusteringDatabase";
+} from "./PostgreSQLClusteringDatabase.js";
 
 vi.setConfig({ testTimeout: 60 * 1000 });
 

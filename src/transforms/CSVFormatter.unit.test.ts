@@ -11,13 +11,13 @@ import {
   SourceType,
   Status,
 } from "openskidata-format";
-import { mockViewportHint } from "../testUtils";
+import { mockViewportHint } from "../testUtils.js";
 import { Transform } from "stream";
 import {
   createCSVWriteStream,
   formatter,
   getCSVFilename,
-} from "./CSVFormatter";
+} from "./CSVFormatter.js";
 
 describe("CSVFormatter", () => {
   describe("formatter", () => {

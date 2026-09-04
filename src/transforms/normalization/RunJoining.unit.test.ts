@@ -1,6 +1,6 @@
 import { SourceType } from "openskidata-format";
-import * as TestHelpers from "../../TestHelpers";
-import { isPartOfSameRun } from "./RunJoining";
+import * as TestHelpers from "../../TestHelpers.js";
+import { isPartOfSameRun } from "./RunJoining.js";
 
 describe("RunJoining", () => {
   describe("isPartOfSameRun", () => {

@@ -1,4 +1,4 @@
-import overpassBBoxQuery from "./overpassBBoxQuery";
+import overpassBBoxQuery from "./overpassBBoxQuery.js";
 
 describe("overpassBBoxQuery", () => {
   it("produces valid query for normal bbox", () => {

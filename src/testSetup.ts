@@ -1,6 +1,6 @@
 import { Pool } from "pg";
-import { getPostgresPoolConfig } from "./utils/getPostgresPoolConfig";
-import { getPostgresTestConfig } from "./Config";
+import { getPostgresPoolConfig } from "./utils/getPostgresPoolConfig.js";
+import { getPostgresTestConfig } from "./Config.js";
 
 // Jest global setup function
 export default async function globalSetup(): Promise<void> {

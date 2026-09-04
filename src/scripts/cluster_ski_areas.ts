@@ -1,9 +1,9 @@
-import clusterSkiAreas from "../clustering/ClusterSkiAreas";
-import { configFromEnvironment } from "../Config";
+import clusterSkiAreas from "../clustering/ClusterSkiAreas.js";
+import { configFromEnvironment } from "../Config.js";
 import {
   GeoJSONIntermediatePaths,
   GeoJSONOutputPaths,
-} from "../io/GeoJSONFiles";
+} from "../io/GeoJSONFiles.js";
 
 const config = configFromEnvironment();
 

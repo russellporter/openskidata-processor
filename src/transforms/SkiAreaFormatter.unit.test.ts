@@ -3,8 +3,8 @@ import {
   InputOpenStreetMapSkiAreaFeature,
   InputSkiMapOrgSkiAreaFeature,
   OSMSkiAreaSite,
-} from "../features/SkiAreaFeature";
-import { InputSkiAreaType, formatSkiArea } from "./SkiAreaFormatter";
+} from "../features/SkiAreaFeature.js";
+import { InputSkiAreaType, formatSkiArea } from "./SkiAreaFormatter.js";
 
 describe("SkiAreaFormatter", () => {
   it("formats OpenStreetMap ski area", () => {

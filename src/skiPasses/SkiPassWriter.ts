@@ -1,7 +1,7 @@
 import { writeFile } from "node:fs/promises";
 import { SkiPassCatalog } from "openskidata-format";
-import { escapeField } from "../transforms/CSVFormatter";
-import { SkiPassMatch } from "./SkiPassTypes";
+import { escapeField } from "../transforms/CSVFormatter.js";
+import { SkiPassMatch } from "./SkiPassTypes.js";
 
 const CSV_HEADERS = [
   "brand_id",

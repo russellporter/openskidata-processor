@@ -1,10 +1,10 @@
 import nock from "nock";
-import { getPostgresTestConfig } from "../Config";
+import { getPostgresTestConfig } from "../Config.js";
 import Geocoder, {
   PhotonGeocode,
   GeocodeApiResponse,
   WhosOnFirstGeometry,
-} from "./Geocoder";
+} from "./Geocoder.js";
 
 const geocoderURL = "http://geocoder.example.com";
 

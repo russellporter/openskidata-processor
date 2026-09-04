@@ -2,14 +2,14 @@ import { createWriteStream } from "fs";
 import { readFile, rename } from "node:fs/promises";
 import { SkiAreaActivity, SkiAreaFeature } from "openskidata-format";
 import { pipeline } from "stream/promises";
-import { readGeoJSONFeatures } from "../io/GeoJSONReader";
-import toFeatureCollection from "../transforms/FeatureCollection";
-import { map } from "../transforms/StreamTransforms";
-import SkiPassJoiner, { JoinableSkiArea } from "./SkiPassJoiner";
-import { loadSkiPassOverrides } from "./SkiPassOverrides";
-import { parseSkiPassChart } from "./SkiPassChartParser";
-import { SkiPassMatch, SkiPassSkiAreaData } from "./SkiPassTypes";
-import { writeSkiPassesCSV, writeSkiPassesJSON } from "./SkiPassWriter";
+import { readGeoJSONFeatures } from "../io/GeoJSONReader.js";
+import toFeatureCollection from "../transforms/FeatureCollection.js";
+import { map } from "../transforms/StreamTransforms.js";
+import SkiPassJoiner, { JoinableSkiArea } from "./SkiPassJoiner.js";
+import { loadSkiPassOverrides } from "./SkiPassOverrides.js";
+import { parseSkiPassChart } from "./SkiPassChartParser.js";
+import { SkiPassMatch, SkiPassSkiAreaData } from "./SkiPassTypes.js";
+import { writeSkiPassesCSV, writeSkiPassesJSON } from "./SkiPassWriter.js";
 
 export interface SkiPassOutputPaths {
   /** The clustered ski areas, rewritten in place with their ski pass data. */

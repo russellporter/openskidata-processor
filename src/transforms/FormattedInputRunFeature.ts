@@ -1,5 +1,5 @@
 import { RunProperties } from "openskidata-format";
-import { InputRunGeometry } from "../features/RunFeature";
+import { InputRunGeometry } from "../features/RunFeature.js";
 
 export type FormattedInputRunFeature = GeoJSON.Feature<
   InputRunGeometry,

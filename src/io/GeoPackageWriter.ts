@@ -16,7 +16,7 @@ import {
 } from "openskidata-format";
 import { Transform } from "stream";
 import { pipeline } from "stream/promises";
-import { readGeoJSONFeatures } from "./GeoJSONReader";
+import { readGeoJSONFeatures } from "./GeoJSONReader.js";
 
 // Type-safe column definition
 interface ColumnDefinition<T> {

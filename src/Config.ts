@@ -171,7 +171,13 @@ function getSkiPassConfig(): SkiPassConfig | null {
     overridesPath:
       process.env.SKI_PASS_OVERRIDES_PATH ??
       // Data rather than code, so it is read from the source tree rather than the build output.
-      path.join(__dirname, "..", "src", "skiPasses", "overrides.json"),
+      path.join(
+        import.meta.dirname,
+        "..",
+        "src",
+        "skiPasses",
+        "overrides.json",
+      ),
   };
 }
 

@@ -3,8 +3,8 @@ import * as path from "path";
 import * as os from "os";
 import nock from "nock";
 import sharp from "sharp";
-import { TerrainTileElevationSource } from "./TerrainTileElevationSource";
-import { lonLatToTilePixel } from "./TileCoordinates";
+import { TerrainTileElevationSource } from "./TerrainTileElevationSource.js";
+import { lonLatToTilePixel } from "./TileCoordinates.js";
 
 function makeTmpDir(): string {
   return fs.mkdtempSync(path.join(os.tmpdir(), "terrain-tile-test-"));

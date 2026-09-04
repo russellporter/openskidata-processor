@@ -1,8 +1,8 @@
 import nock from "nock";
 import { RunFeature } from "openskidata-format";
-import { Config, getPostgresTestConfig } from "./Config";
-import prepare from "./PrepareGeoJSON";
-import * as TestHelpers from "./TestHelpers";
+import { Config, getPostgresTestConfig } from "./Config.js";
+import prepare from "./PrepareGeoJSON.js";
+import * as TestHelpers from "./TestHelpers.js";
 
 vi.setConfig({ testTimeout: 60 * 1000 });
 
@@ -86,70 +86,70 @@ it("adds elevations to lift geometry", async () => {
   await prepare(paths, testConfig);
 
   expect(TestHelpers.fileContents(paths.output.lifts)).toMatchInlineSnapshot(`
-{
-  "features": [
     {
-      "geometry": {
-        "coordinates": [
-          [
-            11.1223444,
-            47.5572422,
-            0,
-          ],
-          [
-            11.1164297,
-            47.558156300000014,
-            1,
-          ],
-        ],
-        "type": "LineString",
-      },
-      "properties": {
-        "access": null,
-        "bubble": null,
-        "capacity": null,
-        "description": null,
-        "detachable": null,
-        "duration": null,
-        "heating": null,
-        "id": "4d07b91974c5a5b3a0ad9e1928c0a6d433c5093b",
-        "liftType": "t-bar",
-        "name": "Skilift Oberau",
-        "occupancy": null,
-        "oneway": null,
-        "places": [],
-        "ref": null,
-        "refFRCAIRN": null,
-        "skiAreas": [],
-        "sources": [
-          {
-            "id": "way/227407273",
-            "type": "openstreetmap",
+      "features": [
+        {
+          "geometry": {
+            "coordinates": [
+              [
+                11.1223444,
+                47.5572422,
+                0,
+              ],
+              [
+                11.1164297,
+                47.5581563,
+                1,
+              ],
+            ],
+            "type": "LineString",
           },
-        ],
-        "stations": [],
-        "status": "operating",
-        "tunnel": null,
-        "type": "lift",
-        "viewportHint": {
-          "bearing": 312.89672520119075,
-          "center": [
-            11.11938705,
-            47.55769924999999,
-          ],
-          "minCameraY": -197.8883671355343,
-          "rotatedHeightMeters": 395.7767342717046,
-          "rotatedWidthMeters": 227.90440472769652,
+          "properties": {
+            "access": null,
+            "bubble": null,
+            "capacity": null,
+            "description": null,
+            "detachable": null,
+            "duration": null,
+            "heating": null,
+            "id": "e8e4058e82dd25aa12b4673471dd754a8b319f5c",
+            "liftType": "t-bar",
+            "name": "Skilift Oberau",
+            "occupancy": null,
+            "oneway": null,
+            "places": [],
+            "ref": null,
+            "refFRCAIRN": null,
+            "skiAreas": [],
+            "sources": [
+              {
+                "id": "way/227407273",
+                "type": "openstreetmap",
+              },
+            ],
+            "stations": [],
+            "status": "operating",
+            "tunnel": null,
+            "type": "lift",
+            "viewportHint": {
+              "bearing": 312.89672520119086,
+              "center": [
+                11.11938705,
+                47.55769925,
+              ],
+              "minCameraY": -197.88836713553425,
+              "rotatedHeightMeters": 395.7767342711662,
+              "rotatedWidthMeters": 227.90440472827592,
+            },
+            "websites": [],
+            "wikidataID": null,
+          },
+          "type": "Feature",
         },
-        "websites": [],
-        "wikidataID": null,
-      },
-      "type": "Feature",
-    },
-  ],
-  "type": "FeatureCollection",
-}
-`);
+      ],
+      "type": "FeatureCollection",
+    }
+  `);
 });
 
 it("adds elevations to run geometry & elevation profile", async () => {
@@ -196,48 +196,48 @@ it("adds elevations to run geometry & elevation profile", async () => {
     .features[0];
 
   expect(feature.properties.elevationProfile).toMatchInlineSnapshot(`
-{
-  "heights": [
-    0,
-    3,
-    4,
-    5,
-    6,
-    7,
-    8,
-    9,
-    10,
-    11,
-    12,
-    13,
-    2,
-  ],
-  "resolution": 23.661411045918097,
-  "targetResolution": 25,
-}
-`);
+    {
+      "heights": [
+        0,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        2,
+      ],
+      "resolution": 23.661411045848993,
+      "targetResolution": 25,
+    }
+  `);
   expect(feature.geometry).toMatchInlineSnapshot(`
-{
-  "coordinates": [
-    [
-      11.1164229,
-      47.55812500000001,
-      0,
-    ],
-    [
-      11.116365499999999,
-      47.5579742,
-      1,
-    ],
-    [
-      11.1171866,
-      47.5556413,
-      2,
-    ],
-  ],
-  "type": "LineString",
-}
-`);
+    {
+      "coordinates": [
+        [
+          11.1164229,
+          47.558125,
+          0,
+        ],
+        [
+          11.1163655,
+          47.5579742,
+          1,
+        ],
+        [
+          11.1171866,
+          47.5556413,
+          2,
+        ],
+      ],
+      "type": "LineString",
+    }
+  `);
 });
 
 it("completes without adding elevations when elevation server fails", async () => {
@@ -277,68 +277,68 @@ it("completes without adding elevations when elevation server fails", async () =
   await prepare(paths, testConfig);
 
   expect(TestHelpers.fileContents(paths.output.lifts)).toMatchInlineSnapshot(`
-{
-  "features": [
     {
-      "geometry": {
-        "coordinates": [
-          [
-            11.1223444,
-            47.5572422,
-          ],
-          [
-            11.1164297,
-            47.558156300000014,
-          ],
-        ],
-        "type": "LineString",
-      },
-      "properties": {
-        "access": null,
-        "bubble": null,
-        "capacity": null,
-        "description": null,
-        "detachable": null,
-        "duration": null,
-        "heating": null,
-        "id": "4d07b91974c5a5b3a0ad9e1928c0a6d433c5093b",
-        "liftType": "t-bar",
-        "name": "Skilift Oberau",
-        "occupancy": null,
-        "oneway": null,
-        "places": [],
-        "ref": null,
-        "refFRCAIRN": null,
-        "skiAreas": [],
-        "sources": [
-          {
-            "id": "way/227407273",
-            "type": "openstreetmap",
+      "features": [
+        {
+          "geometry": {
+            "coordinates": [
+              [
+                11.1223444,
+                47.5572422,
+              ],
+              [
+                11.1164297,
+                47.5581563,
+              ],
+            ],
+            "type": "LineString",
           },
-        ],
-        "stations": [],
-        "status": "operating",
-        "tunnel": null,
-        "type": "lift",
-        "viewportHint": {
-          "bearing": null,
-          "center": [
-            11.11938705,
-            47.55769924999999,
-          ],
-          "minCameraY": -50.87880600015609,
-          "rotatedHeightMeters": 101.75761200110317,
-          "rotatedWidthMeters": 444.3359945090548,
+          "properties": {
+            "access": null,
+            "bubble": null,
+            "capacity": null,
+            "description": null,
+            "detachable": null,
+            "duration": null,
+            "heating": null,
+            "id": "e8e4058e82dd25aa12b4673471dd754a8b319f5c",
+            "liftType": "t-bar",
+            "name": "Skilift Oberau",
+            "occupancy": null,
+            "oneway": null,
+            "places": [],
+            "ref": null,
+            "refFRCAIRN": null,
+            "skiAreas": [],
+            "sources": [
+              {
+                "id": "way/227407273",
+                "type": "openstreetmap",
+              },
+            ],
+            "stations": [],
+            "status": "operating",
+            "tunnel": null,
+            "type": "lift",
+            "viewportHint": {
+              "bearing": null,
+              "center": [
+                11.11938705,
+                47.55769925,
+              ],
+              "minCameraY": -50.87880600015609,
+              "rotatedHeightMeters": 101.75761200031218,
+              "rotatedWidthMeters": 444.3359945090548,
+            },
+            "websites": [],
+            "wikidataID": null,
+          },
+          "type": "Feature",
         },
-        "websites": [],
-        "wikidataID": null,
-      },
-      "type": "Feature",
-    },
-  ],
-  "type": "FeatureCollection",
-}
-`);
+      ],
+      "type": "FeatureCollection",
+    }
+  `);
 });
 
 it("adds elevations to run polygons", async () => {
@@ -387,37 +387,37 @@ it("adds elevations to run polygons", async () => {
 
   expect(TestHelpers.fileContents(paths.output.runs).features[0].geometry)
     .toMatchInlineSnapshot(`
-{
-  "coordinates": [
-    [
-      [
-        6.544500899999996,
-        45.3230511,
-        0,
-      ],
-      [
-        6.5434094000000025,
-        45.32317370000001,
-        1,
-      ],
-      [
-        6.5502579,
-        45.3224134,
-        2,
-      ],
-      [
-        6.550612,
-        45.3222571,
-        3,
-      ],
-      [
-        6.544500899999996,
-        45.3230511,
-        0,
-      ],
-    ],
-  ],
-  "type": "Polygon",
-}
-`);
+      {
+        "coordinates": [
+          [
+            [
+              6.544500899999999,
+              45.3230511,
+              0,
+            ],
+            [
+              6.543409400000001,
+              45.323173700000005,
+              1,
+            ],
+            [
+              6.5502579,
+              45.3224134,
+              2,
+            ],
+            [
+              6.550612,
+              45.3222571,
+              3,
+            ],
+            [
+              6.544500899999999,
+              45.3230511,
+              0,
+            ],
+          ],
+        ],
+        "type": "Polygon",
+      }
+    `);
 });

@@ -9,7 +9,7 @@ import {
   centralPointsInFeature,
   extractPointsAlongGeometry,
   isValidGeometryInFeature,
-} from "./GeoTransforms";
+} from "./GeoTransforms.js";
 
 describe("GeoTransforms", () => {
   describe("centralPointsInFeatures", () => {

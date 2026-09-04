@@ -2,12 +2,12 @@ import { Semaphore } from "async-mutex";
 import DataLoader from "dataloader";
 import * as iso3166_2 from "iso3166-2-db";
 import { Region } from "iso3166-2-db";
-import * as ngeohash from "ngeohash";
+import ngeohash from "ngeohash";
 import { Place } from "openskidata-format";
-import * as Config from "../Config";
-import { PostgresCache } from "../utils/PostgresCache";
-import { extractPointsAlongGeometry } from "./GeoTransforms";
-import { sortPlaces, uniquePlaces } from "./PlaceUtils";
+import * as Config from "../Config.js";
+import { PostgresCache } from "../utils/PostgresCache.js";
+import { extractPointsAlongGeometry } from "./GeoTransforms.js";
+import { sortPlaces, uniquePlaces } from "./PlaceUtils.js";
 
 export type PhotonGeocode = {
   url: string;

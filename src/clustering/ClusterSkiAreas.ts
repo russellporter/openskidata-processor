@@ -1,11 +1,11 @@
-import { Config } from "../Config";
+import { Config } from "../Config.js";
 import {
   GeoJSONIntermediatePaths,
   GeoJSONOutputPaths,
-} from "../io/GeoJSONFiles";
-import { closeSnowCoverCaches } from "../utils/snowCoverHistory";
-import { PostgreSQLClusteringDatabase } from "./database/PostgreSQLClusteringDatabase";
-import { SkiAreaClusteringService } from "./SkiAreaClusteringService";
+} from "../io/GeoJSONFiles.js";
+import { closeSnowCoverCaches } from "../utils/snowCoverHistory.js";
+import { PostgreSQLClusteringDatabase } from "./database/PostgreSQLClusteringDatabase.js";
+import { SkiAreaClusteringService } from "./SkiAreaClusteringService.js";
 
 export default async function clusterSkiAreas(
   intermediatePaths: GeoJSONIntermediatePaths,

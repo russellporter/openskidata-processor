@@ -11,7 +11,7 @@ import {
   SpotGeometry,
   SpotProperties,
 } from "openskidata-format";
-import { VIIRSPixel } from "../utils/VIIRSPixelExtractor";
+import { VIIRSPixel } from "../utils/VIIRSPixelExtractor.js";
 
 export type MapObject = RunObject | LiftObject | SkiAreaObject | SpotObject;
 export type RunObject = DraftRun & { _id: string };

@@ -1,4 +1,4 @@
-import { parseSkiPassLocation } from "./SkiPassLocations";
+import { parseSkiPassLocation } from "./SkiPassLocations.js";
 
 describe("parseSkiPassLocation", () => {
   it("parses a U.S. state", () => {

@@ -8,9 +8,9 @@ import {
   SkiPassCatalog,
   SkiPassUnresolvedRosterEntry,
 } from "openskidata-format";
-import { GeoPackageMerger } from "../io/GeoPackageMerger";
-import uniquedSources from "../transforms/UniqueSources";
-import { runCommand } from "../utils/ProcessRunner";
+import { GeoPackageMerger } from "../io/GeoPackageMerger.js";
+import uniquedSources from "../transforms/UniqueSources.js";
+import { runCommand } from "../utils/ProcessRunner.js";
 
 interface MergeStats {
   geoJsonFiles: number;

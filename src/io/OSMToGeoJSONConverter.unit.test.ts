@@ -1,4 +1,4 @@
-import { convertOSMToGeoJSON } from "./OSMToGeoJSONConverter";
+import { convertOSMToGeoJSON } from "./OSMToGeoJSONConverter.js";
 
 describe("OSMToGeoJSONConverter", () => {
   it("converts a multipolygon relation with some tags on the lines to a Polygon", () => {

@@ -6,8 +6,8 @@ import {
   SourceType,
   SpotFeature,
 } from "openskidata-format";
-import { OSMSkiAreaSite } from "../features/SkiAreaFeature";
-import { formatSkiArea, InputSkiAreaType } from "./SkiAreaFormatter";
+import { OSMSkiAreaSite } from "../features/SkiAreaFeature.js";
+import { formatSkiArea, InputSkiAreaType } from "./SkiAreaFormatter.js";
 
 export class SkiAreaSiteProvider {
   private all: SkiAreaFeature[] = [];

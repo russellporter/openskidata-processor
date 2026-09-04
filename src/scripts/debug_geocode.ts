@@ -1,7 +1,7 @@
 // Takes a latitude and longitude and returns a geocode object.
 
-import { configFromEnvironment } from "../Config";
-import Geocoder from "../transforms/Geocoder";
+import { configFromEnvironment } from "../Config.js";
+import Geocoder from "../transforms/Geocoder.js";
 
 async function debugGeocode() {
   const args = process.argv.slice(2);

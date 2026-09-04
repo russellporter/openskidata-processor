@@ -5,7 +5,7 @@ import {
   aggregatePixelHistories,
   VIIRSPixelData,
   VIIRSCacheData,
-} from "./snowCoverHistory";
+} from "./snowCoverHistory.js";
 import { SnowCoverHistory } from "openskidata-format";
 
 // Mock console methods for testing

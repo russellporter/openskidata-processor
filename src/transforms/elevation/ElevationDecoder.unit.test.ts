@@ -3,7 +3,7 @@ import {
   decodeTerrariumElevation,
   elevationAtPixel,
   bilinearInterpolate,
-} from "./ElevationDecoder";
+} from "./ElevationDecoder.js";
 
 describe("decodeMapboxElevation", () => {
   it("decodes sea level (0m)", () => {

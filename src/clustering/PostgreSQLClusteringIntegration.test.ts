@@ -7,14 +7,14 @@ import {
   SourceType,
   Status,
 } from "openskidata-format";
-import * as TestHelpers from "../TestHelpers";
+import * as TestHelpers from "../TestHelpers.js";
 import {
   simplifiedLiftFeature,
   simplifiedRunFeature,
   simplifiedSkiAreaFeature,
-} from "../TestHelpers";
-import clusterSkiAreas from "./ClusterSkiAreas";
-import { Config, getPostgresTestConfig } from "../Config";
+} from "../TestHelpers.js";
+import clusterSkiAreas from "./ClusterSkiAreas.js";
+import { Config, getPostgresTestConfig } from "../Config.js";
 
 vi.setConfig({ testTimeout: 60 * 1000 });
 

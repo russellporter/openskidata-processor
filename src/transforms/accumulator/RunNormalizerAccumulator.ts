@@ -3,15 +3,15 @@ import { GeoJsonObject } from "geojson";
 import { RunFeature, RunGeometry, RunProperties } from "openskidata-format";
 import * as topojsonClient from "topojson-client";
 import * as topojsonServer from "topojson-server";
-import { performanceMonitor } from "../../clustering/database/PerformanceMonitor";
-import buildFeature from "../FeatureBuilder";
-import { FormattedInputRunFeature } from "../FormattedInputRunFeature";
-import combineRunSegments from "../normalization/CombineRunSegments";
+import { performanceMonitor } from "../../clustering/database/PerformanceMonitor.js";
+import buildFeature from "../FeatureBuilder.js";
+import { FormattedInputRunFeature } from "../FormattedInputRunFeature.js";
+import combineRunSegments from "../normalization/CombineRunSegments.js";
 import {
   mergeOverlappingRuns,
   RunTopology,
-} from "../normalization/MergeOverlappingRuns";
-import Accumulator from "./Accumulator";
+} from "../normalization/MergeOverlappingRuns.js";
+import Accumulator from "./Accumulator.js";
 
 export class RunNormalizerAccumulator implements Accumulator<
   FormattedInputRunFeature,

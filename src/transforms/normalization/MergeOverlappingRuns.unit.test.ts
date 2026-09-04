@@ -4,9 +4,9 @@ import { GeoJsonObject } from "geojson";
 import { RunProperties, Source, SourceType } from "openskidata-format";
 import * as TopoJSONClient from "topojson-client";
 import * as TopoJSONServer from "topojson-server";
-import { InputRunGeometry } from "../../features/RunFeature";
-import * as TestHelpers from "../../TestHelpers";
-import { mergeOverlappingRuns, RunTopology } from "./MergeOverlappingRuns";
+import { InputRunGeometry } from "../../features/RunFeature.js";
+import * as TestHelpers from "../../TestHelpers.js";
+import { mergeOverlappingRuns, RunTopology } from "./MergeOverlappingRuns.js";
 
 function merge(features: GeoJSON.Feature<InputRunGeometry, RunProperties>[]) {
   const inputTopology = TopoJSONServer.topology({

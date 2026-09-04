@@ -1,7 +1,7 @@
 import assert from "assert";
 import { SourceType } from "openskidata-format";
-import * as TestHelpers from "../../TestHelpers";
-import PointGraph from "./PointGraph";
+import * as TestHelpers from "../../TestHelpers.js";
+import PointGraph from "./PointGraph.js";
 
 describe("PointGraph", () => {
   describe("#merge()", () => {

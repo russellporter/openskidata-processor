@@ -1,4 +1,4 @@
-import { getOSMName, getOSMRef } from "./OSMTransforms";
+import { getOSMName, getOSMRef } from "./OSMTransforms.js";
 
 type TestProperties = Record<string, string | undefined>;
 

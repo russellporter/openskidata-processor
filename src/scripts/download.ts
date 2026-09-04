@@ -1,5 +1,5 @@
-import { configFromEnvironment } from "../Config";
-import downloadAndConvertToGeoJSON from "../io/GeoJSONDownloader";
+import { configFromEnvironment } from "../Config.js";
+import downloadAndConvertToGeoJSON from "../io/GeoJSONDownloader.js";
 
 const config = configFromEnvironment();
 

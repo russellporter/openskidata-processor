@@ -1,4 +1,4 @@
-import unique from "../utils/unique";
+import unique from "../utils/unique.js";
 
 export function mapOSMNumber(input: string | undefined): number | null {
   if (input === undefined) {

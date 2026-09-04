@@ -14,7 +14,7 @@ import {
   SpotType,
   Status,
 } from "openskidata-format";
-import { mockViewportHint } from "../testUtils";
+import { mockViewportHint } from "../testUtils.js";
 import { mkdtempSync, mkdirSync, writeFileSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
@@ -22,7 +22,7 @@ import {
   collectFileSizes,
   MetadataCollector,
   METADATA_VERSION,
-} from "./DatasetMetadata";
+} from "./DatasetMetadata.js";
 
 // A two point line with a matching two point profile, borrowed from the CSV
 // formatter tests where it is known to yield an inclined length of 289 m.

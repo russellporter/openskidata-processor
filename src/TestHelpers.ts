@@ -29,22 +29,22 @@ import {
 import { mkdtempSync } from "fs";
 import * as os from "os";
 import * as path from "path";
-import { SkiAreaGeometry } from "./clustering/MapObject";
-import { InputLiftFeature } from "./features/LiftFeature";
-import { InputRunFeature, InputRunGeometry } from "./features/RunFeature";
+import { SkiAreaGeometry } from "./clustering/MapObject.js";
+import { InputLiftFeature } from "./features/LiftFeature.js";
+import { InputRunFeature, InputRunGeometry } from "./features/RunFeature.js";
 import {
   InputOpenStreetMapSkiAreaFeature,
   InputSkiMapOrgSkiAreaFeature,
   OSMSkiAreaSite,
-} from "./features/SkiAreaFeature";
-import { InputSpotFeature } from "./features/SpotFeature";
+} from "./features/SkiAreaFeature.js";
+import { InputSpotFeature } from "./features/SpotFeature.js";
 import {
   DataPaths,
   GeoJSONIntermediatePaths,
   GeoJSONOutputPaths,
   InputDataPaths,
-} from "./io/GeoJSONFiles";
-import placeholderSiteGeometry from "./utils/PlaceholderSiteGeometry";
+} from "./io/GeoJSONFiles.js";
+import placeholderSiteGeometry from "./utils/PlaceholderSiteGeometry.js";
 
 export interface FolderContents extends Map<string, any> {}
 

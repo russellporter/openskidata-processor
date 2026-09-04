@@ -6,7 +6,7 @@ import {
   readDownloadMetadata,
   readOSMDataTimestamp,
   writeDownloadMetadata,
-} from "./DownloadMetadata";
+} from "./DownloadMetadata.js";
 
 function tempDir(): string {
   return mkdtempSync(join(tmpdir(), "download-metadata-"));

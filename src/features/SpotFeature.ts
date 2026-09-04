@@ -3,7 +3,7 @@ import {
   LiftStationPosition,
   DismountRequirement,
 } from "openskidata-format";
-import OSMGeoJSONProperties from "./OSMGeoJSONProperties";
+import OSMGeoJSONProperties from "./OSMGeoJSONProperties.js";
 
 export type OSMSpotTags = {
   [key: string]: string | undefined;

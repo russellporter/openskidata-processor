@@ -1,11 +1,11 @@
-import { GeoPackageMerger } from "./GeoPackageMerger";
-import { GeoPackageWriter } from "./GeoPackageWriter";
+import { GeoPackageMerger } from "./GeoPackageMerger.js";
+import { GeoPackageWriter } from "./GeoPackageWriter.js";
 import { promises as fs, mkdtempSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 import { FeatureType, LiftType } from "openskidata-format";
 import { GeoPackageAPI } from "@ngageoint/geopackage";
-import { mockLiftFeature } from "../TestHelpers";
+import { mockLiftFeature } from "../TestHelpers.js";
 
 describe("GeoPackageMerger", () => {
   let merger: GeoPackageMerger;

@@ -8,10 +8,10 @@ import {
   SkiAreaSnowCoverStatistics,
   SkiAreaStatistics,
 } from "openskidata-format";
-import { LiftObject, MapObject, RunObject } from "../clustering/MapObject";
-import { PostgresConfig, SnowCoverConfig } from "../Config";
-import { getSnowCoverHistoryFromCache } from "../utils/snowCoverHistory";
-import { VIIRSPixel } from "../utils/VIIRSPixelExtractor";
+import { LiftObject, MapObject, RunObject } from "../clustering/MapObject.js";
+import { PostgresConfig, SnowCoverConfig } from "../Config.js";
+import { getSnowCoverHistoryFromCache } from "../utils/snowCoverHistory.js";
+import { VIIRSPixel } from "../utils/VIIRSPixelExtractor.js";
 
 const allSkiAreaActivities = new Set([
   SkiAreaActivity.Downhill,

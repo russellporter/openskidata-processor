@@ -8,8 +8,8 @@ import {
   RunProperties,
   Status,
 } from "openskidata-format";
-import mergedAndUniqued from "../../utils/mergedAndUniqued";
-import uniquedSources from "../UniqueSources";
+import mergedAndUniqued from "../../utils/mergedAndUniqued.js";
+import uniquedSources from "../UniqueSources.js";
 
 const ignoredPropertiesForComparison: Set<string> = new Set<
   keyof RunProperties

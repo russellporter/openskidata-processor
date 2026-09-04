@@ -4,16 +4,16 @@ import {
   SkiPassMembership,
   Source,
 } from "openskidata-format";
-import uniquedSources from "../transforms/UniqueSources";
-import SkiAreaNameMatcher, { MatchableSkiArea } from "./SkiAreaNameMatcher";
-import { SkiPassChart } from "./SkiPassChartParser";
-import { SkiPassDefinition } from "./SkiPassDefinitions";
-import { SkiPassOverrideIndex } from "./SkiPassOverrides";
+import uniquedSources from "../transforms/UniqueSources.js";
+import SkiAreaNameMatcher, { MatchableSkiArea } from "./SkiAreaNameMatcher.js";
+import { SkiPassChart } from "./SkiPassChartParser.js";
+import { SkiPassDefinition } from "./SkiPassDefinitions.js";
+import { SkiPassOverrideIndex } from "./SkiPassOverrides.js";
 import {
   SkiPassMatch,
   SkiPassRosterEntry,
   SkiPassSkiAreaData,
-} from "./SkiPassTypes";
+} from "./SkiPassTypes.js";
 
 /** A ski area the joiner can attach ski pass data to. */
 export interface JoinableSkiArea extends MatchableSkiArea {

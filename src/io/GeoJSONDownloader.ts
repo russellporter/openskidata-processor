@@ -2,8 +2,8 @@ import bboxPolygon from "@turf/bbox-polygon";
 import booleanContains from "@turf/boolean-contains";
 import { readFile, writeFile } from "node:fs/promises";
 import { Readable } from "node:stream";
-import { performanceMonitor } from "../clustering/database/PerformanceMonitor";
-import { InputSkiMapOrgSkiAreaFeature } from "../features/SkiAreaFeature";
+import { performanceMonitor } from "../clustering/database/PerformanceMonitor.js";
+import { InputSkiMapOrgSkiAreaFeature } from "../features/SkiAreaFeature.js";
 import {
   OSMDownloadConfig,
   liftsDownloadConfig,
@@ -12,14 +12,14 @@ import {
   skiAreasDownloadConfig,
   skiMapSkiAreasURL,
   spotsDownloadConfig,
-} from "./DownloadURLs";
+} from "./DownloadURLs.js";
 import {
   earliestTimestamp,
   readOSMDataTimestamp,
   writeDownloadMetadata,
-} from "./DownloadMetadata";
-import { InputDataPaths } from "./GeoJSONFiles";
-import convertOSMFileToGeoJSON from "./OSMToGeoJSONConverter";
+} from "./DownloadMetadata.js";
+import { InputDataPaths } from "./GeoJSONFiles.js";
+import convertOSMFileToGeoJSON from "./OSMToGeoJSONConverter.js";
 
 export default async function downloadAndConvertToGeoJSON(
   folder: string,

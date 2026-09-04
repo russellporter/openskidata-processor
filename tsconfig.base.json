@@ -2,14 +2,13 @@
   "compilerOptions": {
     "strict": true,
     "outDir": "dist",
+    "rootDir": "src",
     "esModuleInterop": true,
-    "target": "es2022",
-    "module": "commonjs",
-    "types": ["node", "vitest/globals"],
-    "baseUrl": ".",
-    "paths": {
-      "*": ["types/*"]
-    },
+    "target": "es2023",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "resolveJsonModule": true,
+    "types": ["node"],
     "skipLibCheck": true
   },
   "include": ["./src/**/*"]

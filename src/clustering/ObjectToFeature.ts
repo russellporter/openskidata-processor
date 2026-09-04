@@ -1,5 +1,5 @@
 import { SkiAreaFeature } from "openskidata-format";
-import { SkiAreaObject } from "./MapObject";
+import { SkiAreaObject } from "./MapObject.js";
 
 export default function objectToFeature(
   skiAreaObject: SkiAreaObject,

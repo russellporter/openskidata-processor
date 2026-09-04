@@ -1,4 +1,4 @@
-import getStatusAndValue from "./Status";
+import getStatusAndValue from "./Status.js";
 
 describe("getStatusAndValue", () => {
   it("uses operating status by default", () => {

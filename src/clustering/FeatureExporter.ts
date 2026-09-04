@@ -10,21 +10,21 @@ import {
   SpotGeometry,
 } from "openskidata-format";
 import { pipeline } from "stream/promises";
-import { PostgresConfig, SnowCoverConfig } from "../Config";
-import toFeatureCollection from "../transforms/FeatureCollection";
-import { filter, map, mapAsync } from "../transforms/StreamTransforms";
-import { toSkiAreaSummary } from "../transforms/toSkiAreaSummary";
-import { getSnowCoverHistoryFromCache } from "../utils/snowCoverHistory";
+import { PostgresConfig, SnowCoverConfig } from "../Config.js";
+import toFeatureCollection from "../transforms/FeatureCollection.js";
+import { filter, map, mapAsync } from "../transforms/StreamTransforms.js";
+import { toSkiAreaSummary } from "../transforms/toSkiAreaSummary.js";
+import { getSnowCoverHistoryFromCache } from "../utils/snowCoverHistory.js";
 import {
   LiftObject,
   MapObject,
   RunObject,
   SkiAreaObject,
   SpotObject,
-} from "./MapObject";
-import objectToFeature from "./ObjectToFeature";
-import { asyncIterableToStream } from "./asyncIterableToStream";
-import { ClusteringDatabase } from "./database/ClusteringDatabase";
+} from "./MapObject.js";
+import objectToFeature from "./ObjectToFeature.js";
+import { asyncIterableToStream } from "./asyncIterableToStream.js";
+import { ClusteringDatabase } from "./database/ClusteringDatabase.js";
 
 export async function exportSkiAreasGeoJSON(
   path: string,

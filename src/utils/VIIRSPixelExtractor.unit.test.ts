@@ -1,5 +1,5 @@
 import { Feature, LineString, Polygon } from "geojson";
-import { VIIRSPixelExtractor } from "./VIIRSPixelExtractor";
+import { VIIRSPixelExtractor } from "./VIIRSPixelExtractor.js";
 
 describe("VIIRSPixelExtractor", () => {
   let extractor: VIIRSPixelExtractor;

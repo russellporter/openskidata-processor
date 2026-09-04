@@ -1,5 +1,5 @@
 import { readFileSync } from "fs";
-import { SkiPassRosterEntry } from "./SkiPassTypes";
+import { SkiPassRosterEntry } from "./SkiPassTypes.js";
 
 /**
  * A roster entry mapped by hand to the ski areas it covers.

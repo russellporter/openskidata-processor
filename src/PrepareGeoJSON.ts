@@ -1,3 +1,4 @@
+import openSkiDataFormatPackage from "openskidata-format/package.json" with { type: "json" };
 import { createWriteStream, existsSync, unlinkSync } from "fs";
 import { writeFile } from "fs/promises";
 import { FeatureType } from "openskidata-format";
@@ -5,33 +6,36 @@ import * as path from "path";
 import { join } from "path";
 import { Readable } from "stream";
 import { pipeline } from "stream/promises";
-import { Config, ElevationServerConfig, PostgresConfig } from "./Config";
-import clusterSkiAreas from "./clustering/ClusterSkiAreas";
-import { readDownloadMetadata } from "./io/DownloadMetadata";
-import { DataPaths, getPath } from "./io/GeoJSONFiles";
-import { readGeoJSONFeatures } from "./io/GeoJSONReader";
-import { convertGeoJSONToGeoPackage } from "./io/GeoPackageWriter";
-import * as CSVFormatter from "./transforms/CSVFormatter";
-import { createElevationProcessor } from "./transforms/Elevation";
-import toFeatureCollection from "./transforms/FeatureCollection";
-import { formatLift } from "./transforms/LiftFormatter";
-import * as MapboxGLFormatter from "./transforms/MapboxGLFormatter";
-import { formatRun } from "./transforms/RunFormatter";
-import { InputSkiAreaType, formatSkiArea } from "./transforms/SkiAreaFormatter";
-import { formatSpots } from "./transforms/SpotFormatter";
-import { generateTiles } from "./transforms/TilesGenerator";
-import enrichSkiAreasWithSkiPasses from "./skiPasses/SkiPassEnrichment";
-import { runCommand } from "./utils/ProcessRunner";
+import { Config, ElevationServerConfig, PostgresConfig } from "./Config.js";
+import clusterSkiAreas from "./clustering/ClusterSkiAreas.js";
+import { readDownloadMetadata } from "./io/DownloadMetadata.js";
+import { DataPaths, getPath } from "./io/GeoJSONFiles.js";
+import { readGeoJSONFeatures } from "./io/GeoJSONReader.js";
+import { convertGeoJSONToGeoPackage } from "./io/GeoPackageWriter.js";
+import * as CSVFormatter from "./transforms/CSVFormatter.js";
+import { createElevationProcessor } from "./transforms/Elevation.js";
+import toFeatureCollection from "./transforms/FeatureCollection.js";
+import { formatLift } from "./transforms/LiftFormatter.js";
+import * as MapboxGLFormatter from "./transforms/MapboxGLFormatter.js";
+import { formatRun } from "./transforms/RunFormatter.js";
+import {
+  InputSkiAreaType,
+  formatSkiArea,
+} from "./transforms/SkiAreaFormatter.js";
+import { formatSpots } from "./transforms/SpotFormatter.js";
+import { generateTiles } from "./transforms/TilesGenerator.js";
+import enrichSkiAreasWithSkiPasses from "./skiPasses/SkiPassEnrichment.js";
+import { runCommand } from "./utils/ProcessRunner.js";
 
-import { performanceMonitor } from "./clustering/database/PerformanceMonitor";
+import { performanceMonitor } from "./clustering/database/PerformanceMonitor.js";
 import {
   SkiAreaSiteProvider,
   addSkiAreaSites,
-} from "./transforms/SkiAreaSiteProvider";
+} from "./transforms/SkiAreaSiteProvider.js";
 import {
   collectFileSizes,
   MetadataCollector,
-} from "./statistics/DatasetMetadata";
+} from "./statistics/DatasetMetadata.js";
 import {
   accumulate,
   concat,
@@ -40,11 +44,11 @@ import {
   get,
   map,
   mapAsync,
-} from "./transforms/StreamTransforms";
-import { RunNormalizerAccumulator } from "./transforms/accumulator/RunNormalizerAccumulator";
+} from "./transforms/StreamTransforms.js";
+import { RunNormalizerAccumulator } from "./transforms/accumulator/RunNormalizerAccumulator.js";
 
 function getFormatVersion(): string {
-  return require("openskidata-format/package.json").version;
+  return openSkiDataFormatPackage.version;
 }
 
 async function createElevationTransform(

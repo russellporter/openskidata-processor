@@ -7,21 +7,21 @@ import {
   SourceType,
   Status,
 } from "openskidata-format";
-import { osmID } from "../features/OSMGeoJSONProperties";
+import { osmID } from "../features/OSMGeoJSONProperties.js";
 import {
   InputOpenStreetMapSkiAreaFeature,
   InputSkiMapOrgSkiAreaFeature,
   OSMSkiAreaSite,
   OSMSkiAreaTags,
-} from "../features/SkiAreaFeature";
-import placeholderSiteGeometry from "../utils/PlaceholderSiteGeometry";
-import notEmpty from "../utils/notEmpty";
-import buildFeature from "./FeatureBuilder";
-import { isValidGeometryInFeature } from "./GeoTransforms";
-import { getOSMFirstValue, getOSMName } from "./OSMTransforms";
-import { Omit } from "./Omit";
+} from "../features/SkiAreaFeature.js";
+import placeholderSiteGeometry from "../utils/PlaceholderSiteGeometry.js";
+import notEmpty from "../utils/notEmpty.js";
+import buildFeature from "./FeatureBuilder.js";
+import { isValidGeometryInFeature } from "./GeoTransforms.js";
+import { getOSMFirstValue, getOSMName } from "./OSMTransforms.js";
+import { Omit } from "./Omit.js";
 import { getRunDifficultyConvention } from "openskidata-format";
-import getStatusAndValue from "./Status";
+import getStatusAndValue from "./Status.js";
 
 export enum InputSkiAreaType {
   SKIMAP_ORG,

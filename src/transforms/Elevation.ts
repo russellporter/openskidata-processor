@@ -1,13 +1,13 @@
 import DataLoader from "dataloader";
-import * as geohash from "ngeohash";
+import geohash from "ngeohash";
 import {
   computeViewportHint,
   extractPointsForElevationProfile,
   FeatureType,
 } from "openskidata-format";
-import { ElevationServerConfig, PostgresConfig } from "../Config";
-import { PostgresCache } from "../utils/PostgresCache";
-import { TerrainTileElevationSource } from "./elevation/TerrainTileElevationSource";
+import { ElevationServerConfig, PostgresConfig } from "../Config.js";
+import { PostgresCache } from "../utils/PostgresCache.js";
+import { TerrainTileElevationSource } from "./elevation/TerrainTileElevationSource.js";
 
 const elevationProfileResolution = 25;
 const ELEVATION_CACHE_TTL_MS = 365 * 24 * 60 * 60 * 1000; // 1 year

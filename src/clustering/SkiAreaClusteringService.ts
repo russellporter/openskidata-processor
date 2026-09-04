@@ -4,6 +4,7 @@ import * as turf from "@turf/helpers";
 import length from "@turf/length";
 import nearestPoint from "@turf/nearest-point";
 import { AssertionError } from "assert";
+import { cpus } from "os";
 import * as GeoJSON from "geojson";
 import {
   computeViewportHint,
@@ -22,34 +23,34 @@ import {
 } from "openskidata-format";
 import { Writable } from "stream";
 import { pipeline } from "stream/promises";
-import { uuid } from "../utils/uuid";
+import { uuid } from "../utils/uuid.js";
 import {
   ElevationServerConfig,
   GeocodingServerConfig,
   PostgresConfig,
   SnowCoverConfig,
-} from "../Config";
-import { readGeoJSONFeatures } from "../io/GeoJSONReader";
-import { skiAreaStatistics } from "../statistics/SkiAreaStatistics";
-import { createElevationProcessor } from "../transforms/Elevation";
-import Geocoder from "../transforms/Geocoder";
-import { getPoints, getPositions } from "../transforms/GeoTransforms";
-import { sortPlaces, uniquePlaces } from "../transforms/PlaceUtils";
-import { mapAsync } from "../transforms/StreamTransforms";
-import { mapWithConcurrency } from "../utils/mapWithConcurrency";
-import { isPlaceholderGeometry } from "../utils/PlaceholderSiteGeometry";
-import { VIIRSPixelExtractor } from "../utils/VIIRSPixelExtractor";
+} from "../Config.js";
+import { readGeoJSONFeatures } from "../io/GeoJSONReader.js";
+import { skiAreaStatistics } from "../statistics/SkiAreaStatistics.js";
+import { createElevationProcessor } from "../transforms/Elevation.js";
+import Geocoder from "../transforms/Geocoder.js";
+import { getPoints, getPositions } from "../transforms/GeoTransforms.js";
+import { sortPlaces, uniquePlaces } from "../transforms/PlaceUtils.js";
+import { mapAsync } from "../transforms/StreamTransforms.js";
+import { mapWithConcurrency } from "../utils/mapWithConcurrency.js";
+import { isPlaceholderGeometry } from "../utils/PlaceholderSiteGeometry.js";
+import { VIIRSPixelExtractor } from "../utils/VIIRSPixelExtractor.js";
 import {
   ClusteringDatabase,
   SearchContext,
-} from "./database/ClusteringDatabase";
-import { performanceMonitor } from "./database/PerformanceMonitor";
+} from "./database/ClusteringDatabase.js";
+import { performanceMonitor } from "./database/PerformanceMonitor.js";
 import {
   exportLiftsGeoJSON,
   exportRunsGeoJSON,
   exportSkiAreasGeoJSON,
   exportSpotsGeoJSON,
-} from "./FeatureExporter";
+} from "./FeatureExporter.js";
 import {
   DraftLift,
   DraftMapObject,
@@ -61,8 +62,8 @@ import {
   RunObject,
   SkiAreaObject,
   SpotObject,
-} from "./MapObject";
-import mergeSkiAreaObjects from "./MergeSkiAreaObjects";
+} from "./MapObject.js";
+import mergeSkiAreaObjects from "./MergeSkiAreaObjects.js";
 
 const maxDistanceInKilometers = 0.5;
 
@@ -417,7 +418,7 @@ export class SkiAreaClusteringService {
       "Associate lift stations with lifts",
       async () => {
         const { LiftStationAssociator } =
-          await import("./LiftStationAssociator");
+          await import("./LiftStationAssociator.js");
 
         // Create elevation processor if elevation server is configured
         const elevationProcessor = elevationServerConfig
@@ -466,7 +467,7 @@ export class SkiAreaClusteringService {
     });
 
     // Process multiple batches concurrently for better performance
-    const concurrentBatches = Math.min(4, require("os").cpus().length);
+    const concurrentBatches = Math.min(4, cpus().length);
     const activeBatches = new Set<Promise<void>>();
 
     let skiAreas: SkiAreaObject[] | null;
@@ -1150,7 +1151,7 @@ export class SkiAreaClusteringService {
       });
 
       // Process multiple batches concurrently for better performance
-      const concurrentBatches = Math.min(3, require("os").cpus().length);
+      const concurrentBatches = Math.min(3, cpus().length);
       const activeBatches = new Set<Promise<void>>();
 
       let skiAreas: SkiAreaObject[] | null;

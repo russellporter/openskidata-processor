@@ -1,9 +1,9 @@
 import { SkiAreaProperties, SourceType } from "openskidata-format";
-import { uniquePlaces } from "../transforms/PlaceUtils";
-import uniquedSources from "../transforms/UniqueSources";
-import mergedAndUniqued from "../utils/mergedAndUniqued";
-import { VIIRSPixel } from "../utils/VIIRSPixelExtractor";
-import { SkiAreaObject } from "./MapObject";
+import { uniquePlaces } from "../transforms/PlaceUtils.js";
+import uniquedSources from "../transforms/UniqueSources.js";
+import mergedAndUniqued from "../utils/mergedAndUniqued.js";
+import { VIIRSPixel } from "../utils/VIIRSPixelExtractor.js";
+import { SkiAreaObject } from "./MapObject.js";
 
 export default function mergeSkiAreaObjects(
   primarySkiArea: SkiAreaObject,

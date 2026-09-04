@@ -2,7 +2,7 @@ import { FeatureCollection, Feature } from "geojson";
 import {
   extractVIIRSPixelsFromGeoJSON,
   extractVIIRSPixelsFromFeature,
-} from "./extractVIIRSPixels";
+} from "./extractVIIRSPixels.js";
 
 describe("extractVIIRSPixels utilities", () => {
   describe("extractVIIRSPixelsFromGeoJSON", () => {
