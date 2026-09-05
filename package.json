@@ -27,7 +27,6 @@
     "ngeohash": "^0.6.4",
     "object-hash": "^3",
     "openskidata-format": "^15.0.0",
-    "osmtogeojson": "3.0.0-beta.5",
     "pg": "^8.23.0",
     "sharp": "^0.35.4",
     "stream-chain": "^4.2.5",
@@ -71,8 +70,5 @@
   "license": "ISC",
   "engines": {
     "node": ">=24"
-  },
-  "overrides": {
-    "@xmldom/xmldom": "^0.9.12"
   }
 }
