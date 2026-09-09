@@ -47,7 +47,7 @@ function pass(
   };
 }
 
-const INDY_BLOCKS = ["INDY PASS ROSTER"];
+const INDY_BLOCKS = ["INDY PASS ROSTER\n2026-27"];
 const IKON_BLOCKS = ["IKON PASS ROSTER"];
 const EPIC_BLOCKS = ["EPIC PASS ROSTER"];
 const POWER_BLOCKS = ["POWER PASS ROSTER"];
