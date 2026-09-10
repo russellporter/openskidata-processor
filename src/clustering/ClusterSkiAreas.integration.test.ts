@@ -53,7 +53,6 @@ beforeEach(async () => {
     elevationServer: null,
     geocodingServer: null,
     snowCover: null,
-    skiPasses: null,
     tiles: null,
     postgresCache: getPostgresTestConfig(),
   };

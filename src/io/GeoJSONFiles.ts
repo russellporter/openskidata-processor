@@ -12,12 +12,10 @@ export interface CommonGeoJSONPaths {
 export class InputDataPaths {
   readonly osmJSON: OSMJSONInputPaths;
   readonly geoJSON: GeoJSONInputPaths;
-  readonly skiPassChart: string;
 
   constructor(folder: string) {
     this.osmJSON = new OSMJSONInputPaths(folder);
     this.geoJSON = new GeoJSONInputPaths(folder);
-    this.skiPassChart = join(folder, "input_ski_passes.csv");
   }
 }
 
@@ -87,9 +85,6 @@ export class GeoJSONOutputPaths implements CommonGeoJSONPaths {
   readonly geoPackage: string;
   // Dataset-wide provenance and counts, consumed by openskidata.org.
   readonly metadata: string;
-  // Ski passes are not geographic features, so they are their own dataset rather than a layer.
-  readonly skiPasses: string;
-  readonly skiPassesCSV: string;
 
   constructor(folder: string) {
     if (!existsSync(folder)) {
@@ -112,8 +107,6 @@ export class GeoJSONOutputPaths implements CommonGeoJSONPaths {
     }
     this.geoPackage = join(folder, "openskidata.gpkg");
     this.metadata = join(folder, "metadata.json");
-    this.skiPasses = join(folder, "ski_passes.json");
-    this.skiPassesCSV = join(this.csv, "ski_passes.csv");
   }
 }
 export interface DataPaths {

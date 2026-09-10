@@ -1,11 +1,4 @@
-import { copyFileSync, readFileSync } from "fs";
-import {
-  SkiAreaActivity,
-  SkiPassCatalog,
-  SourceType,
-  Status,
-} from "openskidata-format";
-import { join } from "path";
+import { SkiAreaActivity, Status } from "openskidata-format";
 import { Config, getPostgresTestConfig } from "./Config.js";
 import prepare from "./PrepareGeoJSON.js";
 import * as TestHelpers from "./TestHelpers.js";
@@ -24,7 +17,6 @@ function createTestConfig(): Config {
     workingDir: TestHelpers.getTempWorkingDir(),
     outputDir: TestHelpers.getTempWorkingDir(),
     snowCover: null,
-    skiPasses: null,
     tiles: null,
     postgresCache: getPostgresTestConfig(),
   };
@@ -468,7 +460,6 @@ it("produces output for simple input", async () => {
               "name": "Rabenkopflift Oberau",
               "places": [],
               "runConvention": "europe",
-              "skiPasses": [],
               "sources": [
                 {
                   "id": "13666",
@@ -837,78 +828,4 @@ it("processes spot entities", async () => {
       },
     ]
   `);
-});
-
-it("attaches ski pass data and writes the ski passes", async () => {
-  const paths = TestHelpers.getFilePaths();
-  TestHelpers.mockInputFiles(
-    {
-      skiMapSkiAreas: [
-        {
-          type: "Feature",
-          properties: {
-            id: "13666",
-            name: "Rabenkopflift Oberau",
-            status: Status.Operating,
-            activities: [SkiAreaActivity.Downhill],
-            scalerank: 1,
-            official_website: null,
-          },
-          geometry: { type: "Point", coordinates: [11.122066, 47.557111] },
-        },
-      ],
-      openStreetMapSkiAreas: [],
-      openStreetMapSkiAreaSites: [],
-      lifts: [],
-      runs: [],
-    },
-    paths.input,
-  );
-  // The real chart, so the roster the pipeline ships against is the one under test.
-  copyFileSync(
-    join(import.meta.dirname, "skiPasses", "__fixtures__", "skiPassChart.csv"),
-    paths.input.skiPassChart,
-  );
-
-  await prepare(paths, {
-    ...createTestConfig(),
-    // The input is a small extract, so roster entries outside it are reported, not fatal.
-    bbox: [11.1, 47.5, 11.2, 47.6],
-    skiPasses: {
-      csvURL: "https://example.com/chart.csv",
-      chartSheetID: "677843907",
-      overridesPath: join(import.meta.dirname, "skiPasses", "overrides.json"),
-    },
-  });
-
-  const skiAreas = TestHelpers.fileContents(paths.output.skiAreas);
-  expect(skiAreas.features[0].properties.skiPasses).toEqual([]);
-
-  const catalog = TestHelpers.fileContents(
-    paths.output.skiPasses,
-  ) as SkiPassCatalog;
-  const passes = catalog.passes;
-  expect(catalog.brands.map((brand) => brand.id)).toEqual([
-    "indy",
-    "ikon",
-    "epic",
-    "power",
-    "new-england",
-  ]);
-  expect(passes).toHaveLength(38);
-  expect(passes.map((pass) => pass.id)).toContain("ikon-base");
-  expect(passes.every((pass) => pass.type === "skiPass")).toBe(true);
-  expect(passes.find((pass) => pass.id === "snow-pass")?.sources).toEqual([
-    { type: SourceType.STORM_SKIING, id: "677843907!JK1" },
-    { type: SourceType.STORM_SKIING, id: "677843907!KR1" },
-  ]);
-  // Nothing in this extract matches, so every roster entry is reported as unresolved.
-  expect(
-    passes.find((pass) => pass.id === "snow-pass")?.unresolvedRosterEntries,
-  ).toHaveLength(14);
-
-  // The ski pass CSV is written even when no ski area is on a pass, with only its header.
-  expect(readFileSync(paths.output.skiPassesCSV, "utf8")).toBe(
-    "brand_id,brand_name,pass_id,pass_name,ski_area_id,ski_area_name,roster_name,roster_location,access,year_joined,match_tier\n",
-  );
 });

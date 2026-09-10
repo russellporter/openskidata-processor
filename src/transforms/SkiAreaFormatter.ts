@@ -162,7 +162,6 @@ function propertiesForOpenStreetMapSkiArea(
     ],
     activities: [],
     status: status,
-    skiPasses: [],
     websites: [tags.website].filter(notEmpty),
     wikidataID: getOSMFirstValue(tags, "wikidata"),
     runConvention: runConvention,
@@ -187,7 +186,6 @@ function propertiesForSkiMapOrgSkiArea(
     ],
     activities: activities,
     status: feature.properties.status,
-    skiPasses: [],
     runConvention: getRunDifficultyConvention(feature),
     websites: [feature.properties.official_website].filter(notEmpty),
     // TODO: #153 Get Wikidata ID from Skimap.org ID (https://github.com/russellporter/openskimap.org/issues/153)

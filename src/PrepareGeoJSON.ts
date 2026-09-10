@@ -24,7 +24,6 @@ import {
 } from "./transforms/SkiAreaFormatter.js";
 import { formatSpots } from "./transforms/SpotFormatter.js";
 import { generateTiles } from "./transforms/TilesGenerator.js";
-import enrichSkiAreasWithSkiPasses from "./skiPasses/SkiPassEnrichment.js";
 import { runCommand } from "./utils/ProcessRunner.js";
 
 import { performanceMonitor } from "./clustering/database/PerformanceMonitor.js";
@@ -189,27 +188,6 @@ export default async function prepare(paths: DataPaths, config: Config) {
   await performanceMonitor.withPhase("Phase 3: Clustering", async () => {
     await clusterSkiAreas(paths.intermediate, paths.output, config);
   });
-
-  const skiPassConfig = config.skiPasses;
-  if (skiPassConfig) {
-    // After clustering: the join needs the geocoded places and the merged ski areas it produces.
-    await performanceMonitor.withPhase(
-      "Phase 3.5: Ski pass enrichment",
-      async () => {
-        await enrichSkiAreasWithSkiPasses(
-          paths.input.skiPassChart,
-          skiPassConfig.chartSheetID,
-          skiPassConfig.overridesPath,
-          config.bbox === null,
-          {
-            skiAreas: paths.output.skiAreas,
-            skiPassesJSON: paths.output.skiPasses,
-            skiPassesCSV: paths.output.skiPassesCSV,
-          },
-        );
-      },
-    );
-  }
 
   await performanceMonitor.withPhase("Phase 4: Output Generation", async () => {
     await performanceMonitor.withOperation(

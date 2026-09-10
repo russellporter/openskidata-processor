@@ -64,7 +64,6 @@ describe("SkiAreaFormatter", () => {
     "name": "Ski Area",
     "places": [],
     "runConvention": "europe",
-    "skiPasses": [],
     "sources": [
       {
         "id": "way/1",
@@ -187,7 +186,6 @@ describe("SkiAreaFormatter", () => {
     "name": "Ski Area",
     "places": [],
     "runConvention": "europe",
-    "skiPasses": [],
     "sources": [
       {
         "id": "1",
@@ -243,7 +241,6 @@ describe("SkiAreaFormatter", () => {
     "name": "Wendelstein",
     "places": [],
     "runConvention": "north_america",
-    "skiPasses": [],
     "sources": [
       {
         "id": "relation/1",

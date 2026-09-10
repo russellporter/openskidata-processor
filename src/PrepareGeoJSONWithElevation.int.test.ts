@@ -39,7 +39,6 @@ beforeEach(() => {
     workingDir: TestHelpers.getTempWorkingDir(),
     outputDir: TestHelpers.getTempWorkingDir(),
     snowCover: null,
-    skiPasses: null,
     tiles: null,
     postgresCache: getPostgresTestConfig(),
   };

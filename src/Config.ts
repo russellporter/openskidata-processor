@@ -1,5 +1,4 @@
 import { assert } from "console";
-import { getStormSkiingChartCSVURL } from "openskidata-format";
 import * as path from "path";
 
 export type GeocodingServerType = "photon" | "geocode-api";
@@ -49,15 +48,6 @@ export type ElevationServerConfig =
 
 export type TilesConfig = { mbTilesPath: string; tilesDir: string };
 
-export type SkiPassConfig = {
-  // CSV export of the ski pass chart (a spreadsheet of each pass's roster of ski areas)
-  csvURL: string;
-  // The sheet within that spreadsheet, so that each value read can be traced back to its cell
-  chartSheetID: string;
-  // Hand-maintained mappings for roster entries the name matcher cannot resolve
-  overridesPath: string;
-};
-
 export type PostgresConfig = {
   host: string;
   port: number;
@@ -86,8 +76,6 @@ export interface Config {
   tiles: TilesConfig | null;
   // PostgreSQL cache configuration
   postgresCache: PostgresConfig;
-  // Ski pass (multi-resort season pass) data integration
-  skiPasses: SkiPassConfig | null;
 }
 
 export function configFromEnvironment(): Config {
@@ -152,32 +140,6 @@ export function configFromEnvironment(): Config {
           }
         : null,
     postgresCache: getPostgresConfig(),
-    skiPasses: getSkiPassConfig(),
-  };
-}
-
-// The sheet of the ski pass chart holding the rosters.
-const SKI_PASS_CHART_SHEET_ID = "677843907";
-
-function getSkiPassConfig(): SkiPassConfig | null {
-  if (process.env.SKI_PASS_CSV_URL === "") {
-    return null;
-  }
-  return {
-    csvURL:
-      process.env.SKI_PASS_CSV_URL ??
-      getStormSkiingChartCSVURL(SKI_PASS_CHART_SHEET_ID),
-    chartSheetID: SKI_PASS_CHART_SHEET_ID,
-    overridesPath:
-      process.env.SKI_PASS_OVERRIDES_PATH ??
-      // Data rather than code, so it is read from the source tree rather than the build output.
-      path.join(
-        import.meta.dirname,
-        "..",
-        "src",
-        "skiPasses",
-        "overrides.json",
-      ),
   };
 }
 

@@ -15,7 +15,6 @@ import {
   SkiAreaActivity,
   SkiAreaFeature,
   SkiAreaStatistics,
-  SkiPassMembership,
   SkiAreaSummaryFeature,
   Source,
   SpotFeature,
@@ -130,7 +129,7 @@ function getHeadersForType(type: FeatureType): string {
     case FeatureType.Lift:
       return "name,ref,ref_fr_cairn,lift_type,status,access,countries,regions,localities,ski_area_names,oneway,duration_sec,capacity,occupancy,detachable,bubble,heating,inclined_length_m,vertical_m,speed_m_per_s,vertical_speed_m_per_s,min_elevation_m,max_elevation_m,overall_pitch_%,wikidata_id,websites,openskimap,id,geometry,lat,lng,ski_area_ids,sources,description";
     case FeatureType.SkiArea:
-      return "name,countries,regions,localities,status,has_downhill,has_nordic,downhill_distance_km,nordic_distance_km,vertical_m,min_elevation_m,max_elevation_m,lift_count,surface_lifts_count,run_convention,wikidata_id,websites,openskimap,id,geometry,lat,lng,sources,ski_passes";
+      return "name,countries,regions,localities,status,has_downhill,has_nordic,downhill_distance_km,nordic_distance_km,vertical_m,min_elevation_m,max_elevation_m,lift_count,surface_lifts_count,run_convention,wikidata_id,websites,openskimap,id,geometry,lat,lng,sources";
     case FeatureType.Spot:
       return "id,spot_type,longitude,latitude,sources,ski_areas,countries,regions,localities,dismount,name,position,entry,exit";
     default:
@@ -290,15 +289,7 @@ function formatSkiArea(feature: SkiAreaFeature): string {
     properties.id,
     ...getGeometry(feature),
     formatSources(properties.sources),
-    formatSkiPasses(properties.skiPasses),
   ].join(",");
-}
-
-/** The actual passes a ski area is on. */
-function formatSkiPasses(skiPasses: SkiPassMembership[]): string {
-  return escapeField(
-    [...new Set(skiPasses.map((membership) => membership.passID))].join(";"),
-  );
 }
 
 /**

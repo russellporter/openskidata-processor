@@ -53,7 +53,6 @@ function skiArea(options: {
       status: options.status !== undefined ? options.status : Status.Operating,
       sources: [{ type: SourceType.SKIMAP_ORG, id: "1" }],
       runConvention: RunDifficultyConvention.EUROPE,
-      skiPasses: [],
       websites: [],
       wikidataID: null,
       places: (options.countries ?? []).map((country) => ({

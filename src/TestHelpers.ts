@@ -17,7 +17,6 @@ import {
   SkiAreaFeature,
   SkiAreaProperties,
   SkiAreaStatistics,
-  SkiPassMembership,
   Source,
   SourceType,
   SpotFeature,
@@ -349,7 +348,6 @@ type MockSkiAreaPropertyOptions = {
   statistics?: SkiAreaStatistics;
   websites?: string[];
   wikidataID?: string | null;
-  skiPasses?: SkiPassMembership[];
 };
 
 type MockSkiAreaGeometryOptions<G extends SkiAreaGeometry> = {
@@ -375,7 +373,6 @@ export function mockSkiAreaFeature<G extends SkiAreaGeometry>(
           ? options.sources
           : [{ id: "1", type: SourceType.SKIMAP_ORG }],
       runConvention: RunDifficultyConvention.EUROPE,
-      skiPasses: options.skiPasses || [],
       statistics: options.statistics,
       websites: options.websites || [],
       wikidataID: options.wikidataID || null,

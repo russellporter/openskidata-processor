@@ -238,13 +238,6 @@ export function formatter(
       mapboxGLProperties.has_nordic = true;
     }
 
-    const passEntries = unique(
-      properties.skiPasses.map((membership) => membership.passID),
-    );
-    if (passEntries.length > 0) {
-      mapboxGLProperties.ski_passes = `;${passEntries.join(";")};`;
-    }
-
     return {
       type: feature.type,
       geometry: centralPointsInFeature(feature.geometry),
