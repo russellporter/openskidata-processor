@@ -223,6 +223,10 @@ export class SkiAreaClusteringService {
       _key: properties.id,
       type: FeatureType.Lift,
       geometry: feature.geometry,
+      // NOTE: lift activities drive object<->ski-area association during
+      // clustering (they are the search key), not the ski area's classification.
+      // Ski-area activities are derived from runs only (see getActivitiesBasedOnRuns),
+      // so a lift never grants "downhill" to its ski area.
       activities:
         properties["status"] === Status.Operating
           ? [SkiAreaActivity.Downhill]
@@ -322,6 +326,9 @@ export class SkiAreaClusteringService {
       _key: properties.id,
       type: FeatureType.Spot,
       geometry: feature.geometry,
+      // NOTE: like lifts, spot activities are the association/search key during
+      // clustering, not ski-area classification. Ski-area activities come from
+      // runs only, so a spot never grants "downhill" to its ski area.
       activities: this.getSpotActivities(properties.spotType),
       skiAreas: feature.properties.skiAreas.map(
         (skiArea) => skiArea.properties.id,
@@ -503,8 +510,7 @@ export class SkiAreaClusteringService {
             const memberObjects = await this.database.getObjectsForSkiArea(
               skiArea.id,
             );
-            const activities =
-              this.getActivitiesBasedOnRunsAndLifts(memberObjects);
+            const activities = this.getActivitiesBasedOnRuns(memberObjects);
 
             if (memberObjects.length === 0) {
               return;
@@ -561,8 +567,7 @@ export class SkiAreaClusteringService {
 
         const hasKnownSkiAreaActivities = skiArea.activities.length > 0;
         if (!hasKnownSkiAreaActivities) {
-          const activities =
-            this.getActivitiesBasedOnRunsAndLifts(memberObjects);
+          const activities = this.getActivitiesBasedOnRuns(memberObjects);
           await this.database.updateObject(skiArea._key, {
             activities: [...activities],
             properties: {
@@ -597,8 +602,7 @@ export class SkiAreaClusteringService {
 
             const hasKnownSkiAreaActivities = skiArea.activities.length > 0;
             if (!hasKnownSkiAreaActivities) {
-              const activities =
-                this.getActivitiesBasedOnRunsAndLifts(memberObjects);
+              const activities = this.getActivitiesBasedOnRuns(memberObjects);
               await this.database.updateObject(skiArea._key, {
                 activities: [...activities],
                 properties: {
@@ -1235,6 +1239,16 @@ export class SkiAreaClusteringService {
       postgresConfig,
       snowCoverConfig,
     );
+
+    // Evidence gate for activities: only runs grant an activity. Lifts and spots
+    // never do (they are not activity evidence), and Skimap.org activities are a
+    // fallback used only when the area's runs yield no downhill/nordic activity.
+    // Skimap.org values live on `skiArea.properties.activities` via the merge step,
+    // so keeping them here is what preserves them for run-less areas.
+    const runActivities = this.getActivitiesBasedOnRuns(memberObjects);
+    const activities =
+      runActivities.length > 0 ? runActivities : skiArea.properties.activities;
+
     // Compute the viewport hint from member run/lift geometries (which have 3D coordinates
     // from elevation enhancement). Falls back to the ski area's own geometry when there
     // are no members (e.g. Skimap.org-only ski area with no associated runs/lifts yet).
@@ -1244,6 +1258,7 @@ export class SkiAreaClusteringService {
     )!;
     const updatedProperties = {
       ...skiArea.properties,
+      activities,
       statistics,
       runConvention: getRunDifficultyConvention(skiArea.geometry),
       viewportHint,
@@ -1270,6 +1285,7 @@ export class SkiAreaClusteringService {
     }
 
     await this.database.updateObject(skiArea._key, {
+      activities,
       properties: updatedProperties,
     });
   }
@@ -1334,20 +1350,20 @@ export class SkiAreaClusteringService {
     }
   }
 
-  private getActivitiesBasedOnRunsAndLifts(
-    mapObjects: MapObject[],
-  ): SkiAreaActivity[] {
-    return Array.from(
-      mapObjects
-        .filter((object) => object.type !== FeatureType.SkiArea)
-        .reduce((accumulatedActivities, object) => {
-          object.activities.forEach((activity) => {
-            if (allSkiAreaActivities.has(activity)) {
-              accumulatedActivities.add(activity);
-            }
-          });
-          return accumulatedActivities;
-        }, new Set<SkiAreaActivity>()),
+  private getActivitiesBasedOnRuns(mapObjects: MapObject[]): SkiAreaActivity[] {
+    const foundActivities = new Set<SkiAreaActivity>();
+    mapObjects
+      .filter((object) => object.type === FeatureType.Run)
+      .forEach((run) => {
+        run.activities.forEach((activity) => {
+          if (allSkiAreaActivities.has(activity)) {
+            foundActivities.add(activity);
+          }
+        });
+      });
+    // Ordered by allSkiAreaActivities so output is stable regardless of row order.
+    return Array.from(allSkiAreaActivities).filter((activity) =>
+      foundActivities.has(activity),
     );
   }
 }

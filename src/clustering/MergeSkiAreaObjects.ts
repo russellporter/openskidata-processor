@@ -43,6 +43,9 @@ export default function mergeSkiAreaObjects(
       skiAreas: primarySkiArea.skiAreas,
       source: primarySkiArea.source,
       type: primarySkiArea.type,
+      // The union here deliberately keeps Skimap.org activities on the merged
+      // object: the final activity gate uses them as a fallback for areas whose
+      // OpenStreetMap runs yield no downhill/nordic activity.
       activities: mergedAndUniqued(
         primarySkiArea.activities,
         otherSkiArea.activities,
@@ -62,6 +65,8 @@ function mergeSkiAreaProperties(
   return {
     id: primarySkiArea.id,
     name: primarySkiArea.name || otherSkiArea.name,
+    // Kept as a union so the final activity gate can fall back to Skimap.org
+    // activities; see mergeSkiAreaObjects above.
     activities: mergedAndUniqued(
       primarySkiArea.activities,
       otherSkiArea.activities,

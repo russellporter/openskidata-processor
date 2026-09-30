@@ -1611,9 +1611,7 @@ it("merges Skimap.org ski area without activities with OpenStreetMap ski area", 
   ).toMatchInlineSnapshot(`
     [
       {
-        "activities": [
-          "downhill",
-        ],
+        "activities": [],
         "id": "1",
         "name": "Name",
         "sources": [
@@ -3758,5 +3756,230 @@ describe("Lift Station Association", () => {
     expect(crossing.geometry.coordinates).toEqual([0.5, 0.5]);
     expect(halfpipe.geometry.coordinates[0]).toBeCloseTo(0.3);
     expect(halfpipe.geometry.coordinates[1]).toBeCloseTo(0.3);
+  });
+});
+
+describe("ski area activity evidence", () => {
+  it("does not apply Skimap.org activities when the OSM area has runs", async () => {
+    const paths = TestHelpers.getFilePaths();
+    TestHelpers.mockFeatureFiles(
+      [
+        TestHelpers.mockSkiAreaFeature({
+          id: "1",
+          activities: [],
+          sources: [{ type: SourceType.OPENSTREETMAP, id: "1135735100" }],
+          geometry: {
+            type: "Polygon",
+            coordinates: [
+              [
+                [0, 0],
+                [2, 0],
+                [2, 2],
+                [0, 2],
+                [0, 0],
+              ],
+            ],
+          },
+        }),
+        // Skimap.org's record for the same place, tagged downhill + nordic.
+        TestHelpers.mockSkiAreaFeature({
+          id: "2",
+          name: "Larch Hills Nordics",
+          activities: [SkiAreaActivity.Downhill, SkiAreaActivity.Nordic],
+          sources: [{ type: SourceType.SKIMAP_ORG, id: "2270" }],
+          geometry: { type: "Point", coordinates: [1, 1] },
+        }),
+      ],
+      [],
+      [
+        TestHelpers.mockRunFeature({
+          id: "3",
+          name: "Nordic Trail",
+          uses: [RunUse.Nordic],
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [0.1, 0.1],
+              [1.9, 1.9],
+            ],
+          },
+        }),
+      ],
+      paths.intermediate,
+    );
+
+    await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
+
+    const skiAreas = TestHelpers.fileContents(paths.output.skiAreas).features;
+    expect(skiAreas).toHaveLength(1);
+    expect(skiAreas[0].properties.activities).toEqual([SkiAreaActivity.Nordic]);
+    expect(
+      skiAreas[0].properties.sources.map((source: any) => source.type).sort(),
+    ).toEqual(["openstreetmap", "skimap.org"]);
+  });
+
+  it("does not derive ski area activities from lifts", async () => {
+    const paths = TestHelpers.getFilePaths();
+    TestHelpers.mockFeatureFiles(
+      [
+        TestHelpers.mockSkiAreaFeature({
+          id: "1",
+          activities: [],
+          sources: [{ type: SourceType.OPENSTREETMAP, id: "1" }],
+          geometry: {
+            type: "Polygon",
+            coordinates: [
+              [
+                [0, 0],
+                [1, 0],
+                [1, 1],
+                [0, 1],
+                [0, 0],
+              ],
+            ],
+          },
+        }),
+      ],
+      [
+        TestHelpers.mockLiftFeature({
+          id: "2",
+          name: "Lift",
+          liftType: LiftType.TBar,
+          status: Status.Operating,
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [0.1, 0.1],
+              [0.9, 0.9],
+            ],
+          },
+        }),
+      ],
+      [],
+      paths.intermediate,
+    );
+
+    await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
+
+    const skiAreas = TestHelpers.fileContents(paths.output.skiAreas).features;
+    expect(skiAreas).toHaveLength(1);
+    expect(skiAreas[0].properties.activities).toEqual([]);
+  });
+
+  it("does not derive ski area activities from spots", async () => {
+    const paths = TestHelpers.getFilePaths();
+    TestHelpers.mockFeatureFiles(
+      [
+        TestHelpers.mockSkiAreaFeature({
+          id: "1",
+          activities: [],
+          sources: [{ type: SourceType.OPENSTREETMAP, id: "1" }],
+          geometry: {
+            type: "Polygon",
+            coordinates: [
+              [
+                [0, 0],
+                [1, 0],
+                [1, 1],
+                [0, 1],
+                [0, 0],
+              ],
+            ],
+          },
+        }),
+      ],
+      [],
+      [
+        TestHelpers.mockRunFeature({
+          id: "2",
+          name: "Nordic Trail",
+          uses: [RunUse.Nordic],
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [0.1, 0.1],
+              [0.9, 0.9],
+            ],
+          },
+        }),
+      ],
+      paths.intermediate,
+      [
+        TestHelpers.mockSpotFeature({
+          id: "3",
+          spotType: SpotType.LiftStation,
+          name: "Base Station",
+          geometry: { type: "Point", coordinates: [0.1, 0.1] },
+        }),
+        TestHelpers.mockSpotFeature({
+          id: "4",
+          spotType: SpotType.Crossing,
+          geometry: { type: "Point", coordinates: [0.5, 0.5] },
+        }),
+      ],
+    );
+
+    await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
+
+    const skiAreas = TestHelpers.fileContents(paths.output.skiAreas).features;
+    expect(skiAreas).toHaveLength(1);
+    expect(skiAreas[0].properties.activities).toEqual([SkiAreaActivity.Nordic]);
+  });
+
+  it("falls back to Skimap.org activities when the OSM area has no runs", async () => {
+    const paths = TestHelpers.getFilePaths();
+    TestHelpers.mockFeatureFiles(
+      [
+        TestHelpers.mockSkiAreaFeature({
+          id: "1",
+          activities: [],
+          sources: [{ type: SourceType.OPENSTREETMAP, id: "1" }],
+          geometry: {
+            type: "Polygon",
+            coordinates: [
+              [
+                [0, 0],
+                [1, 0],
+                [1, 1],
+                [0, 1],
+                [0, 0],
+              ],
+            ],
+          },
+        }),
+        TestHelpers.mockSkiAreaFeature({
+          id: "2",
+          name: "Skimap Area",
+          activities: [SkiAreaActivity.Downhill],
+          sources: [{ type: SourceType.SKIMAP_ORG, id: "2" }],
+          geometry: { type: "Point", coordinates: [0.5, 0.5] },
+        }),
+      ],
+      [
+        TestHelpers.mockLiftFeature({
+          id: "3",
+          name: "Lift",
+          liftType: LiftType.TBar,
+          status: Status.Operating,
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [0.1, 0.1],
+              [0.9, 0.9],
+            ],
+          },
+        }),
+      ],
+      [],
+      paths.intermediate,
+    );
+
+    await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
+
+    const skiAreas = TestHelpers.fileContents(paths.output.skiAreas).features;
+    expect(skiAreas).toHaveLength(1);
+    expect(skiAreas[0].properties.activities).toEqual([
+      SkiAreaActivity.Downhill,
+    ]);
   });
 });
