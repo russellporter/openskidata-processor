@@ -4,6 +4,23 @@ export interface OSMDownloadConfig {
   query: (bbox: GeoJSON.BBox | null) => string;
 }
 
+const lifecycleSiteStates = [
+  "disused",
+  "abandoned",
+  "proposed",
+  "planned",
+  "construction",
+] as const;
+
+const skiAreaSiteRelationFilters = [
+  "rel[site=piste]",
+  ...lifecycleSiteStates.map((state) => `rel[\"${state}:site\"=piste]`),
+].join(";\n    ");
+
+const skiAreaSiteRelationsQuery = `(
+    ${skiAreaSiteRelationFilters};
+  );`;
+
 export const runsDownloadConfig: OSMDownloadConfig = {
   query: (bbox) => `
     [out:json][timeout:1800]${overpassBBoxQuery(bbox)};
@@ -16,7 +33,7 @@ export const runsDownloadConfig: OSMDownloadConfig = {
 export const liftsDownloadConfig: OSMDownloadConfig = {
   query: (bbox) => `
     [out:json][timeout:1800]${overpassBBoxQuery(bbox)};
-    rel[site=piste];
+    ${skiAreaSiteRelationsQuery}
     >>;
     way(r)[railway]->.siterailways;
     ((
@@ -52,7 +69,7 @@ export const skiAreasDownloadConfig: OSMDownloadConfig = {
 export const skiAreaSitesDownloadConfig: OSMDownloadConfig = {
   query: (bbox) => `
   [out:json][timeout:1800]${overpassBBoxQuery(bbox)};
-  rel[site=piste];
+  ${skiAreaSiteRelationsQuery}
   out;
   `,
 };

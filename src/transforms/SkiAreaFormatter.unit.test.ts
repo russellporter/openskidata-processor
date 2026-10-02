@@ -267,6 +267,28 @@ describe("SkiAreaFormatter", () => {
 `);
   });
 
+  it.each([
+    ["disused:site", Status.Disused],
+    ["abandoned:site", Status.Abandoned],
+    ["proposed:site", Status.Proposed],
+    ["planned:site", Status.Planned],
+    ["construction:site", Status.Construction],
+  ])("formats a site with %s lifecycle tagging", (tag, status) => {
+    const site: OSMSkiAreaSite = {
+      id: 1,
+      type: "relation",
+      members: [{ type: "way", ref: 1, role: "" }],
+      tags: {
+        [tag]: "piste",
+      },
+    };
+
+    expect(
+      formatSkiArea(InputSkiAreaType.OPENSTREETMAP_SITE)(site)?.properties
+        .status,
+    ).toBe(status);
+  });
+
   it("uses localized names of site", () => {
     const site: OSMSkiAreaSite = {
       id: 1,
