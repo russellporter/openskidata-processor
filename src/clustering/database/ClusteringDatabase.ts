@@ -109,6 +109,15 @@ export interface ClusteringDatabase {
   ): Promise<MapObject[]>;
 
   /**
+   * Find ski areas from a given source within a distance of a point.
+   */
+  findNearbySkiAreas(
+    point: GeoJSON.Point,
+    source: SourceType,
+    bufferDistanceKm: number,
+  ): Promise<SkiAreaObject[]>;
+
+  /**
    * Get all objects associated with a ski area
    */
   getObjectsForSkiArea(skiAreaId: string): Promise<MapObject[]>;

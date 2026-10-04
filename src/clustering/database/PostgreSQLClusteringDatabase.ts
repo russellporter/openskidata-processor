@@ -1,4 +1,4 @@
-import { FeatureType } from "openskidata-format";
+import { FeatureType, SourceType } from "openskidata-format";
 import { Pool, PoolClient } from "pg";
 import { PostgresConfig } from "../../Config.js";
 import { getPostgresPoolConfig } from "../../utils/getPostgresPoolConfig.js";
@@ -594,6 +594,43 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
       (row) => this.rowToMapObject(row) as SkiAreaObject,
       batchSize,
     );
+  }
+
+  async findNearbySkiAreas(
+    point: GeoJSON.Point,
+    source: SourceType,
+    bufferDistanceKm: number,
+  ): Promise<SkiAreaObject[]> {
+    this.ensureInitialized();
+
+    const query = `
+      SELECT * FROM objects
+      WHERE type = '${FeatureType.SkiArea}'
+        AND source = $1
+        AND NOT (
+          CASE
+            WHEN GeometryType(geom) = 'POINT' THEN
+              ST_X(geom) = 360 AND ST_Y(geom) = 360
+            ELSE FALSE
+          END
+        )
+        AND (
+          ST_Covers(geom, ST_Force2D(ST_GeomFromGeoJSON($2)))
+          OR ST_DWithin(
+            geography(geom),
+            geography(ST_Force2D(ST_GeomFromGeoJSON($2))),
+            $3
+          )
+        )
+      ORDER BY key
+    `;
+    const rows = await this.executeQuery<any[]>(query, [
+      source,
+      JSON.stringify(point),
+      bufferDistanceKm * 1000,
+    ]);
+
+    return rows.map((row) => this.rowToMapObject(row) as SkiAreaObject);
   }
 
   async getAllRuns(useBatching: boolean): Promise<Cursor<RunObject>> {

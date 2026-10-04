@@ -375,7 +375,6 @@ export class SkiAreaClusteringService {
         await this.assignObjectsToSkiAreas({
           skiArea: {
             onlySource: SourceType.OPENSTREETMAP,
-            removeIfNoObjectsFound: true,
             removeIfSubstantialNumberOfObjectsInSkiAreaSite: true,
           },
           objects: { onlyInPolygon: true },
@@ -534,7 +533,6 @@ export class SkiAreaClusteringService {
   private async assignObjectsToSkiAreas(options: {
     skiArea: {
       onlySource: SourceType;
-      removeIfNoObjectsFound?: boolean;
       removeIfSubstantialNumberOfObjectsInSkiAreaSite?: boolean;
     };
     objects: { onlyIfNotAlreadyAssigned?: boolean; onlyInPolygon?: boolean };
@@ -622,7 +620,6 @@ export class SkiAreaClusteringService {
     options: {
       skiArea: {
         onlySource: SourceType;
-        removeIfNoObjectsFound?: boolean;
         removeIfSubstantialNumberOfObjectsInSkiAreaSite?: boolean;
       };
       objects: { onlyIfNotAlreadyAssigned?: boolean; onlyInPolygon?: boolean };
@@ -669,20 +666,6 @@ export class SkiAreaClusteringService {
     }
 
     const memberObjects = await this.visitObject(searchContext, skiArea);
-
-    const removeDueToNoObjects =
-      options.skiArea.removeIfNoObjectsFound &&
-      !memberObjects.some((object) => object.type !== FeatureType.SkiArea);
-
-    if (removeDueToNoObjects) {
-      console.log(
-        `Removing ski area (${JSON.stringify(
-          skiArea.properties.sources,
-        )}) as no objects were found.`,
-      );
-      await this.database.removeObject(skiArea._key);
-      return null;
-    }
 
     const liftsAndRuns = memberObjects.filter(
       (object): object is LiftObject | RunObject =>
@@ -881,14 +864,30 @@ export class SkiAreaClusteringService {
       nearbyObjects.flatMap((object) => object.skiAreas),
     );
 
-    const otherSkiAreasCursor = await this.database.getSkiAreasByIds(
-      Array.from(otherSkiAreaIDs),
-      true, // Batching enabled - read-only operation
-    );
-    const otherSkiAreas: SkiAreaObject[] = await otherSkiAreasCursor.all();
+    const [nearbySkiAreasCursor, directGeometryMatches] = await Promise.all([
+      this.database.getSkiAreasByIds(
+        Array.from(otherSkiAreaIDs),
+        true, // Batching enabled - read-only operation
+      ),
+      skiArea.geometry.type === "Point"
+        ? this.database.findNearbySkiAreas(
+            skiArea.geometry,
+            SourceType.OPENSTREETMAP,
+            maxMergeDistanceInKilometers,
+          )
+        : Promise.resolve([]),
+    ]);
+    const nearbySkiAreas = await nearbySkiAreasCursor.all();
 
-    return otherSkiAreas.filter(
-      (otherSkiArea) => otherSkiArea.source !== skiArea.source,
+    const candidatesByKey = new Map<string, SkiAreaObject>();
+    [...nearbySkiAreas, ...directGeometryMatches].forEach((otherSkiArea) => {
+      if (otherSkiArea.source !== skiArea.source) {
+        candidatesByKey.set(otherSkiArea._key, otherSkiArea);
+      }
+    });
+
+    return Array.from(candidatesByKey.values()).sort((a, b) =>
+      a._key.localeCompare(b._key),
     );
   }
 

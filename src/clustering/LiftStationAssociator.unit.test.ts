@@ -137,6 +137,7 @@ function makeDatabase(
     createIndexes: async () => {},
     getSkiAreas: async () => makeCursor([]),
     getSkiAreasByIds: async () => makeCursor([]),
+    findNearbySkiAreas: async () => [],
     getAllRuns: async () => makeCursor([]),
     getAllLifts: async () => makeCursor([]),
     getAllSpots: async () => makeCursor([]),

@@ -1668,7 +1668,7 @@ it("prefers OSM sourced websites when merging Skimap.org ski area with OpenStree
 `);
 });
 
-it("keeps Skimap.org ski areas separate when OSM super-area has no objects", async () => {
+it("merges Skimap.org areas by OSM geometry without nearby objects", async () => {
   const paths = TestHelpers.getFilePaths();
   TestHelpers.mockFeatureFiles(
     [
@@ -1681,9 +1681,9 @@ it("keeps Skimap.org ski areas separate when OSM super-area has no objects", asy
           coordinates: [
             [
               [0, 0],
-              [1, 0],
-              [1, 1],
-              [0, 1],
+              [0.01, 0],
+              [0.01, 0.01],
+              [0, 0.01],
               [0, 0],
             ],
           ],
@@ -1693,13 +1693,25 @@ it("keeps Skimap.org ski areas separate when OSM super-area has no objects", asy
         id: "2",
         activities: [SkiAreaActivity.Downhill],
         sources: [{ type: SourceType.SKIMAP_ORG, id: "2" }],
-        geometry: { type: "Point", coordinates: [0.25, 0.25] },
+        geometry: { type: "Point", coordinates: [0.005, 0.005] },
       }),
       TestHelpers.mockSkiAreaFeature({
         id: "3",
         activities: [SkiAreaActivity.Downhill],
         sources: [{ type: SourceType.SKIMAP_ORG, id: "3" }],
-        geometry: { type: "Point", coordinates: [0.75, 0.75] },
+        geometry: { type: "Point", coordinates: [0.0115, 0.005] },
+      }),
+      TestHelpers.mockSkiAreaFeature({
+        id: "4",
+        activities: [SkiAreaActivity.Downhill],
+        sources: [{ type: SourceType.SKIMAP_ORG, id: "4" }],
+        geometry: { type: "Point", coordinates: [0.013, 0.005] },
+      }),
+      TestHelpers.mockSkiAreaSiteFeature({
+        id: "5",
+        activities: [],
+        sources: [{ type: SourceType.OPENSTREETMAP, id: "relation/5" }],
+        osmID: 5,
       }),
     ],
     [],
@@ -1709,10 +1721,10 @@ it("keeps Skimap.org ski areas separate when OSM super-area has no objects", asy
 
   await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
 
-  // OSM area is removed (no runs/lifts inside it), leaving the two Skimap.org areas separate.
+  // Points inside or within 250 m of the polygon merge; the farther point stays separate.
   expect(
     TestHelpers.fileContents(paths.output.skiAreas)
-      .features.map(simplifiedSkiAreaFeature)
+      .features.map(simplifiedSkiAreaFeatureWithSources)
       .sort(orderedByID),
   ).toMatchInlineSnapshot(`
     [
@@ -1720,15 +1732,35 @@ it("keeps Skimap.org ski areas separate when OSM super-area has no objects", asy
         "activities": [
           "downhill",
         ],
-        "id": "2",
+        "id": "1",
         "name": "Name",
+        "sources": [
+          {
+            "id": "1",
+            "type": "openstreetmap",
+          },
+          {
+            "id": "2",
+            "type": "skimap.org",
+          },
+          {
+            "id": "3",
+            "type": "skimap.org",
+          },
+        ],
       },
       {
         "activities": [
           "downhill",
         ],
-        "id": "3",
+        "id": "4",
         "name": "Name",
+        "sources": [
+          {
+            "id": "4",
+            "type": "skimap.org",
+          },
+        ],
       },
     ]
   `);
