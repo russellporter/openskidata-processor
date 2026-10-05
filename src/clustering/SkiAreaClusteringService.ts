@@ -66,6 +66,7 @@ import {
 import mergeSkiAreaObjects from "./MergeSkiAreaObjects.js";
 
 const maxDistanceInKilometers = 0.5;
+const maxSkiAreaMergeDistanceInKilometers = 0.25;
 
 // Ski areas are loaded all at once when we may remove them during iteration, so the
 // per-ski-area work has to be throttled explicitly. Matches the clustering pool size.
@@ -375,6 +376,7 @@ export class SkiAreaClusteringService {
         await this.assignObjectsToSkiAreas({
           skiArea: {
             onlySource: SourceType.OPENSTREETMAP,
+            removeIfNoObjectsFound: true,
             removeIfSubstantialNumberOfObjectsInSkiAreaSite: true,
           },
           objects: { onlyInPolygon: true },
@@ -533,6 +535,7 @@ export class SkiAreaClusteringService {
   private async assignObjectsToSkiAreas(options: {
     skiArea: {
       onlySource: SourceType;
+      removeIfNoObjectsFound?: boolean;
       removeIfSubstantialNumberOfObjectsInSkiAreaSite?: boolean;
     };
     objects: { onlyIfNotAlreadyAssigned?: boolean; onlyInPolygon?: boolean };
@@ -620,6 +623,7 @@ export class SkiAreaClusteringService {
     options: {
       skiArea: {
         onlySource: SourceType;
+        removeIfNoObjectsFound?: boolean;
         removeIfSubstantialNumberOfObjectsInSkiAreaSite?: boolean;
       };
       objects: { onlyIfNotAlreadyAssigned?: boolean; onlyInPolygon?: boolean };
@@ -666,6 +670,28 @@ export class SkiAreaClusteringService {
     }
 
     const memberObjects = await this.visitObject(searchContext, skiArea);
+
+    const removeDueToNoObjects =
+      options.skiArea.removeIfNoObjectsFound &&
+      !memberObjects.some((object) => object.type !== FeatureType.SkiArea);
+
+    if (removeDueToNoObjects) {
+      const nearbySkimapSkiAreas = await this.database.findNearbySkiAreas(
+        skiArea.geometry,
+        SourceType.SKIMAP_ORG,
+        maxSkiAreaMergeDistanceInKilometers,
+      );
+
+      if (nearbySkimapSkiAreas.length === 0) {
+        console.log(
+          `Removing ski area (${JSON.stringify(
+            skiArea.properties.sources,
+          )}) as no objects or nearby Skimap.org ski areas were found.`,
+        );
+        await this.database.removeObject(skiArea._key);
+        return null;
+      }
+    }
 
     const liftsAndRuns = memberObjects.filter(
       (object): object is LiftObject | RunObject =>
@@ -841,8 +867,6 @@ export class SkiAreaClusteringService {
   private async getSkiAreasToMergeInto(
     skiArea: SkiAreaObject,
   ): Promise<SkiAreaObject[]> {
-    const maxMergeDistanceInKilometers = 0.25;
-
     const context: SearchContext = {
       id: skiArea.id,
       activities: skiArea.activities,
@@ -854,7 +878,7 @@ export class SkiAreaClusteringService {
     // Use database ST_Buffer for nearby object search
     const bufferedContext: SearchContext = {
       ...context,
-      bufferDistanceKm: maxMergeDistanceInKilometers,
+      bufferDistanceKm: maxSkiAreaMergeDistanceInKilometers,
     };
     const nearbyObjects = await this.database.findNearbyObjects(
       skiArea.geometry,
@@ -873,7 +897,7 @@ export class SkiAreaClusteringService {
         ? this.database.findNearbySkiAreas(
             skiArea.geometry,
             SourceType.OPENSTREETMAP,
-            maxMergeDistanceInKilometers,
+            maxSkiAreaMergeDistanceInKilometers,
           )
         : Promise.resolve([]),
     ]);

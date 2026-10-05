@@ -597,7 +597,7 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
   }
 
   async findNearbySkiAreas(
-    point: GeoJSON.Point,
+    geometry: GeoJSON.Geometry,
     source: SourceType,
     bufferDistanceKm: number,
   ): Promise<SkiAreaObject[]> {
@@ -616,6 +616,7 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
         )
         AND (
           ST_Covers(geom, ST_Force2D(ST_GeomFromGeoJSON($2)))
+          OR ST_Covers(ST_Force2D(ST_GeomFromGeoJSON($2)), geom)
           OR ST_DWithin(
             geography(geom),
             geography(ST_Force2D(ST_GeomFromGeoJSON($2))),
@@ -626,7 +627,7 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
     `;
     const rows = await this.executeQuery<any[]>(query, [
       source,
-      JSON.stringify(point),
+      JSON.stringify(geometry),
       bufferDistanceKm * 1000,
     ]);
 

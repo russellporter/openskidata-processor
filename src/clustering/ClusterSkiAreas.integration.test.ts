@@ -1662,7 +1662,7 @@ it("prefers OSM sourced websites when merging Skimap.org ski area with OpenStree
   ).toMatchInlineSnapshot(`
 [
   [
-    "https://skimap.org",
+    "https://openstreetmap.org",
   ],
 ]
 `);
