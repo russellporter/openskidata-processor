@@ -77,6 +77,13 @@ function objectLengthKm(obj: LiftObject | RunObject): number {
   return obj.geometry.type === "Polygon" ? raw / 3 : raw;
 }
 
+function isNonOperatingLift(object: MapObject): boolean {
+  return (
+    object.type === FeatureType.Lift &&
+    object.properties.status !== Status.Operating
+  );
+}
+
 export const allSkiAreaActivities = new Set([
   SkiAreaActivity.Downhill,
   SkiAreaActivity.Nordic,
@@ -228,10 +235,7 @@ export class SkiAreaClusteringService {
       // clustering (they are the search key), not the ski area's classification.
       // Ski-area activities are derived from runs only (see getActivitiesBasedOnRuns),
       // so a lift never grants "downhill" to its ski area.
-      activities:
-        properties["status"] === Status.Operating
-          ? [SkiAreaActivity.Downhill]
-          : [],
+      activities: [SkiAreaActivity.Downhill],
       skiAreas: feature.properties.skiAreas.map(
         (skiArea) => skiArea.properties.id,
       ),
@@ -814,6 +818,14 @@ export class SkiAreaClusteringService {
     } else {
       let foundObjects: MapObject[] = [];
       for (let i = 0; i < objects.length; i++) {
+        // Non-operating lifts join the ski area, but the search doesn't continue from
+        // them. Otherwise e.g. a proposed interconnect lift would pull a neighbouring
+        // ski area's objects into this one.
+        if (isNonOperatingLift(objects[i])) {
+          foundObjects.push(objects[i]);
+          continue;
+        }
+
         foundObjects = foundObjects.concat(
           await this.visitObject(context, objects[i]),
         );
@@ -1018,7 +1030,10 @@ export class SkiAreaClusteringService {
 
     if (
       activities.includes(SkiAreaActivity.Downhill) &&
-      !memberObjects.some((object) => object.type === FeatureType.Lift)
+      !memberObjects.some(
+        (object) =>
+          object.type === FeatureType.Lift && !isNonOperatingLift(object),
+      )
     ) {
       activities = activities.filter(
         (activity) => activity !== SkiAreaActivity.Downhill,
@@ -1257,8 +1272,17 @@ export class SkiAreaClusteringService {
       return;
     }
 
+    // Non-operating lifts (e.g. abandoned, proposed) only describe a ski area that is
+    // itself non-operating.
+    const isNonOperatingSkiArea =
+      skiArea.properties.status !== null &&
+      skiArea.properties.status !== Status.Operating;
+    const describingObjects = isNonOperatingSkiArea
+      ? memberObjects
+      : memberObjects.filter((object) => !isNonOperatingLift(object));
+
     const statistics = await skiAreaStatistics(
-      memberObjects,
+      describingObjects,
       postgresConfig,
       snowCoverConfig,
     );
@@ -1275,7 +1299,7 @@ export class SkiAreaClusteringService {
     // Compute the viewport hint from member run/lift geometries (which have 3D coordinates
     // from elevation enhancement). Falls back to the ski area's own geometry when there
     // are no members (e.g. Skimap.org-only ski area with no associated runs/lifts yet).
-    const memberGeometries = memberObjects.map((obj) => obj.geometry);
+    const memberGeometries = describingObjects.map((obj) => obj.geometry);
     const viewportHint = computeViewportHint(
       memberGeometries.length > 0 ? memberGeometries : [skiArea.geometry],
     )!;

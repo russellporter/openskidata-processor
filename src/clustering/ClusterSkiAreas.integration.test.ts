@@ -1766,6 +1766,232 @@ it("merges Skimap.org areas by OSM geometry without nearby objects", async () =>
   `);
 });
 
+it("merges Skimap.org ski area with a site based ski area consisting of only proposed lifts", async () => {
+  const paths = TestHelpers.getFilePaths();
+  const siteSkiArea = TestHelpers.mockSkiAreaSiteFeature({
+    id: "1",
+    osmID: 1,
+    activities: [],
+    status: Status.Proposed,
+    sources: [{ type: SourceType.OPENSTREETMAP, id: "relation/1" }],
+  });
+  TestHelpers.mockFeatureFiles(
+    [
+      siteSkiArea,
+      // Near the base of one lift, but far away from the centre of the site.
+      TestHelpers.mockSkiAreaFeature({
+        id: "2",
+        activities: [SkiAreaActivity.Downhill],
+        status: Status.Proposed,
+        sources: [{ type: SourceType.SKIMAP_ORG, id: "2" }],
+        geometry: { type: "Point", coordinates: [0.001, 0] },
+      }),
+    ],
+    [
+      TestHelpers.mockLiftFeature({
+        id: "3",
+        name: "Village Lift",
+        liftType: LiftType.Gondola,
+        status: Status.Proposed,
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [0, 0],
+            [0, 0.05],
+          ],
+        },
+        skiAreas: [siteSkiArea],
+      }),
+      TestHelpers.mockLiftFeature({
+        id: "4",
+        name: "Glacier Lift",
+        liftType: LiftType.ChairLift,
+        status: Status.Proposed,
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [0.05, 0.05],
+            [0.1, 0.1],
+          ],
+        },
+        skiAreas: [siteSkiArea],
+      }),
+    ],
+    [],
+    paths.intermediate,
+  );
+
+  await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
+
+  const skiAreas: SkiAreaFeature[] = TestHelpers.fileContents(
+    paths.output.skiAreas,
+  ).features;
+  expect(skiAreas.map(simplifiedSkiAreaFeatureWithSources)).toEqual([
+    {
+      id: "1",
+      name: "Name",
+      activities: [SkiAreaActivity.Downhill],
+      sources: [
+        { type: SourceType.OPENSTREETMAP, id: "relation/1" },
+        { type: SourceType.SKIMAP_ORG, id: "2" },
+      ],
+    },
+  ]);
+  // The ski area is itself proposed, so its proposed lifts describe it.
+  expect(skiAreas[0].properties.statistics?.lifts.byType).toMatchObject({
+    [LiftType.Gondola]: { count: 1 },
+    [LiftType.ChairLift]: { count: 1 },
+  });
+});
+
+it("associates a non-operating lift with nearby ski areas without counting it or clustering through it", async () => {
+  const paths = TestHelpers.getFilePaths();
+  TestHelpers.mockFeatureFiles(
+    [],
+    [
+      TestHelpers.mockLiftFeature({
+        id: "1",
+        name: "South Lift",
+        liftType: LiftType.TBar,
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [0, 0],
+            [0, 0.01],
+          ],
+        },
+      }),
+      // Connects the two clusters, which are otherwise several kilometers apart.
+      TestHelpers.mockLiftFeature({
+        id: "2",
+        name: "Abandoned Interconnect",
+        liftType: LiftType.Gondola,
+        status: Status.Abandoned,
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [0, 0.01],
+            [0, 0.05],
+          ],
+        },
+      }),
+      TestHelpers.mockLiftFeature({
+        id: "3",
+        name: "North Lift",
+        liftType: LiftType.TBar,
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [0, 0.05],
+            [0, 0.06],
+          ],
+        },
+      }),
+    ],
+    [
+      TestHelpers.mockRunFeature({
+        id: "4",
+        name: "South Run",
+        uses: [RunUse.Downhill],
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [0, 0.01],
+            [0, 0],
+          ],
+        },
+      }),
+      TestHelpers.mockRunFeature({
+        id: "5",
+        name: "North Run",
+        uses: [RunUse.Downhill],
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [0, 0.06],
+            [0, 0.05],
+          ],
+        },
+      }),
+    ],
+    paths.intermediate,
+  );
+
+  await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
+
+  const skiAreas: SkiAreaFeature[] = TestHelpers.fileContents(
+    paths.output.skiAreas,
+  ).features;
+  expect(skiAreas).toHaveLength(2);
+  skiAreas.forEach((skiArea) => {
+    expect(skiArea.properties.statistics?.lifts.byType).toEqual({
+      [LiftType.TBar]: expect.objectContaining({ count: 1 }),
+    });
+  });
+
+  const runs = TestHelpers.fileContents(paths.output.runs)
+    .features.map(simplifiedRunFeature)
+    .sort(orderedByID);
+  expect(runs[0].skiAreas).toHaveLength(1);
+  expect(runs[1].skiAreas).toHaveLength(1);
+  expect(runs[0].skiAreas).not.toEqual(runs[1].skiAreas);
+
+  const lifts = TestHelpers.fileContents(paths.output.lifts)
+    .features.map(simplifiedLiftFeature)
+    .sort(orderedByID);
+  expect(lifts[0].skiAreas).toEqual(runs[0].skiAreas);
+  expect(lifts[1].skiAreas.sort()).toEqual(
+    [...runs[0].skiAreas, ...runs[1].skiAreas].sort(),
+  );
+  expect(lifts[2].skiAreas).toEqual(runs[1].skiAreas);
+});
+
+it("does not generate ski area for downhill run with only a non-operating lift", async () => {
+  const paths = TestHelpers.getFilePaths();
+  TestHelpers.mockFeatureFiles(
+    [],
+    [
+      TestHelpers.mockLiftFeature({
+        id: "1",
+        name: "Abandoned Lift",
+        liftType: LiftType.TBar,
+        status: Status.Abandoned,
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [0, 0],
+            [0, 0.01],
+          ],
+        },
+      }),
+    ],
+    [
+      TestHelpers.mockRunFeature({
+        id: "2",
+        name: "Run",
+        uses: [RunUse.Downhill],
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [0, 0.01],
+            [0, 0],
+          ],
+        },
+      }),
+    ],
+    paths.intermediate,
+  );
+
+  await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
+
+  expect(TestHelpers.fileContents(paths.output.skiAreas).features).toEqual([]);
+  expect(
+    TestHelpers.fileContents(paths.output.lifts).features.map(
+      simplifiedLiftFeature,
+    ),
+  ).toEqual([{ id: "1", name: "Abandoned Lift", skiAreas: [] }]);
+});
+
 it("merges OSM ski area containing multiple Skimap.org ski areas when it has objects inside it", async () => {
   const paths = TestHelpers.getFilePaths();
   TestHelpers.mockFeatureFiles(
