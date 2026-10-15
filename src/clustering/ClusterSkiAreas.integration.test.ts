@@ -48,6 +48,7 @@ beforeEach(async () => {
   uuidMock.reset();
   testConfig = {
     workingDir: TestHelpers.getTempWorkingDir(),
+    osmInputDir: null,
     outputDir: "output",
     bbox: null,
     elevationServer: null,

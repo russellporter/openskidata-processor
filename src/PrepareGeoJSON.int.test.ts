@@ -15,6 +15,7 @@ function createTestConfig(): Config {
     bbox: null,
     geocodingServer: null,
     workingDir: TestHelpers.getTempWorkingDir(),
+    osmInputDir: null,
     outputDir: TestHelpers.getTempWorkingDir(),
     snowCover: null,
     tiles: null,

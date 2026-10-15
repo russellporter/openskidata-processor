@@ -44,6 +44,8 @@ docker compose exec app bash
 
 To download data for only a specific area, specify a GeoJSON format bounding box in an environment variable: `BBOX="[-13, -90, 65, 90]"`
 
+Instead of querying the Overpass API, the OSM input can be read from pre-extracted files: set `OSM_INPUT_DIR` to a directory containing `input_runs.osmjson`, `input_lifts.osmjson`, `input_ski_areas.osmjson`, `input_ski_area_sites.osmjson` and `input_spots.osmjson` in Overpass JSON format, as produced nightly from a planet file by osm-preprocess. `OSM_INPUT_DIR` can't be combined with `BBOX`.
+
 The output is placed in files within the `data` folder. The output location can be overridden by setting `OUTPUT_DIR`.
 
 The GeoPackage file (`openskidata.gpkg`) contains all three layers (ski areas, runs, and lifts) in a single file, making it easy to use with GIS software like QGIS.

@@ -109,6 +109,7 @@ it("correctly associates lifts and runs with ski areas", async () => {
   // Create test config
   const testConfig: Config = {
     workingDir: TestHelpers.getTempWorkingDir(),
+    osmInputDir: null,
     outputDir: TestHelpers.getTempWorkingDir(),
     bbox: null,
     elevationServer: null,
@@ -213,6 +214,7 @@ it("verifies ski area associations persist through clustering and augmentation",
   // Create test config
   const testConfig: Config = {
     workingDir: TestHelpers.getTempWorkingDir(),
+    osmInputDir: null,
     outputDir: TestHelpers.getTempWorkingDir(),
     bbox: null,
     elevationServer: null,

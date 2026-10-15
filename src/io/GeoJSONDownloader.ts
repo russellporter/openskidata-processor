@@ -1,6 +1,7 @@
 import bboxPolygon from "@turf/bbox-polygon";
 import booleanContains from "@turf/boolean-contains";
-import { readFile, writeFile } from "node:fs/promises";
+import { copyFile, readFile, writeFile } from "node:fs/promises";
+import { basename, join } from "node:path";
 import { Readable } from "node:stream";
 import { performanceMonitor } from "../clustering/database/PerformanceMonitor.js";
 import { InputSkiMapOrgSkiAreaFeature } from "../features/SkiAreaFeature.js";
@@ -24,47 +25,26 @@ import convertOSMFileToGeoJSON from "./OSMToGeoJSONConverter.js";
 export default async function downloadAndConvertToGeoJSON(
   folder: string,
   bbox: GeoJSON.BBox | null,
+  osmInputDir: string | null = null,
 ): Promise<InputDataPaths> {
   return await performanceMonitor.withPhase("Phase 1: Download", async () => {
     const paths = new InputDataPaths(folder);
     const startedAt = new Date().toISOString();
     let skiMapOrgDownloadedAt = startedAt;
 
-    // Serialize downloads using the same endpoint so we don't get rate limited by the Overpass API
+    const osmPaths = [
+      paths.osmJSON.runs,
+      paths.osmJSON.lifts,
+      paths.osmJSON.skiAreas,
+      paths.osmJSON.skiAreaSites,
+      paths.osmJSON.spots,
+    ];
+
     await performanceMonitor.withOperation("Downloading OSM data", async () => {
       await Promise.all([
-        downloadOSMJSON(
-          OSMEndpoint.Z,
-          runsDownloadConfig,
-          paths.osmJSON.runs,
-          bbox,
-        ),
-        (async () => {
-          await downloadOSMJSON(
-            OSMEndpoint.LZ4,
-            liftsDownloadConfig,
-            paths.osmJSON.lifts,
-            bbox,
-          );
-          await downloadOSMJSON(
-            OSMEndpoint.LZ4,
-            skiAreasDownloadConfig,
-            paths.osmJSON.skiAreas,
-            bbox,
-          );
-          await downloadOSMJSON(
-            OSMEndpoint.LZ4,
-            skiAreaSitesDownloadConfig,
-            paths.osmJSON.skiAreaSites,
-            bbox,
-          );
-          await downloadOSMJSON(
-            OSMEndpoint.LZ4,
-            spotsDownloadConfig,
-            paths.osmJSON.spots,
-            bbox,
-          );
-        })(),
+        osmInputDir
+          ? copyOSMJSONFiles(osmInputDir, osmPaths)
+          : downloadOSMJSONFromOverpass(paths, bbox),
         (async () => {
           await downloadSkiMapOrgSkiAreas(paths.geoJSON.skiMapSkiAreas, bbox);
           skiMapOrgDownloadedAt = new Date().toISOString();
@@ -91,15 +71,7 @@ export default async function downloadAndConvertToGeoJSON(
       async () => {
         try {
           const dataTimestamp = earliestTimestamp(
-            await Promise.all(
-              [
-                paths.osmJSON.runs,
-                paths.osmJSON.lifts,
-                paths.osmJSON.skiAreas,
-                paths.osmJSON.skiAreaSites,
-                paths.osmJSON.spots,
-              ].map(readOSMDataTimestamp),
-            ),
+            await Promise.all(osmPaths.map(readOSMDataTimestamp)),
           );
 
           await writeDownloadMetadata(folder, {
@@ -117,6 +89,55 @@ export default async function downloadAndConvertToGeoJSON(
 
     return paths;
   });
+}
+
+async function downloadOSMJSONFromOverpass(
+  paths: InputDataPaths,
+  bbox: GeoJSON.BBox | null,
+) {
+  // Serialize downloads using the same endpoint so we don't get rate limited by the Overpass API
+  await Promise.all([
+    downloadOSMJSON(
+      OSMEndpoint.Z,
+      runsDownloadConfig,
+      paths.osmJSON.runs,
+      bbox,
+    ),
+    (async () => {
+      await downloadOSMJSON(
+        OSMEndpoint.LZ4,
+        liftsDownloadConfig,
+        paths.osmJSON.lifts,
+        bbox,
+      );
+      await downloadOSMJSON(
+        OSMEndpoint.LZ4,
+        skiAreasDownloadConfig,
+        paths.osmJSON.skiAreas,
+        bbox,
+      );
+      await downloadOSMJSON(
+        OSMEndpoint.LZ4,
+        skiAreaSitesDownloadConfig,
+        paths.osmJSON.skiAreaSites,
+        bbox,
+      );
+      await downloadOSMJSON(
+        OSMEndpoint.LZ4,
+        spotsDownloadConfig,
+        paths.osmJSON.spots,
+        bbox,
+      );
+    })(),
+  ]);
+}
+
+async function copyOSMJSONFiles(sourceDir: string, targetPaths: string[]) {
+  for (const targetPath of targetPaths) {
+    const sourcePath = join(sourceDir, basename(targetPath));
+    console.log(`Using ${sourcePath} instead of querying Overpass`);
+    await copyFile(sourcePath, targetPath);
+  }
 }
 
 enum OSMEndpoint {

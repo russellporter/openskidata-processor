@@ -68,6 +68,9 @@ export interface Config {
   bbox: GeoJSON.BBox | null;
   // Directory used for downloads and storage of intermediate results
   workingDir: string;
+  // Directory with pre-extracted input_*.osmjson files (e.g. from osm-preprocess),
+  // used instead of querying the Overpass API
+  osmInputDir: string | null;
   // Directory where the output files are written to
   outputDir: string;
   // Snow cover data integration
@@ -90,6 +93,12 @@ export function configFromEnvironment(): Config {
   }
   const geocodingCacheTTL = process.env.GEOCODING_SERVER_URL_TTL;
   const workingDir = process.env["WORKING_DIR"] ?? "data";
+  const osmInputDir = process.env["OSM_INPUT_DIR"] || null;
+  if (osmInputDir && bbox) {
+    throw new Error(
+      "BBOX can't be combined with OSM_INPUT_DIR: the files in OSM_INPUT_DIR are used as-is",
+    );
+  }
 
   // Validate snow cover fetch policy
   const snowCoverFetchPolicy = process.env.SNOW_COVER_FETCH_POLICY;
@@ -124,6 +133,7 @@ export function configFromEnvironment(): Config {
         : null,
     bbox: bbox as GeoJSON.BBox,
     workingDir: workingDir,
+    osmInputDir: osmInputDir,
     outputDir: outputDir,
     snowCover:
       process.env.ENABLE_SNOW_COVER === "1"
