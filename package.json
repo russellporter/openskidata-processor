@@ -38,7 +38,7 @@
     "@types/better-sqlite3": "^9.6.0",
     "@types/geojson": "^7946",
     "@types/ngeohash": "^0.6.2",
-    "@types/node": "^24.13.3",
+    "@types/node": "^26.0.0",
     "@types/object-hash": "^3",
     "@types/pg": "^8.23.1",
     "@types/topojson-client": "^3",
@@ -69,6 +69,6 @@
   "author": "Russell Porter",
   "license": "ISC",
   "engines": {
-    "node": ">=24"
+    "node": ">=26"
   }
 }
