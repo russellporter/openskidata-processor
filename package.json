@@ -30,7 +30,7 @@
     "pg": "^8.23.0",
     "sharp": "^0.35.4",
     "stream-chain": "^4.2.5",
-    "stream-json": "^3.6.0",
+    "stream-json": "^3.7.0",
     "topojson-client": "^3",
     "topojson-server": "^3"
   },
