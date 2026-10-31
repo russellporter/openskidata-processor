@@ -70,8 +70,10 @@
 //! `point[1]`, so if elevation ran first, two arcs with equal `x,y` and different `z`
 //! would be silently coalesced. Keep normalization 2D.
 
+pub mod chains;
 pub mod components;
 
+pub use chains::{ChainGraph, JoinKey, Link, Segment, is_degenerate, join_chains};
 pub use components::{ComponentId, ComponentIndex};
 
 use anyhow::Result;
@@ -87,18 +89,6 @@ pub struct OutputOrderKey {
     /// Sequence of this segment within that line.
     pub sequence: u32,
 }
-
-/// A precomputed comparison key for run-joining.
-///
-/// Replaces `isPartOfSameRun` (`RunJoining.ts:36`), which allocates two filtered property
-/// objects via `withoutIgnoredProperties` and deep-compares them on **every** candidate
-/// at **every** endpoint probe. Hash the non-ignored properties once at format time and
-/// compare `u64`s instead.
-///
-/// The ignored set upstream is `{id, sources, skiAreas, elevationProfile, places,
-/// viewportHint}` — keep it exactly, or runs will stop joining where they used to.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct JoinKey(pub u64);
 
 /// Normalize all runs in the store.
 pub fn normalize_runs(_store: &mut FeatureStore) -> Result<Vec<FeatureIdx>> {
