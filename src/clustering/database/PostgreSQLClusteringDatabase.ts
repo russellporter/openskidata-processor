@@ -41,14 +41,24 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
   private static readonly DEFAULT_BATCH_SIZE = 1000;
   private static readonly BULK_OPERATION_BATCH_SIZE = 5000;
 
+  /**
+   * Rows per multi-row INSERT.
+   *
+   * Each row binds 18 parameters and the wire protocol allows 65535 per statement, so the
+   * hard ceiling is around 3600 rows. This stays well below it: planning time grows with
+   * the statement size, and the round-trip saving is already almost entirely captured at
+   * this batch size.
+   */
+  private static readonly INSERT_ROWS_PER_STATEMENT = 500;
+
   // SQL statements
-  private static readonly INSERT_OBJECT_SQL = `
-    INSERT INTO objects
+  private static readonly OBJECT_COLUMNS = `
     (key, type, source, geometry, geom, is_polygon, activities, ski_areas,
      is_basis_for_new_ski_area, is_in_ski_area_polygon, is_in_ski_area_site,
      site_ski_areas, lift_type, station_ids, difficulty, viirs_pixels, spot_type,
-     properties)
-    VALUES ($1, $2, $3, $4, ST_MakeValid(ST_Force2D(ST_GeomFromGeoJSON($5)), 'method=structure'), $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+     properties)`;
+
+  private static readonly OBJECT_UPSERT_CLAUSE = `
     ON CONFLICT (key) DO UPDATE SET
       type = EXCLUDED.type,
       source = EXCLUDED.source,
@@ -68,6 +78,23 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
       spot_type = EXCLUDED.spot_type,
       properties = EXCLUDED.properties
   `;
+
+  /** The single-row upsert, used by saveObject. */
+  private static readonly INSERT_OBJECT_SQL = `
+    INSERT INTO objects ${PostgreSQLClusteringDatabase.OBJECT_COLUMNS}
+    VALUES ($1, $2, $3, $4, ST_MakeValid(ST_Force2D(ST_GeomFromGeoJSON($5)), 'method=structure'), $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+    ${PostgreSQLClusteringDatabase.OBJECT_UPSERT_CLAUSE}`;
+
+  /**
+   * The multi-row upsert, used by saveObjects. Shares its column list and conflict
+   * clause with the single-row statement above so the two cannot drift apart.
+   */
+  private static insertObjectsSQL(rowClauses: string[]): string {
+    return `
+    INSERT INTO objects ${PostgreSQLClusteringDatabase.OBJECT_COLUMNS}
+    VALUES ${rowClauses.join(",\n           ")}
+    ${PostgreSQLClusteringDatabase.OBJECT_UPSERT_CLAUSE}`;
+  }
 
   async initialize(): Promise<void> {
     // First connect to postgres database to create our temporary database
@@ -522,18 +549,47 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
   async saveObjects(objects: MapObject[]): Promise<void> {
     this.ensureInitialized();
 
-    // Process in optimized batches for very large datasets
+    if (objects.length === 0) {
+      return;
+    }
+
+    // Collapsed by key, keeping the last occurrence. A multi-row upsert cannot touch the
+    // same row twice in one statement ("ON CONFLICT DO UPDATE command cannot affect row a
+    // second time"), and last-wins matches what sequential upserts did.
+    const deduplicated = new Map<string, MapObject>();
+    for (const object of objects) {
+      deduplicated.set(object._key, object);
+    }
+
     await this.processBatches(
-      objects,
-      PostgreSQLClusteringDatabase.BULK_OPERATION_BATCH_SIZE,
+      Array.from(deduplicated.values()),
+      PostgreSQLClusteringDatabase.INSERT_ROWS_PER_STATEMENT,
       async (batch, client) => {
+        // One statement per batch rather than one per object. Each row costs a network
+        // round trip otherwise, which at planet scale is the dominant cost of loading the
+        // clustering database.
+        const params: any[] = [];
+        const rowClauses: string[] = [];
+
         for (const object of batch) {
-          const params = this.mapObjectToSQLParams(object);
-          await client.query(
-            PostgreSQLClusteringDatabase.INSERT_OBJECT_SQL,
-            params,
-          );
+          const objectParams = this.mapObjectToSQLParams(object);
+          const base = params.length;
+          params.push(...objectParams);
+          // Column 5 is the geometry, which has to go through the same validity repair
+          // the single-row statement applies.
+          const placeholders = objectParams.map((_, index) => {
+            const position = base + index + 1;
+            return index === 4
+              ? `ST_MakeValid(ST_Force2D(ST_GeomFromGeoJSON($${position})), 'method=structure')`
+              : `$${position}`;
+          });
+          rowClauses.push(`(${placeholders.join(", ")})`);
         }
+
+        await client.query(
+          PostgreSQLClusteringDatabase.insertObjectsSQL(rowClauses),
+          params,
+        );
       },
     );
   }
@@ -976,20 +1032,27 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
     const pool = this.ensureInitialized();
     const batchSize = PostgreSQLClusteringDatabase.DEFAULT_BATCH_SIZE;
     const rowMapper = this.rowToMapObject;
-    const query = `SELECT * FROM objects WHERE type = $1 ORDER BY key`;
+
+    // Keyset pagination rather than LIMIT/OFFSET. OFFSET makes the server walk and
+    // discard every row before the window, so exporting N rows in batches of B costs
+    // O(N^2 / B) row visits; at planet scale the last batches dominate the whole export.
+    // Seeking on the already-ordered key visits each row once.
+    const firstPage = `SELECT * FROM objects WHERE type = $1 ORDER BY key LIMIT $2`;
+    const nextPage = `SELECT * FROM objects WHERE type = $1 AND key > $3 ORDER BY key LIMIT $2`;
 
     return {
       async *[Symbol.asyncIterator]() {
-        let offset = 0;
-        while (true) {
+        let lastKey: string | null = null;
+        for (;;) {
           const client = await pool.connect();
-          let rows;
+          let rows: any[];
           try {
-            const result = await client.query(`${query} LIMIT $2 OFFSET $3`, [
-              type,
-              batchSize,
-              offset,
-            ]);
+            const params: (string | number)[] =
+              lastKey === null ? [type, batchSize] : [type, batchSize, lastKey];
+            const result = await client.query<any>(
+              lastKey === null ? firstPage : nextPage,
+              params,
+            );
             rows = result.rows;
           } finally {
             client.release();
@@ -1002,7 +1065,7 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
           if (rows.length < batchSize) {
             break;
           }
-          offset += rows.length;
+          lastKey = rows[rows.length - 1].key;
         }
       },
     };

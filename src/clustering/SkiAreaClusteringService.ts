@@ -89,6 +89,10 @@ function concurrencyLimit(preferred: number): number {
 // per-ski-area work has to be throttled explicitly. Matches the clustering pool size.
 const maxConcurrentSkiAreas = concurrencyLimit(10);
 
+// Features buffered before being written to the clustering database. Bounded so memory
+// does not grow with the size of the input; see loadFeatures.
+const LOAD_BATCH_SIZE = 500;
+
 function objectLengthKm(obj: LiftObject | RunObject): number {
   const raw = length(turf.feature(obj.geometry));
   return obj.geometry.type === "Polygon" ? raw / 3 : raw;
@@ -197,16 +201,56 @@ export class SkiAreaClusteringService {
     path: string,
     prepare: (feature: any) => DraftMapObject,
   ): Promise<void> {
+    // Accumulated and written in batches rather than one statement per feature. The
+    // previous shape cost a round trip per object; batching turns the load into a handful
+    // of statements per thousand objects. The buffer is bounded, so memory does not grow
+    // with the size of the input.
+    const database = this.database;
+    let buffer: MapObject[] = [];
+
+    const flush = async () => {
+      if (buffer.length === 0) {
+        return;
+      }
+      const batch = buffer;
+      buffer = [];
+      try {
+        await database.saveObjects(batch);
+      } catch (e) {
+        // A failed batch would previously have been a single failed object, so fall back
+        // to writing the batch one at a time. That isolates the offending feature instead
+        // of discarding the whole batch, and keeps the "log it and carry on" behaviour
+        // that the load pass has always had for malformed input.
+        console.log(
+          `Failed saving a batch of ${batch.length} features, retrying individually`,
+          e,
+        );
+        for (const object of batch) {
+          try {
+            await database.saveObject(object);
+          } catch (individualError) {
+            console.log(
+              "Failed loading feature " + JSON.stringify(object._key),
+              individualError,
+            );
+          }
+        }
+      }
+    };
+
     await pipeline(
       readGeoJSONFeatures(path),
       mapAsync(async (feature: any) => {
         try {
-          const preparedObject = prepare(feature) as MapObject;
-          await this.database.saveObject(preparedObject);
+          buffer.push(prepare(feature) as MapObject);
         } catch (e) {
           console.log("Failed loading feature " + JSON.stringify(feature), e);
+          return;
         }
-      }, 10),
+        if (buffer.length >= LOAD_BATCH_SIZE) {
+          await flush();
+        }
+      }, 1),
       new Writable({
         objectMode: true,
         write(chunk, encoding, callback) {
@@ -214,6 +258,8 @@ export class SkiAreaClusteringService {
         },
       }),
     );
+
+    await flush();
   }
 
   private prepareSkiArea(feature: SkiAreaFeature): DraftSkiArea {

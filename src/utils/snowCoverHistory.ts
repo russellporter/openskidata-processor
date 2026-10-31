@@ -265,21 +265,16 @@ export function aggregatePixelHistories(
 }
 
 /**
- * Read VIIRS cache data for a single pixel from PostgreSQL cache.
+ * Whether a pixel reference is within the VIIRS sinusoidal grid and well formed.
  *
- * @param cache PostgreSQL cache instance
- * @param tileId Tile identifier (e.g., "h12v04")
- * @param row Pixel row
- * @param col Pixel column
- * @returns Pixel data or null if not found or invalid
+ * Checked before building a cache key so an out-of-range pixel never reaches the cache.
  */
-async function readPixelCacheData(
-  cache: PostgresCache<VIIRSCacheData[]>,
+function isValidPixelReference(
   tileId: string,
   row: number,
   col: number,
-): Promise<VIIRSPixelData | null> {
-  if (
+): boolean {
+  return !(
     !tileId ||
     typeof row !== "number" ||
     typeof col !== "number" ||
@@ -288,14 +283,26 @@ async function readPixelCacheData(
     row >= 3000 ||
     col >= 3000 ||
     !/^h\d{2}v\d{2}$/.test(tileId)
-  ) {
-    return null;
-  }
+  );
+}
 
-  const cacheKey = `snow_cover:${tileId}:${row}:${col}`;
+function pixelCacheKey(tileId: string, row: number, col: number): string {
+  return `snow_cover:${tileId}:${row}:${col}`;
+}
 
+/**
+ * Validates and reshapes one pixel's cached value.
+ *
+ * Split out from the former `readPixelCacheData` so the fetch can be batched; the
+ * validation below is unchanged.
+ */
+function parsePixelCacheData(
+  data: VIIRSCacheData[] | undefined,
+  tileId: string,
+  row: number,
+  col: number,
+): VIIRSPixelData | null {
   try {
-    const data = await cache.get(cacheKey);
     if (!data || !Array.isArray(data)) return null;
 
     const validData = data.filter((yearData) => {
@@ -360,16 +367,44 @@ export async function getSnowCoverHistory(
     pixelsByTile[tileId].push([row, col]);
   });
 
-  const pixelsData: VIIRSPixelData[] = [];
-
+  // Every pixel's cache key is collected first and fetched in one query, rather than one
+  // query (and one pool checkout) per pixel as this used to do. A single run can touch
+  // hundreds of 375 m pixels, and snow cover is read once per run during export and again
+  // several times per ski area while computing statistics.
+  //
+  // The order of `pixelsData` is preserved exactly. aggregatePixelHistories averages the
+  // values it collects per year and day, so the order they are summed in determines the
+  // floating point result. PostgresCache.getMany returns its results in input-key order,
+  // which makes preserving the order a matter of keeping the same traversal.
+  const requests: { tileId: string; row: number; col: number }[] = [];
   for (const [tileId, tilePixels] of Object.entries(pixelsByTile)) {
     for (const [row, col] of tilePixels) {
-      const pixelData = await readPixelCacheData(cache, tileId, row, col);
-      if (pixelData) {
-        pixelsData.push(pixelData);
-      }
+      requests.push({ tileId, row, col });
     }
   }
+
+  const validRequests = requests.filter((request) =>
+    isValidPixelReference(request.tileId, request.row, request.col),
+  );
+
+  const cachedValues = await cache.getMany(
+    validRequests.map((request) =>
+      pixelCacheKey(request.tileId, request.row, request.col),
+    ),
+  );
+
+  const pixelsData: VIIRSPixelData[] = [];
+  validRequests.forEach((request, index) => {
+    const pixelData = parsePixelCacheData(
+      cachedValues[index],
+      request.tileId,
+      request.row,
+      request.col,
+    );
+    if (pixelData) {
+      pixelsData.push(pixelData);
+    }
+  });
 
   return aggregatePixelHistories(pixelsData);
 }
