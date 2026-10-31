@@ -42,7 +42,7 @@ pub mod arena;
 pub mod feature_id;
 pub mod interner;
 
-pub use arena::{CoordArena, CoordSlice, FixedCoord};
+pub use arena::{CoordArena, CoordOutOfRange, CoordSlice, FixedCoord};
 pub use interner::{StringInterner, Symbol};
 
 /// Degrees are stored as `round(degrees * 1e7)`.
@@ -144,6 +144,16 @@ pub struct FeatureStore {
     /// Elevation in centimetres, parallel to `coords`; `None` where unknown.
     pub elevation_cm: Vec<Option<i32>>,
     pub bbox: Vec<FixedBBox>,
+    /// True for a ski area whose real position is unknown.
+    ///
+    /// The TypeScript pipeline represents this as the literal coordinate `[360, 360, id]`
+    /// (`src/utils/PlaceholderSiteGeometry.ts`) and tests for it by comparing against 360
+    /// in several places, including inside SQL. That value is not representable on the
+    /// fixed-point grid — 360 degrees scales past `i32::MAX` — so it is carried as a flag
+    /// instead, and the output writer re-emits the sentinel coordinate for compatibility.
+    /// Making it explicit also removes the magic number from every predicate that tests
+    /// for it.
+    pub has_placeholder_geometry: Vec<bool>,
     pub activities: Vec<ActivityMask>,
     pub status: Vec<Status>,
     pub source_type: Vec<SourceType>,
@@ -176,21 +186,68 @@ impl FeatureStore {
         self.len() == 0
     }
 
-    /// Reserve capacity across every column at once, so a planet-scale load does not
+    /// Reserves capacity across every column at once, so a planet-scale load does not
     /// repeatedly reallocate twenty vectors.
-    pub fn reserve(&mut self, _additional: usize) {
-        todo!("reserve every column")
+    pub fn reserve(&mut self, additional: usize) {
+        self.feature_type.reserve(additional);
+        self.geometry_kind.reserve(additional);
+        self.geometry.reserve(additional);
+        self.geometry_parts.reserve(additional);
+        self.bbox.reserve(additional);
+        self.has_placeholder_geometry.reserve(additional);
+        self.activities.reserve(additional);
+        self.status.reserve(additional);
+        self.source_type.reserve(additional);
+        self.source_id.reserve(additional);
+        self.name.reserve(additional);
+        self.id.reserve(additional);
+        self.run_uses.reserve(additional);
+        self.run_difficulty.reserve(additional);
+        self.run_grooming.reserve(additional);
+        self.lift_type.reserve(additional);
+        self.spot_type.reserve(additional);
+        self.assigned_ski_areas.reserve(additional);
+        self.is_basis_for_new_ski_area.reserve(additional);
+        self.is_in_ski_area_polygon.reserve(additional);
+        self.is_in_ski_area_site.reserve(additional);
     }
 
     /// Coordinates of a feature, as fixed-point pairs.
-    pub fn coords_of(&self, _idx: FeatureIdx) -> &[FixedCoord] {
-        todo!("slice the arena with self.geometry[idx]")
+    pub fn coords_of(&self, idx: FeatureIdx) -> &[FixedCoord] {
+        self.coords.get(self.geometry[idx.0 as usize])
     }
 
     /// Bit set of [`RunUse`] values for a run.
-    pub fn run_uses_of(&self, _idx: FeatureIdx) -> Vec<RunUse> {
-        todo!("expand the run_uses bitmask")
+    pub fn run_uses_of(&self, idx: FeatureIdx) -> Vec<RunUse> {
+        let mask = self.run_uses[idx.0 as usize];
+        RunUse::ALL
+            .iter()
+            .copied()
+            .filter(|&use_| mask & run_use_bit(use_) != 0)
+            .collect()
     }
+
+    /// Resident bytes of the arena and string table, for stage memory reporting.
+    ///
+    /// Covers the two structures that scale with the dataset rather than every column, so
+    /// it is a floor on usage, not a total.
+    pub fn heap_bytes(&self) -> usize {
+        self.coords.heap_bytes() + self.strings.heap_bytes()
+    }
+}
+
+/// Bit position of a run use within [`FeatureStore::run_uses`].
+///
+/// There are 11 uses, so a `u16` mask holds them with room to spare.
+pub fn run_use_bit(run_use: RunUse) -> u16 {
+    1u16 << (run_use as u16)
+}
+
+/// Packs run uses into the mask stored in [`FeatureStore::run_uses`].
+pub fn run_uses_mask(uses: &[RunUse]) -> u16 {
+    uses.iter()
+        .copied()
+        .fold(0u16, |mask, use_| mask | run_use_bit(use_))
 }
 
 #[cfg(test)]
@@ -209,6 +266,29 @@ mod tests {
         // them. See osd_cluster's module docs.
         assert_eq!(both.intersection(downhill_only), downhill_only);
         assert!(downhill_only.intersection(nordic_only).is_empty());
+    }
+
+    #[test]
+    fn run_use_mask_round_trips() {
+        let uses = [RunUse::Downhill, RunUse::Nordic, RunUse::Fatbike];
+        let mask = run_uses_mask(&uses);
+        let expanded: Vec<RunUse> = RunUse::ALL
+            .iter()
+            .copied()
+            .filter(|&u| mask & run_use_bit(u) != 0)
+            .collect();
+        assert_eq!(expanded, uses.to_vec());
+        assert_eq!(run_uses_mask(&[]), 0);
+    }
+
+    /// There are 11 run uses; the mask must hold every one of them.
+    #[test]
+    fn every_run_use_fits_in_the_mask() {
+        let all: Vec<RunUse> = RunUse::ALL.to_vec();
+        let mask = run_uses_mask(&all);
+        for &use_ in RunUse::ALL {
+            assert!(mask & run_use_bit(use_) != 0, "{use_:?} did not fit");
+        }
     }
 
     #[test]
