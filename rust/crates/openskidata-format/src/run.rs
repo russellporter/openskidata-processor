@@ -72,23 +72,62 @@ pub fn run_elevation_data(
 
 /// Replaces `getRunColor`.
 pub fn run_color(
-    _convention: RunDifficultyConvention,
-    _difficulty: Option<RunDifficulty>,
+    convention: RunDifficultyConvention,
+    difficulty: Option<RunDifficulty>,
 ) -> RunColorValue {
-    todo!("port getRunColor")
+    run_color_name_to_value(run_color_name(convention, difficulty))
 }
 
 /// Replaces `getRunColorName`.
+///
+/// The three conventions differ in how they colour the easier end of the range: Europe
+/// distinguishes novice (green) from easy (blue), while Japan and North America group
+/// both as green and then diverge — Japan uses red for intermediate, North America blue.
+/// An unknown difficulty is grey in every convention.
 pub fn run_color_name(
-    _convention: RunDifficultyConvention,
-    _difficulty: Option<RunDifficulty>,
+    convention: RunDifficultyConvention,
+    difficulty: Option<RunDifficulty>,
 ) -> RunColorName {
-    todo!("port getRunColorName")
+    use RunColorName as C;
+    use RunDifficulty as D;
+
+    let Some(difficulty) = difficulty else {
+        return C::Grey;
+    };
+
+    match convention {
+        RunDifficultyConvention::Europe => match difficulty {
+            D::Novice => C::Green,
+            D::Easy => C::Blue,
+            D::Intermediate => C::Red,
+            D::Advanced | D::Expert => C::Black,
+            D::Freeride | D::Extreme => C::Orange,
+        },
+        RunDifficultyConvention::Japan => match difficulty {
+            D::Novice | D::Easy => C::Green,
+            D::Intermediate => C::Red,
+            D::Advanced | D::Expert => C::Black,
+            D::Freeride | D::Extreme => C::Orange,
+        },
+        RunDifficultyConvention::NorthAmerica => match difficulty {
+            D::Novice | D::Easy => C::Green,
+            D::Intermediate => C::Blue,
+            D::Advanced | D::Expert => C::Black,
+            D::Freeride | D::Extreme => C::Orange,
+        },
+    }
 }
 
 /// Replaces `runColorNameToValue`.
-pub fn run_color_name_to_value(_color: RunColorName) -> RunColorValue {
-    todo!("port runColorNameToValue")
+pub fn run_color_name_to_value(color: RunColorName) -> RunColorValue {
+    match color {
+        RunColorName::Green => RunColorValue::Green,
+        RunColorName::Blue => RunColorValue::Blue,
+        RunColorName::Red => RunColorValue::Red,
+        RunColorName::Black => RunColorValue::Black,
+        RunColorName::Orange => RunColorValue::Orange,
+        RunColorName::Grey => RunColorValue::Grey,
+    }
 }
 
 /// Replaces `getRunDifficultyConvention` from

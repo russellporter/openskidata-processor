@@ -1,0 +1,891 @@
+{
+  "formatVersion": "16.0.0",
+  "runColorName": [
+    {
+      "convention": "europe",
+      "difficulty": "novice",
+      "expected": "green"
+    },
+    {
+      "convention": "europe",
+      "difficulty": "easy",
+      "expected": "blue"
+    },
+    {
+      "convention": "europe",
+      "difficulty": "intermediate",
+      "expected": "red"
+    },
+    {
+      "convention": "europe",
+      "difficulty": "advanced",
+      "expected": "black"
+    },
+    {
+      "convention": "europe",
+      "difficulty": "expert",
+      "expected": "black"
+    },
+    {
+      "convention": "europe",
+      "difficulty": "freeride",
+      "expected": "orange"
+    },
+    {
+      "convention": "europe",
+      "difficulty": "extreme",
+      "expected": "orange"
+    },
+    {
+      "convention": "europe",
+      "difficulty": null,
+      "expected": "grey"
+    },
+    {
+      "convention": "japan",
+      "difficulty": "novice",
+      "expected": "green"
+    },
+    {
+      "convention": "japan",
+      "difficulty": "easy",
+      "expected": "green"
+    },
+    {
+      "convention": "japan",
+      "difficulty": "intermediate",
+      "expected": "red"
+    },
+    {
+      "convention": "japan",
+      "difficulty": "advanced",
+      "expected": "black"
+    },
+    {
+      "convention": "japan",
+      "difficulty": "expert",
+      "expected": "black"
+    },
+    {
+      "convention": "japan",
+      "difficulty": "freeride",
+      "expected": "orange"
+    },
+    {
+      "convention": "japan",
+      "difficulty": "extreme",
+      "expected": "orange"
+    },
+    {
+      "convention": "japan",
+      "difficulty": null,
+      "expected": "grey"
+    },
+    {
+      "convention": "north_america",
+      "difficulty": "novice",
+      "expected": "green"
+    },
+    {
+      "convention": "north_america",
+      "difficulty": "easy",
+      "expected": "green"
+    },
+    {
+      "convention": "north_america",
+      "difficulty": "intermediate",
+      "expected": "blue"
+    },
+    {
+      "convention": "north_america",
+      "difficulty": "advanced",
+      "expected": "black"
+    },
+    {
+      "convention": "north_america",
+      "difficulty": "expert",
+      "expected": "black"
+    },
+    {
+      "convention": "north_america",
+      "difficulty": "freeride",
+      "expected": "orange"
+    },
+    {
+      "convention": "north_america",
+      "difficulty": "extreme",
+      "expected": "orange"
+    },
+    {
+      "convention": "north_america",
+      "difficulty": null,
+      "expected": "grey"
+    }
+  ],
+  "runColor": [
+    {
+      "convention": "europe",
+      "difficulty": "novice",
+      "expected": "hsl(125, 100%, 33%)"
+    },
+    {
+      "convention": "europe",
+      "difficulty": "easy",
+      "expected": "hsl(208, 100%, 33%)"
+    },
+    {
+      "convention": "europe",
+      "difficulty": "intermediate",
+      "expected": "hsl(359, 94%, 53%)"
+    },
+    {
+      "convention": "europe",
+      "difficulty": "advanced",
+      "expected": "hsl(0, 0%, 0%)"
+    },
+    {
+      "convention": "europe",
+      "difficulty": "expert",
+      "expected": "hsl(0, 0%, 0%)"
+    },
+    {
+      "convention": "europe",
+      "difficulty": "freeride",
+      "expected": "hsl(34, 100%, 50%)"
+    },
+    {
+      "convention": "europe",
+      "difficulty": "extreme",
+      "expected": "hsl(34, 100%, 50%)"
+    },
+    {
+      "convention": "europe",
+      "difficulty": null,
+      "expected": "hsl(0, 0%, 35%)"
+    },
+    {
+      "convention": "japan",
+      "difficulty": "novice",
+      "expected": "hsl(125, 100%, 33%)"
+    },
+    {
+      "convention": "japan",
+      "difficulty": "easy",
+      "expected": "hsl(125, 100%, 33%)"
+    },
+    {
+      "convention": "japan",
+      "difficulty": "intermediate",
+      "expected": "hsl(359, 94%, 53%)"
+    },
+    {
+      "convention": "japan",
+      "difficulty": "advanced",
+      "expected": "hsl(0, 0%, 0%)"
+    },
+    {
+      "convention": "japan",
+      "difficulty": "expert",
+      "expected": "hsl(0, 0%, 0%)"
+    },
+    {
+      "convention": "japan",
+      "difficulty": "freeride",
+      "expected": "hsl(34, 100%, 50%)"
+    },
+    {
+      "convention": "japan",
+      "difficulty": "extreme",
+      "expected": "hsl(34, 100%, 50%)"
+    },
+    {
+      "convention": "japan",
+      "difficulty": null,
+      "expected": "hsl(0, 0%, 35%)"
+    },
+    {
+      "convention": "north_america",
+      "difficulty": "novice",
+      "expected": "hsl(125, 100%, 33%)"
+    },
+    {
+      "convention": "north_america",
+      "difficulty": "easy",
+      "expected": "hsl(125, 100%, 33%)"
+    },
+    {
+      "convention": "north_america",
+      "difficulty": "intermediate",
+      "expected": "hsl(208, 100%, 33%)"
+    },
+    {
+      "convention": "north_america",
+      "difficulty": "advanced",
+      "expected": "hsl(0, 0%, 0%)"
+    },
+    {
+      "convention": "north_america",
+      "difficulty": "expert",
+      "expected": "hsl(0, 0%, 0%)"
+    },
+    {
+      "convention": "north_america",
+      "difficulty": "freeride",
+      "expected": "hsl(34, 100%, 50%)"
+    },
+    {
+      "convention": "north_america",
+      "difficulty": "extreme",
+      "expected": "hsl(34, 100%, 50%)"
+    },
+    {
+      "convention": "north_america",
+      "difficulty": null,
+      "expected": "hsl(0, 0%, 35%)"
+    }
+  ],
+  "runColorNameToValue": [
+    {
+      "color": "green",
+      "expected": "hsl(125, 100%, 33%)"
+    },
+    {
+      "color": "blue",
+      "expected": "hsl(208, 100%, 33%)"
+    },
+    {
+      "color": "red",
+      "expected": "hsl(359, 94%, 53%)"
+    },
+    {
+      "color": "black",
+      "expected": "hsl(0, 0%, 0%)"
+    },
+    {
+      "color": "orange",
+      "expected": "hsl(34, 100%, 50%)"
+    },
+    {
+      "color": "grey",
+      "expected": "hsl(0, 0%, 35%)"
+    }
+  ],
+  "liftColor": [
+    {
+      "status": "operating",
+      "expected": "hsl(0, 82%, 42%)"
+    },
+    {
+      "status": "disused",
+      "expected": "hsl(0, 53%, 42%)"
+    },
+    {
+      "status": "abandoned",
+      "expected": "hsl(0, 53%, 42%)"
+    },
+    {
+      "status": "proposed",
+      "expected": "hsl(0, 82%, 42%)"
+    },
+    {
+      "status": "planned",
+      "expected": "hsl(0, 82%, 42%)"
+    },
+    {
+      "status": "construction",
+      "expected": "hsl(0, 82%, 42%)"
+    }
+  ],
+  "formattedLiftType": [
+    {
+      "liftType": "cable_car",
+      "expected": "Cable Car"
+    },
+    {
+      "liftType": "gondola",
+      "expected": "Gondola"
+    },
+    {
+      "liftType": "chair_lift",
+      "expected": "Chairlift"
+    },
+    {
+      "liftType": "mixed_lift",
+      "expected": "Hybrid"
+    },
+    {
+      "liftType": "drag_lift",
+      "expected": "Drag lift"
+    },
+    {
+      "liftType": "t-bar",
+      "expected": "T-bar"
+    },
+    {
+      "liftType": "j-bar",
+      "expected": "J-bar"
+    },
+    {
+      "liftType": "platter",
+      "expected": "Platter"
+    },
+    {
+      "liftType": "rope_tow",
+      "expected": "Ropetow"
+    },
+    {
+      "liftType": "magic_carpet",
+      "expected": "Magic Carpet"
+    },
+    {
+      "liftType": "funicular",
+      "expected": "Funicular"
+    },
+    {
+      "liftType": "railway",
+      "expected": "Railway"
+    }
+  ],
+  "sourceURL": [
+    {
+      "type": "skimap.org",
+      "id": "example-id/123",
+      "expected": "https://www.skimap.org/SkiAreas/view/example-id/123"
+    },
+    {
+      "type": "openstreetmap",
+      "id": "example-id/123",
+      "expected": "https://www.openstreetmap.org/example-id/123"
+    }
+  ],
+  "sourceName": [
+    {
+      "type": "skimap.org",
+      "expected": "Skimap.org"
+    },
+    {
+      "type": "openstreetmap",
+      "expected": "OpenStreetMap"
+    }
+  ],
+  "slopeGradingScaleForUse": [
+    {
+      "runUse": "downhill",
+      "convention": "europe",
+      "expected": {
+        "stops": [
+          {
+            "maxSteepness": 0.05,
+            "difficulty": null
+          },
+          {
+            "maxSteepness": 0.25,
+            "difficulty": "easy"
+          },
+          {
+            "maxSteepness": 0.4,
+            "difficulty": "intermediate"
+          },
+          {
+            "maxSteepness": 0.8,
+            "difficulty": "advanced"
+          },
+          {
+            "maxSteepness": 1,
+            "difficulty": "expert"
+          },
+          {
+            "maxSteepness": 1.2,
+            "difficulty": "freeride"
+          },
+          {
+            "maxSteepness": {
+              "$nonFinite": "Infinity"
+            },
+            "difficulty": "extreme"
+          }
+        ]
+      }
+    },
+    {
+      "runUse": "downhill",
+      "convention": "japan",
+      "expected": {
+        "stops": [
+          {
+            "maxSteepness": 0.05,
+            "difficulty": null
+          },
+          {
+            "maxSteepness": 0.25,
+            "difficulty": "easy"
+          },
+          {
+            "maxSteepness": 0.4,
+            "difficulty": "intermediate"
+          },
+          {
+            "maxSteepness": 0.8,
+            "difficulty": "advanced"
+          },
+          {
+            "maxSteepness": 1,
+            "difficulty": "expert"
+          },
+          {
+            "maxSteepness": 1.2,
+            "difficulty": "freeride"
+          },
+          {
+            "maxSteepness": {
+              "$nonFinite": "Infinity"
+            },
+            "difficulty": "extreme"
+          }
+        ]
+      }
+    },
+    {
+      "runUse": "downhill",
+      "convention": "north_america",
+      "expected": {
+        "stops": [
+          {
+            "maxSteepness": 0.05,
+            "difficulty": null
+          },
+          {
+            "maxSteepness": 0.25,
+            "difficulty": "easy"
+          },
+          {
+            "maxSteepness": 0.4,
+            "difficulty": "intermediate"
+          },
+          {
+            "maxSteepness": 0.8,
+            "difficulty": "advanced"
+          },
+          {
+            "maxSteepness": 1,
+            "difficulty": "expert"
+          },
+          {
+            "maxSteepness": 1.2,
+            "difficulty": "freeride"
+          },
+          {
+            "maxSteepness": {
+              "$nonFinite": "Infinity"
+            },
+            "difficulty": "extreme"
+          }
+        ]
+      }
+    },
+    {
+      "runUse": "nordic",
+      "convention": "europe",
+      "expected": {
+        "stops": [
+          {
+            "maxSteepness": 0.1,
+            "difficulty": "easy"
+          },
+          {
+            "maxSteepness": 0.15,
+            "difficulty": "intermediate"
+          },
+          {
+            "maxSteepness": 0.3,
+            "difficulty": "advanced"
+          }
+        ]
+      }
+    },
+    {
+      "runUse": "nordic",
+      "convention": "japan",
+      "expected": {
+        "stops": [
+          {
+            "maxSteepness": 0.1,
+            "difficulty": "easy"
+          },
+          {
+            "maxSteepness": 0.15,
+            "difficulty": "intermediate"
+          },
+          {
+            "maxSteepness": 0.3,
+            "difficulty": "advanced"
+          }
+        ]
+      }
+    },
+    {
+      "runUse": "nordic",
+      "convention": "north_america",
+      "expected": {
+        "stops": [
+          {
+            "maxSteepness": 0.1,
+            "difficulty": "easy"
+          },
+          {
+            "maxSteepness": 0.15,
+            "difficulty": "intermediate"
+          },
+          {
+            "maxSteepness": 0.3,
+            "difficulty": "advanced"
+          }
+        ]
+      }
+    },
+    {
+      "runUse": "skitour",
+      "convention": "europe",
+      "expected": {
+        "stops": [
+          {
+            "maxSteepness": 0.05,
+            "difficulty": null
+          },
+          {
+            "maxSteepness": 0.25,
+            "difficulty": "easy"
+          },
+          {
+            "maxSteepness": 0.4,
+            "difficulty": "intermediate"
+          },
+          {
+            "maxSteepness": 0.8,
+            "difficulty": "advanced"
+          },
+          {
+            "maxSteepness": 1,
+            "difficulty": "expert"
+          },
+          {
+            "maxSteepness": 1.2,
+            "difficulty": "freeride"
+          },
+          {
+            "maxSteepness": {
+              "$nonFinite": "Infinity"
+            },
+            "difficulty": "extreme"
+          }
+        ]
+      }
+    },
+    {
+      "runUse": "skitour",
+      "convention": "japan",
+      "expected": {
+        "stops": [
+          {
+            "maxSteepness": 0.05,
+            "difficulty": null
+          },
+          {
+            "maxSteepness": 0.25,
+            "difficulty": "easy"
+          },
+          {
+            "maxSteepness": 0.4,
+            "difficulty": "intermediate"
+          },
+          {
+            "maxSteepness": 0.8,
+            "difficulty": "advanced"
+          },
+          {
+            "maxSteepness": 1,
+            "difficulty": "expert"
+          },
+          {
+            "maxSteepness": 1.2,
+            "difficulty": "freeride"
+          },
+          {
+            "maxSteepness": {
+              "$nonFinite": "Infinity"
+            },
+            "difficulty": "extreme"
+          }
+        ]
+      }
+    },
+    {
+      "runUse": "skitour",
+      "convention": "north_america",
+      "expected": {
+        "stops": [
+          {
+            "maxSteepness": 0.05,
+            "difficulty": null
+          },
+          {
+            "maxSteepness": 0.25,
+            "difficulty": "easy"
+          },
+          {
+            "maxSteepness": 0.4,
+            "difficulty": "intermediate"
+          },
+          {
+            "maxSteepness": 0.8,
+            "difficulty": "advanced"
+          },
+          {
+            "maxSteepness": 1,
+            "difficulty": "expert"
+          },
+          {
+            "maxSteepness": 1.2,
+            "difficulty": "freeride"
+          },
+          {
+            "maxSteepness": {
+              "$nonFinite": "Infinity"
+            },
+            "difficulty": "extreme"
+          }
+        ]
+      }
+    },
+    {
+      "runUse": "sled",
+      "convention": "europe",
+      "expected": {
+        "stops": []
+      }
+    },
+    {
+      "runUse": "sled",
+      "convention": "japan",
+      "expected": {
+        "stops": []
+      }
+    },
+    {
+      "runUse": "sled",
+      "convention": "north_america",
+      "expected": {
+        "stops": []
+      }
+    },
+    {
+      "runUse": "hike",
+      "convention": "europe",
+      "expected": {
+        "stops": []
+      }
+    },
+    {
+      "runUse": "hike",
+      "convention": "japan",
+      "expected": {
+        "stops": []
+      }
+    },
+    {
+      "runUse": "hike",
+      "convention": "north_america",
+      "expected": {
+        "stops": []
+      }
+    },
+    {
+      "runUse": "sleigh",
+      "convention": "europe",
+      "expected": {
+        "stops": []
+      }
+    },
+    {
+      "runUse": "sleigh",
+      "convention": "japan",
+      "expected": {
+        "stops": []
+      }
+    },
+    {
+      "runUse": "sleigh",
+      "convention": "north_america",
+      "expected": {
+        "stops": []
+      }
+    },
+    {
+      "runUse": "ice_skate",
+      "convention": "europe",
+      "expected": {
+        "stops": []
+      }
+    },
+    {
+      "runUse": "ice_skate",
+      "convention": "japan",
+      "expected": {
+        "stops": []
+      }
+    },
+    {
+      "runUse": "ice_skate",
+      "convention": "north_america",
+      "expected": {
+        "stops": []
+      }
+    },
+    {
+      "runUse": "snow_park",
+      "convention": "europe",
+      "expected": {
+        "stops": []
+      }
+    },
+    {
+      "runUse": "snow_park",
+      "convention": "japan",
+      "expected": {
+        "stops": []
+      }
+    },
+    {
+      "runUse": "snow_park",
+      "convention": "north_america",
+      "expected": {
+        "stops": []
+      }
+    },
+    {
+      "runUse": "playground",
+      "convention": "europe",
+      "expected": {
+        "stops": []
+      }
+    },
+    {
+      "runUse": "playground",
+      "convention": "japan",
+      "expected": {
+        "stops": []
+      }
+    },
+    {
+      "runUse": "playground",
+      "convention": "north_america",
+      "expected": {
+        "stops": []
+      }
+    },
+    {
+      "runUse": "connection",
+      "convention": "europe",
+      "expected": {
+        "stops": []
+      }
+    },
+    {
+      "runUse": "connection",
+      "convention": "japan",
+      "expected": {
+        "stops": []
+      }
+    },
+    {
+      "runUse": "connection",
+      "convention": "north_america",
+      "expected": {
+        "stops": []
+      }
+    },
+    {
+      "runUse": "fatbike",
+      "convention": "europe",
+      "expected": {
+        "stops": []
+      }
+    },
+    {
+      "runUse": "fatbike",
+      "convention": "japan",
+      "expected": {
+        "stops": []
+      }
+    },
+    {
+      "runUse": "fatbike",
+      "convention": "north_america",
+      "expected": {
+        "stops": []
+      }
+    }
+  ],
+  "runDifficultyConvention": [
+    {
+      "name": "Austrian Alps",
+      "lng": 11.3,
+      "lat": 47.2,
+      "expected": "europe"
+    },
+    {
+      "name": "French Alps",
+      "lng": 6.6,
+      "lat": 45.3,
+      "expected": "europe"
+    },
+    {
+      "name": "Hokkaido",
+      "lng": 142.8,
+      "lat": 43.3,
+      "expected": "japan"
+    },
+    {
+      "name": "Honshu",
+      "lng": 138.2,
+      "lat": 36.7,
+      "expected": "japan"
+    },
+    {
+      "name": "Colorado",
+      "lng": -106,
+      "lat": 39.6,
+      "expected": "north_america"
+    },
+    {
+      "name": "British Columbia",
+      "lng": -118.2,
+      "lat": 50.9,
+      "expected": "north_america"
+    },
+    {
+      "name": "Chilean Andes",
+      "lng": -70.3,
+      "lat": -33.4,
+      "expected": "europe"
+    },
+    {
+      "name": "New Zealand",
+      "lng": 170.1,
+      "lat": -44.6,
+      "expected": "north_america"
+    },
+    {
+      "name": "Norway",
+      "lng": 8.5,
+      "lat": 60.9,
+      "expected": "europe"
+    },
+    {
+      "name": "mid Atlantic",
+      "lng": -30,
+      "lat": 40,
+      "expected": "europe"
+    }
+  ]
+}

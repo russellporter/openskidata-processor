@@ -82,13 +82,37 @@ pub fn lift_elevation_data(_geometry: &LiftGeometry, _elevations: &[f64]) -> Opt
 }
 
 /// Replaces `getLiftColor`.
-pub fn lift_color(_status: Status) -> &'static str {
-    todo!("port getLiftColor")
+pub fn lift_color(status: Status) -> &'static str {
+    const BRIGHT_RED: &str = "hsl(0, 82%, 42%)";
+    const DIM_RED: &str = "hsl(0, 53%, 42%)";
+    match status {
+        // A lift that no longer runs is drawn dimmer. Note that proposed, planned and
+        // under-construction lifts use the bright colour, like operating ones.
+        Status::Disused | Status::Abandoned => DIM_RED,
+        Status::Proposed | Status::Planned | Status::Construction | Status::Operating => BRIGHT_RED,
+    }
 }
 
 /// Replaces `getFormattedLiftType`.
-pub fn formatted_lift_type(_lift_type: LiftType) -> &'static str {
-    todo!("port getFormattedLiftType")
+///
+/// These are display strings, so the exact casing is what users see: "Chairlift" and
+/// "Ropetow" are one word, "Cable Car" and "Magic Carpet" are two, and "Drag lift" has a
+/// lower-case second word.
+pub fn formatted_lift_type(lift_type: LiftType) -> &'static str {
+    match lift_type {
+        LiftType::CableCar => "Cable Car",
+        LiftType::Gondola => "Gondola",
+        LiftType::ChairLift => "Chairlift",
+        LiftType::MixedLift => "Hybrid",
+        LiftType::DragLift => "Drag lift",
+        LiftType::TBar => "T-bar",
+        LiftType::JBar => "J-bar",
+        LiftType::Platter => "Platter",
+        LiftType::RopeTow => "Ropetow",
+        LiftType::MagicCarpet => "Magic Carpet",
+        LiftType::Funicular => "Funicular",
+        LiftType::Railway => "Railway",
+    }
 }
 
 /// Replaces `getLiftNameAndType` from `LiftNameFormatter.js`.

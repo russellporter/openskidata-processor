@@ -43,8 +43,9 @@ See `rust/README.md`.
 - Check: `docker compose exec app sh -c "cd rust && cargo check --workspace"`
 - Test: `docker compose exec app sh -c "cd rust && cargo test --workspace"`
 - Format: `docker compose exec app sh -c "cd rust && cargo fmt --all"`
-- Regenerate the format enums after an `openskidata-format` bump:
-  `docker compose exec app node rust/codegen/generate-format-enums.mjs`
+- Regenerate the generated format files after an `openskidata-format` bump:
+  `docker compose exec app node rust/codegen/generate-format-enums.mjs` and
+  `docker compose exec app node rust/codegen/generate-format-vectors.mjs`
 
 `rust/crates/openskidata-format/src/generated/enums.rs` is generated and checked in — do
 not edit it by hand. Its enum strings are the public wire contract, so they are derived

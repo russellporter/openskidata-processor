@@ -11,11 +11,21 @@ pub struct Source {
 }
 
 /// Replaces `getSourceURL`.
-pub fn source_url(_source: &Source) -> String {
-    todo!("port getSourceURL from openskidata-format/dist/Source.js")
+pub fn source_url(source: &Source) -> String {
+    match source.source_type {
+        SourceType::Openstreetmap => {
+            format!("https://www.openstreetmap.org/{}", source.id)
+        }
+        SourceType::SkimapOrg => {
+            format!("https://www.skimap.org/SkiAreas/view/{}", source.id)
+        }
+    }
 }
 
 /// Replaces `getSourceName`.
-pub fn source_name(_source_type: SourceType) -> &'static str {
-    todo!("port getSourceName from openskidata-format/dist/Source.js")
+pub fn source_name(source_type: SourceType) -> &'static str {
+    match source_type {
+        SourceType::Openstreetmap => "OpenStreetMap",
+        SourceType::SkimapOrg => "Skimap.org",
+    }
 }
