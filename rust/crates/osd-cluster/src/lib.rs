@@ -83,9 +83,14 @@
 pub mod flood;
 pub mod geometry;
 pub mod index;
+pub mod passes;
 
 pub use flood::{FillOptions, Frame, flood_fill, is_non_operating_lift};
 pub use index::SpatialIndex;
+pub use passes::{
+    Pass, PassReport, activities_from_member_runs, run_assignment_passes, run_pass,
+    ski_areas_in_id_order,
+};
 
 use anyhow::Result;
 use osd_store::{FeatureIdx, FeatureStore, SkiAreaIdx};
@@ -103,28 +108,6 @@ pub enum DistanceBackend {
     Postgis,
     /// Stage 4b: in-process local projection. Carries ±0.5–1.5 m error at 500 m.
     LocalProjection,
-}
-
-/// Which pass is running. Upstream calls `assignObjectsToSkiAreas` three times with
-/// different options, plus a merge pass and a generation pass.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Pass {
-    /// Objects inside OSM polygon ski areas. Depth-1 containment, not a fill
-    /// (semantic 5).
-    InPolygon,
-    /// Nearby objects for OSM ski areas; consumes unassigned objects (semantic 1).
-    NearbyOpenStreetMap,
-    /// Nearby objects for Skimap.org ski areas; consumes unassigned objects.
-    NearbySkimapOrg,
-}
-
-/// Run every clustering pass, in upstream's order.
-pub fn cluster(
-    _store: &mut FeatureStore,
-    _index: &SpatialIndex,
-    _backend: DistanceBackend,
-) -> Result<()> {
-    todo!("the nine passes of performClustering, in order")
 }
 
 /// Replaces `generateSkiAreasForUnassignedObjects`.
@@ -171,13 +154,6 @@ pub fn report_metric_blast_radius(
 
 #[cfg(test)]
 mod tests {
-    /// Semantic 1 at the pass level: the fill itself honours only_unassigned (covered in
-    /// tests/semantics.rs), but the sequential seed loop that makes "first in id order
-    /// wins" observable lives in `cluster`, which is not implemented yet.
-    #[test]
-    #[ignore = "scaffold: implement cluster first"]
-    fn first_ski_area_in_id_order_claims_a_contested_object() {}
-
     /// The 53 inline snapshots in `ClusterSkiAreas.integration.test.ts` are the de-facto
     /// specification for this crate.
     #[test]
