@@ -53,6 +53,21 @@ jobs:
       - name: Audit dependencies
         run: docker compose exec -T app npm audit --audit-level=critical
 
+      # The Rust workspace in rust/ is replacing src/ stage by stage. Both pipelines
+      # coexist until the port completes, so both are checked here; the TypeScript steps
+      # above are retired per stage as each port lands.
+      - name: Check the generated format enums are in sync
+        run: docker compose exec -T app node rust/codegen/generate-format-enums.mjs --check
+
+      - name: Rust format
+        run: docker compose exec -T app sh -c "cd rust && cargo fmt --all --check"
+
+      - name: Rust check
+        run: docker compose exec -T app sh -c "cd rust && cargo check --workspace --all-targets"
+
+      - name: Rust tests
+        run: docker compose exec -T app sh -c "cd rust && cargo test --workspace"
+
       - name: Cleanup
         if: always()
         run: docker compose down

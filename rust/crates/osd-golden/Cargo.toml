@@ -1,0 +1,14 @@
+[package]
+name = "osd-golden"
+description = "Golden-master fixture extraction and semantic diff"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+clap.workspace = true
+serde_json.workspace = true
+rusqlite.workspace = true

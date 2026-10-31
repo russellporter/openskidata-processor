@@ -12,3 +12,4 @@ coverage/
 venv/
 *.tmp
 *.temp
+rust/target

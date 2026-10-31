@@ -1,0 +1,13 @@
+[package]
+name = "osd-tags"
+description = "OSM tag to domain-model formatters"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+openskidata-format.workspace = true
+osd-store.workspace = true

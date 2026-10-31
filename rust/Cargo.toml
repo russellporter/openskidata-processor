@@ -1,0 +1,61 @@
+[workspace]
+resolver = "3"
+members = ["crates/*"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "ISC"
+authors = ["Russell Porter"]
+repository = "https://github.com/russellporter/openskidata-processor"
+
+# Pinned centrally: every crate takes its external versions from here, so the
+# workspace cannot end up with two versions of `geo` or `rstar` in one build.
+[workspace.dependencies]
+# geometry + spatial
+geo = "0.33.1"
+geo-types = { version = "0.7.20", features = ["serde"] }
+rstar = "0.13.0"
+geos = "11.3.1"
+# parallelism + async
+rayon = "1.12.0"
+tokio = { version = "1.54.1", features = ["rt-multi-thread", "macros", "fs", "sync", "time"] }
+reqwest = { version = "0.13.5", default-features = false, features = ["json", "rustls", "gzip"] }
+# serialization
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+# storage
+rusqlite = { version = "0.41.1", features = ["bundled"] }
+tokio-postgres = "0.7.18"
+# osm
+osmpbf = "0.3.8"
+# hashing / ids
+xxhash-rust = { version = "0.8.19", features = ["xxh3"] }
+# errors, logging, cli
+anyhow = "1.0.104"
+thiserror = "2.0.21"
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
+clap = { version = "4.6.7", features = ["derive", "env"] }
+# internal
+openskidata-format = { path = "crates/openskidata-format" }
+osd-store = { path = "crates/osd-store" }
+osd-osm = { path = "crates/osd-osm" }
+osd-tags = { path = "crates/osd-tags" }
+osd-normalize = { path = "crates/osd-normalize" }
+osd-cluster = { path = "crates/osd-cluster" }
+osd-enrich = { path = "crates/osd-enrich" }
+osd-cache = { path = "crates/osd-cache" }
+osd-out = { path = "crates/osd-out" }
+osd-pipeline = { path = "crates/osd-pipeline" }
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+panic = "abort"
+
+# The planet run is the thing being optimized; keep debug symbols so perf/flamegraph
+# output is readable without rebuilding.
+[profile.release.package."*"]
+debug = 1

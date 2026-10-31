@@ -6,3 +6,4 @@ cache/
 output/
 npm-debug.log
 snow-cover/venv/
+rust/target/

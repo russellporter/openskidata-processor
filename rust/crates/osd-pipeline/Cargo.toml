@@ -1,0 +1,21 @@
+[package]
+name = "osd-pipeline"
+description = "Pipeline orchestration"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+tracing.workspace = true
+openskidata-format.workspace = true
+osd-store.workspace = true
+osd-osm.workspace = true
+osd-tags.workspace = true
+osd-normalize.workspace = true
+osd-cluster.workspace = true
+osd-enrich.workspace = true
+osd-cache.workspace = true
+osd-out.workspace = true

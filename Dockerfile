@@ -34,6 +34,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt-get update && apt-get install -y \
     libsqlite3-dev \
     sqlite3 \
+    libgeos-dev \
     postgresql-17 \
     postgresql-17-postgis-3 \
     postgresql-client-17
@@ -50,7 +51,21 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt-get update && apt-get install -y \
     build-essential \
     python3 \
+    curl \
     && mkdir -p data
+
+# Rust toolchain for the workspace in rust/, which is replacing src/ stage by stage.
+# Pinned so CI and local development agree; includes rustfmt and clippy.
+ENV RUSTUP_HOME=/usr/local/rustup \
+    CARGO_HOME=/usr/local/cargo \
+    PATH=/usr/local/cargo/bin:$PATH
+ENV RUST_VERSION=1.97.0
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
+    | sh -s -- -y --no-modify-path --profile minimal \
+        --default-toolchain ${RUST_VERSION} \
+        --component rustfmt clippy \
+    && chmod -R a+w ${RUSTUP_HOME} ${CARGO_HOME} \
+    && rustc --version && cargo --version
 
 # Copy PostgreSQL initialization script (done early as it rarely changes)
 COPY scripts/init-postgres.sh /usr/local/bin/init-postgres.sh

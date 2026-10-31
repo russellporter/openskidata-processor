@@ -34,6 +34,26 @@ BBOX=[132.34,34.78,132.40,34.84]
 Use a larger BBOX to test performance implications of a change:
 `docker compose exec app bash -c "BBOX=[-125,49,-115,52] ./run.sh`
 
+## Rust workspace (`rust/`)
+
+A Cargo workspace in `rust/` is replacing `src/` stage by stage. Both pipelines coexist
+until the port completes: the TypeScript one stays runnable as the golden-master oracle.
+See `rust/README.md`.
+
+- Check: `docker compose exec app sh -c "cd rust && cargo check --workspace"`
+- Test: `docker compose exec app sh -c "cd rust && cargo test --workspace"`
+- Format: `docker compose exec app sh -c "cd rust && cargo fmt --all"`
+- Regenerate the format enums after an `openskidata-format` bump:
+  `docker compose exec app node rust/codegen/generate-format-enums.mjs`
+
+`rust/crates/openskidata-format/src/generated/enums.rs` is generated and checked in — do
+not edit it by hand. Its enum strings are the public wire contract, so they are derived
+from the npm package rather than hand-typed. CI fails if it is stale.
+
+Crate-level module docs carry the reasoning for the non-obvious design decisions
+(especially in `osd-cluster` and `osd-normalize`). Read them before changing those
+algorithms; several look like they can be simplified and cannot.
+
 ## Code Style & Conventions
 
 - TypeScript with strict mode enabled

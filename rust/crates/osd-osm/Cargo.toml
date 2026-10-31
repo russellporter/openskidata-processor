@@ -1,0 +1,16 @@
+[package]
+name = "osd-osm"
+description = "OpenStreetMap PBF reader and way/relation geometry assembly"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+osmpbf.workspace = true
+anyhow.workspace = true
+thiserror.workspace = true
+geo-types.workspace = true
+openskidata-format.workspace = true
+osd-store.workspace = true

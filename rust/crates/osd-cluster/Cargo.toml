@@ -1,0 +1,17 @@
+[package]
+name = "osd-cluster"
+description = "Ski area clustering: R-tree plus iterative flood fill"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+rayon.workspace = true
+rstar.workspace = true
+geo.workspace = true
+geos.workspace = true
+openskidata-format.workspace = true
+osd-store.workspace = true
