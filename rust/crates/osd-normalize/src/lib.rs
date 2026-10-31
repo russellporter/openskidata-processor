@@ -70,12 +70,12 @@
 //! `point[1]`, so if elevation ran first, two arcs with equal `x,y` and different `z`
 //! would be silently coalesced. Keep normalization 2D.
 
-use anyhow::Result;
-use osd_store::{FeatureIdx, FeatureStore, FixedCoord};
+pub mod components;
 
-/// Identifies a spatially-connected group of runs.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub struct ComponentId(pub u32);
+pub use components::{ComponentId, ComponentIndex};
+
+use anyhow::Result;
+use osd_store::{FeatureIdx, FeatureStore};
 
 /// Where a produced line came from, used to restore global output order.
 ///
@@ -86,30 +86,6 @@ pub struct OutputOrderKey {
     pub source_line: u32,
     /// Sequence of this segment within that line.
     pub sequence: u32,
-}
-
-/// Pass 1: coordinate union-find, retaining only the coord-to-component mapping.
-#[derive(Debug, Default)]
-pub struct ComponentIndex {
-    _parent: Vec<u32>,
-}
-
-impl ComponentIndex {
-    /// Build from a stream of per-feature coordinate slices.
-    pub fn build<'a, I>(_runs: I) -> Result<ComponentIndex>
-    where
-        I: Iterator<Item = &'a [FixedCoord]>,
-    {
-        todo!("union-find over every coordinate of every run")
-    }
-
-    pub fn component_of(&self, _coord: FixedCoord) -> Option<ComponentId> {
-        todo!("find the component containing this coordinate")
-    }
-
-    pub fn component_count(&self) -> usize {
-        todo!("count distinct roots")
-    }
 }
 
 /// A precomputed comparison key for run-joining.
@@ -160,17 +136,6 @@ mod tests {
     #[test]
     #[ignore = "scaffold: implement normalize_runs first"]
     fn partitioned_output_equals_global_output() {}
-
-    /// Precondition 1: interior shared vertices must not be split across partitions.
-    #[test]
-    #[ignore = "scaffold: implement ComponentIndex first"]
-    fn interior_shared_vertices_land_in_one_component() {}
-
-    /// Precondition 1, the coarser relation: endpoints differing in the 8th decimal are
-    /// one node to PointGraph, so they must share a partition.
-    #[test]
-    #[ignore = "scaffold: implement ComponentIndex first"]
-    fn endpoints_within_one_grid_cell_land_in_one_component() {}
 
     /// Precondition 3.
     #[test]
