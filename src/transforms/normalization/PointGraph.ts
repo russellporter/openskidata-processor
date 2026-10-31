@@ -43,26 +43,39 @@ export default class PointGraph {
       features.map((f) => f.feature.properties),
     );
 
-    feature.geometry.coordinates = features.reduce(
-      (coordinates: number[][], featureInfo) => {
-        const feature = featureInfo.feature;
-        const coordsLength = coordinates.length;
-        let featureCoords = structuredClone(feature.geometry.coordinates);
-        if (featureInfo.reversed) {
-          featureCoords.reverse();
-        }
-        if (coordsLength > 0) {
+    // Accumulated with push rather than concat. `concat` allocated a fresh array holding
+    // every coordinate so far once per link in the chain, copying the growing prefix k
+    // times and making a long chain quadratic in its total coordinate count.
+    //
+    // Each coordinate pair is still copied, so the merged geometry shares no array with
+    // the features it was built from. That isolation is load-bearing: the elevation stage
+    // appends a third element to coordinate pairs in place, so a shared pair would get
+    // elevated twice.
+    const mergedCoordinates: number[][] = [];
+    for (const featureInfo of features) {
+      const featureCoords = featureInfo.feature.geometry.coordinates;
+      // Iterated in reverse instead of materializing a reversed copy.
+      const count = featureCoords.length;
+      for (let i = 0; i < count; i++) {
+        const coordinate = featureInfo.reversed
+          ? featureCoords[count - 1 - i]
+          : featureCoords[i];
+        if (i === 0 && mergedCoordinates.length > 0) {
           if (
-            !isDeepStrictEqual(featureCoords[0], coordinates[coordsLength - 1])
+            !isDeepStrictEqual(
+              coordinate,
+              mergedCoordinates[mergedCoordinates.length - 1],
+            )
           ) {
             throw "mismatched coords in PointGraph";
           }
-          featureCoords = featureCoords.slice(1);
+          // The shared endpoint is already present from the previous link.
+          continue;
         }
-        return coordinates.concat(featureCoords);
-      },
-      [],
-    );
+        mergedCoordinates.push([...coordinate]);
+      }
+    }
+    feature.geometry.coordinates = mergedCoordinates;
 
     feature.properties.viewportHint = computeViewportHint([feature.geometry]);
 

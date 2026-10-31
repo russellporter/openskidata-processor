@@ -14,7 +14,7 @@ import {
 import { osmID } from "../features/OSMGeoJSONProperties.js";
 import { InputRunFeature, OSMRunTags } from "../features/RunFeature.js";
 import notEmpty from "../utils/notEmpty.js";
-import buildFeature from "./FeatureBuilder.js";
+import { buildFeatureWithDeferredID } from "./FeatureBuilder.js";
 import { isValidGeometryInFeature } from "./GeoTransforms.js";
 import { Omit } from "./Omit.js";
 import {
@@ -86,7 +86,7 @@ export function formatRun(feature: InputRunFeature): RunFeature[] {
         type: "Polygon",
         coordinates: polygonCoords,
       };
-      return buildFeature(polygonGeometry, properties);
+      return buildFeatureWithDeferredID(polygonGeometry, properties);
     });
   } else if (feature.geometry.type === "MultiLineString") {
     return feature.geometry.coordinates.map((lineCoords) => {
@@ -94,11 +94,11 @@ export function formatRun(feature: InputRunFeature): RunFeature[] {
         type: "LineString",
         coordinates: lineCoords,
       };
-      return buildFeature(lineGeometry, properties);
+      return buildFeatureWithDeferredID(lineGeometry, properties);
     });
   }
 
-  return [buildFeature(feature.geometry, properties)];
+  return [buildFeatureWithDeferredID(feature.geometry, properties)];
 }
 
 function getStatusAndUses(tags: OSMRunTags) {

@@ -149,6 +149,16 @@ if [ ! -f /var/lib/postgresql/data/PG_VERSION ]; then
     echo "Creating application databases..."
     su - postgres -c "psql -c \"CREATE DATABASE openskidata_cache;\""
     su - postgres -c "psql -c \"CREATE DATABASE openskidata_test;\""
+
+    # A template carrying PostGIS, used as the source for the per-run clustering
+    # databases. CREATE EXTENSION postgis registers several thousand catalog entries and
+    # dominates the cost of standing up each of those databases; copying a template that
+    # already has them reduces that to a file copy. The processor falls back to
+    # CREATE EXTENSION when this template is absent, so it is an optimisation, not a
+    # requirement.
+    echo "Creating PostGIS template database..."
+    su - postgres -c "psql -c \"CREATE DATABASE template_postgis;\""
+    su - postgres -c "psql -c \"CREATE EXTENSION IF NOT EXISTS postgis;\" template_postgis"
     
     # Enable PostGIS extension on both databases
     echo "Enabling PostGIS extensions..."

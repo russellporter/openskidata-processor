@@ -173,13 +173,27 @@ function getArcsList(geometry: RunLine) {
  * Removes every element matching `predicate` from `array` in place and returns
  * them in their original order. Replaces lodash's `remove`.
  */
+/**
+ * Moves every element matching `predicate` out of `array` and returns them in their
+ * original relative order.
+ *
+ * Written as a single forward partition. The previous implementation walked backwards
+ * calling `array.splice(i, 1)` per match and `removed.unshift(...)` per match, each of
+ * which shifts every later element, making it quadratic twice over in the number of
+ * matches. Every run in the dataset is a match here, so that was quadratic in the size of
+ * the whole run set.
+ */
 function removeInPlace<T>(array: T[], predicate: (value: T) => boolean): T[] {
   const removed: T[] = [];
-  for (let i = array.length - 1; i >= 0; i--) {
-    if (predicate(array[i])) {
-      removed.unshift(array[i]);
-      array.splice(i, 1);
+  let keep = 0;
+  for (let i = 0; i < array.length; i++) {
+    const value = array[i];
+    if (predicate(value)) {
+      removed.push(value);
+    } else {
+      array[keep++] = value;
     }
   }
+  array.length = keep;
   return removed;
 }

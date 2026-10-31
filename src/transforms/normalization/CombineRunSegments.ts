@@ -4,13 +4,18 @@ import { RunLineFeature } from "../../features/RunFeature.js";
 import notEmpty from "../../utils/notEmpty.js";
 import PointGraph from "./PointGraph.js";
 
-// TopoJSON quantizes coordinates to a fixed grid during topology construction.
-// Very short run segments can have all their coordinates snap to the same grid
-// point, producing a degenerate arc. When converted back to GeoJSON, this
-// yields a zero-length LineString (e.g. two identical coordinates). Such
-// geometries must be filtered out before segment combining, otherwise
-// downstream processing (e.g. elevation profile extraction) throws when it
-// tries to divide by the zero-length.
+// Some runs have a degenerate geometry: fewer than two coordinates, or every coordinate
+// identical. OpenStreetMap contains ways like this, and splitting a run at shared
+// vertices can also leave a zero-length segment behind. They must be filtered out before
+// segment combining, otherwise downstream processing (e.g. elevation profile extraction)
+// divides by the zero length and throws.
+//
+// Note: this is not caused by quantization, as this comment previously claimed.
+// RunNormalizerAccumulator calls topojsonServer.topology() with no quantization argument,
+// and topojson-server only prequantizes when one is given, so arcs here hold the original
+// absolute coordinates and arc identity is exact float equality. That matters beyond this
+// comment: it is what makes building the topology per spatially-connected component
+// equivalent to building it globally.
 function isDegenerateLineString(coords: number[][]): boolean {
   return (
     coords.length < 2 || coords.every((c) => isDeepStrictEqual(c, coords[0]))

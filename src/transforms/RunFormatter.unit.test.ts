@@ -35,49 +35,49 @@ describe("RunFormatter", () => {
     );
     expect(runs).toHaveLength(1);
     expect(runs[0]!.properties).toMatchInlineSnapshot(`
-{
-  "description": null,
-  "difficulty": null,
-  "difficultyConvention": "europe",
-  "elevationProfile": null,
-  "gladed": null,
-  "grooming": null,
-  "id": "64e1be16905be0666594b5c433d4aa1aa1a64e5f",
-  "lit": null,
-  "name": null,
-  "oneway": true,
-  "patrolled": null,
-  "places": [],
-  "ref": null,
-  "skiAreas": [],
-  "snowfarming": null,
-  "snowmaking": null,
-  "sources": [
-    {
-      "id": "way/1",
-      "type": "openstreetmap",
-    },
-  ],
-  "status": "operating",
-  "tunnel": null,
-  "type": "run",
-  "uses": [
-    "downhill",
-  ],
-  "viewportHint": {
-    "bearing": null,
-    "center": [
-      0.5,
-      0.5,
-    ],
-    "minCameraY": -55660,
-    "rotatedHeightMeters": 111320,
-    "rotatedWidthMeters": 111315.76127550355,
-  },
-  "websites": [],
-  "wikidataID": null,
-}
-`);
+      {
+        "description": null,
+        "difficulty": null,
+        "difficultyConvention": "europe",
+        "elevationProfile": null,
+        "gladed": null,
+        "grooming": null,
+        "id": "__deferred_feature_id__",
+        "lit": null,
+        "name": null,
+        "oneway": true,
+        "patrolled": null,
+        "places": [],
+        "ref": null,
+        "skiAreas": [],
+        "snowfarming": null,
+        "snowmaking": null,
+        "sources": [
+          {
+            "id": "way/1",
+            "type": "openstreetmap",
+          },
+        ],
+        "status": "operating",
+        "tunnel": null,
+        "type": "run",
+        "uses": [
+          "downhill",
+        ],
+        "viewportHint": {
+          "bearing": null,
+          "center": [
+            0.5,
+            0.5,
+          ],
+          "minCameraY": -55660,
+          "rotatedHeightMeters": 111320,
+          "rotatedWidthMeters": 111315.76127550355,
+        },
+        "websites": [],
+        "wikidataID": null,
+      }
+    `);
   });
 
   it("uses piste name instead of other name", () => {

@@ -80,11 +80,24 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
     const adminPool = new Pool(adminPoolConfig);
 
     try {
-      // Create temporary database
       const adminClient = await adminPool.connect();
       try {
-        await adminClient.query(`CREATE DATABASE "${this.databaseName}"`);
-        console.log(`✅ Created temporary database: ${this.databaseName}`);
+        // Created from a template that already has PostGIS where one is available.
+        // CREATE EXTENSION postgis registers several thousand catalog entries and is by
+        // far the slowest part of standing up this database; copying a template that
+        // already contains them turns that into a file copy. Falls back to a plain
+        // database (and a CREATE EXTENSION below) when the template does not exist, so
+        // no deployment has to be changed for this to work.
+        const template = await this.findPostgisTemplate(adminClient);
+        await adminClient.query(
+          template
+            ? `CREATE DATABASE "${this.databaseName}" TEMPLATE "${template}"`
+            : `CREATE DATABASE "${this.databaseName}"`,
+        );
+        console.log(
+          `✅ Created temporary database: ${this.databaseName}` +
+            (template ? ` (from template ${template})` : ""),
+        );
       } finally {
         adminClient.release();
       }
@@ -163,9 +176,52 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
     console.log(
       `✅ Closed connections to clustering database: ${this.databaseName}`,
     );
-    console.log(
-      `   Database will be cleaned up automatically after 1 day if not in use`,
+
+    await this.dropDatabase();
+  }
+
+  /**
+   * Drops the per-run clustering database.
+   *
+   * This used to be left behind, relying on the janitor in scripts/init-postgres.sh to
+   * remove databases older than a day. That janitor only runs when the container starts,
+   * so a long-lived container accumulated one copy of the working set per run
+   * indefinitely — each carrying the full object table, two geometry representations and
+   * ten indexes.
+   *
+   * Set KEEP_CLUSTERING_DATABASE=1 to retain it for debugging a run's clustering state.
+   * Failure to drop is logged and otherwise ignored: the run's real work is already
+   * finished by this point, and the janitor remains as a backstop.
+   */
+  private async dropDatabase(): Promise<void> {
+    if (process.env.KEEP_CLUSTERING_DATABASE === "1") {
+      console.log(
+        `   Retaining ${this.databaseName} (KEEP_CLUSTERING_DATABASE=1)`,
+      );
+      return;
+    }
+
+    const adminPoolConfig = getPostgresPoolConfig(
+      "postgres",
+      this.postgresConfig,
     );
+    adminPoolConfig.connectionTimeoutMillis = 10000;
+    const adminPool = new Pool(adminPoolConfig);
+
+    try {
+      // WITH (FORCE) terminates any connection that outlived the pool shutdown above,
+      // so a stray client cannot keep the database alive. Supported since PostgreSQL 13.
+      await adminPool.query(
+        `DROP DATABASE IF EXISTS "${this.databaseName}" WITH (FORCE)`,
+      );
+      console.log(`✅ Dropped clustering database: ${this.databaseName}`);
+    } catch (error) {
+      console.warn(
+        `Warning: failed to drop clustering database ${this.databaseName}: ${error}`,
+      );
+    } finally {
+      await adminPool.end().catch(() => {});
+    }
   }
 
   private ensureInitialized(): Pool {
@@ -329,12 +385,44 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
     return { setParts, values };
   }
 
+  /**
+   * Finds a template database that already has PostGIS installed.
+   *
+   * Returns null when there is none, in which case the caller creates a plain database
+   * and enablePostGIS installs the extension the slow way.
+   */
+  private async findPostgisTemplate(
+    client: PoolClient,
+  ): Promise<string | null> {
+    const candidates = [
+      process.env.POSTGIS_TEMPLATE_DATABASE,
+      "template_postgis",
+      "postgis_template",
+    ].filter((name): name is string => !!name);
+
+    // Only the existence of the database is checked here. Whether it actually contains
+    // PostGIS cannot be seen from this connection, because pg_extension is per-database
+    // and this client is attached to `postgres`. That is fine: createTables still runs
+    // CREATE EXTENSION IF NOT EXISTS when the template turns out not to have it, so a
+    // misnamed template costs nothing beyond the work this was avoiding.
+    for (const candidate of candidates) {
+      const result = await client.query(
+        "SELECT 1 FROM pg_database WHERE datname = $1",
+        [candidate],
+      );
+      if (result.rows.length > 0) {
+        return candidate;
+      }
+    }
+    return null;
+  }
+
   private async enablePostGIS(): Promise<void> {
     const pool = this.ensureInitialized();
 
-    // Enable PostGIS extension for spatial geometry types
+    // Still unconditional: cheap when the template already supplied PostGIS (a catalog
+    // lookup), and correct when it did not.
     await pool.query("CREATE EXTENSION IF NOT EXISTS postgis");
-    console.log("✅ PostGIS extension enabled");
   }
 
   private async createTables(): Promise<void> {

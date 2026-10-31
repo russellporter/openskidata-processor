@@ -33,13 +33,40 @@ function withoutIgnoredProperties(
   return result as Partial<RunProperties>;
 }
 
+/**
+ * Caches the comparison view of each properties object.
+ *
+ * `isPartOfSameRun` is called from `PointGraph`'s endpoint probe, once per candidate at
+ * every endpoint of every run, and each call rebuilt both filtered objects from scratch.
+ * The same few features are probed repeatedly, so the work was almost entirely repeated.
+ *
+ * Keyed on the properties object itself and weakly held, so this adds no lifetime to
+ * anything and cannot leak across a streaming run.
+ */
+const comparisonViewCache = new WeakMap<
+  RunProperties,
+  Partial<RunProperties>
+>();
+
+function comparisonView(properties: RunProperties): Partial<RunProperties> {
+  let view = comparisonViewCache.get(properties);
+  if (view === undefined) {
+    view = withoutIgnoredProperties(properties);
+    comparisonViewCache.set(properties, view);
+  }
+  return view;
+}
+
 export function isPartOfSameRun(
   leftFeature: RunFeature,
   rightFeature: RunFeature,
 ): boolean {
+  // Still a deep structural comparison, deliberately. Comparing serialized keys instead
+  // would make the result depend on property insertion order, which is not part of what
+  // "same run" means.
   return isDeepStrictEqual(
-    withoutIgnoredProperties(leftFeature.properties),
-    withoutIgnoredProperties(rightFeature.properties),
+    comparisonView(leftFeature.properties),
+    comparisonView(rightFeature.properties),
   );
 }
 
