@@ -13,6 +13,7 @@
 //! repository. Port it against the extracted fixtures and resist improving it here;
 //! behaviour changes in this layer are indistinguishable from porting bugs.
 
+pub mod lift;
 pub mod run;
 pub mod status;
 
