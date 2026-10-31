@@ -23,29 +23,12 @@ import {
 import { toSkiAreaSummary } from "../transforms/toSkiAreaSummary.js";
 import clusterSkiAreas from "./ClusterSkiAreas.js";
 
-// vi.mock factories are hoisted above module-level declarations, so the counter
-// has to be hoisted with them. Keeping it in a holder (rather than inside the
-// factory) preserves the per-test reset that beforeEach relies on.
-const uuidMock = vi.hoisted(() => {
-  let count = 0;
-  return {
-    reset: () => {
-      count = 0;
-    },
-    uuid: () => "mock-UUID-" + count++,
-  };
-});
-vi.mock("../utils/uuid", () => {
-  return { uuid: uuidMock.uuid };
-});
-
 // Increase timeout to give time to set up PostgreSQL database
 vi.setConfig({ testTimeout: 60 * 1000 });
 
 let testConfig: Config;
 
 beforeEach(async () => {
-  uuidMock.reset();
   testConfig = {
     workingDir: TestHelpers.getTempWorkingDir(),
     osmInputDir: null,
@@ -166,14 +149,14 @@ it("generates ski areas for runs without them", async () => {
         "id": "3",
         "name": "Oberauer Skiabfahrt",
         "skiAreas": [
-          "mock-UUID-0",
+          "48f6a424-f387-5283-b445-0ef72ca5257e",
         ],
       },
       {
         "id": "4",
         "name": "Another run nearby",
         "skiAreas": [
-          "mock-UUID-0",
+          "48f6a424-f387-5283-b445-0ef72ca5257e",
         ],
       },
     ]
@@ -188,7 +171,7 @@ it("generates ski areas for runs without them", async () => {
         "activities": [
           "downhill",
         ],
-        "id": "mock-UUID-0",
+        "id": "48f6a424-f387-5283-b445-0ef72ca5257e",
         "name": null,
       },
     ]
@@ -545,7 +528,7 @@ it("clusters ski area activities independently", async () => {
         "id": "4",
         "name": "Nordic run not part of ski area",
         "skiAreas": [
-          "mock-UUID-0",
+          "03f9de24-03c4-5a77-830a-05afe9eba109",
         ],
       },
     ]
@@ -612,7 +595,7 @@ it("generates a downhill ski area but does not include backcountry runs when clu
         "id": "3",
         "name": "Downhill Run & Backcountry Route",
         "skiAreas": [
-          "mock-UUID-0",
+          "ae236ad2-7053-5344-a6ba-045c423cf3b3",
         ],
       },
       {
@@ -672,7 +655,7 @@ it("generates elevation statistics for run & lift based on lift served skiable v
         "activities": [
           "downhill",
         ],
-        "id": "mock-UUID-0",
+        "id": "5bdd56b2-38fe-5c57-803e-4f11065f0780",
         "name": null,
         "statistics": {
           "lifts": {
@@ -956,14 +939,14 @@ it("generates ski area which includes the snow park", async () => {
         "id": "1",
         "name": "Run",
         "skiAreas": [
-          "mock-UUID-0",
+          "ca48596b-cc8d-510d-a81f-ec814144fafb",
         ],
       },
       {
         "id": "2",
         "name": "Terrain Park",
         "skiAreas": [
-          "mock-UUID-0",
+          "ca48596b-cc8d-510d-a81f-ec814144fafb",
         ],
       },
     ]
@@ -1023,7 +1006,7 @@ it("generates ski area which includes the patrolled ungroomed run", async () => 
         "id": "1",
         "name": "Run",
         "skiAreas": [
-          "mock-UUID-0",
+          "5ffc23d6-06b5-5fd7-8eb4-ea1b0bcf64c9",
         ],
       },
     ]
@@ -2413,7 +2396,7 @@ it("uses runs fully contained in the ski area polygon to determine activities wh
         "activities": [
           "nordic",
         ],
-        "id": "mock-UUID-0",
+        "id": "a598e652-831b-5c87-a24f-1442db777e5f",
         "name": null,
       },
     ]
@@ -2472,7 +2455,7 @@ it("removes an OpenStreetMap ski area that does not contain any runs/lifts as it
         "activities": [
           "nordic",
         ],
-        "id": "mock-UUID-0",
+        "id": "a598e652-831b-5c87-a24f-1442db777e5f",
         "name": null,
       },
     ]
@@ -2488,7 +2471,7 @@ it("removes an OpenStreetMap ski area that does not contain any runs/lifts as it
         "id": "2",
         "name": "Run outside the ski area should be associated with a separate, generated ski area",
         "skiAreas": [
-          "mock-UUID-0",
+          "a598e652-831b-5c87-a24f-1442db777e5f",
         ],
       },
     ]
@@ -2695,7 +2678,7 @@ it("does not add nearby unassociated runs of different activity to site based sk
         "id": "3",
         "name": "Run",
         "skiAreas": [
-          "mock-UUID-0",
+          "1c5ec9c3-98ef-59e1-b29e-8f4d52d3215c",
         ],
       },
     ]
@@ -3422,23 +3405,23 @@ it("associates spots to ski areas but spots alone do not create ski areas", asyn
       simplifiedSpotFeature,
     ),
   ).toMatchInlineSnapshot(`
-[
-  {
-    "id": "3",
-    "skiAreas": [
-      "mock-UUID-0",
-    ],
-    "spotType": "lift_station",
-  },
-  {
-    "id": "4",
-    "skiAreas": [
-      "mock-UUID-0",
-    ],
-    "spotType": "crossing",
-  },
-]
-`);
+    [
+      {
+        "id": "3",
+        "skiAreas": [
+          "3f2f87e6-7eff-56da-b5ff-c5b52bf6775a",
+        ],
+        "spotType": "lift_station",
+      },
+      {
+        "id": "4",
+        "skiAreas": [
+          "3f2f87e6-7eff-56da-b5ff-c5b52bf6775a",
+        ],
+        "spotType": "crossing",
+      },
+    ]
+  `);
 
   expect(
     TestHelpers.fileContents(paths.output.skiAreas).features.map(
@@ -3450,7 +3433,7 @@ it("associates spots to ski areas but spots alone do not create ski areas", asyn
         "activities": [
           "downhill",
         ],
-        "id": "mock-UUID-0",
+        "id": "3f2f87e6-7eff-56da-b5ff-c5b52bf6775a",
         "name": null,
       },
     ]

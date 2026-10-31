@@ -21,22 +21,6 @@ vi.setConfig({ testTimeout: 60 * 1000 });
 // vi.mock factories are hoisted above module-level declarations, so the counter
 // has to be hoisted with them. Keeping it in a holder (rather than inside the
 // factory) preserves the per-test reset that beforeEach relies on.
-const uuidMock = vi.hoisted(() => {
-  let count = 0;
-  return {
-    reset: () => {
-      count = 0;
-    },
-    uuid: () => "mock-UUID-" + count++,
-  };
-});
-vi.mock("../utils/uuid", () => {
-  return { uuid: uuidMock.uuid };
-});
-
-beforeEach(() => {
-  uuidMock.reset();
-});
 
 /**
  * Integration test that verifies the SQLite clustering correctly

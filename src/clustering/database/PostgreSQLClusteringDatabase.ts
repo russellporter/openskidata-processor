@@ -393,7 +393,13 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
       CREATE INDEX IF NOT EXISTS idx_type_ski_areas ON objects(type) WHERE ski_areas = '[]'::jsonb;
 
       -- Unassigned object queries (critical for clustering performance)
-      CREATE INDEX IF NOT EXISTS idx_unassigned_runs ON objects(type, is_basis_for_new_ski_area)
+      -- Indexed on key, not on (type, is_basis_for_new_ski_area): the partial predicate
+      -- already fixes both of those columns to constants, so indexing them stores no
+      -- information. Indexing key instead lets getNextUnassignedRun's
+      -- "ORDER BY key LIMIT 1" stop at the first index entry. Without it, that query has
+      -- to read every remaining unassigned run and sort them just to discard all but one,
+      -- once per generated ski area, which is quadratic over the generation pass.
+      CREATE INDEX IF NOT EXISTS idx_unassigned_runs ON objects(key)
         WHERE type = '${FeatureType.Run}' AND is_basis_for_new_ski_area = true;
 
       -- Source-specific queries with polygon filtering
@@ -783,6 +789,13 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
       paramIndex += context.alreadyVisited.length;
     }
 
+    // Row order here decides clustering membership, not just output ordering: it drives
+    // the traversal order in SkiAreaClusteringService.processFoundObjects, which narrows
+    // the activity set along each path, which determines which objects are reachable.
+    // Without this the result depends on the query plan, so it moves with work_mem,
+    // statistics and page layout.
+    query += " ORDER BY key";
+
     return performanceMonitor.measure(
       "Find nearby objects",
       async () => {
@@ -800,8 +813,12 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
   async getObjectsForSkiArea(skiAreaId: string): Promise<MapObject[]> {
     this.ensureInitialized();
 
-    const query = `SELECT * FROM objects 
-       WHERE ski_areas @> $1::jsonb AND type != '${FeatureType.SkiArea}'`;
+    // Ordered because the member list feeds computeViewportHint and skiAreaStatistics,
+    // both of which accumulate floating point sums whose result depends on summation
+    // order, and the places flatMap, whose output order is visible.
+    const query = `SELECT * FROM objects
+       WHERE ski_areas @> $1::jsonb AND type != '${FeatureType.SkiArea}'
+       ORDER BY key`;
     const rows = await this.executeQuery<any[]>(query, [
       JSON.stringify([skiAreaId]),
     ]);
@@ -844,10 +861,15 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
   async getNextUnassignedRun(): Promise<MapObject | null> {
     this.ensureInitialized();
 
+    // Ordered because this picks the seed for each generated ski area, and the seed
+    // determines the root activity set, the shape of the resulting flood fill, and the
+    // ski area's id. An unordered LIMIT 1 returns whatever the heap yields, which made
+    // generated ski areas differ between runs of the same input.
     const query = `
-      SELECT * FROM objects 
-      WHERE type = '${FeatureType.Run}' 
+      SELECT * FROM objects
+      WHERE type = '${FeatureType.Run}'
         AND is_basis_for_new_ski_area = true
+      ORDER BY key
       LIMIT 1
     `;
 

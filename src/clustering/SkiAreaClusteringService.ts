@@ -23,7 +23,7 @@ import {
 } from "openskidata-format";
 import { Writable } from "stream";
 import { pipeline } from "stream/promises";
-import { uuid } from "../utils/uuid.js";
+import { generatedSkiAreaID } from "../utils/generatedSkiAreaID.js";
 import {
   ElevationServerConfig,
   GeocodingServerConfig,
@@ -68,9 +68,26 @@ import mergeSkiAreaObjects from "./MergeSkiAreaObjects.js";
 const maxDistanceInKilometers = 0.5;
 const maxSkiAreaMergeDistanceInKilometers = 0.25;
 
+/**
+ * Pins every clustering concurrency limit to 1.
+ *
+ * Several passes read a ski area's properties, compute from them and write them back.
+ * Running those concurrently means the interleaving decides which write wins, so the
+ * output varies between runs of the same input even once query ordering is pinned. That
+ * is tolerable in production, where the variation is between equally valid results, but
+ * it makes the output useless as a reference to diff against.
+ *
+ * Set `FORCE_SEQUENTIAL=1` when capturing a baseline or comparing two implementations.
+ */
+const forceSequential = process.env.FORCE_SEQUENTIAL === "1";
+
+function concurrencyLimit(preferred: number): number {
+  return forceSequential ? 1 : preferred;
+}
+
 // Ski areas are loaded all at once when we may remove them during iteration, so the
 // per-ski-area work has to be throttled explicitly. Matches the clustering pool size.
-const maxConcurrentSkiAreas = 10;
+const maxConcurrentSkiAreas = concurrencyLimit(10);
 
 function objectLengthKm(obj: LiftObject | RunObject): number {
   const raw = length(turf.feature(obj.geometry));
@@ -479,7 +496,7 @@ export class SkiAreaClusteringService {
     });
 
     // Process multiple batches concurrently for better performance
-    const concurrentBatches = Math.min(4, cpus().length);
+    const concurrentBatches = concurrencyLimit(Math.min(4, cpus().length));
     const activeBatches = new Set<Promise<void>>();
 
     let skiAreas: SkiAreaObject[] | null;
@@ -584,7 +601,7 @@ export class SkiAreaClusteringService {
       }
     } else {
       // Process concurrently in small batches to reduce database contention
-      const chunkSize = 3;
+      const chunkSize = concurrencyLimit(3);
       for (let i = 0; i < skiAreas.length; i += chunkSize) {
         const chunk = skiAreas.slice(i, i + chunkSize);
 
@@ -1013,13 +1030,18 @@ export class SkiAreaClusteringService {
   }
 
   private async generateSkiAreaForRun(unassignedRun: RunObject): Promise<void> {
-    const newSkiAreaID = uuid();
+    // The real ID is derived from the member set once the traversal has found it, so this
+    // is only a placeholder for the search context. It is never persisted: the context ID
+    // is used solely to exclude objects already in this ski area, and nothing can be in
+    // one that does not exist yet. Derived from the seed key rather than random so that
+    // nothing about the run depends on an unpredictable value.
+    const provisionalSkiAreaID = `provisional:${unassignedRun._key}`;
     let activities = unassignedRun.activities.filter((activity) =>
       allSkiAreaActivities.has(activity),
     );
 
     const context: SearchContext = {
-      id: newSkiAreaID,
+      id: provisionalSkiAreaID,
       activities,
       alreadyVisited: [unassignedRun._key],
       searchType: "intersects",
@@ -1055,15 +1077,21 @@ export class SkiAreaClusteringService {
       return;
     }
 
-    await this.createGeneratedSkiArea(newSkiAreaID, activities, memberObjects);
+    await this.createGeneratedSkiArea(activities, memberObjects);
   }
 
   private async createGeneratedSkiArea(
-    id: string,
     activities: SkiAreaActivity[],
     memberObjects: MapObject[],
   ): Promise<void> {
-    const geometry = this.skiAreaGeometry(memberObjects);
+    // Sorted before anything derives from the member list. Both the ID and the geometry
+    // depend on the order: skiAreaGeometry sums coordinates through centroid(), and
+    // nearestPoint() returns the first of any equidistant candidates.
+    const sortedMembers = [...memberObjects].sort((left, right) =>
+      left._key < right._key ? -1 : left._key > right._key ? 1 : 0,
+    );
+    const id = generatedSkiAreaID(sortedMembers.map((object) => object._key));
+    const geometry = this.skiAreaGeometry(sortedMembers);
 
     const draftSkiArea: DraftSkiArea = {
       _key: id,
@@ -1099,7 +1127,7 @@ export class SkiAreaClusteringService {
 
     await this.database.markObjectsAsPartOfSkiArea(
       id,
-      memberObjects.map((obj) => obj._key),
+      sortedMembers.map((obj) => obj._key),
       false,
     );
   }
@@ -1192,7 +1220,7 @@ export class SkiAreaClusteringService {
       });
 
       // Process multiple batches concurrently for better performance
-      const concurrentBatches = Math.min(3, cpus().length);
+      const concurrentBatches = concurrencyLimit(Math.min(3, cpus().length));
       const activeBatches = new Set<Promise<void>>();
 
       let skiAreas: SkiAreaObject[] | null;
