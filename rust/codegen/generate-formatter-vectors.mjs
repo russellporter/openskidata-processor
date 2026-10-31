@@ -181,7 +181,74 @@ for (const [plain, prefixed] of [
   });
 }
 
-// Axis 5: a few assorted extras.
+// Axis 5: names. Localized name keys, the piste:name-versus-name fallback, and the
+// ref-prefix stripping, which has several accepted separator forms.
+const NAME_SETS = [
+  { name: "Simple" },
+  { "name:de": "Deutsch" },
+  { "name:de": "Deutsch", "name:fr": "Francais" },
+  { name: "Base", "name:de": "Deutsch" },
+  // The same value under several keys, to exercise the de-duplication before joining.
+  { name: "Same", "name:de": "Same" },
+  { "piste:name": "Piste Name", name: "Plain Name" },
+  {
+    "piste:name": "Piste Name",
+    "piste:name:de": "Piste Deutsch",
+    name: "Plain Name",
+  },
+  // Key sort order decides the join order, so these two must differ.
+  { "name:zz": "Last", "name:aa": "First" },
+];
+for (const names of NAME_SETS) {
+  runCases.push({ "piste:type": "downhill", ...names });
+}
+
+// Ref-prefix stripping: the name begins with the ref in various separator forms.
+const REF_PREFIX_NAMES = [
+  "11 - Peak Chair",
+  "11-Peak Chair",
+  "11- Peak Chair",
+  "11 -Peak Chair",
+  "11 Peak Chair",
+  "11Peak Chair",
+  "110 - Other",
+  "Peak Chair 11",
+];
+for (const name of REF_PREFIX_NAMES) {
+  runCases.push({ "piste:type": "downhill", ref: "11", name });
+}
+
+// Ref priority: piste:loc_ref > piste:ref > loc_ref > ref.
+for (const key of ["piste:loc_ref", "piste:ref", "loc_ref", "ref"]) {
+  runCases.push({ "piste:type": "downhill", [key]: `via-${key}` });
+}
+runCases.push({
+  "piste:type": "downhill",
+  "piste:loc_ref": "A",
+  "piste:ref": "B",
+  loc_ref: "C",
+  ref: "D",
+});
+
+// Gladed falls back to natural/landuse when untagged.
+for (const pair of [
+  ["natural", "wood"],
+  ["landuse", "forest"],
+  ["natural", "scrub"],
+]) {
+  runCases.push({ "piste:type": "downhill", [pair[0]]: pair[1] });
+}
+runCases.push({
+  "piste:type": "downhill",
+  natural: "wood",
+  "piste:gladed": "no",
+});
+
+// Multi-value tags where only the first is taken.
+runCases.push({ "piste:type": "downhill", wikidata: "Q1;Q2" });
+runCases.push({ "piste:type": "downhill", website: "" });
+
+// Axis 6: a few assorted extras.
 runCases.push({ "piste:type": "downhill", "piste:abandoned": "yes" });
 runCases.push({ "piste:type": "downhill", "piste:status": "abandoned" });
 runCases.push({ "piste:type": "downhill", website: "https://example.com" });

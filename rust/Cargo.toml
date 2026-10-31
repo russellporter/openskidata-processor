@@ -29,6 +29,9 @@ rusqlite = { version = "0.41.1", features = ["bundled"] }
 tokio-postgres = "0.7.18"
 # osm
 osmpbf = "0.3.8"
+# text
+regex = "1.13.1"
+
 # hashing / ids
 xxhash-rust = { version = "0.8.19", features = ["xxh3"] }
 # errors, logging, cli

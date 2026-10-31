@@ -7,6 +7,7 @@
 use openskidata_format::{RunDifficulty, RunGrooming, RunUse};
 use osd_tags::{
     Tags,
+    osm::{first_value, osm_name, osm_ref},
     run::{difficulty, grooming, oneway, status_and_uses},
 };
 use serde::Deserialize;
@@ -153,4 +154,64 @@ fn filtering_agrees_with_the_live_implementation() {
         filtered > 50 && kept > 200,
         "filtered {filtered}, kept {kept}"
     );
+}
+
+/// Names are the most intricate derivation here — localized variants, the piste-versus-
+/// plain fallback, de-duplication and reference-prefix stripping all interact — so they
+/// are checked over the whole corpus rather than only the cases I thought to write.
+#[test]
+fn names_match_the_live_implementation() {
+    let mut named = 0;
+    for case in &cases() {
+        let Some(output) = single_output(case) else {
+            continue;
+        };
+        let expected = output.get("name").and_then(|v| v.as_str());
+        let reference = osm_ref(&case.tags);
+        let actual = osm_name(&case.tags, "piste:name", Some("name"), reference.as_deref());
+
+        assert_eq!(
+            actual.as_deref(),
+            expected,
+            "tags {:?} (ref {:?})",
+            case.tags,
+            reference
+        );
+        if expected.is_some() {
+            named += 1;
+        }
+    }
+    assert!(named > 15, "only {named} named cases in the corpus");
+}
+
+#[test]
+fn refs_match_the_live_implementation() {
+    for case in &cases() {
+        let Some(output) = single_output(case) else {
+            continue;
+        };
+        let expected = output.get("ref").and_then(|v| v.as_str());
+        assert_eq!(
+            osm_ref(&case.tags).as_deref(),
+            expected,
+            "tags {:?}",
+            case.tags
+        );
+    }
+}
+
+#[test]
+fn wikidata_ids_match_the_live_implementation() {
+    for case in &cases() {
+        let Some(output) = single_output(case) else {
+            continue;
+        };
+        let expected = output.get("wikidataID").and_then(|v| v.as_str());
+        assert_eq!(
+            first_value(&case.tags, "wikidata").as_deref(),
+            expected,
+            "tags {:?}",
+            case.tags
+        );
+    }
 }

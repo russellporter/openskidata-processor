@@ -14,6 +14,7 @@
 //! behaviour changes in this layer are indistinguishable from porting bugs.
 
 pub mod lift;
+pub mod osm;
 pub mod run;
 pub mod status;
 

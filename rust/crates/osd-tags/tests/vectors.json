@@ -9760,6 +9760,943 @@
     {
       "tags": {
         "piste:type": "downhill",
+        "name": "Simple"
+      },
+      "output": [
+        {
+          "description": null,
+          "difficulty": null,
+          "difficultyConvention": "europe",
+          "gladed": null,
+          "grooming": null,
+          "lit": null,
+          "name": "Simple",
+          "oneway": true,
+          "patrolled": null,
+          "ref": null,
+          "snowfarming": null,
+          "snowmaking": null,
+          "sources": [
+            {
+              "type": "openstreetmap",
+              "id": "way/1"
+            }
+          ],
+          "status": "operating",
+          "tunnel": null,
+          "type": "run",
+          "uses": ["downhill"],
+          "websites": [],
+          "wikidataID": null
+        }
+      ]
+    },
+    {
+      "tags": {
+        "piste:type": "downhill",
+        "name:de": "Deutsch"
+      },
+      "output": [
+        {
+          "description": null,
+          "difficulty": null,
+          "difficultyConvention": "europe",
+          "gladed": null,
+          "grooming": null,
+          "lit": null,
+          "name": "Deutsch",
+          "oneway": true,
+          "patrolled": null,
+          "ref": null,
+          "snowfarming": null,
+          "snowmaking": null,
+          "sources": [
+            {
+              "type": "openstreetmap",
+              "id": "way/1"
+            }
+          ],
+          "status": "operating",
+          "tunnel": null,
+          "type": "run",
+          "uses": ["downhill"],
+          "websites": [],
+          "wikidataID": null
+        }
+      ]
+    },
+    {
+      "tags": {
+        "piste:type": "downhill",
+        "name:de": "Deutsch",
+        "name:fr": "Francais"
+      },
+      "output": [
+        {
+          "description": null,
+          "difficulty": null,
+          "difficultyConvention": "europe",
+          "gladed": null,
+          "grooming": null,
+          "lit": null,
+          "name": "Deutsch, Francais",
+          "oneway": true,
+          "patrolled": null,
+          "ref": null,
+          "snowfarming": null,
+          "snowmaking": null,
+          "sources": [
+            {
+              "type": "openstreetmap",
+              "id": "way/1"
+            }
+          ],
+          "status": "operating",
+          "tunnel": null,
+          "type": "run",
+          "uses": ["downhill"],
+          "websites": [],
+          "wikidataID": null
+        }
+      ]
+    },
+    {
+      "tags": {
+        "piste:type": "downhill",
+        "name": "Base",
+        "name:de": "Deutsch"
+      },
+      "output": [
+        {
+          "description": null,
+          "difficulty": null,
+          "difficultyConvention": "europe",
+          "gladed": null,
+          "grooming": null,
+          "lit": null,
+          "name": "Base, Deutsch",
+          "oneway": true,
+          "patrolled": null,
+          "ref": null,
+          "snowfarming": null,
+          "snowmaking": null,
+          "sources": [
+            {
+              "type": "openstreetmap",
+              "id": "way/1"
+            }
+          ],
+          "status": "operating",
+          "tunnel": null,
+          "type": "run",
+          "uses": ["downhill"],
+          "websites": [],
+          "wikidataID": null
+        }
+      ]
+    },
+    {
+      "tags": {
+        "piste:type": "downhill",
+        "name": "Same",
+        "name:de": "Same"
+      },
+      "output": [
+        {
+          "description": null,
+          "difficulty": null,
+          "difficultyConvention": "europe",
+          "gladed": null,
+          "grooming": null,
+          "lit": null,
+          "name": "Same",
+          "oneway": true,
+          "patrolled": null,
+          "ref": null,
+          "snowfarming": null,
+          "snowmaking": null,
+          "sources": [
+            {
+              "type": "openstreetmap",
+              "id": "way/1"
+            }
+          ],
+          "status": "operating",
+          "tunnel": null,
+          "type": "run",
+          "uses": ["downhill"],
+          "websites": [],
+          "wikidataID": null
+        }
+      ]
+    },
+    {
+      "tags": {
+        "piste:type": "downhill",
+        "piste:name": "Piste Name",
+        "name": "Plain Name"
+      },
+      "output": [
+        {
+          "description": null,
+          "difficulty": null,
+          "difficultyConvention": "europe",
+          "gladed": null,
+          "grooming": null,
+          "lit": null,
+          "name": "Piste Name",
+          "oneway": true,
+          "patrolled": null,
+          "ref": null,
+          "snowfarming": null,
+          "snowmaking": null,
+          "sources": [
+            {
+              "type": "openstreetmap",
+              "id": "way/1"
+            }
+          ],
+          "status": "operating",
+          "tunnel": null,
+          "type": "run",
+          "uses": ["downhill"],
+          "websites": [],
+          "wikidataID": null
+        }
+      ]
+    },
+    {
+      "tags": {
+        "piste:type": "downhill",
+        "piste:name": "Piste Name",
+        "piste:name:de": "Piste Deutsch",
+        "name": "Plain Name"
+      },
+      "output": [
+        {
+          "description": null,
+          "difficulty": null,
+          "difficultyConvention": "europe",
+          "gladed": null,
+          "grooming": null,
+          "lit": null,
+          "name": "Piste Name, Piste Deutsch",
+          "oneway": true,
+          "patrolled": null,
+          "ref": null,
+          "snowfarming": null,
+          "snowmaking": null,
+          "sources": [
+            {
+              "type": "openstreetmap",
+              "id": "way/1"
+            }
+          ],
+          "status": "operating",
+          "tunnel": null,
+          "type": "run",
+          "uses": ["downhill"],
+          "websites": [],
+          "wikidataID": null
+        }
+      ]
+    },
+    {
+      "tags": {
+        "piste:type": "downhill",
+        "name:zz": "Last",
+        "name:aa": "First"
+      },
+      "output": [
+        {
+          "description": null,
+          "difficulty": null,
+          "difficultyConvention": "europe",
+          "gladed": null,
+          "grooming": null,
+          "lit": null,
+          "name": "First, Last",
+          "oneway": true,
+          "patrolled": null,
+          "ref": null,
+          "snowfarming": null,
+          "snowmaking": null,
+          "sources": [
+            {
+              "type": "openstreetmap",
+              "id": "way/1"
+            }
+          ],
+          "status": "operating",
+          "tunnel": null,
+          "type": "run",
+          "uses": ["downhill"],
+          "websites": [],
+          "wikidataID": null
+        }
+      ]
+    },
+    {
+      "tags": {
+        "piste:type": "downhill",
+        "ref": "11",
+        "name": "11 - Peak Chair"
+      },
+      "output": [
+        {
+          "description": null,
+          "difficulty": null,
+          "difficultyConvention": "europe",
+          "gladed": null,
+          "grooming": null,
+          "lit": null,
+          "name": "Peak Chair",
+          "oneway": true,
+          "patrolled": null,
+          "ref": "11",
+          "snowfarming": null,
+          "snowmaking": null,
+          "sources": [
+            {
+              "type": "openstreetmap",
+              "id": "way/1"
+            }
+          ],
+          "status": "operating",
+          "tunnel": null,
+          "type": "run",
+          "uses": ["downhill"],
+          "websites": [],
+          "wikidataID": null
+        }
+      ]
+    },
+    {
+      "tags": {
+        "piste:type": "downhill",
+        "ref": "11",
+        "name": "11-Peak Chair"
+      },
+      "output": [
+        {
+          "description": null,
+          "difficulty": null,
+          "difficultyConvention": "europe",
+          "gladed": null,
+          "grooming": null,
+          "lit": null,
+          "name": "Peak Chair",
+          "oneway": true,
+          "patrolled": null,
+          "ref": "11",
+          "snowfarming": null,
+          "snowmaking": null,
+          "sources": [
+            {
+              "type": "openstreetmap",
+              "id": "way/1"
+            }
+          ],
+          "status": "operating",
+          "tunnel": null,
+          "type": "run",
+          "uses": ["downhill"],
+          "websites": [],
+          "wikidataID": null
+        }
+      ]
+    },
+    {
+      "tags": {
+        "piste:type": "downhill",
+        "ref": "11",
+        "name": "11- Peak Chair"
+      },
+      "output": [
+        {
+          "description": null,
+          "difficulty": null,
+          "difficultyConvention": "europe",
+          "gladed": null,
+          "grooming": null,
+          "lit": null,
+          "name": "Peak Chair",
+          "oneway": true,
+          "patrolled": null,
+          "ref": "11",
+          "snowfarming": null,
+          "snowmaking": null,
+          "sources": [
+            {
+              "type": "openstreetmap",
+              "id": "way/1"
+            }
+          ],
+          "status": "operating",
+          "tunnel": null,
+          "type": "run",
+          "uses": ["downhill"],
+          "websites": [],
+          "wikidataID": null
+        }
+      ]
+    },
+    {
+      "tags": {
+        "piste:type": "downhill",
+        "ref": "11",
+        "name": "11 -Peak Chair"
+      },
+      "output": [
+        {
+          "description": null,
+          "difficulty": null,
+          "difficultyConvention": "europe",
+          "gladed": null,
+          "grooming": null,
+          "lit": null,
+          "name": "-Peak Chair",
+          "oneway": true,
+          "patrolled": null,
+          "ref": "11",
+          "snowfarming": null,
+          "snowmaking": null,
+          "sources": [
+            {
+              "type": "openstreetmap",
+              "id": "way/1"
+            }
+          ],
+          "status": "operating",
+          "tunnel": null,
+          "type": "run",
+          "uses": ["downhill"],
+          "websites": [],
+          "wikidataID": null
+        }
+      ]
+    },
+    {
+      "tags": {
+        "piste:type": "downhill",
+        "ref": "11",
+        "name": "11 Peak Chair"
+      },
+      "output": [
+        {
+          "description": null,
+          "difficulty": null,
+          "difficultyConvention": "europe",
+          "gladed": null,
+          "grooming": null,
+          "lit": null,
+          "name": "Peak Chair",
+          "oneway": true,
+          "patrolled": null,
+          "ref": "11",
+          "snowfarming": null,
+          "snowmaking": null,
+          "sources": [
+            {
+              "type": "openstreetmap",
+              "id": "way/1"
+            }
+          ],
+          "status": "operating",
+          "tunnel": null,
+          "type": "run",
+          "uses": ["downhill"],
+          "websites": [],
+          "wikidataID": null
+        }
+      ]
+    },
+    {
+      "tags": {
+        "piste:type": "downhill",
+        "ref": "11",
+        "name": "11Peak Chair"
+      },
+      "output": [
+        {
+          "description": null,
+          "difficulty": null,
+          "difficultyConvention": "europe",
+          "gladed": null,
+          "grooming": null,
+          "lit": null,
+          "name": "11Peak Chair",
+          "oneway": true,
+          "patrolled": null,
+          "ref": "11",
+          "snowfarming": null,
+          "snowmaking": null,
+          "sources": [
+            {
+              "type": "openstreetmap",
+              "id": "way/1"
+            }
+          ],
+          "status": "operating",
+          "tunnel": null,
+          "type": "run",
+          "uses": ["downhill"],
+          "websites": [],
+          "wikidataID": null
+        }
+      ]
+    },
+    {
+      "tags": {
+        "piste:type": "downhill",
+        "ref": "11",
+        "name": "110 - Other"
+      },
+      "output": [
+        {
+          "description": null,
+          "difficulty": null,
+          "difficultyConvention": "europe",
+          "gladed": null,
+          "grooming": null,
+          "lit": null,
+          "name": "110 - Other",
+          "oneway": true,
+          "patrolled": null,
+          "ref": "11",
+          "snowfarming": null,
+          "snowmaking": null,
+          "sources": [
+            {
+              "type": "openstreetmap",
+              "id": "way/1"
+            }
+          ],
+          "status": "operating",
+          "tunnel": null,
+          "type": "run",
+          "uses": ["downhill"],
+          "websites": [],
+          "wikidataID": null
+        }
+      ]
+    },
+    {
+      "tags": {
+        "piste:type": "downhill",
+        "ref": "11",
+        "name": "Peak Chair 11"
+      },
+      "output": [
+        {
+          "description": null,
+          "difficulty": null,
+          "difficultyConvention": "europe",
+          "gladed": null,
+          "grooming": null,
+          "lit": null,
+          "name": "Peak Chair 11",
+          "oneway": true,
+          "patrolled": null,
+          "ref": "11",
+          "snowfarming": null,
+          "snowmaking": null,
+          "sources": [
+            {
+              "type": "openstreetmap",
+              "id": "way/1"
+            }
+          ],
+          "status": "operating",
+          "tunnel": null,
+          "type": "run",
+          "uses": ["downhill"],
+          "websites": [],
+          "wikidataID": null
+        }
+      ]
+    },
+    {
+      "tags": {
+        "piste:type": "downhill",
+        "piste:loc_ref": "via-piste:loc_ref"
+      },
+      "output": [
+        {
+          "description": null,
+          "difficulty": null,
+          "difficultyConvention": "europe",
+          "gladed": null,
+          "grooming": null,
+          "lit": null,
+          "name": null,
+          "oneway": true,
+          "patrolled": null,
+          "ref": "via-piste:loc_ref",
+          "snowfarming": null,
+          "snowmaking": null,
+          "sources": [
+            {
+              "type": "openstreetmap",
+              "id": "way/1"
+            }
+          ],
+          "status": "operating",
+          "tunnel": null,
+          "type": "run",
+          "uses": ["downhill"],
+          "websites": [],
+          "wikidataID": null
+        }
+      ]
+    },
+    {
+      "tags": {
+        "piste:type": "downhill",
+        "piste:ref": "via-piste:ref"
+      },
+      "output": [
+        {
+          "description": null,
+          "difficulty": null,
+          "difficultyConvention": "europe",
+          "gladed": null,
+          "grooming": null,
+          "lit": null,
+          "name": null,
+          "oneway": true,
+          "patrolled": null,
+          "ref": "via-piste:ref",
+          "snowfarming": null,
+          "snowmaking": null,
+          "sources": [
+            {
+              "type": "openstreetmap",
+              "id": "way/1"
+            }
+          ],
+          "status": "operating",
+          "tunnel": null,
+          "type": "run",
+          "uses": ["downhill"],
+          "websites": [],
+          "wikidataID": null
+        }
+      ]
+    },
+    {
+      "tags": {
+        "piste:type": "downhill",
+        "loc_ref": "via-loc_ref"
+      },
+      "output": [
+        {
+          "description": null,
+          "difficulty": null,
+          "difficultyConvention": "europe",
+          "gladed": null,
+          "grooming": null,
+          "lit": null,
+          "name": null,
+          "oneway": true,
+          "patrolled": null,
+          "ref": "via-loc_ref",
+          "snowfarming": null,
+          "snowmaking": null,
+          "sources": [
+            {
+              "type": "openstreetmap",
+              "id": "way/1"
+            }
+          ],
+          "status": "operating",
+          "tunnel": null,
+          "type": "run",
+          "uses": ["downhill"],
+          "websites": [],
+          "wikidataID": null
+        }
+      ]
+    },
+    {
+      "tags": {
+        "piste:type": "downhill",
+        "ref": "via-ref"
+      },
+      "output": [
+        {
+          "description": null,
+          "difficulty": null,
+          "difficultyConvention": "europe",
+          "gladed": null,
+          "grooming": null,
+          "lit": null,
+          "name": null,
+          "oneway": true,
+          "patrolled": null,
+          "ref": "via-ref",
+          "snowfarming": null,
+          "snowmaking": null,
+          "sources": [
+            {
+              "type": "openstreetmap",
+              "id": "way/1"
+            }
+          ],
+          "status": "operating",
+          "tunnel": null,
+          "type": "run",
+          "uses": ["downhill"],
+          "websites": [],
+          "wikidataID": null
+        }
+      ]
+    },
+    {
+      "tags": {
+        "piste:type": "downhill",
+        "piste:loc_ref": "A",
+        "piste:ref": "B",
+        "loc_ref": "C",
+        "ref": "D"
+      },
+      "output": [
+        {
+          "description": null,
+          "difficulty": null,
+          "difficultyConvention": "europe",
+          "gladed": null,
+          "grooming": null,
+          "lit": null,
+          "name": null,
+          "oneway": true,
+          "patrolled": null,
+          "ref": "A",
+          "snowfarming": null,
+          "snowmaking": null,
+          "sources": [
+            {
+              "type": "openstreetmap",
+              "id": "way/1"
+            }
+          ],
+          "status": "operating",
+          "tunnel": null,
+          "type": "run",
+          "uses": ["downhill"],
+          "websites": [],
+          "wikidataID": null
+        }
+      ]
+    },
+    {
+      "tags": {
+        "piste:type": "downhill",
+        "natural": "wood"
+      },
+      "output": [
+        {
+          "description": null,
+          "difficulty": null,
+          "difficultyConvention": "europe",
+          "gladed": true,
+          "grooming": null,
+          "lit": null,
+          "name": null,
+          "oneway": true,
+          "patrolled": null,
+          "ref": null,
+          "snowfarming": null,
+          "snowmaking": null,
+          "sources": [
+            {
+              "type": "openstreetmap",
+              "id": "way/1"
+            }
+          ],
+          "status": "operating",
+          "tunnel": null,
+          "type": "run",
+          "uses": ["downhill"],
+          "websites": [],
+          "wikidataID": null
+        }
+      ]
+    },
+    {
+      "tags": {
+        "piste:type": "downhill",
+        "landuse": "forest"
+      },
+      "output": [
+        {
+          "description": null,
+          "difficulty": null,
+          "difficultyConvention": "europe",
+          "gladed": true,
+          "grooming": null,
+          "lit": null,
+          "name": null,
+          "oneway": true,
+          "patrolled": null,
+          "ref": null,
+          "snowfarming": null,
+          "snowmaking": null,
+          "sources": [
+            {
+              "type": "openstreetmap",
+              "id": "way/1"
+            }
+          ],
+          "status": "operating",
+          "tunnel": null,
+          "type": "run",
+          "uses": ["downhill"],
+          "websites": [],
+          "wikidataID": null
+        }
+      ]
+    },
+    {
+      "tags": {
+        "piste:type": "downhill",
+        "natural": "scrub"
+      },
+      "output": [
+        {
+          "description": null,
+          "difficulty": null,
+          "difficultyConvention": "europe",
+          "gladed": null,
+          "grooming": null,
+          "lit": null,
+          "name": null,
+          "oneway": true,
+          "patrolled": null,
+          "ref": null,
+          "snowfarming": null,
+          "snowmaking": null,
+          "sources": [
+            {
+              "type": "openstreetmap",
+              "id": "way/1"
+            }
+          ],
+          "status": "operating",
+          "tunnel": null,
+          "type": "run",
+          "uses": ["downhill"],
+          "websites": [],
+          "wikidataID": null
+        }
+      ]
+    },
+    {
+      "tags": {
+        "piste:type": "downhill",
+        "natural": "wood",
+        "piste:gladed": "no"
+      },
+      "output": [
+        {
+          "description": null,
+          "difficulty": null,
+          "difficultyConvention": "europe",
+          "gladed": false,
+          "grooming": null,
+          "lit": null,
+          "name": null,
+          "oneway": true,
+          "patrolled": null,
+          "ref": null,
+          "snowfarming": null,
+          "snowmaking": null,
+          "sources": [
+            {
+              "type": "openstreetmap",
+              "id": "way/1"
+            }
+          ],
+          "status": "operating",
+          "tunnel": null,
+          "type": "run",
+          "uses": ["downhill"],
+          "websites": [],
+          "wikidataID": null
+        }
+      ]
+    },
+    {
+      "tags": {
+        "piste:type": "downhill",
+        "wikidata": "Q1;Q2"
+      },
+      "output": [
+        {
+          "description": null,
+          "difficulty": null,
+          "difficultyConvention": "europe",
+          "gladed": null,
+          "grooming": null,
+          "lit": null,
+          "name": null,
+          "oneway": true,
+          "patrolled": null,
+          "ref": null,
+          "snowfarming": null,
+          "snowmaking": null,
+          "sources": [
+            {
+              "type": "openstreetmap",
+              "id": "way/1"
+            }
+          ],
+          "status": "operating",
+          "tunnel": null,
+          "type": "run",
+          "uses": ["downhill"],
+          "websites": [],
+          "wikidataID": "Q1"
+        }
+      ]
+    },
+    {
+      "tags": {
+        "piste:type": "downhill",
+        "website": ""
+      },
+      "output": [
+        {
+          "description": null,
+          "difficulty": null,
+          "difficultyConvention": "europe",
+          "gladed": null,
+          "grooming": null,
+          "lit": null,
+          "name": null,
+          "oneway": true,
+          "patrolled": null,
+          "ref": null,
+          "snowfarming": null,
+          "snowmaking": null,
+          "sources": [
+            {
+              "type": "openstreetmap",
+              "id": "way/1"
+            }
+          ],
+          "status": "operating",
+          "tunnel": null,
+          "type": "run",
+          "uses": ["downhill"],
+          "websites": [""],
+          "wikidataID": null
+        }
+      ]
+    },
+    {
+      "tags": {
+        "piste:type": "downhill",
         "piste:abandoned": "yes"
       },
       "output": []

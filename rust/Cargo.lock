@@ -1514,6 +1514,7 @@ dependencies = [
  "anyhow",
  "openskidata-format",
  "osd-store",
+ "regex",
  "serde",
  "serde_json",
 ]
