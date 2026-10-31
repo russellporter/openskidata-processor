@@ -13,17 +13,15 @@
 //! repository. Port it against the extracted fixtures and resist improving it here;
 //! behaviour changes in this layer are indistinguishable from porting bugs.
 
+pub mod status;
+
+pub use status::{
+    LIFECYCLE_STATES, StatusAndValue, Tags, UNSUPPORTED_STATES, lifecycle_prefix, status_and_value,
+};
+
 use anyhow::Result;
 use osd_store::{FeatureIdx, FeatureStore};
 use std::collections::BTreeMap;
-
-/// Raw OSM tags for one element.
-pub type Tags = BTreeMap<String, String>;
-
-/// Replaces `src/transforms/Status.ts`: resolves lifecycle-prefixed tags to a status.
-pub fn resolve_status(_tags: &Tags, _base_key: &str) -> Option<openskidata_format::Status> {
-    todo!("port Status.ts, including lifecycle prefixes")
-}
 
 /// Replaces `formatRun`. Returns zero or more features: one input way can yield several
 /// runs, which is why upstream uses `flatMapArray`.

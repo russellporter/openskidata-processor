@@ -10,4 +10,6 @@ repository.workspace = true
 [dependencies]
 anyhow.workspace = true
 openskidata-format.workspace = true
+serde.workspace = true
+serde_json.workspace = true
 osd-store.workspace = true
