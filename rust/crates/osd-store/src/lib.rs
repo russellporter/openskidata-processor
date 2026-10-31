@@ -39,6 +39,7 @@ use openskidata_format::{
 };
 
 pub mod arena;
+pub mod builder;
 pub mod feature_id;
 pub mod interner;
 

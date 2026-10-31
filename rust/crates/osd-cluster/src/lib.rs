@@ -80,8 +80,15 @@
 //! [`DistanceBackend::LocalProjection`] land, as a separately measured commit, with the
 //! `[490, 510]` m blast radius already instrumented.
 
+pub mod flood;
+pub mod geometry;
+pub mod index;
+
+pub use flood::{FillOptions, Frame, flood_fill, is_non_operating_lift};
+pub use index::SpatialIndex;
+
 use anyhow::Result;
-use osd_store::{ActivityMask, FeatureIdx, FeatureStore, SkiAreaIdx};
+use osd_store::{FeatureIdx, FeatureStore, SkiAreaIdx};
 
 /// Upstream `maxDistanceInKilometers` (`SkiAreaClusteringService.ts:68`).
 pub const MAX_DISTANCE_KM: f64 = 0.5;
@@ -98,17 +105,6 @@ pub enum DistanceBackend {
     LocalProjection,
 }
 
-/// A frame of the explicit traversal stack.
-///
-/// The activity mask lives **here**, not in a shared context, which is what preserves
-/// semantic 2.
-#[derive(Debug, Clone, Copy)]
-pub struct Frame {
-    pub feature: FeatureIdx,
-    /// Activities narrowed along the path taken to reach this feature.
-    pub activities: ActivityMask,
-}
-
 /// Which pass is running. Upstream calls `assignObjectsToSkiAreas` three times with
 /// different options, plus a merge pass and a generation pass.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -122,31 +118,6 @@ pub enum Pass {
     NearbySkimapOrg,
 }
 
-/// Spatial index over feature bounding boxes.
-///
-/// Built once with `rstar`'s bulk (STR) load, which is both faster to construct and
-/// better quality than repeated insertion.
-#[derive(Debug, Default)]
-pub struct SpatialIndex {
-    _placeholder: (),
-}
-
-impl SpatialIndex {
-    pub fn build(_store: &FeatureStore) -> SpatialIndex {
-        todo!("rstar bulk_load over bounding boxes expanded by MAX_DISTANCE_KM")
-    }
-
-    /// Candidates whose expanded bbox may be within `MAX_DISTANCE_KM`.
-    ///
-    /// Returned **sorted by feature id**, because candidate order drives the traversal,
-    /// which drives the activity narrowing, which decides membership. Upstream's
-    /// `findNearbyObjects` has no `ORDER BY` at all, so its membership is not reproducible
-    /// run to run; sorting here is a deliberate improvement.
-    pub fn candidates(&self, _store: &FeatureStore, _of: FeatureIdx) -> Vec<FeatureIdx> {
-        todo!("query the R-tree, then sort by id")
-    }
-}
-
 /// Run every clustering pass, in upstream's order.
 pub fn cluster(
     _store: &mut FeatureStore,
@@ -154,20 +125,6 @@ pub fn cluster(
     _backend: DistanceBackend,
 ) -> Result<()> {
     todo!("the nine passes of performClustering, in order")
-}
-
-/// One flood fill from a seed ski area.
-///
-/// Explicit stack, DFS pre-order, children in sorted candidate order, shared `visited`
-/// set. Preserves semantics 1–5.
-pub fn flood_fill(
-    _store: &FeatureStore,
-    _index: &SpatialIndex,
-    _seed: SkiAreaIdx,
-    _pass: Pass,
-    _backend: DistanceBackend,
-) -> Result<Vec<FeatureIdx>> {
-    todo!("iterative DFS with the activity mask carried on the frame")
 }
 
 /// Replaces `generateSkiAreasForUnassignedObjects`.
@@ -214,36 +171,12 @@ pub fn report_metric_blast_radius(
 
 #[cfg(test)]
 mod tests {
-    /// Semantic 2, and the reason union-find is rejected. This is the module-doc
-    /// counterexample, and it is the single most important test in this crate.
-    #[test]
-    #[ignore = "scaffold: implement flood_fill first"]
-    fn nordic_only_neighbour_is_excluded_behind_a_downhill_narrowing() {}
-
-    /// Semantic 3.
-    #[test]
-    #[ignore = "scaffold: implement flood_fill first"]
-    fn non_operating_lift_is_absorbed_but_not_traversed_through() {}
-
-    /// Semantic 1.
+    /// Semantic 1 at the pass level: the fill itself honours only_unassigned (covered in
+    /// tests/semantics.rs), but the sequential seed loop that makes "first in id order
+    /// wins" observable lives in `cluster`, which is not implemented yet.
     #[test]
     #[ignore = "scaffold: implement cluster first"]
     fn first_ski_area_in_id_order_claims_a_contested_object() {}
-
-    /// Semantic 4.
-    #[test]
-    #[ignore = "scaffold: implement flood_fill first"]
-    fn ski_areas_are_never_traversal_nodes() {}
-
-    /// Semantic 5.
-    #[test]
-    #[ignore = "scaffold: implement cluster first"]
-    fn in_polygon_pass_does_not_recurse() {}
-
-    /// Unlike upstream, the same input must give the same output every time.
-    #[test]
-    #[ignore = "scaffold: implement cluster first"]
-    fn clustering_is_deterministic_across_runs() {}
 
     /// The 53 inline snapshots in `ClusterSkiAreas.integration.test.ts` are the de-facto
     /// specification for this crate.
