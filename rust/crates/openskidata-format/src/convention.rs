@@ -53,7 +53,7 @@ use crate::generated::convention_regions::{JAPAN, MultiPolygon, NORTH_AMERICA};
 
 /// Where a point lies relative to a polygon.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Containment {
+pub enum Containment {
     Outside,
     Boundary,
     Inside,
@@ -73,7 +73,7 @@ fn orient(u1: f64, u2: f64, v1: f64, v2: f64) -> f64 {
 
 /// `point-in-polygon-hao`: ray crossing over every ring of one polygon, outer and holes
 /// together.
-fn point_in_polygon(x: f64, y: f64, polygon: &[&[[f64; 2]]]) -> Containment {
+pub fn point_in_polygon(x: f64, y: f64, polygon: &[&[[f64; 2]]]) -> Containment {
     let mut crossings = 0u32;
 
     for contour in polygon {

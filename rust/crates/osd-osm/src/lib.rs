@@ -28,6 +28,7 @@ pub mod geometry;
 pub mod node_store;
 pub mod overpass;
 pub mod polygon_features;
+pub mod validity;
 
 pub use converter::Converter;
 pub use element::{Element, Feature, Geometry};
