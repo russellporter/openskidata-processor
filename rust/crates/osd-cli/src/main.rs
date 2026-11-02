@@ -19,7 +19,7 @@ pub struct MallocConf(*const u8);
 unsafe impl Sync for MallocConf {}
 #[unsafe(export_name = "_rjem_malloc_conf")]
 pub static MALLOC_CONF: MallocConf =
-    MallocConf(b"dirty_decay_ms:1000,muzzy_decay_ms:1000\0".as_ptr());
+    MallocConf(c"dirty_decay_ms:1000,muzzy_decay_ms:1000".as_ptr().cast());
 use clap::{Parser, Subcommand};
 
 #[derive(clap::ValueEnum, Debug, Clone, Copy)]
