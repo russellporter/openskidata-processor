@@ -80,6 +80,12 @@ stands. The cache is read and written in tile order around each concurrent batch
 is deterministic at any concurrency; tiles with an alpha channel are decoded as RGB where upstream
 misreads them.
 
+**Tiles.** `GENERATE_TILES=1` (or `--generate-tiles`) builds `openskimap.mbtiles` with tippecanoe,
+as upstream does (the four layers in the working directory, at most `TILE_CONCURRENCY` at once,
+then `tile-join`). On 500 resorts the Rust and TypeScript pipelines' tile sets decode to
+identical tiles: 3,491 tiles, 32,242 features, no differences (compared with a real MVT decoder;
+the bytes differ because the mapboxgl GeoJSON lists properties in a different key order).
+
 **Not done yet.** Snow cover, PBF input, and the streaming driver that bounds normalization memory
 (`normalize_runs_partitioned` partitions in memory today). The Postgres caches migrate with
 `openskidata migrate-cache`.

@@ -50,6 +50,9 @@ pub struct PrepareConfig {
     pub geocoding: Option<GeocodingSettings>,
     /// The elevation server, if one is configured (`ELEVATION_SERVER_URL`).
     pub elevation: Option<ElevationSettings>,
+    /// Build `openskimap.mbtiles` from the mapboxgl files with tippecanoe (`GENERATE_TILES`).
+    /// The four layers are built in the input directory, as upstream's working directory.
+    pub generate_tiles: bool,
 }
 
 /// A reverse-geocoding server.
@@ -385,6 +388,15 @@ pub fn prepare(config: &PrepareConfig) -> Result<()> {
     let started = std::time::Instant::now();
     write_outputs(&output, &config.output_dir)?;
     tracing::info!("write the outputs: {:?}", started.elapsed());
+    if config.generate_tiles {
+        let started = std::time::Instant::now();
+        osd_out::tiles::generate_tiles(
+            &config.output_dir,
+            &config.input_dir,
+            &config.output_dir.join("openskimap.mbtiles"),
+        )?;
+        tracing::info!("generate the tiles: {:?}", started.elapsed());
+    }
     let download = metadata::read_download_metadata(&config.input_dir);
     write_metadata(
         &output,

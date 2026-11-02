@@ -129,6 +129,10 @@ struct PrepareArgs {
     /// For `tile`: tiles downloaded at once.
     #[arg(long, env = "ELEVATION_TILE_CONCURRENCY", default_value_t = 4)]
     elevation_tile_concurrency: usize,
+    /// Build `openskimap.mbtiles` with tippecanoe. `TILE_CONCURRENCY` bounds how many of the
+    /// four layers are built at once (default 2).
+    #[arg(long, env = "GENERATE_TILES", action = clap::ArgAction::SetTrue, value_parser = clap::builder::FalseyValueParser::new())]
+    generate_tiles: bool,
     /// The cache store the geocoder's and the elevation lookup's responses are kept in.
     #[arg(long, env = "CACHE_PATH", default_value = "data/cache.db")]
     cache_path: std::path::PathBuf,
@@ -149,8 +153,8 @@ enum Command {
     /// Turn the downloaded input files into the output files.
     ///
     /// Reads the files `download` wrote, and writes GeoJSON, the slimmed mapboxgl GeoJSON,
-    /// CSV and the GeoPackage to the output directory. Snow cover and tiles are not applied
-    /// yet.
+    /// CSV and the GeoPackage to the output directory, and with `--generate-tiles` the vector
+    /// tiles. Snow cover is not applied yet.
     Prepare {
         #[command(flatten)]
         common: Common,
@@ -207,6 +211,7 @@ fn run_prepare(common: &Common, args: PrepareArgs) -> Result<()> {
         output_dir: args.output_dir,
         bbox: parse_bbox(&common.bbox)?,
         cache_path: args.cache_path,
+        generate_tiles: args.generate_tiles,
         geocoding: args
             .geocoding_server_url
             .map(|url| osd_pipeline::prepare::GeocodingSettings {

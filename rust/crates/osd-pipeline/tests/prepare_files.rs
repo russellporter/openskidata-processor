@@ -135,6 +135,7 @@ fn files_written_by_prepare_match_the_typescript_output() {
         let output_dir = scratch(&format!("out{n}"));
         write_inputs(&input_dir, &scene.roles);
         prepare(&PrepareConfig {
+            generate_tiles: false,
             input_dir: input_dir.clone(),
             output_dir: output_dir.clone(),
             bbox: None,
@@ -199,6 +200,7 @@ fn the_geojson_layout_is_the_one_merge_outputs_expects() {
     let output_dir = scratch("layout-out");
     write_inputs(&input_dir, &scene.roles);
     prepare(&PrepareConfig {
+        generate_tiles: false,
         input_dir: input_dir.clone(),
         output_dir: output_dir.clone(),
         bbox: None,
@@ -235,6 +237,7 @@ fn metadata_json_describes_what_was_written() {
     )
     .unwrap();
     prepare(&PrepareConfig {
+        generate_tiles: false,
         input_dir: input_dir.clone(),
         output_dir: output_dir.clone(),
         bbox: Some(vec![11.0, 47.0, 12.5, 48.0]),
@@ -312,6 +315,7 @@ fn metadata_json_describes_what_was_written() {
     let output_dir = scratch("meta-none-out");
     write_inputs(&input_dir, &scene.roles);
     prepare(&PrepareConfig {
+        generate_tiles: false,
         input_dir: input_dir.clone(),
         output_dir: output_dir.clone(),
         bbox: None,
@@ -441,6 +445,7 @@ fn prepare_geocodes_and_a_second_run_needs_no_server() {
     let run = |out: &str, url: &str| {
         let output_dir = scratch(out);
         prepare(&PrepareConfig {
+            generate_tiles: false,
             input_dir: input_dir.clone(),
             output_dir: output_dir.clone(),
             bbox: None,
@@ -512,6 +517,7 @@ fn prepare_elevates_and_a_second_run_needs_no_server() {
     let run = |out: &str, url: &str| {
         let output_dir = scratch(out);
         prepare(&PrepareConfig {
+            generate_tiles: false,
             input_dir: input_dir.clone(),
             output_dir: output_dir.clone(),
             bbox: None,
@@ -608,6 +614,7 @@ fn heights_can_come_from_terrain_tiles() {
         (200, tile.clone())
     });
     prepare(&PrepareConfig {
+        generate_tiles: false,
         input_dir,
         output_dir: output_dir.clone(),
         bbox: None,
@@ -655,4 +662,71 @@ fn heights_can_come_from_terrain_tiles() {
     assert!(server.request_count() > 0);
     // The tile cache was saved when the run finished.
     assert!(cache_dir.join("tiles/cache-index.json").exists());
+}
+
+#[test]
+fn tiles_are_built_from_the_mapboxgl_files_when_asked() {
+    if std::process::Command::new("tippecanoe")
+        .arg("--version")
+        .output()
+        .is_err()
+    {
+        eprintln!("tippecanoe is not installed: skipping");
+        return;
+    }
+    let scenes: Scenes =
+        serde_json::from_str(include_str!("../../osd-cluster/tests/cluster_scenes.json")).unwrap();
+    let scene = scenes
+        .scenes
+        .iter()
+        .find(|s| {
+            !s.expected.runs.is_empty()
+                && !s.expected.lifts.is_empty()
+                && !s.expected.ski_areas.is_empty()
+                && !s.expected.spots.is_empty()
+        })
+        .expect("a scene with every kind of feature");
+    let input_dir = scratch("mbtiles-in");
+    let output_dir = scratch("mbtiles-out");
+    write_inputs(&input_dir, &scene.roles);
+    prepare(&PrepareConfig {
+        generate_tiles: true,
+        input_dir: input_dir.clone(),
+        output_dir: output_dir.clone(),
+        bbox: None,
+        cache_path: scratch("mbtiles-cache").join("cache.db"),
+        geocoding: None,
+        elevation: None,
+    })
+    .unwrap();
+
+    // The four layers are built in the working (input) directory and joined into the output.
+    for layer in ["ski_areas", "runs", "lifts", "spots"] {
+        assert!(
+            input_dir.join(format!("{layer}.mbtiles")).exists(),
+            "{layer}"
+        );
+    }
+    let tiles = rusqlite::Connection::open(output_dir.join("openskimap.mbtiles")).unwrap();
+    let count: i64 = tiles
+        .query_row("select count(*) from tiles", [], |r| r.get(0))
+        .unwrap();
+    assert!(count > 0);
+    let json: String = tiles
+        .query_row("select value from metadata where name = 'json'", [], |r| {
+            r.get(0)
+        })
+        .unwrap();
+    let layers: Value = serde_json::from_str(&json).unwrap();
+    let mut names: Vec<&str> = layers["vector_layers"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|l| l["id"].as_str().unwrap())
+        .collect();
+    names.sort();
+    assert_eq!(names, ["lifts", "runs", "skiareas", "spots"]);
+    // Tiles are not described in metadata.json, as upstream's are not.
+    let metadata = fs::read_to_string(output_dir.join("metadata.json")).unwrap();
+    assert!(!metadata.contains("mbtiles"));
 }
