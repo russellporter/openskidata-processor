@@ -1,10 +1,15 @@
 //! Replaces: `openskidata-format/dist/Lift.{d.ts,js}` and `LiftNameFormatter.{d.ts,js}`.
 
 use crate::{
-    FeatureType, LiftType, Status, elevation_profile::ElevationData, place::Place,
-    ski_area::SkiAreaSummaryFeature, source::Source, spot::LiftStationSpotFeature,
+    FeatureType, LiftType, Status,
+    elevation_profile::{ElevationData, elevation_data},
+    place::Place,
+    ski_area::SkiAreaSummaryFeature,
+    source::Source,
+    spot::LiftStationSpotFeature,
     viewport_hint::ViewportHint,
 };
+use osd_turf::Coord;
 use serde::{Deserialize, Serialize};
 
 /// Upstream `Access = 'private' | null`. The field is always present, so it is
@@ -76,9 +81,61 @@ pub struct LiftProperties {
     pub viewport_hint: ViewportHint,
 }
 
-/// Replaces `getLiftElevationData`.
-pub fn lift_elevation_data(_geometry: &LiftGeometry, _elevations: &[f64]) -> Option<ElevationData> {
-    todo!("port getLiftElevationData")
+/// A lift station as `getLiftElevationData` reads it: where on the lift it is, and its
+/// position (with elevation, when known).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct StationPoint {
+    pub position: Option<crate::LiftStationPosition>,
+    pub coord: Coord,
+}
+
+/// `getLiftElevationData`'s result: the elevation data of the line, and how fast the lift
+/// climbs it.
+#[derive(Debug, Clone, PartialEq)]
+pub struct LiftElevationData {
+    pub elevation: ElevationData,
+    pub speed_in_meters_per_second: Option<f64>,
+    pub vertical_speed_in_meters_per_second: Option<f64>,
+}
+
+/// Replaces `getLiftElevationData`. `None` when the line carries no elevation.
+///
+/// Lifts keep their elevation in the geometry itself rather than in a separate profile. When
+/// the top and bottom stations both have an elevation, their distance replaces the line's for
+/// the speeds, since the line often runs past the stations.
+pub fn lift_elevation_data(
+    coordinates: &[Coord],
+    duration_in_seconds: Option<f64>,
+    stations: &[StationPoint],
+) -> Result<Option<LiftElevationData>, String> {
+    if coordinates.first().is_none_or(|c| c.z.is_none()) {
+        return Ok(None);
+    }
+    let elevation = elevation_data(coordinates)?;
+    let terminal = terminal_station_distances(stations);
+    let inclined_length = terminal.map_or(elevation.pitch.inclined_length_in_meters, |t| t.0);
+    let vertical_length = terminal.map_or(elevation.ascent_descent.vertical_in_meters, |t| t.1);
+    // JavaScript truthiness: `0`, `NaN` and absent give `null`.
+    let duration = duration_in_seconds.filter(|d| *d != 0.0 && !d.is_nan());
+    Ok(Some(LiftElevationData {
+        speed_in_meters_per_second: duration.map(|d| inclined_length / d),
+        vertical_speed_in_meters_per_second: duration.map(|d| vertical_length / d),
+        elevation,
+    }))
+}
+
+/// `(inclined length, vertical)` between the top and bottom stations, if both have elevations.
+fn terminal_station_distances(stations: &[StationPoint]) -> Option<(f64, f64)> {
+    use crate::LiftStationPosition::{Bottom, Top};
+    let top = stations.iter().find(|s| s.position == Some(Top))?;
+    let bottom = stations.iter().find(|s| s.position == Some(Bottom))?;
+    let (top_z, bottom_z) = (top.coord.z?, bottom.coord.z?);
+    let horizontal = osd_turf::distance(top.coord.xy(), bottom.coord.xy(), osd_turf::Units::Meters);
+    let vertical = (top_z - bottom_z).abs();
+    Some((
+        (horizontal * horizontal + vertical * vertical).sqrt(),
+        vertical,
+    ))
 }
 
 /// Replaces `getLiftColor`.

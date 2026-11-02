@@ -6,36 +6,14 @@
 //! using the closest equivalent from a Rust geodesy crate.
 
 use osd_osm::element::{Geometry, Position};
-use std::f64::consts::PI;
 
-/// `earthRadius` in `@turf/helpers`.
-const EARTH_RADIUS_M: f64 = 6_371_008.8;
-
-/// `degreesToRadians`: reduced modulo 360 first, with JavaScript's `%`.
-fn degrees_to_radians(degrees: f64) -> f64 {
-    (degrees % 360.0) * PI / 180.0
-}
-
-/// `radiansToDegrees`: reduced modulo 2 pi first.
-fn radians_to_degrees(radians: f64) -> f64 {
-    (radians % (2.0 * PI)) * 180.0 / PI
-}
-
-/// `@turf/distance`: haversine distance in kilometres.
-pub fn distance_km(from: Position, to: Position) -> f64 {
-    let d_lat = degrees_to_radians(to[1] - from[1]);
-    let d_lon = degrees_to_radians(to[0] - from[0]);
-    let lat1 = degrees_to_radians(from[1]);
-    let lat2 = degrees_to_radians(to[1]);
-    let a = libm::sin(d_lat / 2.0).powi(2)
-        + libm::sin(d_lon / 2.0).powi(2) * libm::cos(lat1) * libm::cos(lat2);
-    2.0 * libm::atan2(a.sqrt(), (1.0 - a).sqrt()) * (EARTH_RADIUS_M / 1000.0)
-}
+use osd_turf::{Units, path_length as turf_path_length};
+pub use osd_turf::{
+    along, bearing, degrees_to_radians, destination_km, distance_km, radians_to_degrees,
+};
 
 fn path_length(positions: &[Position]) -> f64 {
-    positions
-        .windows(2)
-        .fold(0.0, |sum, pair| sum + distance_km(pair[0], pair[1]))
+    turf_path_length(positions, Units::Kilometers)
 }
 
 /// `@turf/length` in kilometres: the sum of the geodesic lengths of every segment, of every
@@ -108,60 +86,6 @@ pub fn nearest_point(target: Position, points: &[Position]) -> Position {
         }
     }
     points[best]
-}
-
-/// `@turf/bearing`, in degrees.
-pub fn bearing(start: Position, end: Position) -> f64 {
-    let lon1 = degrees_to_radians(start[0]);
-    let lon2 = degrees_to_radians(end[0]);
-    let lat1 = degrees_to_radians(start[1]);
-    let lat2 = degrees_to_radians(end[1]);
-    let a = libm::sin(lon2 - lon1) * libm::cos(lat2);
-    let b = libm::cos(lat1) * libm::sin(lat2)
-        - libm::sin(lat1) * libm::cos(lat2) * libm::cos(lon2 - lon1);
-    radians_to_degrees(libm::atan2(a, b))
-}
-
-/// `@turf/destination` for a distance in kilometres.
-pub fn destination_km(origin: Position, distance_km: f64, bearing_degrees: f64) -> Position {
-    let longitude1 = degrees_to_radians(origin[0]);
-    let latitude1 = degrees_to_radians(origin[1]);
-    let bearing_rad = degrees_to_radians(bearing_degrees);
-    let radians = distance_km / (EARTH_RADIUS_M / 1000.0);
-
-    let latitude2 = libm::asin(
-        libm::sin(latitude1) * libm::cos(radians)
-            + libm::cos(latitude1) * libm::sin(radians) * libm::cos(bearing_rad),
-    );
-    let longitude2 = longitude1
-        + libm::atan2(
-            libm::sin(bearing_rad) * libm::sin(radians) * libm::cos(latitude1),
-            libm::cos(radians) - libm::sin(latitude1) * libm::sin(latitude2),
-        );
-    [
-        radians_to_degrees(longitude2),
-        radians_to_degrees(latitude2),
-    ]
-}
-
-/// `@turf/along`: the point a distance in kilometres along a line.
-pub fn along(coords: &[Position], distance: f64) -> Position {
-    let mut travelled = 0.0;
-    for i in 0..coords.len() {
-        if distance >= travelled && i == coords.len() - 1 {
-            break;
-        } else if travelled >= distance {
-            let overshot = distance - travelled;
-            if overshot == 0.0 {
-                return coords[i];
-            }
-            let direction = bearing(coords[i], coords[i - 1]) - 180.0;
-            return destination_km(coords[i], overshot, direction);
-        } else {
-            travelled += distance_km(coords[i], coords[i + 1]);
-        }
-    }
-    coords[coords.len() - 1]
 }
 
 /// `SkiAreaClusteringService.skiAreaGeometry`: a point inside the cluster of members.

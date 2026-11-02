@@ -1,0 +1,11 @@
+[package]
+name = "osd-turf"
+description = "Ports of the turf functions the pipeline's results depend on, with turf's own arithmetic"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+libm.workspace = true

@@ -3,12 +3,8 @@
 use crate::viewport_hint::ViewportHint;
 use crate::{
     FeatureType, RunColorName, RunColorValue, RunDifficulty, RunDifficultyConvention, RunGrooming,
-    RunUse, Status,
-    elevation_profile::{ElevationData, ElevationProfile},
-    place::Place,
-    ski_area::SkiAreaSummary,
-    snow_cover::SnowCoverHistory,
-    source::Source,
+    RunUse, Status, elevation_profile::ElevationProfile, place::Place, ski_area::SkiAreaSummary,
+    snow_cover::SnowCoverHistory, source::Source,
 };
 use serde::{Deserialize, Serialize};
 
@@ -62,12 +58,17 @@ pub struct RunProperties {
     pub viewport_hint: ViewportHint,
 }
 
-/// Replaces `getRunElevationData`.
+/// Replaces `getRunElevationData`: the elevation data of a LineString run with an elevation
+/// profile, or `None` for a run without either.
 pub fn run_elevation_data(
-    _properties: &RunProperties,
-    _geometry: &RunGeometry,
-) -> Option<ElevationData> {
-    todo!("port getRunElevationData")
+    coordinates: &[osd_turf::Coord],
+    profile: Option<&crate::elevation_profile::ElevationProfile>,
+) -> Result<Option<crate::elevation_profile::ElevationData>, String> {
+    let Some(profile) = profile else {
+        return Ok(None);
+    };
+    let profile_geometry = crate::elevation_profile::profile_geometry(coordinates, profile)?;
+    crate::elevation_profile::elevation_data(&profile_geometry).map(Some)
 }
 
 /// Replaces `getRunColor`.

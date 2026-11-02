@@ -1,5 +1,6 @@
 # Generated, compact fixtures: one scene per line, which Prettier would explode into
 # millions of lines.
+rust/crates/openskidata-format/tests/elevation_vectors.json
 rust/crates/openskidata-format/tests/lift_name_vectors.json
 rust/crates/openskidata-format/tests/viewport_vectors.json
 rust/crates/osd-cluster/tests/cluster_scenes.json

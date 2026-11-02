@@ -13,3 +13,4 @@ serde_json.workspace = true
 geo-types.workspace = true
 thiserror.workspace = true
 robust.workspace = true
+osd-turf.workspace = true

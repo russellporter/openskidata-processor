@@ -1424,6 +1424,7 @@ name = "openskidata-format"
 version = "0.1.0"
 dependencies = [
  "geo-types",
+ "osd-turf",
  "robust",
  "serde",
  "serde_json",
@@ -1473,6 +1474,7 @@ dependencies = [
  "openskidata-format",
  "osd-osm",
  "osd-store",
+ "osd-turf",
  "rayon",
  "rstar 0.13.0",
  "serde",
@@ -1594,6 +1596,13 @@ dependencies = [
  "regex",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "osd-turf"
+version = "0.1.0"
+dependencies = [
+ "libm",
 ]
 
 [[package]]
