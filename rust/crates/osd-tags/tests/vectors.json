@@ -16840,5 +16840,1339 @@
         }
       }
     ]
-  }
+  },
+  "spots": [
+    {
+      "tags": {
+        "piste:dismount": "yes"
+      },
+      "output": [
+        {
+          "properties": {
+            "dismount": "yes",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "node/3"
+              }
+            ],
+            "spotType": "crossing",
+            "type": "spot"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      ]
+    },
+    {
+      "tags": {
+        "piste:dismount": "no"
+      },
+      "output": [
+        {
+          "properties": {
+            "dismount": "no",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "node/3"
+              }
+            ],
+            "spotType": "crossing",
+            "type": "spot"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      ]
+    },
+    {
+      "tags": {
+        "piste:dismount": "sometimes"
+      },
+      "output": [
+        {
+          "properties": {
+            "dismount": "sometimes",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "node/3"
+              }
+            ],
+            "spotType": "crossing",
+            "type": "spot"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      ]
+    },
+    {
+      "tags": {
+        "piste:dismount": ""
+      },
+      "output": []
+    },
+    {
+      "tags": {
+        "piste:dismount": "nonsense"
+      },
+      "output": []
+    },
+    {
+      "tags": {
+        "piste:dismount": "YES"
+      },
+      "output": []
+    },
+    {
+      "tags": {
+        "aerialway": "station"
+      },
+      "output": [
+        {
+          "properties": {
+            "entry": null,
+            "exit": null,
+            "liftId": "",
+            "name": null,
+            "position": null,
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "node/3"
+              }
+            ],
+            "spotType": "lift_station",
+            "type": "spot"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      ]
+    },
+    {
+      "tags": {
+        "aerialway": "station",
+        "aerialway:access": "both"
+      },
+      "output": [
+        {
+          "properties": {
+            "entry": true,
+            "exit": true,
+            "liftId": "",
+            "name": null,
+            "position": null,
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "node/3"
+              }
+            ],
+            "spotType": "lift_station",
+            "type": "spot"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      ]
+    },
+    {
+      "tags": {
+        "aerialway": "station",
+        "aerialway:access": "entry"
+      },
+      "output": [
+        {
+          "properties": {
+            "entry": true,
+            "exit": false,
+            "liftId": "",
+            "name": null,
+            "position": null,
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "node/3"
+              }
+            ],
+            "spotType": "lift_station",
+            "type": "spot"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      ]
+    },
+    {
+      "tags": {
+        "aerialway": "station",
+        "aerialway:access": "exit"
+      },
+      "output": [
+        {
+          "properties": {
+            "entry": false,
+            "exit": true,
+            "liftId": "",
+            "name": null,
+            "position": null,
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "node/3"
+              }
+            ],
+            "spotType": "lift_station",
+            "type": "spot"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      ]
+    },
+    {
+      "tags": {
+        "aerialway": "station",
+        "aerialway:access": "no"
+      },
+      "output": [
+        {
+          "properties": {
+            "entry": false,
+            "exit": false,
+            "liftId": "",
+            "name": null,
+            "position": null,
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "node/3"
+              }
+            ],
+            "spotType": "lift_station",
+            "type": "spot"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      ]
+    },
+    {
+      "tags": {
+        "aerialway": "station",
+        "aerialway:access": "nonsense"
+      },
+      "output": [
+        {
+          "properties": {
+            "entry": null,
+            "exit": null,
+            "liftId": "",
+            "name": null,
+            "position": null,
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "node/3"
+              }
+            ],
+            "spotType": "lift_station",
+            "type": "spot"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      ]
+    },
+    {
+      "tags": {
+        "aerialway": "station",
+        "aerialway:station": "top"
+      },
+      "output": [
+        {
+          "properties": {
+            "entry": null,
+            "exit": null,
+            "liftId": "",
+            "name": null,
+            "position": "top",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "node/3"
+              }
+            ],
+            "spotType": "lift_station",
+            "type": "spot"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      ]
+    },
+    {
+      "tags": {
+        "aerialway": "station",
+        "aerialway:station": "top",
+        "aerialway:access": "both"
+      },
+      "output": [
+        {
+          "properties": {
+            "entry": true,
+            "exit": true,
+            "liftId": "",
+            "name": null,
+            "position": "top",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "node/3"
+              }
+            ],
+            "spotType": "lift_station",
+            "type": "spot"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      ]
+    },
+    {
+      "tags": {
+        "aerialway": "station",
+        "aerialway:station": "top",
+        "aerialway:access": "entry"
+      },
+      "output": [
+        {
+          "properties": {
+            "entry": true,
+            "exit": false,
+            "liftId": "",
+            "name": null,
+            "position": "top",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "node/3"
+              }
+            ],
+            "spotType": "lift_station",
+            "type": "spot"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      ]
+    },
+    {
+      "tags": {
+        "aerialway": "station",
+        "aerialway:station": "top",
+        "aerialway:access": "exit"
+      },
+      "output": [
+        {
+          "properties": {
+            "entry": false,
+            "exit": true,
+            "liftId": "",
+            "name": null,
+            "position": "top",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "node/3"
+              }
+            ],
+            "spotType": "lift_station",
+            "type": "spot"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      ]
+    },
+    {
+      "tags": {
+        "aerialway": "station",
+        "aerialway:station": "top",
+        "aerialway:access": "no"
+      },
+      "output": [
+        {
+          "properties": {
+            "entry": false,
+            "exit": false,
+            "liftId": "",
+            "name": null,
+            "position": "top",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "node/3"
+              }
+            ],
+            "spotType": "lift_station",
+            "type": "spot"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      ]
+    },
+    {
+      "tags": {
+        "aerialway": "station",
+        "aerialway:station": "top",
+        "aerialway:access": "nonsense"
+      },
+      "output": [
+        {
+          "properties": {
+            "entry": null,
+            "exit": null,
+            "liftId": "",
+            "name": null,
+            "position": "top",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "node/3"
+              }
+            ],
+            "spotType": "lift_station",
+            "type": "spot"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      ]
+    },
+    {
+      "tags": {
+        "aerialway": "station",
+        "aerialway:station": "mid"
+      },
+      "output": [
+        {
+          "properties": {
+            "entry": null,
+            "exit": null,
+            "liftId": "",
+            "name": null,
+            "position": "mid",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "node/3"
+              }
+            ],
+            "spotType": "lift_station",
+            "type": "spot"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      ]
+    },
+    {
+      "tags": {
+        "aerialway": "station",
+        "aerialway:station": "mid",
+        "aerialway:access": "both"
+      },
+      "output": [
+        {
+          "properties": {
+            "entry": true,
+            "exit": true,
+            "liftId": "",
+            "name": null,
+            "position": "mid",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "node/3"
+              }
+            ],
+            "spotType": "lift_station",
+            "type": "spot"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      ]
+    },
+    {
+      "tags": {
+        "aerialway": "station",
+        "aerialway:station": "mid",
+        "aerialway:access": "entry"
+      },
+      "output": [
+        {
+          "properties": {
+            "entry": true,
+            "exit": false,
+            "liftId": "",
+            "name": null,
+            "position": "mid",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "node/3"
+              }
+            ],
+            "spotType": "lift_station",
+            "type": "spot"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      ]
+    },
+    {
+      "tags": {
+        "aerialway": "station",
+        "aerialway:station": "mid",
+        "aerialway:access": "exit"
+      },
+      "output": [
+        {
+          "properties": {
+            "entry": false,
+            "exit": true,
+            "liftId": "",
+            "name": null,
+            "position": "mid",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "node/3"
+              }
+            ],
+            "spotType": "lift_station",
+            "type": "spot"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      ]
+    },
+    {
+      "tags": {
+        "aerialway": "station",
+        "aerialway:station": "mid",
+        "aerialway:access": "no"
+      },
+      "output": [
+        {
+          "properties": {
+            "entry": false,
+            "exit": false,
+            "liftId": "",
+            "name": null,
+            "position": "mid",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "node/3"
+              }
+            ],
+            "spotType": "lift_station",
+            "type": "spot"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      ]
+    },
+    {
+      "tags": {
+        "aerialway": "station",
+        "aerialway:station": "mid",
+        "aerialway:access": "nonsense"
+      },
+      "output": [
+        {
+          "properties": {
+            "entry": null,
+            "exit": null,
+            "liftId": "",
+            "name": null,
+            "position": "mid",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "node/3"
+              }
+            ],
+            "spotType": "lift_station",
+            "type": "spot"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      ]
+    },
+    {
+      "tags": {
+        "aerialway": "station",
+        "aerialway:station": "bottom"
+      },
+      "output": [
+        {
+          "properties": {
+            "entry": null,
+            "exit": null,
+            "liftId": "",
+            "name": null,
+            "position": "bottom",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "node/3"
+              }
+            ],
+            "spotType": "lift_station",
+            "type": "spot"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      ]
+    },
+    {
+      "tags": {
+        "aerialway": "station",
+        "aerialway:station": "bottom",
+        "aerialway:access": "both"
+      },
+      "output": [
+        {
+          "properties": {
+            "entry": true,
+            "exit": true,
+            "liftId": "",
+            "name": null,
+            "position": "bottom",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "node/3"
+              }
+            ],
+            "spotType": "lift_station",
+            "type": "spot"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      ]
+    },
+    {
+      "tags": {
+        "aerialway": "station",
+        "aerialway:station": "bottom",
+        "aerialway:access": "entry"
+      },
+      "output": [
+        {
+          "properties": {
+            "entry": true,
+            "exit": false,
+            "liftId": "",
+            "name": null,
+            "position": "bottom",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "node/3"
+              }
+            ],
+            "spotType": "lift_station",
+            "type": "spot"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      ]
+    },
+    {
+      "tags": {
+        "aerialway": "station",
+        "aerialway:station": "bottom",
+        "aerialway:access": "exit"
+      },
+      "output": [
+        {
+          "properties": {
+            "entry": false,
+            "exit": true,
+            "liftId": "",
+            "name": null,
+            "position": "bottom",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "node/3"
+              }
+            ],
+            "spotType": "lift_station",
+            "type": "spot"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      ]
+    },
+    {
+      "tags": {
+        "aerialway": "station",
+        "aerialway:station": "bottom",
+        "aerialway:access": "no"
+      },
+      "output": [
+        {
+          "properties": {
+            "entry": false,
+            "exit": false,
+            "liftId": "",
+            "name": null,
+            "position": "bottom",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "node/3"
+              }
+            ],
+            "spotType": "lift_station",
+            "type": "spot"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      ]
+    },
+    {
+      "tags": {
+        "aerialway": "station",
+        "aerialway:station": "bottom",
+        "aerialway:access": "nonsense"
+      },
+      "output": [
+        {
+          "properties": {
+            "entry": null,
+            "exit": null,
+            "liftId": "",
+            "name": null,
+            "position": "bottom",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "node/3"
+              }
+            ],
+            "spotType": "lift_station",
+            "type": "spot"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      ]
+    },
+    {
+      "tags": {
+        "aerialway": "station",
+        "aerialway:station": "nonsense"
+      },
+      "output": [
+        {
+          "properties": {
+            "entry": null,
+            "exit": null,
+            "liftId": "",
+            "name": null,
+            "position": null,
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "node/3"
+              }
+            ],
+            "spotType": "lift_station",
+            "type": "spot"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      ]
+    },
+    {
+      "tags": {
+        "aerialway": "station",
+        "aerialway:station": "nonsense",
+        "aerialway:access": "both"
+      },
+      "output": [
+        {
+          "properties": {
+            "entry": true,
+            "exit": true,
+            "liftId": "",
+            "name": null,
+            "position": null,
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "node/3"
+              }
+            ],
+            "spotType": "lift_station",
+            "type": "spot"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      ]
+    },
+    {
+      "tags": {
+        "aerialway": "station",
+        "aerialway:station": "nonsense",
+        "aerialway:access": "entry"
+      },
+      "output": [
+        {
+          "properties": {
+            "entry": true,
+            "exit": false,
+            "liftId": "",
+            "name": null,
+            "position": null,
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "node/3"
+              }
+            ],
+            "spotType": "lift_station",
+            "type": "spot"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      ]
+    },
+    {
+      "tags": {
+        "aerialway": "station",
+        "aerialway:station": "nonsense",
+        "aerialway:access": "exit"
+      },
+      "output": [
+        {
+          "properties": {
+            "entry": false,
+            "exit": true,
+            "liftId": "",
+            "name": null,
+            "position": null,
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "node/3"
+              }
+            ],
+            "spotType": "lift_station",
+            "type": "spot"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      ]
+    },
+    {
+      "tags": {
+        "aerialway": "station",
+        "aerialway:station": "nonsense",
+        "aerialway:access": "no"
+      },
+      "output": [
+        {
+          "properties": {
+            "entry": false,
+            "exit": false,
+            "liftId": "",
+            "name": null,
+            "position": null,
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "node/3"
+              }
+            ],
+            "spotType": "lift_station",
+            "type": "spot"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      ]
+    },
+    {
+      "tags": {
+        "aerialway": "station",
+        "aerialway:station": "nonsense",
+        "aerialway:access": "nonsense"
+      },
+      "output": [
+        {
+          "properties": {
+            "entry": null,
+            "exit": null,
+            "liftId": "",
+            "name": null,
+            "position": null,
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "node/3"
+              }
+            ],
+            "spotType": "lift_station",
+            "type": "spot"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      ]
+    },
+    {
+      "tags": {
+        "aerialway": "station",
+        "name": "Valley Station"
+      },
+      "output": [
+        {
+          "properties": {
+            "entry": null,
+            "exit": null,
+            "liftId": "",
+            "name": "Valley Station",
+            "position": null,
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "node/3"
+              }
+            ],
+            "spotType": "lift_station",
+            "type": "spot"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      ]
+    },
+    {
+      "tags": {
+        "aerialway": "station",
+        "name": "Base",
+        "name:de": "Talstation"
+      },
+      "output": [
+        {
+          "properties": {
+            "entry": null,
+            "exit": null,
+            "liftId": "",
+            "name": "Base, Talstation",
+            "position": null,
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "node/3"
+              }
+            ],
+            "spotType": "lift_station",
+            "type": "spot"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      ]
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift"
+      },
+      "output": []
+    },
+    {
+      "tags": {
+        "aerialway": "pylon"
+      },
+      "output": []
+    },
+    {
+      "tags": {
+        "disused:aerialway": "station"
+      },
+      "output": []
+    },
+    {
+      "tags": {
+        "amenity": "avalanche_transceiver"
+      },
+      "output": []
+    },
+    {
+      "tags": {
+        "amenity": "avalanche_transceiver",
+        "avalanche_transceiver": "training"
+      },
+      "output": [
+        {
+          "properties": {
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "node/3"
+              }
+            ],
+            "spotType": "avalanche_transceiver_training",
+            "type": "spot"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      ]
+    },
+    {
+      "tags": {
+        "amenity": "avalanche_transceiver",
+        "avalanche_transceiver": "checkpoint"
+      },
+      "output": [
+        {
+          "properties": {
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "node/3"
+              }
+            ],
+            "spotType": "avalanche_transceiver_checkpoint",
+            "type": "spot"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      ]
+    },
+    {
+      "tags": {
+        "amenity": "avalanche_transceiver",
+        "avalanche_transceiver": "nonsense"
+      },
+      "output": []
+    },
+    {
+      "tags": {
+        "amenity": "restaurant",
+        "avalanche_transceiver": "training"
+      },
+      "output": []
+    },
+    {
+      "tags": {
+        "avalanche_transceiver": "checkpoint"
+      },
+      "output": []
+    },
+    {
+      "tags": {
+        "man_made": "piste:halfpipe"
+      },
+      "output": [
+        {
+          "properties": {
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "node/3"
+              }
+            ],
+            "spotType": "halfpipe",
+            "type": "spot"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      ]
+    },
+    {
+      "tags": {
+        "man_made": "tower"
+      },
+      "output": []
+    },
+    {
+      "tags": {
+        "piste:dismount": "yes",
+        "aerialway": "station"
+      },
+      "output": [
+        {
+          "properties": {
+            "dismount": "yes",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "node/3"
+              }
+            ],
+            "spotType": "crossing",
+            "type": "spot"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        },
+        {
+          "properties": {
+            "entry": null,
+            "exit": null,
+            "liftId": "",
+            "name": null,
+            "position": null,
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "node/3"
+              }
+            ],
+            "spotType": "lift_station",
+            "type": "spot"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      ]
+    },
+    {
+      "tags": {
+        "piste:dismount": "no",
+        "aerialway": "station",
+        "aerialway:station": "top",
+        "amenity": "avalanche_transceiver",
+        "avalanche_transceiver": "training",
+        "man_made": "piste:halfpipe"
+      },
+      "output": [
+        {
+          "properties": {
+            "dismount": "no",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "node/3"
+              }
+            ],
+            "spotType": "crossing",
+            "type": "spot"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        },
+        {
+          "properties": {
+            "entry": null,
+            "exit": null,
+            "liftId": "",
+            "name": null,
+            "position": "top",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "node/3"
+              }
+            ],
+            "spotType": "lift_station",
+            "type": "spot"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        },
+        {
+          "properties": {
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "node/3"
+              }
+            ],
+            "spotType": "avalanche_transceiver_training",
+            "type": "spot"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        },
+        {
+          "properties": {
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "node/3"
+              }
+            ],
+            "spotType": "halfpipe",
+            "type": "spot"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      ]
+    },
+    {
+      "tags": {
+        "amenity": "avalanche_transceiver",
+        "avalanche_transceiver": "checkpoint",
+        "man_made": "piste:halfpipe"
+      },
+      "output": [
+        {
+          "properties": {
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "node/3"
+              }
+            ],
+            "spotType": "avalanche_transceiver_checkpoint",
+            "type": "spot"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        },
+        {
+          "properties": {
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "node/3"
+              }
+            ],
+            "spotType": "halfpipe",
+            "type": "spot"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      ]
+    },
+    {
+      "tags": {},
+      "output": []
+    }
+  ]
 }

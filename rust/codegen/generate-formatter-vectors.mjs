@@ -39,6 +39,9 @@ const { formatLift } = await import(
 const { formatSkiArea, InputSkiAreaType } = await import(
   join(repoRoot, "dist/transforms/SkiAreaFormatter.js")
 );
+const { formatSpots } = await import(
+  join(repoRoot, "dist/transforms/SpotFormatter.js")
+);
 
 /** A short line, so geometry never varies between cases. */
 const LINE = {
@@ -545,7 +548,82 @@ const skiAreas = {
   skimap: skiAreasSkimap,
 };
 
-const vectors = { formatVersion: pkg.version, runs, lifts, skiAreas };
+// ---------------------------------------------------------------------------------------
+// Spots. Unlike the other formatters every sub-formatter is applied, not just the first
+// that matches, so one OSM element can yield several spots. Order is part of the contract.
+// ---------------------------------------------------------------------------------------
+
+const spotCases = [];
+const addSpot = (tags) => spotCases.push(tags);
+
+// Crossings.
+for (const dismount of ["yes", "no", "sometimes", "", "nonsense", "YES"]) {
+  addSpot({ "piste:dismount": dismount });
+}
+
+// Lift stations: position crossed with access, which are independent derivations.
+const STATION_POSITIONS = [undefined, "top", "mid", "bottom", "nonsense"];
+const STATION_ACCESS = [undefined, "both", "entry", "exit", "no", "nonsense"];
+for (const position of STATION_POSITIONS) {
+  for (const access of STATION_ACCESS) {
+    const tags = { aerialway: "station" };
+    if (position !== undefined) tags["aerialway:station"] = position;
+    if (access !== undefined) tags["aerialway:access"] = access;
+    addSpot(tags);
+  }
+}
+addSpot({ aerialway: "station", name: "Valley Station" });
+addSpot({ aerialway: "station", name: "Base", "name:de": "Talstation" });
+// Not a station.
+addSpot({ aerialway: "chair_lift" });
+addSpot({ aerialway: "pylon" });
+addSpot({ "disused:aerialway": "station" });
+
+// Avalanche transceiver points.
+for (const kind of [undefined, "training", "checkpoint", "nonsense"]) {
+  const tags = { amenity: "avalanche_transceiver" };
+  if (kind !== undefined) tags.avalanche_transceiver = kind;
+  addSpot(tags);
+}
+addSpot({ amenity: "restaurant", avalanche_transceiver: "training" });
+addSpot({ avalanche_transceiver: "checkpoint" });
+
+// Halfpipes.
+addSpot({ man_made: "piste:halfpipe" });
+addSpot({ man_made: "tower" });
+
+// Combinations: several sub-formatters matching at once, to pin count and order.
+addSpot({ "piste:dismount": "yes", aerialway: "station" });
+addSpot({
+  "piste:dismount": "no",
+  aerialway: "station",
+  "aerialway:station": "top",
+  amenity: "avalanche_transceiver",
+  avalanche_transceiver: "training",
+  man_made: "piste:halfpipe",
+});
+addSpot({
+  amenity: "avalanche_transceiver",
+  avalanche_transceiver: "checkpoint",
+  man_made: "piste:halfpipe",
+});
+addSpot({});
+
+const spots = spotCases.map((tags) => {
+  let output;
+  try {
+    output = formatSpots({
+      type: "Feature",
+      geometry: POINT,
+      properties: { type: "node", id: 3, tags },
+    }).map(skiAreaOutput);
+  } catch (error) {
+    output = { error: String(error?.message ?? error) };
+  }
+  return { tags, output };
+});
+
+const vectors = { formatVersion: pkg.version, runs, lifts, skiAreas, spots };
 /**
  * Run the emitted JSON through Prettier, so the checked-in file is both
  * Prettier-clean (CI runs `prettier --check` over the repo) and byte-stable against this
@@ -590,6 +668,7 @@ if (process.argv.includes("--check")) {
     `Wrote ${runs.length} run cases (${emptyRuns} filtered out) and ` +
       `${lifts.length} lift cases (${nullLifts} rejected)`,
   );
+  console.log(`Wrote ${spots.length} spot cases`);
   console.log(
     `Wrote ${skiAreas.landuse.length} landuse, ${skiAreas.site.length} site and ` +
       `${skiAreas.skimap.length} Skimap.org ski area cases`,
