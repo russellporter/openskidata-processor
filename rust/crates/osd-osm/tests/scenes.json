@@ -1,0 +1,3425 @@
+{
+  "scenes": [
+    {
+      "name": "tagged and untagged nodes, unreferenced and in ways",
+      "elements": [
+        {
+          "type": "node",
+          "id": 5,
+          "lat": 1,
+          "lon": 1
+        },
+        {
+          "type": "node",
+          "id": 1,
+          "lat": 0,
+          "lon": 0,
+          "tags": {
+            "name": "tagged"
+          }
+        },
+        {
+          "type": "node",
+          "id": 3,
+          "lat": 0.5,
+          "lon": 0.5
+        },
+        {
+          "type": "node",
+          "id": 2,
+          "lat": 1,
+          "lon": 0
+        },
+        {
+          "type": "way",
+          "id": 10,
+          "nodes": [2, 3],
+          "tags": {
+            "aerialway": "chair_lift"
+          }
+        }
+      ],
+      "expected": [
+        {
+          "type": "Feature",
+          "id": "way/10",
+          "properties": {
+            "type": "way",
+            "id": 10,
+            "tags": {
+              "aerialway": "chair_lift"
+            }
+          },
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [0, 1],
+              [0.5, 0.5]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "node/1",
+          "properties": {
+            "type": "node",
+            "id": 1,
+            "tags": {
+              "name": "tagged"
+            }
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [0, 0]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "node/5",
+          "properties": {
+            "type": "node",
+            "id": 5,
+            "tags": {}
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [1, 1]
+          }
+        }
+      ]
+    },
+    {
+      "name": "unsorted nodes with duplicate ids",
+      "elements": [
+        {
+          "type": "node",
+          "id": 30,
+          "lat": 3,
+          "lon": 3,
+          "tags": {
+            "a": "b"
+          }
+        },
+        {
+          "type": "node",
+          "id": 10,
+          "lat": 1,
+          "lon": 1
+        },
+        {
+          "type": "node",
+          "id": 20,
+          "lat": 2,
+          "lon": 2
+        },
+        {
+          "type": "node",
+          "id": 10,
+          "lat": 9,
+          "lon": 9,
+          "tags": {
+            "dup": "yes"
+          }
+        },
+        {
+          "type": "way",
+          "id": 1,
+          "nodes": [10, 20, 30],
+          "tags": {
+            "highway": "path"
+          }
+        }
+      ],
+      "expected": [
+        {
+          "type": "Feature",
+          "id": "way/1",
+          "properties": {
+            "type": "way",
+            "id": 1,
+            "tags": {
+              "highway": "path"
+            }
+          },
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [9, 9],
+              [2, 2],
+              [3, 3]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "node/10",
+          "properties": {
+            "type": "node",
+            "id": 10,
+            "tags": {
+              "dup": "yes"
+            }
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [1, 1]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "node/10",
+          "properties": {
+            "type": "node",
+            "id": 10,
+            "tags": {
+              "dup": "yes"
+            }
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [9, 9]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "node/30",
+          "properties": {
+            "type": "node",
+            "id": 30,
+            "tags": {
+              "a": "b"
+            }
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [3, 3]
+          }
+        }
+      ]
+    },
+    {
+      "name": "coordinate rounding",
+      "elements": [
+        {
+          "type": "node",
+          "id": 1,
+          "lat": 47.1,
+          "lon": 11.12345678901235,
+          "tags": {
+            "t": "1"
+          }
+        },
+        {
+          "type": "node",
+          "id": 2,
+          "lat": 5e-13,
+          "lon": -5e-13,
+          "tags": {
+            "t": "2"
+          }
+        },
+        {
+          "type": "node",
+          "id": 3,
+          "lat": -1.5e-12,
+          "lon": 1.5e-12,
+          "tags": {
+            "t": "3"
+          }
+        },
+        {
+          "type": "node",
+          "id": 4,
+          "lat": -89.12345678901235,
+          "lon": 180,
+          "tags": {
+            "t": "4"
+          }
+        },
+        {
+          "type": "node",
+          "id": 5,
+          "lat": -1e-13,
+          "lon": 1e-13,
+          "tags": {
+            "t": "5"
+          }
+        }
+      ],
+      "expected": [
+        {
+          "type": "Feature",
+          "id": "node/1",
+          "properties": {
+            "type": "node",
+            "id": 1,
+            "tags": {
+              "t": "1"
+            }
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11.123456789012, 47.1]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "node/2",
+          "properties": {
+            "type": "node",
+            "id": 2,
+            "tags": {
+              "t": "2"
+            }
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [0, 1e-12]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "node/3",
+          "properties": {
+            "type": "node",
+            "id": 3,
+            "tags": {
+              "t": "3"
+            }
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [2e-12, -1e-12]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "node/4",
+          "properties": {
+            "type": "node",
+            "id": 4,
+            "tags": {
+              "t": "4"
+            }
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [180, -89.123456789012]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "node/5",
+          "properties": {
+            "type": "node",
+            "id": 5,
+            "tags": {
+              "t": "5"
+            }
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [0, 0]
+          }
+        }
+      ]
+    },
+    {
+      "name": "open and closed ways, area-tagged or not",
+      "elements": [
+        {
+          "type": "node",
+          "id": 1,
+          "lat": 0,
+          "lon": 0
+        },
+        {
+          "type": "node",
+          "id": 2,
+          "lat": 0,
+          "lon": 1
+        },
+        {
+          "type": "node",
+          "id": 3,
+          "lat": 1,
+          "lon": 1
+        },
+        {
+          "type": "node",
+          "id": 4,
+          "lat": 1,
+          "lon": 0
+        },
+        {
+          "type": "way",
+          "id": 100,
+          "nodes": [1, 2, 3, 4, 1],
+          "tags": {
+            "landuse": "winter_sports"
+          }
+        },
+        {
+          "type": "way",
+          "id": 101,
+          "nodes": [1, 2, 3, 4, 1],
+          "tags": {
+            "aerialway": "chair_lift"
+          }
+        },
+        {
+          "type": "way",
+          "id": 102,
+          "nodes": [1, 2, 3, 4],
+          "tags": {
+            "landuse": "winter_sports"
+          }
+        },
+        {
+          "type": "way",
+          "id": 103,
+          "nodes": [1, 2, 3, 4, 1],
+          "tags": {
+            "piste:type": "downhill"
+          }
+        },
+        {
+          "type": "way",
+          "id": 104,
+          "nodes": [1, 2, 3, 4, 1],
+          "tags": {
+            "piste:type": "nordic"
+          }
+        },
+        {
+          "type": "way",
+          "id": 105,
+          "nodes": [1, 2, 3, 4, 1],
+          "tags": {
+            "landuse": "winter_sports",
+            "area": "no"
+          }
+        },
+        {
+          "type": "way",
+          "id": 106,
+          "nodes": [1, 2, 3, 4, 1],
+          "tags": {
+            "piste:type": "downhill",
+            "area": "yes"
+          }
+        },
+        {
+          "type": "way",
+          "id": 107,
+          "nodes": [1, 2, 3, 4, 1],
+          "tags": {
+            "piste:type": "downhill",
+            "area": "no"
+          }
+        },
+        {
+          "type": "way",
+          "id": 108,
+          "nodes": [1, 2, 3, 4, 1]
+        },
+        {
+          "type": "way",
+          "id": 109,
+          "nodes": [1, 2],
+          "tags": {}
+        }
+      ],
+      "expected": [
+        {
+          "type": "Feature",
+          "id": "way/100",
+          "properties": {
+            "type": "way",
+            "id": 100,
+            "tags": {
+              "landuse": "winter_sports"
+            }
+          },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [0, 0],
+                [1, 0],
+                [1, 1],
+                [0, 1],
+                [0, 0]
+              ]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "way/103",
+          "properties": {
+            "type": "way",
+            "id": 103,
+            "tags": {
+              "piste:type": "downhill"
+            }
+          },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [0, 0],
+                [1, 0],
+                [1, 1],
+                [0, 1],
+                [0, 0]
+              ]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "way/106",
+          "properties": {
+            "type": "way",
+            "id": 106,
+            "tags": {
+              "piste:type": "downhill",
+              "area": "yes"
+            }
+          },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [0, 0],
+                [1, 0],
+                [1, 1],
+                [0, 1],
+                [0, 0]
+              ]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "way/101",
+          "properties": {
+            "type": "way",
+            "id": 101,
+            "tags": {
+              "aerialway": "chair_lift"
+            }
+          },
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [0, 0],
+              [1, 0],
+              [1, 1],
+              [0, 1],
+              [0, 0]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "way/102",
+          "properties": {
+            "type": "way",
+            "id": 102,
+            "tags": {
+              "landuse": "winter_sports"
+            }
+          },
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [0, 0],
+              [1, 0],
+              [1, 1],
+              [0, 1]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "way/104",
+          "properties": {
+            "type": "way",
+            "id": 104,
+            "tags": {
+              "piste:type": "nordic"
+            }
+          },
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [0, 0],
+              [1, 0],
+              [1, 1],
+              [0, 1],
+              [0, 0]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "way/105",
+          "properties": {
+            "type": "way",
+            "id": 105,
+            "tags": {
+              "landuse": "winter_sports",
+              "area": "no"
+            }
+          },
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [0, 0],
+              [1, 0],
+              [1, 1],
+              [0, 1],
+              [0, 0]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "way/107",
+          "properties": {
+            "type": "way",
+            "id": 107,
+            "tags": {
+              "piste:type": "downhill",
+              "area": "no"
+            }
+          },
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [0, 0],
+              [1, 0],
+              [1, 1],
+              [0, 1],
+              [0, 0]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "way/108",
+          "properties": {
+            "type": "way",
+            "id": 108,
+            "tags": {}
+          },
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [0, 0],
+              [1, 0],
+              [1, 1],
+              [0, 1],
+              [0, 0]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "way/109",
+          "properties": {
+            "type": "way",
+            "id": 109,
+            "tags": {}
+          },
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [0, 0],
+              [1, 0]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "polygon winding is normalised",
+      "elements": [
+        {
+          "type": "node",
+          "id": 1,
+          "lat": 0,
+          "lon": 0
+        },
+        {
+          "type": "node",
+          "id": 2,
+          "lat": 0,
+          "lon": 1
+        },
+        {
+          "type": "node",
+          "id": 3,
+          "lat": 1,
+          "lon": 1
+        },
+        {
+          "type": "node",
+          "id": 4,
+          "lat": 1,
+          "lon": 0
+        },
+        {
+          "type": "way",
+          "id": 1,
+          "nodes": [1, 2, 3, 4, 1],
+          "tags": {
+            "landuse": "winter_sports"
+          }
+        },
+        {
+          "type": "way",
+          "id": 2,
+          "nodes": [1, 4, 3, 2, 1],
+          "tags": {
+            "landuse": "winter_sports"
+          }
+        }
+      ],
+      "expected": [
+        {
+          "type": "Feature",
+          "id": "way/1",
+          "properties": {
+            "type": "way",
+            "id": 1,
+            "tags": {
+              "landuse": "winter_sports"
+            }
+          },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [0, 0],
+                [1, 0],
+                [1, 1],
+                [0, 1],
+                [0, 0]
+              ]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "way/2",
+          "properties": {
+            "type": "way",
+            "id": 2,
+            "tags": {
+              "landuse": "winter_sports"
+            }
+          },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [0, 0],
+                [1, 0],
+                [1, 1],
+                [0, 1],
+                [0, 0]
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "ways with missing nodes or no node list",
+      "elements": [
+        {
+          "type": "node",
+          "id": 1,
+          "lat": 0,
+          "lon": 0
+        },
+        {
+          "type": "node",
+          "id": 2,
+          "lat": 1,
+          "lon": 1
+        },
+        {
+          "type": "way",
+          "id": 10,
+          "nodes": [1, 99, 2],
+          "tags": {
+            "highway": "path"
+          }
+        },
+        {
+          "type": "way",
+          "id": 11,
+          "nodes": [99, 98],
+          "tags": {
+            "highway": "path"
+          }
+        },
+        {
+          "type": "way",
+          "id": 12,
+          "nodes": [1, 99],
+          "tags": {
+            "highway": "path"
+          }
+        },
+        {
+          "type": "way",
+          "id": 13,
+          "tags": {
+            "highway": "path"
+          }
+        },
+        {
+          "type": "way",
+          "id": 14,
+          "nodes": [],
+          "tags": {
+            "highway": "path"
+          }
+        },
+        {
+          "type": "way",
+          "id": 15,
+          "nodes": [1, 2, 99, 1],
+          "tags": {
+            "landuse": "winter_sports"
+          }
+        },
+        {
+          "type": "way",
+          "id": 16,
+          "nodes": [99, 1, 2, 99],
+          "tags": {
+            "landuse": "winter_sports"
+          }
+        }
+      ],
+      "expected": [
+        {
+          "type": "Feature",
+          "id": "way/15",
+          "properties": {
+            "type": "way",
+            "id": 15,
+            "tags": {
+              "landuse": "winter_sports"
+            }
+          },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [0, 0],
+                [1, 1],
+                [0, 0]
+              ]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "way/10",
+          "properties": {
+            "type": "way",
+            "id": 10,
+            "tags": {
+              "highway": "path"
+            }
+          },
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [0, 0],
+              [1, 1]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "way/16",
+          "properties": {
+            "type": "way",
+            "id": 16,
+            "tags": {
+              "landuse": "winter_sports"
+            }
+          },
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [0, 0],
+              [1, 1]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "duplicate way ids",
+      "elements": [
+        {
+          "type": "node",
+          "id": 1,
+          "lat": 0,
+          "lon": 0
+        },
+        {
+          "type": "node",
+          "id": 2,
+          "lat": 1,
+          "lon": 1
+        },
+        {
+          "type": "node",
+          "id": 3,
+          "lat": 2,
+          "lon": 2
+        },
+        {
+          "type": "way",
+          "id": 10,
+          "nodes": [1, 2],
+          "tags": {
+            "a": "first"
+          }
+        },
+        {
+          "type": "way",
+          "id": 10,
+          "nodes": [2, 3],
+          "tags": {
+            "a": "second"
+          }
+        },
+        {
+          "type": "relation",
+          "id": 50,
+          "members": [
+            {
+              "type": "way",
+              "ref": 10,
+              "role": ""
+            }
+          ],
+          "tags": {
+            "type": "route",
+            "route": "piste"
+          }
+        }
+      ],
+      "expected": [
+        {
+          "type": "Feature",
+          "id": "relation/50",
+          "properties": {
+            "type": "relation",
+            "id": 50,
+            "tags": {
+              "type": "route",
+              "route": "piste"
+            }
+          },
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [1, 1],
+              [2, 2]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "way/10",
+          "properties": {
+            "type": "way",
+            "id": 10,
+            "tags": {
+              "a": "first"
+            }
+          },
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [0, 0],
+              [1, 1]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "way/10",
+          "properties": {
+            "type": "way",
+            "id": 10,
+            "tags": {
+              "a": "second"
+            }
+          },
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [1, 1],
+              [2, 2]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "route relation joining ways in both directions",
+      "elements": [
+        {
+          "type": "node",
+          "id": 1,
+          "lat": 0,
+          "lon": 0
+        },
+        {
+          "type": "node",
+          "id": 2,
+          "lat": 0,
+          "lon": 1
+        },
+        {
+          "type": "node",
+          "id": 3,
+          "lat": 0,
+          "lon": 2
+        },
+        {
+          "type": "node",
+          "id": 4,
+          "lat": 0,
+          "lon": 3
+        },
+        {
+          "type": "node",
+          "id": 5,
+          "lat": 0,
+          "lon": 4
+        },
+        {
+          "type": "way",
+          "id": 10,
+          "nodes": [1, 2],
+          "tags": {}
+        },
+        {
+          "type": "way",
+          "id": 11,
+          "nodes": [3, 2],
+          "tags": {}
+        },
+        {
+          "type": "way",
+          "id": 12,
+          "nodes": [3, 4],
+          "tags": {}
+        },
+        {
+          "type": "way",
+          "id": 13,
+          "nodes": [5, 4],
+          "tags": {}
+        },
+        {
+          "type": "relation",
+          "id": 20,
+          "members": [
+            {
+              "type": "way",
+              "ref": 10
+            },
+            {
+              "type": "way",
+              "ref": 11
+            },
+            {
+              "type": "way",
+              "ref": 12
+            },
+            {
+              "type": "way",
+              "ref": 13
+            }
+          ],
+          "tags": {
+            "type": "route",
+            "route": "piste"
+          }
+        }
+      ],
+      "expected": [
+        {
+          "type": "Feature",
+          "id": "relation/20",
+          "properties": {
+            "type": "relation",
+            "id": 20,
+            "tags": {
+              "type": "route",
+              "route": "piste"
+            }
+          },
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [4, 0],
+              [3, 0],
+              [2, 0],
+              [1, 0],
+              [0, 0]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "way/10",
+          "properties": {
+            "type": "way",
+            "id": 10,
+            "tags": {}
+          },
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [0, 0],
+              [1, 0]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "way/11",
+          "properties": {
+            "type": "way",
+            "id": 11,
+            "tags": {}
+          },
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [2, 0],
+              [1, 0]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "way/12",
+          "properties": {
+            "type": "way",
+            "id": 12,
+            "tags": {}
+          },
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [2, 0],
+              [3, 0]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "way/13",
+          "properties": {
+            "type": "way",
+            "id": 13,
+            "tags": {}
+          },
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [4, 0],
+              [3, 0]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "route relation with a gap yields a multilinestring",
+      "elements": [
+        {
+          "type": "node",
+          "id": 1,
+          "lat": 0,
+          "lon": 0
+        },
+        {
+          "type": "node",
+          "id": 2,
+          "lat": 0,
+          "lon": 1
+        },
+        {
+          "type": "node",
+          "id": 3,
+          "lat": 5,
+          "lon": 5
+        },
+        {
+          "type": "node",
+          "id": 4,
+          "lat": 5,
+          "lon": 6
+        },
+        {
+          "type": "way",
+          "id": 10,
+          "nodes": [1, 2],
+          "tags": {}
+        },
+        {
+          "type": "way",
+          "id": 11,
+          "nodes": [3, 4],
+          "tags": {}
+        },
+        {
+          "type": "relation",
+          "id": 20,
+          "members": [
+            {
+              "type": "way",
+              "ref": 10
+            },
+            {
+              "type": "way",
+              "ref": 11
+            }
+          ],
+          "tags": {
+            "type": "waterway"
+          }
+        }
+      ],
+      "expected": [
+        {
+          "type": "Feature",
+          "id": "relation/20",
+          "properties": {
+            "type": "relation",
+            "id": 20,
+            "tags": {
+              "type": "waterway"
+            }
+          },
+          "geometry": {
+            "type": "MultiLineString",
+            "coordinates": [
+              [
+                [5, 5],
+                [6, 5]
+              ],
+              [
+                [0, 0],
+                [1, 0]
+              ]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "way/10",
+          "properties": {
+            "type": "way",
+            "id": 10,
+            "tags": {}
+          },
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [0, 0],
+              [1, 0]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "way/11",
+          "properties": {
+            "type": "way",
+            "id": 11,
+            "tags": {}
+          },
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [5, 5],
+              [6, 5]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "route relation edge cases",
+      "elements": [
+        {
+          "type": "node",
+          "id": 1,
+          "lat": 0,
+          "lon": 0
+        },
+        {
+          "type": "node",
+          "id": 2,
+          "lat": 0,
+          "lon": 1
+        },
+        {
+          "type": "way",
+          "id": 10,
+          "nodes": [1, 2],
+          "tags": {}
+        },
+        {
+          "type": "way",
+          "id": 11,
+          "nodes": [97, 98],
+          "tags": {}
+        },
+        {
+          "type": "relation",
+          "id": 20,
+          "members": [
+            {
+              "type": "way",
+              "ref": 10
+            },
+            {
+              "type": "way",
+              "ref": 404
+            }
+          ],
+          "tags": {
+            "type": "route"
+          }
+        },
+        {
+          "type": "relation",
+          "id": 21,
+          "members": [
+            {
+              "type": "way",
+              "ref": 404
+            }
+          ],
+          "tags": {
+            "type": "route"
+          }
+        },
+        {
+          "type": "relation",
+          "id": 22,
+          "members": [
+            {
+              "type": "way",
+              "ref": 11
+            }
+          ],
+          "tags": {
+            "type": "route"
+          }
+        },
+        {
+          "type": "relation",
+          "id": 23,
+          "members": [],
+          "tags": {
+            "type": "route"
+          }
+        },
+        {
+          "type": "relation",
+          "id": 24,
+          "tags": {
+            "type": "route"
+          }
+        },
+        {
+          "type": "relation",
+          "id": 25,
+          "members": [
+            {
+              "type": "way",
+              "ref": 10
+            }
+          ]
+        },
+        {
+          "type": "relation",
+          "id": 26,
+          "members": [
+            {
+              "type": "way",
+              "ref": 10
+            }
+          ],
+          "tags": {
+            "type": "restriction"
+          }
+        },
+        {
+          "type": "relation",
+          "id": 27,
+          "members": [
+            {
+              "type": "way",
+              "ref": 10
+            }
+          ],
+          "tags": {
+            "name": "no type"
+          }
+        },
+        {
+          "type": "relation",
+          "id": 28,
+          "members": [
+            {
+              "type": "node",
+              "ref": 1
+            },
+            {
+              "type": "relation",
+              "ref": 20
+            }
+          ],
+          "tags": {
+            "type": "route"
+          }
+        }
+      ],
+      "expected": [
+        {
+          "type": "Feature",
+          "id": "relation/20",
+          "properties": {
+            "type": "relation",
+            "id": 20,
+            "tags": {
+              "type": "route"
+            }
+          },
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [0, 0],
+              [1, 0]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "relation/22",
+          "properties": {
+            "type": "relation",
+            "id": 22,
+            "tags": {
+              "type": "route"
+            }
+          },
+          "geometry": {
+            "type": "LineString",
+            "coordinates": []
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "way/10",
+          "properties": {
+            "type": "way",
+            "id": 10,
+            "tags": {}
+          },
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [0, 0],
+              [1, 0]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "node/1",
+          "properties": {
+            "type": "node",
+            "id": 1,
+            "tags": {}
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [0, 0]
+          }
+        }
+      ]
+    },
+    {
+      "name": "simple multipolygon with an inner ring",
+      "elements": [
+        {
+          "type": "node",
+          "id": 1,
+          "lat": 0,
+          "lon": 0
+        },
+        {
+          "type": "node",
+          "id": 2,
+          "lat": 0,
+          "lon": 10
+        },
+        {
+          "type": "node",
+          "id": 3,
+          "lat": 10,
+          "lon": 10
+        },
+        {
+          "type": "node",
+          "id": 4,
+          "lat": 10,
+          "lon": 0
+        },
+        {
+          "type": "node",
+          "id": 11,
+          "lat": 4,
+          "lon": 4
+        },
+        {
+          "type": "node",
+          "id": 12,
+          "lat": 4,
+          "lon": 6
+        },
+        {
+          "type": "node",
+          "id": 13,
+          "lat": 6,
+          "lon": 6
+        },
+        {
+          "type": "node",
+          "id": 14,
+          "lat": 6,
+          "lon": 4
+        },
+        {
+          "type": "way",
+          "id": 100,
+          "nodes": [1, 2, 3, 4, 1],
+          "tags": {}
+        },
+        {
+          "type": "way",
+          "id": 101,
+          "nodes": [11, 12, 13, 14, 11],
+          "tags": {}
+        },
+        {
+          "type": "relation",
+          "id": 200,
+          "members": [
+            {
+              "type": "way",
+              "ref": 100,
+              "role": "outer"
+            },
+            {
+              "type": "way",
+              "ref": 101,
+              "role": "inner"
+            }
+          ],
+          "tags": {
+            "type": "multipolygon",
+            "landuse": "winter_sports"
+          }
+        }
+      ],
+      "expected": [
+        {
+          "type": "Feature",
+          "id": "relation/200",
+          "properties": {
+            "type": "relation",
+            "id": 200,
+            "tags": {
+              "type": "multipolygon",
+              "landuse": "winter_sports"
+            }
+          },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [0, 0],
+                [10, 0],
+                [10, 10],
+                [0, 10],
+                [0, 0]
+              ],
+              [
+                [4, 4],
+                [4, 6],
+                [6, 6],
+                [6, 4],
+                [4, 4]
+              ]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "way/100",
+          "properties": {
+            "type": "way",
+            "id": 100,
+            "tags": {}
+          },
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [0, 0],
+              [10, 0],
+              [10, 10],
+              [0, 10],
+              [0, 0]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "way/101",
+          "properties": {
+            "type": "way",
+            "id": 101,
+            "tags": {}
+          },
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [4, 4],
+              [6, 4],
+              [6, 6],
+              [4, 6],
+              [4, 4]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "multipolygon outers split across ways in mixed directions",
+      "elements": [
+        {
+          "type": "node",
+          "id": 1,
+          "lat": 0,
+          "lon": 0
+        },
+        {
+          "type": "node",
+          "id": 2,
+          "lat": 0,
+          "lon": 10
+        },
+        {
+          "type": "node",
+          "id": 3,
+          "lat": 10,
+          "lon": 10
+        },
+        {
+          "type": "node",
+          "id": 4,
+          "lat": 10,
+          "lon": 0
+        },
+        {
+          "type": "way",
+          "id": 100,
+          "nodes": [1, 2, 3],
+          "tags": {}
+        },
+        {
+          "type": "way",
+          "id": 101,
+          "nodes": [1, 4, 3],
+          "tags": {}
+        },
+        {
+          "type": "relation",
+          "id": 200,
+          "members": [
+            {
+              "type": "way",
+              "ref": 100,
+              "role": "outer"
+            },
+            {
+              "type": "way",
+              "ref": 101,
+              "role": "outer"
+            }
+          ],
+          "tags": {
+            "type": "multipolygon"
+          }
+        }
+      ],
+      "expected": [
+        {
+          "type": "Feature",
+          "id": "relation/200",
+          "properties": {
+            "type": "relation",
+            "id": 200,
+            "tags": {
+              "type": "multipolygon"
+            }
+          },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [0, 0],
+                [10, 0],
+                [10, 10],
+                [0, 10],
+                [0, 0]
+              ]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "way/100",
+          "properties": {
+            "type": "way",
+            "id": 100,
+            "tags": {}
+          },
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [0, 0],
+              [10, 0],
+              [10, 10]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "way/101",
+          "properties": {
+            "type": "way",
+            "id": 101,
+            "tags": {}
+          },
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [0, 0],
+              [0, 10],
+              [10, 10]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "multipolygon with two outers and inners assigned to the right one",
+      "elements": [
+        {
+          "type": "node",
+          "id": 1,
+          "lat": 0,
+          "lon": 0
+        },
+        {
+          "type": "node",
+          "id": 2,
+          "lat": 0,
+          "lon": 10
+        },
+        {
+          "type": "node",
+          "id": 3,
+          "lat": 10,
+          "lon": 10
+        },
+        {
+          "type": "node",
+          "id": 4,
+          "lat": 10,
+          "lon": 0
+        },
+        {
+          "type": "node",
+          "id": 11,
+          "lat": 0,
+          "lon": 20
+        },
+        {
+          "type": "node",
+          "id": 12,
+          "lat": 0,
+          "lon": 30
+        },
+        {
+          "type": "node",
+          "id": 13,
+          "lat": 10,
+          "lon": 30
+        },
+        {
+          "type": "node",
+          "id": 14,
+          "lat": 10,
+          "lon": 20
+        },
+        {
+          "type": "node",
+          "id": 21,
+          "lat": 2,
+          "lon": 2
+        },
+        {
+          "type": "node",
+          "id": 22,
+          "lat": 2,
+          "lon": 4
+        },
+        {
+          "type": "node",
+          "id": 23,
+          "lat": 4,
+          "lon": 4
+        },
+        {
+          "type": "node",
+          "id": 24,
+          "lat": 4,
+          "lon": 2
+        },
+        {
+          "type": "node",
+          "id": 31,
+          "lat": 2,
+          "lon": 22
+        },
+        {
+          "type": "node",
+          "id": 32,
+          "lat": 2,
+          "lon": 24
+        },
+        {
+          "type": "node",
+          "id": 33,
+          "lat": 4,
+          "lon": 24
+        },
+        {
+          "type": "node",
+          "id": 34,
+          "lat": 4,
+          "lon": 22
+        },
+        {
+          "type": "node",
+          "id": 41,
+          "lat": 50,
+          "lon": 50
+        },
+        {
+          "type": "node",
+          "id": 42,
+          "lat": 50,
+          "lon": 51
+        },
+        {
+          "type": "node",
+          "id": 43,
+          "lat": 51,
+          "lon": 51
+        },
+        {
+          "type": "node",
+          "id": 44,
+          "lat": 51,
+          "lon": 50
+        },
+        {
+          "type": "way",
+          "id": 100,
+          "nodes": [1, 2, 3, 4, 1],
+          "tags": {}
+        },
+        {
+          "type": "way",
+          "id": 101,
+          "nodes": [11, 12, 13, 14, 11],
+          "tags": {}
+        },
+        {
+          "type": "way",
+          "id": 102,
+          "nodes": [21, 22, 23, 24, 21],
+          "tags": {}
+        },
+        {
+          "type": "way",
+          "id": 103,
+          "nodes": [31, 32, 33, 34, 31],
+          "tags": {}
+        },
+        {
+          "type": "way",
+          "id": 104,
+          "nodes": [41, 42, 43, 44, 41],
+          "tags": {}
+        },
+        {
+          "type": "relation",
+          "id": 200,
+          "members": [
+            {
+              "type": "way",
+              "ref": 100,
+              "role": "outer"
+            },
+            {
+              "type": "way",
+              "ref": 101,
+              "role": "outer"
+            },
+            {
+              "type": "way",
+              "ref": 102,
+              "role": "inner"
+            },
+            {
+              "type": "way",
+              "ref": 103,
+              "role": "inner"
+            },
+            {
+              "type": "way",
+              "ref": 104,
+              "role": "inner"
+            }
+          ],
+          "tags": {
+            "type": "multipolygon"
+          }
+        }
+      ],
+      "expected": [
+        {
+          "type": "Feature",
+          "id": "relation/200",
+          "properties": {
+            "type": "relation",
+            "id": 200,
+            "tags": {
+              "type": "multipolygon"
+            }
+          },
+          "geometry": {
+            "type": "MultiPolygon",
+            "coordinates": [
+              [
+                [
+                  [20, 0],
+                  [30, 0],
+                  [30, 10],
+                  [20, 10],
+                  [20, 0]
+                ],
+                [
+                  [22, 2],
+                  [22, 4],
+                  [24, 4],
+                  [24, 2],
+                  [22, 2]
+                ]
+              ],
+              [
+                [
+                  [0, 0],
+                  [10, 0],
+                  [10, 10],
+                  [0, 10],
+                  [0, 0]
+                ],
+                [
+                  [2, 2],
+                  [2, 4],
+                  [4, 4],
+                  [4, 2],
+                  [2, 2]
+                ]
+              ]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "way/100",
+          "properties": {
+            "type": "way",
+            "id": 100,
+            "tags": {}
+          },
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [0, 0],
+              [10, 0],
+              [10, 10],
+              [0, 10],
+              [0, 0]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "way/101",
+          "properties": {
+            "type": "way",
+            "id": 101,
+            "tags": {}
+          },
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [20, 0],
+              [30, 0],
+              [30, 10],
+              [20, 10],
+              [20, 0]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "way/102",
+          "properties": {
+            "type": "way",
+            "id": 102,
+            "tags": {}
+          },
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [2, 2],
+              [4, 2],
+              [4, 4],
+              [2, 4],
+              [2, 2]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "way/103",
+          "properties": {
+            "type": "way",
+            "id": 103,
+            "tags": {}
+          },
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [22, 2],
+              [24, 2],
+              [24, 4],
+              [22, 4],
+              [22, 2]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "way/104",
+          "properties": {
+            "type": "way",
+            "id": 104,
+            "tags": {}
+          },
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [50, 50],
+              [51, 50],
+              [51, 51],
+              [50, 51],
+              [50, 50]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "inner ring contained by two nested outers goes to the first listed",
+      "elements": [
+        {
+          "type": "node",
+          "id": 1,
+          "lat": 0,
+          "lon": 0
+        },
+        {
+          "type": "node",
+          "id": 2,
+          "lat": 0,
+          "lon": 100
+        },
+        {
+          "type": "node",
+          "id": 3,
+          "lat": 100,
+          "lon": 100
+        },
+        {
+          "type": "node",
+          "id": 4,
+          "lat": 100,
+          "lon": 0
+        },
+        {
+          "type": "node",
+          "id": 11,
+          "lat": 10,
+          "lon": 10
+        },
+        {
+          "type": "node",
+          "id": 12,
+          "lat": 10,
+          "lon": 60
+        },
+        {
+          "type": "node",
+          "id": 13,
+          "lat": 60,
+          "lon": 60
+        },
+        {
+          "type": "node",
+          "id": 14,
+          "lat": 60,
+          "lon": 10
+        },
+        {
+          "type": "node",
+          "id": 21,
+          "lat": 20,
+          "lon": 20
+        },
+        {
+          "type": "node",
+          "id": 22,
+          "lat": 20,
+          "lon": 25
+        },
+        {
+          "type": "node",
+          "id": 23,
+          "lat": 25,
+          "lon": 25
+        },
+        {
+          "type": "node",
+          "id": 24,
+          "lat": 25,
+          "lon": 20
+        },
+        {
+          "type": "way",
+          "id": 100,
+          "nodes": [1, 2, 3, 4, 1],
+          "tags": {}
+        },
+        {
+          "type": "way",
+          "id": 101,
+          "nodes": [11, 12, 13, 14, 11],
+          "tags": {}
+        },
+        {
+          "type": "way",
+          "id": 102,
+          "nodes": [21, 22, 23, 24, 21],
+          "tags": {}
+        },
+        {
+          "type": "relation",
+          "id": 200,
+          "members": [
+            {
+              "type": "way",
+              "ref": 100,
+              "role": "outer"
+            },
+            {
+              "type": "way",
+              "ref": 101,
+              "role": "outer"
+            },
+            {
+              "type": "way",
+              "ref": 102,
+              "role": "inner"
+            }
+          ],
+          "tags": {
+            "type": "multipolygon"
+          }
+        },
+        {
+          "type": "relation",
+          "id": 201,
+          "members": [
+            {
+              "type": "way",
+              "ref": 101,
+              "role": "outer"
+            },
+            {
+              "type": "way",
+              "ref": 100,
+              "role": "outer"
+            },
+            {
+              "type": "way",
+              "ref": 102,
+              "role": "inner"
+            }
+          ],
+          "tags": {
+            "type": "multipolygon"
+          }
+        }
+      ],
+      "expected": [
+        {
+          "type": "Feature",
+          "id": "relation/200",
+          "properties": {
+            "type": "relation",
+            "id": 200,
+            "tags": {
+              "type": "multipolygon"
+            }
+          },
+          "geometry": {
+            "type": "MultiPolygon",
+            "coordinates": [
+              [
+                [
+                  [10, 10],
+                  [60, 10],
+                  [60, 60],
+                  [10, 60],
+                  [10, 10]
+                ],
+                [
+                  [20, 20],
+                  [20, 25],
+                  [25, 25],
+                  [25, 20],
+                  [20, 20]
+                ]
+              ],
+              [
+                [
+                  [0, 0],
+                  [100, 0],
+                  [100, 100],
+                  [0, 100],
+                  [0, 0]
+                ]
+              ]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "relation/201",
+          "properties": {
+            "type": "relation",
+            "id": 201,
+            "tags": {
+              "type": "multipolygon"
+            }
+          },
+          "geometry": {
+            "type": "MultiPolygon",
+            "coordinates": [
+              [
+                [
+                  [0, 0],
+                  [100, 0],
+                  [100, 100],
+                  [0, 100],
+                  [0, 0]
+                ],
+                [
+                  [20, 20],
+                  [20, 25],
+                  [25, 25],
+                  [25, 20],
+                  [20, 20]
+                ]
+              ],
+              [
+                [
+                  [10, 10],
+                  [60, 10],
+                  [60, 60],
+                  [10, 60],
+                  [10, 10]
+                ]
+              ]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "way/100",
+          "properties": {
+            "type": "way",
+            "id": 100,
+            "tags": {}
+          },
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [0, 0],
+              [100, 0],
+              [100, 100],
+              [0, 100],
+              [0, 0]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "way/101",
+          "properties": {
+            "type": "way",
+            "id": 101,
+            "tags": {}
+          },
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [10, 10],
+              [60, 10],
+              [60, 60],
+              [10, 60],
+              [10, 10]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "way/102",
+          "properties": {
+            "type": "way",
+            "id": 102,
+            "tags": {}
+          },
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [20, 20],
+              [25, 20],
+              [25, 25],
+              [20, 25],
+              [20, 20]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "multipolygon roles: missing, empty and unknown",
+      "elements": [
+        {
+          "type": "node",
+          "id": 1,
+          "lat": 0,
+          "lon": 0
+        },
+        {
+          "type": "node",
+          "id": 2,
+          "lat": 0,
+          "lon": 10
+        },
+        {
+          "type": "node",
+          "id": 3,
+          "lat": 10,
+          "lon": 10
+        },
+        {
+          "type": "node",
+          "id": 4,
+          "lat": 10,
+          "lon": 0
+        },
+        {
+          "type": "node",
+          "id": 11,
+          "lat": 0,
+          "lon": 30
+        },
+        {
+          "type": "node",
+          "id": 12,
+          "lat": 0,
+          "lon": 40
+        },
+        {
+          "type": "node",
+          "id": 13,
+          "lat": 10,
+          "lon": 40
+        },
+        {
+          "type": "node",
+          "id": 14,
+          "lat": 10,
+          "lon": 30
+        },
+        {
+          "type": "node",
+          "id": 21,
+          "lat": 0,
+          "lon": 60
+        },
+        {
+          "type": "node",
+          "id": 22,
+          "lat": 0,
+          "lon": 70
+        },
+        {
+          "type": "node",
+          "id": 23,
+          "lat": 10,
+          "lon": 70
+        },
+        {
+          "type": "node",
+          "id": 24,
+          "lat": 10,
+          "lon": 60
+        },
+        {
+          "type": "way",
+          "id": 100,
+          "nodes": [1, 2, 3, 4, 1],
+          "tags": {}
+        },
+        {
+          "type": "way",
+          "id": 101,
+          "nodes": [11, 12, 13, 14, 11],
+          "tags": {}
+        },
+        {
+          "type": "way",
+          "id": 102,
+          "nodes": [21, 22, 23, 24, 21],
+          "tags": {}
+        },
+        {
+          "type": "relation",
+          "id": 200,
+          "members": [
+            {
+              "type": "way",
+              "ref": 100
+            },
+            {
+              "type": "way",
+              "ref": 101,
+              "role": ""
+            }
+          ],
+          "tags": {
+            "type": "multipolygon"
+          }
+        },
+        {
+          "type": "relation",
+          "id": 201,
+          "members": [
+            {
+              "type": "way",
+              "ref": 100,
+              "role": "outer"
+            },
+            {
+              "type": "way",
+              "ref": 101
+            },
+            {
+              "type": "way",
+              "ref": 102,
+              "role": ""
+            }
+          ],
+          "tags": {
+            "type": "multipolygon"
+          }
+        },
+        {
+          "type": "relation",
+          "id": 202,
+          "members": [
+            {
+              "type": "way",
+              "ref": 100,
+              "role": "outer"
+            },
+            {
+              "type": "way",
+              "ref": 101,
+              "role": "subarea"
+            }
+          ],
+          "tags": {
+            "type": "boundary"
+          }
+        }
+      ],
+      "expected": [
+        {
+          "type": "Feature",
+          "id": "relation/201",
+          "properties": {
+            "type": "relation",
+            "id": 201,
+            "tags": {
+              "type": "multipolygon"
+            }
+          },
+          "geometry": {
+            "type": "MultiPolygon",
+            "coordinates": [
+              [
+                [
+                  [60, 0],
+                  [70, 0],
+                  [70, 10],
+                  [60, 10],
+                  [60, 0]
+                ]
+              ],
+              [
+                [
+                  [30, 0],
+                  [40, 0],
+                  [40, 10],
+                  [30, 10],
+                  [30, 0]
+                ]
+              ],
+              [
+                [
+                  [0, 0],
+                  [10, 0],
+                  [10, 10],
+                  [0, 10],
+                  [0, 0]
+                ]
+              ]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "relation/202",
+          "properties": {
+            "type": "relation",
+            "id": 202,
+            "tags": {
+              "type": "boundary"
+            }
+          },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [0, 0],
+                [10, 0],
+                [10, 10],
+                [0, 10],
+                [0, 0]
+              ]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "way/100",
+          "properties": {
+            "type": "way",
+            "id": 100,
+            "tags": {}
+          },
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [0, 0],
+              [10, 0],
+              [10, 10],
+              [0, 10],
+              [0, 0]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "way/101",
+          "properties": {
+            "type": "way",
+            "id": 101,
+            "tags": {}
+          },
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [30, 0],
+              [40, 0],
+              [40, 10],
+              [30, 10],
+              [30, 0]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "way/102",
+          "properties": {
+            "type": "way",
+            "id": 102,
+            "tags": {}
+          },
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [60, 0],
+              [70, 0],
+              [70, 10],
+              [60, 10],
+              [60, 0]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "multipolygon rings too short or unclosed",
+      "elements": [
+        {
+          "type": "node",
+          "id": 1,
+          "lat": 0,
+          "lon": 0
+        },
+        {
+          "type": "node",
+          "id": 2,
+          "lat": 0,
+          "lon": 10
+        },
+        {
+          "type": "node",
+          "id": 3,
+          "lat": 10,
+          "lon": 10
+        },
+        {
+          "type": "node",
+          "id": 4,
+          "lat": 10,
+          "lon": 0
+        },
+        {
+          "type": "node",
+          "id": 11,
+          "lat": 4,
+          "lon": 4
+        },
+        {
+          "type": "node",
+          "id": 12,
+          "lat": 4,
+          "lon": 6
+        },
+        {
+          "type": "node",
+          "id": 13,
+          "lat": 6,
+          "lon": 6
+        },
+        {
+          "type": "node",
+          "id": 14,
+          "lat": 6,
+          "lon": 4
+        },
+        {
+          "type": "node",
+          "id": 21,
+          "lat": 0,
+          "lon": 0
+        },
+        {
+          "type": "node",
+          "id": 22,
+          "lat": 1,
+          "lon": 1
+        },
+        {
+          "type": "node",
+          "id": 23,
+          "lat": 0,
+          "lon": 2
+        },
+        {
+          "type": "way",
+          "id": 100,
+          "nodes": [1, 2, 3, 4, 1],
+          "tags": {}
+        },
+        {
+          "type": "way",
+          "id": 101,
+          "nodes": [11, 12, 13, 14, 11],
+          "tags": {}
+        },
+        {
+          "type": "way",
+          "id": 102,
+          "nodes": [21, 22, 21],
+          "tags": {}
+        },
+        {
+          "type": "way",
+          "id": 103,
+          "nodes": [1, 2, 3],
+          "tags": {}
+        },
+        {
+          "type": "relation",
+          "id": 200,
+          "members": [
+            {
+              "type": "way",
+              "ref": 102,
+              "role": "outer"
+            },
+            {
+              "type": "way",
+              "ref": 101,
+              "role": "inner"
+            }
+          ],
+          "tags": {
+            "type": "multipolygon"
+          }
+        },
+        {
+          "type": "relation",
+          "id": 201,
+          "members": [
+            {
+              "type": "way",
+              "ref": 103,
+              "role": "outer"
+            }
+          ],
+          "tags": {
+            "type": "multipolygon"
+          }
+        },
+        {
+          "type": "relation",
+          "id": 202,
+          "members": [
+            {
+              "type": "way",
+              "ref": 100,
+              "role": "outer"
+            },
+            {
+              "type": "way",
+              "ref": 102,
+              "role": "inner"
+            }
+          ],
+          "tags": {
+            "type": "multipolygon"
+          }
+        },
+        {
+          "type": "relation",
+          "id": 203,
+          "members": [
+            {
+              "type": "way",
+              "ref": 100,
+              "role": "outer"
+            },
+            {
+              "type": "way",
+              "ref": 999,
+              "role": "inner"
+            }
+          ],
+          "tags": {
+            "type": "multipolygon"
+          }
+        }
+      ],
+      "expected": [
+        {
+          "type": "Feature",
+          "id": "relation/202",
+          "properties": {
+            "type": "relation",
+            "id": 202,
+            "tags": {
+              "type": "multipolygon"
+            }
+          },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [0, 0],
+                [10, 0],
+                [10, 10],
+                [0, 10],
+                [0, 0]
+              ]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "relation/203",
+          "properties": {
+            "type": "relation",
+            "id": 203,
+            "tags": {
+              "type": "multipolygon"
+            }
+          },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [0, 0],
+                [10, 0],
+                [10, 10],
+                [0, 10],
+                [0, 0]
+              ]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "way/100",
+          "properties": {
+            "type": "way",
+            "id": 100,
+            "tags": {}
+          },
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [0, 0],
+              [10, 0],
+              [10, 10],
+              [0, 10],
+              [0, 0]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "way/101",
+          "properties": {
+            "type": "way",
+            "id": 101,
+            "tags": {}
+          },
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [4, 4],
+              [6, 4],
+              [6, 6],
+              [4, 6],
+              [4, 4]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "way/102",
+          "properties": {
+            "type": "way",
+            "id": 102,
+            "tags": {}
+          },
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [0, 0],
+              [1, 1],
+              [0, 0]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "way/103",
+          "properties": {
+            "type": "way",
+            "id": 103,
+            "tags": {}
+          },
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [0, 0],
+              [10, 0],
+              [10, 10]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "node/23",
+          "properties": {
+            "type": "node",
+            "id": 23,
+            "tags": {}
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [2, 0]
+          }
+        }
+      ]
+    },
+    {
+      "name": "points: relation node members, nodes in ways, tagged nodes",
+      "elements": [
+        {
+          "type": "node",
+          "id": 1,
+          "lat": 0,
+          "lon": 0
+        },
+        {
+          "type": "node",
+          "id": 2,
+          "lat": 0,
+          "lon": 1
+        },
+        {
+          "type": "node",
+          "id": 3,
+          "lat": 0,
+          "lon": 2
+        },
+        {
+          "type": "node",
+          "id": 4,
+          "lat": 0,
+          "lon": 3,
+          "tags": {
+            "place": "x"
+          }
+        },
+        {
+          "type": "node",
+          "id": 5,
+          "lat": 0,
+          "lon": 4
+        },
+        {
+          "type": "way",
+          "id": 10,
+          "nodes": [1, 2],
+          "tags": {
+            "highway": "path"
+          }
+        },
+        {
+          "type": "relation",
+          "id": 20,
+          "members": [
+            {
+              "type": "node",
+              "ref": 1,
+              "role": "stop"
+            },
+            {
+              "type": "node",
+              "ref": 3
+            },
+            {
+              "type": "node",
+              "ref": 999
+            },
+            {
+              "type": "way",
+              "ref": 10
+            }
+          ],
+          "tags": {
+            "type": "route"
+          }
+        }
+      ],
+      "expected": [
+        {
+          "type": "Feature",
+          "id": "relation/20",
+          "properties": {
+            "type": "relation",
+            "id": 20,
+            "tags": {
+              "type": "route"
+            }
+          },
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [0, 0],
+              [1, 0]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "way/10",
+          "properties": {
+            "type": "way",
+            "id": 10,
+            "tags": {
+              "highway": "path"
+            }
+          },
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [0, 0],
+              [1, 0]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "node/1",
+          "properties": {
+            "type": "node",
+            "id": 1,
+            "tags": {}
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [0, 0]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "node/3",
+          "properties": {
+            "type": "node",
+            "id": 3,
+            "tags": {}
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [2, 0]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "node/4",
+          "properties": {
+            "type": "node",
+            "id": 4,
+            "tags": {
+              "place": "x"
+            }
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [3, 0]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "node/5",
+          "properties": {
+            "type": "node",
+            "id": 5,
+            "tags": {}
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [4, 0]
+          }
+        }
+      ]
+    },
+    {
+      "name": "emission order: relations, polygon ways, line ways, points",
+      "elements": [
+        {
+          "type": "node",
+          "id": 9,
+          "lat": 9,
+          "lon": 9,
+          "tags": {
+            "name": "point"
+          }
+        },
+        {
+          "type": "node",
+          "id": 1,
+          "lat": 0,
+          "lon": 0
+        },
+        {
+          "type": "node",
+          "id": 2,
+          "lat": 0,
+          "lon": 1
+        },
+        {
+          "type": "node",
+          "id": 3,
+          "lat": 1,
+          "lon": 1
+        },
+        {
+          "type": "node",
+          "id": 4,
+          "lat": 1,
+          "lon": 0
+        },
+        {
+          "type": "way",
+          "id": 300,
+          "nodes": [1, 2],
+          "tags": {
+            "highway": "path"
+          }
+        },
+        {
+          "type": "way",
+          "id": 301,
+          "nodes": [1, 2, 3, 4, 1],
+          "tags": {
+            "landuse": "winter_sports"
+          }
+        },
+        {
+          "type": "way",
+          "id": 302,
+          "nodes": [3, 4],
+          "tags": {
+            "highway": "path"
+          }
+        },
+        {
+          "type": "relation",
+          "id": 400,
+          "members": [
+            {
+              "type": "way",
+              "ref": 300
+            }
+          ],
+          "tags": {
+            "type": "route"
+          }
+        },
+        {
+          "type": "way",
+          "id": 303,
+          "nodes": [2, 3, 4, 2],
+          "tags": {
+            "landuse": "winter_sports"
+          }
+        }
+      ],
+      "expected": [
+        {
+          "type": "Feature",
+          "id": "relation/400",
+          "properties": {
+            "type": "relation",
+            "id": 400,
+            "tags": {
+              "type": "route"
+            }
+          },
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [0, 0],
+              [1, 0]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "way/301",
+          "properties": {
+            "type": "way",
+            "id": 301,
+            "tags": {
+              "landuse": "winter_sports"
+            }
+          },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [0, 0],
+                [1, 0],
+                [1, 1],
+                [0, 1],
+                [0, 0]
+              ]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "way/303",
+          "properties": {
+            "type": "way",
+            "id": 303,
+            "tags": {
+              "landuse": "winter_sports"
+            }
+          },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [1, 0],
+                [1, 1],
+                [0, 1],
+                [1, 0]
+              ]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "way/300",
+          "properties": {
+            "type": "way",
+            "id": 300,
+            "tags": {
+              "highway": "path"
+            }
+          },
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [0, 0],
+              [1, 0]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "way/302",
+          "properties": {
+            "type": "way",
+            "id": 302,
+            "tags": {
+              "highway": "path"
+            }
+          },
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [1, 1],
+              [0, 1]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "id": "node/9",
+          "properties": {
+            "type": "node",
+            "id": 9,
+            "tags": {
+              "name": "point"
+            }
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [9, 9]
+          }
+        }
+      ]
+    },
+    {
+      "name": "ids_only style elements",
+      "elements": [
+        {
+          "type": "way",
+          "id": 1
+        },
+        {
+          "type": "relation",
+          "id": 2,
+          "tags": {
+            "type": "multipolygon"
+          }
+        },
+        {
+          "type": "relation",
+          "id": 3
+        },
+        {
+          "type": "way",
+          "id": 4
+        }
+      ],
+      "expected": []
+    },
+    {
+      "name": "unknown member types do not break relations",
+      "elements": [
+        {
+          "type": "node",
+          "id": 1,
+          "lat": 0,
+          "lon": 0
+        },
+        {
+          "type": "node",
+          "id": 2,
+          "lat": 0,
+          "lon": 1
+        },
+        {
+          "type": "node",
+          "id": 3,
+          "lat": 1,
+          "lon": 1
+        },
+        {
+          "type": "node",
+          "id": 4,
+          "lat": 1,
+          "lon": 0
+        },
+        {
+          "type": "way",
+          "id": 100,
+          "nodes": [1, 2, 3, 4, 1],
+          "tags": {}
+        },
+        {
+          "type": "relation",
+          "id": 200,
+          "members": [
+            {
+              "type": "area",
+              "ref": 5,
+              "role": "outer"
+            }
+          ],
+          "tags": {
+            "type": "multipolygon"
+          }
+        },
+        {
+          "type": "relation",
+          "id": 201,
+          "members": [
+            {
+              "type": "area",
+              "ref": 5,
+              "role": "outer"
+            },
+            {
+              "type": "way",
+              "ref": 100,
+              "role": "inner"
+            }
+          ],
+          "tags": {
+            "type": "multipolygon"
+          }
+        }
+      ],
+      "expected": [
+        {
+          "type": "Feature",
+          "id": "way/100",
+          "properties": {
+            "type": "way",
+            "id": 100,
+            "tags": {}
+          },
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [0, 0],
+              [1, 0],
+              [1, 1],
+              [0, 1],
+              [0, 0]
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

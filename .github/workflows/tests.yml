@@ -68,6 +68,9 @@ jobs:
       - name: Check the formatter test vectors are in sync
         run: docker compose exec -T app node rust/codegen/generate-formatter-vectors.mjs --check
 
+      - name: Check the OSM converter scenes are in sync
+        run: docker compose exec -T app node rust/codegen/generate-osm-scenes.mjs --check
+
       - name: Rust format
         run: docker compose exec -T app sh -c "cd rust && cargo fmt --all --check"
 

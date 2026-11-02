@@ -10,6 +10,8 @@ repository.workspace = true
 [dependencies]
 osmpbf.workspace = true
 anyhow.workspace = true
+serde.workspace = true
+serde_json.workspace = true
 thiserror.workspace = true
 geo-types.workspace = true
 openskidata-format.workspace = true
