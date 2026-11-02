@@ -326,3 +326,119 @@ fn estimated_run_difficulty_follows_the_scale() {
     assert!(empty.stops.is_empty());
     assert_eq!(slope_grading::estimated_run_difficulty(0.5, &empty), None);
 }
+
+// ---------------------------------------------------------------------------------------
+// Run-difficulty convention: compared against the live implementation, not hand-written.
+// ---------------------------------------------------------------------------------------
+
+use openskidata_format::convention::{
+    run_difficulty_convention_at, run_difficulty_convention_for_bbox,
+};
+
+#[derive(Debug, Deserialize)]
+struct ConventionVectors {
+    #[serde(rename = "runDifficultyConventionOracle")]
+    oracle: ConventionOracle,
+}
+
+#[derive(Debug, Deserialize)]
+struct ConventionOracle {
+    grid: Grid,
+    boundary: Boundary,
+    bboxes: Bboxes,
+}
+
+#[derive(Debug, Deserialize)]
+struct Grid {
+    step: f64,
+    #[serde(rename = "minLng")]
+    min_lng: f64,
+    #[serde(rename = "minLat")]
+    min_lat: f64,
+    rows: Vec<String>,
+}
+
+#[derive(Debug, Deserialize)]
+struct Boundary {
+    points: Vec<[f64; 2]>,
+    codes: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct Bboxes {
+    boxes: Vec<[f64; 4]>,
+    codes: String,
+}
+
+fn convention_vectors() -> ConventionOracle {
+    let v: ConventionVectors = serde_json::from_str(include_str!("vectors.json"))
+        .expect("vectors.json should deserialize");
+    v.oracle
+}
+
+fn code(convention: RunDifficultyConvention) -> char {
+    match convention {
+        RunDifficultyConvention::Europe => 'e',
+        RunDifficultyConvention::Japan => 'j',
+        RunDifficultyConvention::NorthAmerica => 'n',
+    }
+}
+
+/// Every cell of a global grid, 10,585 points, including the antimeridian and both poles.
+#[test]
+fn convention_matches_the_live_implementation_over_the_globe() {
+    let grid = convention_vectors().grid;
+    let mut checked = 0;
+    let mut seen = std::collections::BTreeSet::new();
+
+    for (row_index, row) in grid.rows.iter().enumerate() {
+        let lat = grid.min_lat + grid.step * row_index as f64;
+        for (col_index, expected) in row.chars().enumerate() {
+            let lng = grid.min_lng + grid.step * col_index as f64;
+            let actual = code(run_difficulty_convention_at(lng, lat));
+            assert_eq!(actual, expected, "at lng {lng}, lat {lat}");
+            seen.insert(actual);
+            checked += 1;
+        }
+    }
+
+    assert_eq!(checked, 73 * 145, "the grid should be fully covered");
+    assert_eq!(
+        seen.len(),
+        3,
+        "all three conventions should occur: {seen:?}"
+    );
+}
+
+/// The neighbourhood of every polygon vertex and edge, where the exact-arithmetic boundary
+/// handling decides the answer. The points include each vertex itself, which lies exactly on
+/// the boundary and so counts as inside, and offsets of one nanodegree.
+#[test]
+fn convention_matches_the_live_implementation_at_every_boundary() {
+    let boundary = convention_vectors().boundary;
+    assert_eq!(boundary.points.len(), boundary.codes.len());
+
+    let mut counts = std::collections::BTreeMap::<char, usize>::new();
+    for (point, expected) in boundary.points.iter().zip(boundary.codes.chars()) {
+        let actual = code(run_difficulty_convention_at(point[0], point[1]));
+        assert_eq!(actual, expected, "at {point:?}");
+        *counts.entry(actual).or_default() += 1;
+    }
+
+    // Both sides of every border must have been exercised, or agreement proves little.
+    assert!(
+        counts.values().all(|&n| n > 50) && counts.len() == 3,
+        "boundary coverage too thin: {counts:?}"
+    );
+}
+
+#[test]
+fn convention_matches_the_live_implementation_for_bounding_boxes() {
+    let bboxes = convention_vectors().bboxes;
+    assert_eq!(bboxes.boxes.len(), bboxes.codes.len());
+
+    for (b, expected) in bboxes.boxes.iter().zip(bboxes.codes.chars()) {
+        let actual = code(run_difficulty_convention_for_bbox(b[0], b[1], b[2], b[3]));
+        assert_eq!(actual, expected, "for bbox {b:?}");
+    }
+}

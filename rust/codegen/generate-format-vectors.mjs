@@ -17,6 +17,8 @@
 import { writeFileSync, readFileSync, mkdirSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { loadConventionRegions } from "./convention-data.mjs";
+import { prettifyJson } from "./tooling.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(here, "..", "..");
@@ -115,6 +117,103 @@ const vectors = {
 };
 
 /**
+ * The run-difficulty convention lookup, checked three ways.
+ *
+ * The lookup is point-in-polygon against two hand-drawn regions, using an exact-arithmetic
+ * orientation predicate to decide boundary cases. Spot checks at a handful of named places
+ * would not catch a wrong sign convention or a mishandled boundary, so this covers the whole
+ * globe, the neighbourhood of every polygon vertex and edge, and the bounding-box centre
+ * rule used for areas.
+ */
+const CONVENTION_CODE = { europe: "e", japan: "j", north_america: "n" };
+
+function conventionOf(geometry) {
+  return CONVENTION_CODE[f.getRunDifficultyConvention(geometry)];
+}
+const conventionAtPoint = (lng, lat) =>
+  conventionOf({ type: "Point", coordinates: [lng, lat] });
+
+// 1. A global grid: one string per latitude row, one character per longitude column.
+const GRID_STEP = 2.5;
+const gridRows = [];
+for (let lat = -90; lat <= 90; lat += GRID_STEP) {
+  let row = "";
+  for (let lng = -180; lng <= 180; lng += GRID_STEP) {
+    row += conventionAtPoint(lng, lat);
+  }
+  gridRows.push(row);
+}
+
+// 2. The neighbourhood of every polygon vertex and edge, where boundary handling lives.
+//    Each vertex is tested exactly (it lies on the boundary, which counts as inside), then
+//    nudged by a few tiny offsets in each axis direction; each edge midpoint likewise.
+const regions = loadConventionRegions();
+const boundaryPoints = [];
+const addBoundaryPoint = (lng, lat) => boundaryPoints.push([lng, lat]);
+for (const multiPolygon of [regions.japan, regions.northAmerica]) {
+  for (const polygon of multiPolygon) {
+    for (const ring of polygon) {
+      for (let i = 0; i < ring.length; i++) {
+        const [x, y] = ring[i];
+        addBoundaryPoint(x, y);
+        for (const d of [1e-9, 1e-4]) {
+          addBoundaryPoint(x + d, y);
+          addBoundaryPoint(x - d, y);
+          addBoundaryPoint(x, y + d);
+          addBoundaryPoint(x, y - d);
+        }
+        if (i + 1 < ring.length) {
+          const [nx, ny] = ring[i + 1];
+          addBoundaryPoint((x + nx) / 2, (y + ny) / 2);
+        }
+      }
+    }
+  }
+}
+const boundaryCodes = boundaryPoints
+  .map(([lng, lat]) => conventionAtPoint(lng, lat))
+  .join("");
+
+// 3. Bounding-box centres. Turf's `center` is the centre of the bounding box, not the
+//    centroid, so a long thin area can land in a different region from most of its length.
+//    Deterministic pseudo-random rectangles keep the file reproducible.
+let seed = 123456789;
+const next = () => {
+  seed = (Math.imul(seed, 1103515245) + 12345) >>> 0;
+  return seed / 4294967296;
+};
+const bboxes = [];
+for (let n = 0; n < 300; n++) {
+  const west = -180 + next() * 340;
+  const south = -80 + next() * 150;
+  const east = Math.min(180, west + next() * 40);
+  const north = Math.min(85, south + next() * 30);
+  bboxes.push([west, south, east, north]);
+}
+const bboxCodes = bboxes
+  .map(([w, s, e, n]) =>
+    conventionOf({
+      type: "Polygon",
+      coordinates: [
+        [
+          [w, s],
+          [e, s],
+          [e, n],
+          [w, n],
+          [w, s],
+        ],
+      ],
+    }),
+  )
+  .join("");
+
+vectors.runDifficultyConventionOracle = {
+  grid: { step: GRID_STEP, minLng: -180, minLat: -90, rows: gridRows },
+  boundary: { points: boundaryPoints, codes: boundaryCodes },
+  bboxes: { boxes: bboxes, codes: bboxCodes },
+};
+
+/**
  * JSON has no Infinity, and `JSON.stringify` silently turns it into `null`. The slope
  * grading scales use Infinity as their final threshold, and a null there would read as
  * "no threshold" instead of "unbounded", so it is encoded explicitly.
@@ -127,7 +226,9 @@ function encodeNonFinite(_key, value) {
   return value;
 }
 
-const generated = JSON.stringify(vectors, encodeNonFinite, 2) + "\n";
+const generated = prettifyJson(
+  JSON.stringify(vectors, encodeNonFinite, 2) + "\n",
+);
 
 if (process.argv.includes("--check")) {
   const existing = existsSync(outPath) ? readFileSync(outPath, "utf8") : "";

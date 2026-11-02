@@ -2,4 +2,5 @@
 //!
 //! Do not edit by hand. Regenerate with:
 //! `node rust/codegen/generate-format-enums.mjs`
+pub mod convention_regions;
 pub mod enums;

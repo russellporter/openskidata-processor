@@ -130,10 +130,9 @@ pub fn run_color_name_to_value(color: RunColorName) -> RunColorValue {
     }
 }
 
-/// Replaces `getRunDifficultyConvention` from
-/// `openskidata-format/dist/RunDifficultyConvention.js`, which does point-in-polygon
-/// against 15.5 KB of embedded region polygons. Those polygons must be carried over
-/// verbatim, along with the exact boundary behaviour.
-pub fn run_difficulty_convention(_lng: f64, _lat: f64) -> RunDifficultyConvention {
-    todo!("port getRunDifficultyConvention, including its embedded region polygons")
+/// Replaces `getRunDifficultyConvention` for a point. For an area, use
+/// [`crate::convention::run_difficulty_convention_for_positions`], which places it by the
+/// centre of its bounding box.
+pub fn run_difficulty_convention(lng: f64, lat: f64) -> RunDifficultyConvention {
+    crate::convention::run_difficulty_convention_at(lng, lat)
 }

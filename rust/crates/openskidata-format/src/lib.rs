@@ -33,6 +33,7 @@
 
 pub mod generated;
 
+pub mod convention;
 pub mod elevation_profile;
 pub mod lift;
 pub mod place;

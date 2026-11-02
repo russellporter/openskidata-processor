@@ -23,7 +23,10 @@ tokio = { version = "1.54.1", features = ["rt-multi-thread", "macros", "fs", "sy
 reqwest = { version = "0.13.5", default-features = false, features = ["json", "rustls", "gzip"] }
 # serialization
 serde = { version = "1.0.229", features = ["derive"] }
-serde_json = "1.0.154"
+# float_roundtrip: serde_json's default float parser is not correctly rounded and can land one
+# ulp from the nearest double. That is enough to flip a point that lies exactly on a polygon
+# boundary, and would silently perturb every coordinate read from GeoJSON.
+serde_json = { version = "1.0.154", features = ["float_roundtrip"] }
 # storage
 rusqlite = { version = "0.41.1", features = ["bundled"] }
 tokio-postgres = "0.7.18"
@@ -31,6 +34,9 @@ tokio-postgres = "0.7.18"
 osmpbf = "0.3.8"
 # text
 regex = "1.13.1"
+
+# exact geometric predicates (Shewchuk), for boundary-exact point-in-polygon
+robust = "1.2.0"
 
 # hashing / ids
 xxhash-rust = { version = "0.8.19", features = ["xxh3"] }

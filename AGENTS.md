@@ -44,7 +44,8 @@ See `rust/README.md`.
 - Test: `docker compose exec app sh -c "cd rust && cargo test --workspace"`
 - Format: `docker compose exec app sh -c "cd rust && cargo fmt --all"`
 - Regenerate the generated format files after an `openskidata-format` bump:
-  `docker compose exec app node rust/codegen/generate-format-enums.mjs` and
+  `docker compose exec app node rust/codegen/generate-format-enums.mjs`,
+  `docker compose exec app node rust/codegen/generate-convention-regions.mjs` and
   `docker compose exec app node rust/codegen/generate-format-vectors.mjs`
 
 `rust/crates/openskidata-format/src/generated/enums.rs` is generated and checked in — do

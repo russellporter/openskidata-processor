@@ -16,6 +16,7 @@
 pub mod lift;
 pub mod osm;
 pub mod run;
+pub mod site;
 pub mod ski_area;
 pub mod spot;
 pub mod status;
@@ -26,7 +27,6 @@ pub use status::{
 
 use anyhow::Result;
 use osd_store::{FeatureIdx, FeatureStore};
-use std::collections::BTreeMap;
 
 /// Replaces `formatRun`. Returns zero or more features: one input way can yield several
 /// runs, which is why upstream uses `flatMapArray`.
@@ -47,19 +47,6 @@ pub fn format_ski_area(_tags: &Tags, _store: &mut FeatureStore) -> Result<Option
 /// Replaces `formatSpots`.
 pub fn format_spots(_tags: &Tags, _store: &mut FeatureStore) -> Result<Vec<FeatureIdx>> {
     todo!("port SpotFormatter.ts")
-}
-
-/// Replaces `SkiAreaSiteProvider`: indexes `site=piste` relations by member OSM id so
-/// each run, lift and spot can pick up its site membership.
-#[derive(Debug, Default)]
-pub struct SkiAreaSiteProvider {
-    _by_osm_id: BTreeMap<String, Vec<u32>>,
-}
-
-impl SkiAreaSiteProvider {
-    pub fn sites_for(&self, _osm_id: &str) -> &[u32] {
-        todo!("look up site memberships")
-    }
 }
 
 #[cfg(test)]
