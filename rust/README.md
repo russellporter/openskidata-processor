@@ -103,6 +103,12 @@ depends on them. Each is pinned by a test and explained where it lives.
   inclined length elevation produces; the collector takes it as an input (the oracle feeds it the
   real `getRunElevationData` results). `prepare` passes each run's from its elevation profile; the
   lift total stays `0` until the pipeline's geometry can carry elevations.
+- **`sortPlaces` can depend on V8's sort.** Two names that are canonically equivalent but not the
+  same string (`Zürich` composed and decomposed) make `localeCompare` return `0`, and `sortPlaces`
+  stops there instead of comparing the next field, so its comparison is not transitive and the
+  result depends on the algorithm. Under 64 places this reproduces V8's (run detection and binary
+  insertion); from 64 it is a stable sort, identical whenever the comparison is consistent, as it
+  is for any real geocoder output.
 - **A run whose elevation profile does not fit its line** makes upstream's CSV export throw; here it
   is logged and the run's elevation columns are left empty.
 

@@ -39,6 +39,9 @@
 //!   `pixelIntersectsGeometry` predicate **exactly**, but restrict candidates to a
 //!   supercover rasterization of the segments dilated by one pixel: same answers, O(n).
 
+pub mod collation;
+pub mod places;
+
 use anyhow::Result;
 use osd_cache::CacheStore;
 use osd_store::FeatureStore;

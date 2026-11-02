@@ -98,6 +98,12 @@ jobs:
       - name: Check the output formatter vectors are in sync
         run: docker compose exec -T app node rust/codegen/generate-output-vectors.mjs --check
 
+      - name: Check the collation vectors are in sync
+        run: docker compose exec -T app node rust/codegen/generate-collation-vectors.mjs --check
+
+      - name: Check the places vectors are in sync
+        run: docker compose exec -T app node rust/codegen/generate-places-vectors.mjs --check
+
       - name: Check the geohash vectors are in sync
         run: docker compose exec -T app node rust/codegen/generate-geohash-vectors.mjs --check
 
