@@ -40,7 +40,7 @@ jobs:
         run: docker compose exec -T app npm run check-types
 
       - name: Check formatting
-        run: docker compose exec -T app npx prettier --check . --ignore-path .gitignore
+        run: docker compose exec -T app npx prettier --check . --ignore-path .gitignore --ignore-path .prettierignore
 
       - name: Verify every module loads under Node ESM
         run: docker compose exec -T app npm run smoke-import
@@ -70,6 +70,9 @@ jobs:
 
       - name: Check the OSM converter scenes are in sync
         run: docker compose exec -T app node rust/codegen/generate-osm-scenes.mjs --check
+
+      - name: Check the topology scenes are in sync
+        run: docker compose exec -T app node rust/codegen/generate-topology-scenes.mjs --check
 
       - name: Rust format
         run: docker compose exec -T app sh -c "cd rust && cargo fmt --all --check"

@@ -1,0 +1,4 @@
+# Generated, compact fixtures: one scene per line, which Prettier would explode into
+# millions of lines.
+rust/crates/osd-normalize/tests/topology_scenes.json
+rust/crates/osd-normalize/tests/normalize_scenes.json
