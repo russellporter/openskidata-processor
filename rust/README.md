@@ -59,12 +59,14 @@ places, wikidata ids, references, elevation profiles or lift-station positions, 
 sets feed the real writer real output features with those properties and random booleans
 filled in. The Rust writer is compared on every table's DDL, every row and every R-tree.
 
-**Not done yet.** Elevation: the maths is ported (`openskidata-format::elevation_profile`) but not yet applied --
-fetching heights, the elevation CSV columns and ski-area elevations -- geocoding, snow
-cover, the Postgres cache migration, downloading from Overpass/Skimap.org, PBF input, and the
-streaming driver that bounds normalization memory (`normalize_runs_partitioned` partitions in
-memory today). No performance or memory figure has been measured: Overpass is unreachable
-from the development container, so there is no large input to measure on.
+**Not done yet.** Applying elevation: the maths is ported (`openskidata-format::elevation_profile`)
+and feeds a run's CSV columns and `metadata.json`, but heights are not fetched, and the pipeline's
+geometry is 2D, so lifts' elevation columns, ski-area elevations and lift-station positions wait
+for geometry that carries elevations. Also geocoding, snow cover, downloading from
+Overpass/Skimap.org, PBF input, and the streaming driver that bounds normalization memory
+(`normalize_runs_partitioned` partitions in memory today). The Postgres caches migrate with
+`openskidata migrate-cache`. No performance or memory figure has been measured: Overpass is
+unreachable from the development container, so there is no large input to measure on.
 
 ## Behaviours reproduced
 

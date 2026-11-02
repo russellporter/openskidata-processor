@@ -42,12 +42,20 @@ enum Command {
         #[arg(long, env = "GENERATE_TILES")]
         generate_tiles: bool,
     },
-    /// Migrate the Postgres caches into the embedded store. Run once.
+    /// Migrate the Postgres caches into the embedded store. Run once; safe to repeat.
+    ///
+    /// Carries the elevation, geocoding and snow cover caches across with their timestamps,
+    /// so nothing has to be fetched again. Elevation keys become the geohash cell's bits.
     MigrateCache {
+        /// A libpq-style connection string for the cache database, e.g.
+        /// `host=localhost user=postgres dbname=openskidata_cache`.
         #[arg(long, env = "POSTGRES_URL")]
         postgres_url: String,
         #[arg(long, env = "CACHE_PATH", default_value = "data/cache.db")]
         cache_path: std::path::PathBuf,
+        /// The prefix of the cache tables (upstream's `tablePrefix`; empty in production).
+        #[arg(long, env = "TABLE_PREFIX", default_value = "")]
+        table_prefix: String,
     },
 }
 
@@ -77,6 +85,20 @@ async fn main() -> Result<()> {
             })
         }
         Command::Run { .. } => todo!("wire up osd_pipeline::run"),
-        Command::MigrateCache { .. } => todo!("wire up osd_cache::migrate_from_postgres"),
+        Command::MigrateCache {
+            postgres_url,
+            cache_path,
+            table_prefix,
+        } => {
+            if let Some(parent) = cache_path.parent().filter(|p| !p.as_os_str().is_empty()) {
+                std::fs::create_dir_all(parent)?;
+            }
+            let store = osd_cache::CacheStore::open(&cache_path)?;
+            let report =
+                osd_cache::migrate_from_postgres(&postgres_url, &table_prefix, &store).await?;
+            println!("{report:#?}");
+            println!("{:#?}", store.counts()?);
+            Ok(())
+        }
     }
 }

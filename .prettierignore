@@ -3,6 +3,7 @@
 rust/crates/openskidata-format/tests/elevation_vectors.json
 rust/crates/openskidata-format/tests/lift_name_vectors.json
 rust/crates/openskidata-format/tests/viewport_vectors.json
+rust/crates/osd-cache/tests/geohash_vectors.json
 rust/crates/osd-cluster/tests/cluster_scenes.json
 rust/crates/osd-cluster/tests/turf_vectors.json
 rust/crates/osd-normalize/tests/merge_vectors.json
