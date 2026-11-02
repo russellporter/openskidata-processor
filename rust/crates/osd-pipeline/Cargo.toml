@@ -23,6 +23,7 @@ osd-cache.workspace = true
 osd-out.workspace = true
 osd-turf.workspace = true
 time.workspace = true
+rayon.workspace = true
 reqwest.workspace = true
 
 [dev-dependencies]

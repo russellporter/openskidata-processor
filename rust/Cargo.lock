@@ -1726,6 +1726,7 @@ dependencies = [
  "osd-tags",
  "osd-turf",
  "png",
+ "rayon",
  "reqwest",
  "rusqlite",
  "serde",

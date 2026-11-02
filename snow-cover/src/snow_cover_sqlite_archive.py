@@ -175,18 +175,26 @@ class SnowCoverSQLiteArchive:
     
     def discover_existing_pixels(self) -> Dict[str, List[Tuple[int, int]]]:
         """
-        Discover all existing cached pixels by scanning cache keys.
-        
+        Discover all pixels that have data in the archive, from its keys.
+
         Returns:
             Dictionary mapping tile names to lists of (pixel_row, pixel_col) tuples
         """
-        # This is a limitation of the current SQLite implementation
-        # We would need to add a method to list all keys with a prefix
-        # For now, return empty dict - this feature would need to be implemented
-        # by adding a key listing capability to SQLiteCache
-        self.logger.warning("discover_existing_pixels not implemented for SQLite archive")
-        return {}
-    
+        if not self._initialized:
+            raise RuntimeError("Archive not initialized")
+
+        pixels_by_tile: Dict[str, List[Tuple[int, int]]] = {}
+        for key in self.archive.keys("snow_cover:"):
+            parts = key.split(":")
+            if len(parts) != 4:
+                continue
+            _, tile, row, col = parts
+            try:
+                pixels_by_tile.setdefault(tile, []).append((int(row), int(col)))
+            except ValueError:
+                self.logger.warning(f"Ignoring malformed archive key {key}")
+        return pixels_by_tile
+
     def get_archive_stats(self) -> Dict[str, int]:
         """
         Get archive statistics.

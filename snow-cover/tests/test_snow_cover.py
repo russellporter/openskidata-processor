@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import json
 import pytest
 from pathlib import Path
 
@@ -7,9 +8,9 @@ import sys
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from test_fixtures import (
-    temp_dir, pixel_extractor, data_fetcher, cache_manager, sample_geojson_file,
+    temp_dir, pixel_extractor, data_fetcher, archive, sample_geojson_file,
     sample_tile_pixels, sample_dates, test_data_helper,
-    assert_pixel_coords_valid, assert_cache_file_valid
+    assert_pixel_coords_valid, assert_archived_data_valid
 )
 from constants import ERROR_OLD_MISSING, ERROR_RECENT_MISSING
 
@@ -97,42 +98,71 @@ def test_pixel_extractor_empty_geojson(pixel_extractor, temp_dir):
     assert len(unique_pixels) == 0
 
 
-# Cache Manager Tests
-def test_cache_manager_save_and_load(cache_manager, sample_tile_pixels, test_data_helper):
-    """Test cache save and load operations."""
+# Archive Tests
+def test_archive_save_and_load(archive, sample_tile_pixels, test_data_helper):
+    """Test archive save and load operations."""
     tile, pixel_row, pixel_col = sample_tile_pixels[0]
-    
+
     # Create and save test data
     pixel_data = test_data_helper.create_pixel_data(2024, [0, 1, 2])
-    cache_manager.save_pixel_data(tile, pixel_row, pixel_col, pixel_data)
-    
-    # Verify cache file exists
-    cache_path = cache_manager.get_pixel_cache_path(tile, pixel_row, pixel_col)
-    assert_cache_file_valid(cache_path)
-    
+    archive.save_pixel_data(tile, pixel_row, pixel_col, pixel_data)
+
+    # What is stored is what the processor reads
+    stored = archive.archive.get(f"snow_cover:{tile}:{pixel_row}:{pixel_col}")
+    assert_archived_data_valid(stored)
+    assert stored[0]['data'][0] == [85, 0]
+    assert stored[0]['data'][3] == [None, 0]
+
     # Load and verify data
-    loaded_data = cache_manager.load_pixel_data(tile, pixel_row, pixel_col)
+    loaded_data = archive.load_pixel_data(tile, pixel_row, pixel_col)
     assert len(loaded_data) == 1
     assert loaded_data[0].year == 2024
 
 
-def test_cache_manager_missing_weeks(cache_manager, sample_tile_pixels, sample_dates):
-    """Test cache manager missing weeks detection."""
+def test_archive_missing_weeks(archive, sample_tile_pixels, sample_dates, test_data_helper):
+    """Test archive missing weeks detection."""
     tile, pixel_row, pixel_col = sample_tile_pixels[0]
     start_date, end_date = sample_dates[0], sample_dates[-1]
-    
+
     # Initially all weeks should be missing
-    missing_weeks = cache_manager.get_missing_weeks_for_pixel(
+    missing_weeks = archive.get_missing_weeks_for_pixel(
         tile, pixel_row, pixel_col, start_date, end_date
     )
     assert len(missing_weeks) > 0
-    
+
     # Add data and verify reduction in missing weeks
-    cache_manager.update_pixel_week(tile, pixel_row, pixel_col, start_date, 85, 0)
-    missing_weeks_after = cache_manager.get_missing_weeks_for_pixel(
+    from utils import calculate_week_index
+    week = calculate_week_index(start_date, start_date.year)
+    archive.save_pixel_data(
+        tile, pixel_row, pixel_col, test_data_helper.create_pixel_data(start_date.year, [week])
+    )
+    missing_weeks_after = archive.get_missing_weeks_for_pixel(
         tile, pixel_row, pixel_col, start_date, end_date
     )
-    assert len(missing_weeks_after) < len(missing_weeks)
+    assert len(missing_weeks_after) == len(missing_weeks) - 1
+
+
+def test_archive_discovers_the_pixels_it_holds(archive, test_data_helper):
+    """The pixels with data are found from the keys."""
+    data = test_data_helper.create_pixel_data(2024, [0])
+    archive.save_pixel_data("h18v04", 5, 7, data)
+    archive.save_pixel_data("h18v04", 6, 7, data)
+    archive.save_pixel_data("h12v03", 1, 2, data)
+    assert archive.discover_existing_pixels() == {
+        "h12v03": [(1, 2)],
+        "h18v04": [(5, 7), (6, 7)],
+    }
+
+
+def test_pixels_json_lists_the_pixels_to_fetch(temp_dir):
+    """The processor hands over the pixels it will read."""
+    from fetch_snow_data import VIIRSSnowDataProcessor
+    path = Path(temp_dir) / "pixels.json"
+    path.write_text(json.dumps({"h18v04": [[1, 2], [3, 4]], "h12v03": [[5, 6]]}))
+    assert VIIRSSnowDataProcessor.read_pixels_json(str(path)) == {
+        "h18v04": [(1, 2), (3, 4)],
+        "h12v03": [(5, 6)],
+    }
 
 
 # Data Fetcher Tests
@@ -156,7 +186,7 @@ def test_data_fetcher_date_classification(data_fetcher):
 
 
 # Integration Tests
-def test_integration_full_workflow(pixel_extractor, cache_manager, sample_geojson_file):
+def test_integration_full_workflow(pixel_extractor, archive, sample_geojson_file):
     """Test simplified end-to-end workflow."""
     # Extract pixels
     unique_pixels = pixel_extractor.extract_unique_pixels_from_geojson(sample_geojson_file)
@@ -174,7 +204,7 @@ def test_integration_full_workflow(pixel_extractor, cache_manager, sample_geojso
             start_date = datetime(2024, 1, 1)
             end_date = datetime(2024, 1, 31)
             
-            missing_weeks = cache_manager.get_missing_weeks_for_pixel(
+            missing_weeks = archive.get_missing_weeks_for_pixel(
                 tile, pixel_row, pixel_col, start_date, end_date
             )
             assert isinstance(missing_weeks, list)

@@ -17,7 +17,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from data_fetcher import VIIRSDataFetcher
 from pixel_extractor import VIIRSPixelExtractor
-from cache_manager import PixelCacheManager
+from snow_cover_sqlite_archive import SnowCoverSQLiteArchive
 from constants import ERROR_OLD_MISSING, ERROR_RECENT_MISSING, ERROR_OTHER
 
 
@@ -68,15 +68,20 @@ def pixel_extractor():
 
 
 @pytest.fixture
-def data_fetcher(temp_dir):
-    """Create VIIRSDataFetcher instance with temp directory."""
-    return VIIRSDataFetcher(cache_dir=temp_dir)
+def data_fetcher():
+    """Create VIIRSDataFetcher instance (it keeps its downloads in its own temp directory)."""
+    fetcher = VIIRSDataFetcher()
+    yield fetcher
+    fetcher.cleanup()
 
 
 @pytest.fixture
-def cache_manager(temp_dir):
-    """Create PixelCacheManager instance with temp directory."""
-    return PixelCacheManager(cache_root=temp_dir)
+def archive(temp_dir):
+    """A snow cover archive in a SQLite file in the temp directory."""
+    archive = SnowCoverSQLiteArchive(str(Path(temp_dir) / "cache.db"))
+    archive.initialize()
+    yield archive
+    archive.close()
 
 
 @pytest.fixture
@@ -168,16 +173,11 @@ def assert_pixel_coords_valid(pixel_coords):
         assert 0 <= pixel['pixel_col'] < 3000
 
 
-def assert_cache_file_valid(cache_path):
-    """Assert that a cache file is valid JSON with correct structure."""
-    assert cache_path.exists()
-    
-    with open(cache_path, 'r') as f:
-        data = json.load(f)
-    
+def assert_archived_data_valid(data):
+    """Assert that archived pixel data has the structure the processor reads."""
     assert isinstance(data, list)
     for year_data in data:
-        assert 'year' in year_data
-        assert 'data' in year_data
         assert isinstance(year_data['year'], int)
         assert isinstance(year_data['data'], list)
+        for week in year_data['data']:
+            assert isinstance(week, list) and len(week) == 2

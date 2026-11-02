@@ -148,6 +148,13 @@ struct PrepareArgs {
         default_value = "full"
     )]
     snow_cover_fetch_policy: SnowCoverFetchPolicyArg,
+    /// The snow cover fetcher (default `snow-cover/src/fetch_snow_data.py`).
+    #[arg(long, env = "SNOW_COVER_SCRIPT")]
+    snow_cover_script: Option<std::path::PathBuf>,
+    /// The Python to run it with (default `snow-cover/venv/bin/python` if it exists, else
+    /// `python3`).
+    #[arg(long, env = "SNOW_COVER_PYTHON")]
+    snow_cover_python: Option<std::path::PathBuf>,
     /// Build `openskimap.mbtiles` with tippecanoe. `TILE_CONCURRENCY` bounds how many of the
     /// four layers are built at once (default 2).
     #[arg(long, env = "GENERATE_TILES", action = clap::ArgAction::SetTrue, value_parser = clap::builder::FalseyValueParser::new())]
@@ -231,10 +238,9 @@ fn run_prepare(common: &Common, args: PrepareArgs) -> Result<()> {
         bbox: parse_bbox(&common.bbox)?,
         cache_path: args.cache_path,
         generate_tiles: args.generate_tiles,
-        snow_cover: args
-            .enable_snow_cover
-            .then_some(osd_pipeline::prepare::SnowCoverSettings {
-                fetch_policy: match args.snow_cover_fetch_policy {
+        snow_cover: args.enable_snow_cover.then(|| {
+            let mut settings =
+                osd_pipeline::prepare::SnowCoverSettings::new(match args.snow_cover_fetch_policy {
                     SnowCoverFetchPolicyArg::Full => {
                         osd_pipeline::prepare::SnowCoverFetchPolicy::Full
                     }
@@ -244,8 +250,13 @@ fn run_prepare(common: &Common, args: PrepareArgs) -> Result<()> {
                     SnowCoverFetchPolicyArg::None => {
                         osd_pipeline::prepare::SnowCoverFetchPolicy::None
                     }
-                },
-            }),
+                });
+            if let Some(script) = args.snow_cover_script.clone() {
+                settings.script = script;
+            }
+            settings.python = args.snow_cover_python.clone();
+            settings
+        }),
         geocoding: args
             .geocoding_server_url
             .map(|url| osd_pipeline::prepare::GeocodingSettings {

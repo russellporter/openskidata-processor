@@ -161,3 +161,19 @@ jobs:
       - name: Cleanup
         if: always()
         run: docker compose down
+
+  snow-cover-python:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install the snow cover fetcher's dependencies
+        run: pip install -r snow-cover/requirements.txt
+
+      - name: Python tests
+        run: python -m pytest snow-cover

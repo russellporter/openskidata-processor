@@ -7,13 +7,13 @@ weekly snow cover data with error handling and progress tracking.
 """
 
 import argparse
+import json
 import logging
 import sys
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, List, Tuple, Set, Optional
 
-from pixel_extractor import VIIRSPixelExtractor
 from data_fetcher import VIIRSDataFetcher
 from snow_cover_sqlite_archive import SnowCoverSQLiteArchive
 from constants import ERROR_OLD_MISSING, ERROR_RECENT_MISSING, ERROR_OTHER
@@ -34,7 +34,7 @@ class VIIRSSnowDataProcessor:
             from_year: Start year (inclusive), defaults to 2012
             to_year: End year (inclusive), defaults to current year
         """
-        self.pixel_extractor = VIIRSPixelExtractor()
+        self.pixel_extractor = None  # created when pixels are taken from a GeoJSON file
         self.data_fetcher = VIIRSDataFetcher()
         self.archive_manager = SnowCoverSQLiteArchive(archive_file)
         self.archive_manager.initialize()
@@ -68,6 +68,10 @@ class VIIRSSnowDataProcessor:
             Dictionary mapping tile names to lists of (pixel_row, pixel_col) tuples
         """
         self.logger.info(f"Extracting pixels from {geojson_path}")
+        if self.pixel_extractor is None:
+            # Imported here: it needs geopandas, which reading a pixel list does not.
+            from pixel_extractor import VIIRSPixelExtractor
+            self.pixel_extractor = VIIRSPixelExtractor()
         
         # Extract unique pixels
         unique_pixels = self.pixel_extractor.extract_unique_pixels_from_geojson(geojson_path)
@@ -79,6 +83,19 @@ class VIIRSSnowDataProcessor:
         
         return pixels_by_tile
     
+    @staticmethod
+    def read_pixels_json(path: str) -> Dict[str, List[Tuple[int, int]]]:
+        """
+        Read the pixels to fetch from a JSON file written by the processor:
+        ``{"h18v04": [[row, col], ...], ...}``.
+
+        The processor works out which pixels a run covers with the same code that later reads the
+        data back, so every pixel it will look up is one that gets fetched here.
+        """
+        with open(path) as f:
+            raw = json.load(f)
+        return {tile: [(int(row), int(col)) for row, col in pixels] for tile, pixels in raw.items()}
+
     def get_missing_data_summary(self, pixels_by_tile: Dict[str, List[Tuple[int, int]]]) -> Dict[str, int]:
         """
         Analyze missing data across all pixels to prioritize fetching.
@@ -213,7 +230,7 @@ class VIIRSSnowDataProcessor:
         return stats
     
     def run(self, geojson_path: Optional[str] = None, max_tiles: Optional[int] = None, 
-           fill_cache_mode: bool = False) -> bool:
+           fill_cache_mode: bool = False, pixels_json_path: Optional[str] = None) -> bool:
         """
         Run the complete VIIRS snow data fetching process.
         
@@ -230,6 +247,8 @@ class VIIRSSnowDataProcessor:
             if fill_cache_mode:
                 self.logger.info("Discovering existing cached pixels")
                 pixels_by_tile = self.archive_manager.discover_existing_pixels()
+            elif pixels_json_path is not None:
+                pixels_by_tile = self.read_pixels_json(pixels_json_path)
             else:
                 if geojson_path is None:
                     raise ValueError("geojson_path is required when not in fill_cache_mode")
@@ -322,6 +341,11 @@ def main():
     )
     
     parser.add_argument(
+        '--pixels-json',
+        help='JSON file of the pixels to fetch, {"h18v04": [[row, col], ...]}, instead of a GeoJSON file'
+    )
+
+    parser.add_argument(
         '--fill-cache',
         action='store_true',
         help='Fill missing temporal data for existing archived pixels (no geojson required)'
@@ -394,9 +418,13 @@ def main():
     if args.fill_cache:
         if args.geojson_path:
             logger.warning("geojson_path ignored when using --fill-cache mode")
+    elif args.pixels_json:
+        if not Path(args.pixels_json).exists():
+            logger.error(f"Input file not found: {args.pixels_json}")
+            sys.exit(1)
     else:
         if not args.geojson_path:
-            logger.error("geojson_path is required unless using --fill-cache mode")
+            logger.error("geojson_path or --pixels-json is required unless using --fill-cache mode")
             sys.exit(1)
         if not Path(args.geojson_path).exists():
             logger.error(f"Input file not found: {args.geojson_path}")
@@ -442,7 +470,12 @@ def main():
         success = processor.run(geojson_path=None, max_tiles=args.max_tiles, fill_cache_mode=True)
     else:
         logger.info("Starting VIIRS snow data fetch process")
-        success = processor.run(args.geojson_path, args.max_tiles, fill_cache_mode=False)
+        success = processor.run(
+            args.geojson_path,
+            args.max_tiles,
+            fill_cache_mode=False,
+            pixels_json_path=args.pixels_json,
+        )
     
     if success:
         logger.info("Processing completed successfully")

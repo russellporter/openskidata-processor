@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import List, Dict, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from cache_manager import PixelWeeklyData
+    from snow_cover_sqlite_archive import PixelWeeklyData
 
 
 def calculate_week_index(date: datetime, year: int) -> int:
@@ -80,7 +80,7 @@ def create_empty_year_data(year: int) -> "PixelWeeklyData":
     Returns:
         PixelWeeklyData with 53 weeks of empty data
     """
-    from cache_manager import PixelWeeklyData
+    from snow_cover_sqlite_archive import PixelWeeklyData
     return PixelWeeklyData(year=year, data=[[None, 0] for _ in range(53)])
 
 

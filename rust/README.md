@@ -97,9 +97,17 @@ The comparison found one thing worth knowing: date-fns's `subDays` is `setDate(g
 which truncates the sum, so a fractional cloud persistence rounds the other way from truncating it
 first. A pixel is tested only against the segments that reach it (upstream tests every segment
 for every pixel in the geometry's bounding box), which cannot change the answer.
-Fetching new data (the Python in `snow-cover/`) is not wired in yet.
+Fetching new data is the Python in `snow-cover/`, repaired: it imported two modules that do not
+exist (`sqlite_cache`, `cache_manager`), and wrote to a file the processor did not read. It now
+writes the processor's own cache file (`snow-cover/src/sqlite_cache.py` shares the table
+definitions in `osd-cache`, and a test runs it against the Rust reader), takes the pixels to fetch
+from the processor (`--pixels-json`, the same extraction that later reads them back; upstream's
+Python extracted them itself with shapely and could disagree at the margins), can list the pixels
+it already holds for `--fill-cache`, and its tests run in CI. `SNOW_COVER_FETCH_POLICY` is `full`
+(fetch the runs' pixels), `incremental` (fill the weeks missing for pixels already held) or
+`none`. The download from NASA itself has not been run: it needs Earthdata credentials.
 
-**Not done yet.** Fetching snow cover data, PBF input, and the streaming driver that bounds normalization memory
+**Not done yet.** PBF input, and the streaming driver that bounds normalization memory
 (`normalize_runs_partitioned` partitions in memory today). The Postgres caches migrate with
 `openskidata migrate-cache`.
 

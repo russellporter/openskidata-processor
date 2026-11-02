@@ -98,9 +98,7 @@ fn run_histories_and_ski_area_statistics_match_the_typescript_output() {
             cache_path,
             geocoding: None,
             elevation: None,
-            snow_cover: Some(SnowCoverSettings {
-                fetch_policy: SnowCoverFetchPolicy::None,
-            }),
+            snow_cover: Some(SnowCoverSettings::new(SnowCoverFetchPolicy::None)),
             generate_tiles: false,
         })
         .unwrap();

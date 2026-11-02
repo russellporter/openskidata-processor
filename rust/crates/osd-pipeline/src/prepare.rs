@@ -70,9 +70,118 @@ pub enum SnowCoverFetchPolicy {
     None,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct SnowCoverSettings {
     pub fetch_policy: SnowCoverFetchPolicy,
+    /// The fetcher, `snow-cover/src/fetch_snow_data.py`, relative to the working directory.
+    pub script: PathBuf,
+    /// The Python to run it with; `None` is `snow-cover/venv/bin/python` if that exists, else
+    /// `python3`.
+    pub python: Option<PathBuf>,
+}
+
+impl SnowCoverSettings {
+    pub fn new(fetch_policy: SnowCoverFetchPolicy) -> Self {
+        SnowCoverSettings {
+            fetch_policy,
+            script: PathBuf::from("snow-cover/src/fetch_snow_data.py"),
+            python: None,
+        }
+    }
+}
+
+/// The pixels the runs cover, each once, as `{"h18v04": [[row, col], ...]}` in the order first
+/// seen: what the fetcher is asked to bring into the archive. The same extraction later reads
+/// the data back, so nothing that will be looked up is left out.
+pub fn snow_cover_pixels_json(runs: &[crate::format::RunOut]) -> String {
+    use rayon::prelude::*;
+    let per_run: Vec<Vec<osd_enrich::viirs::ViirsPixel>> = runs
+        .par_iter()
+        .map(|run| {
+            osd_enrich::viirs::geometry_pixels(&crate::format::geometry_of_run(&run.geometry))
+        })
+        .collect();
+    let mut seen = std::collections::HashSet::new();
+    let mut tiles: Vec<String> = Vec::new();
+    let mut by_tile: std::collections::HashMap<String, Vec<[u32; 2]>> =
+        std::collections::HashMap::new();
+    for [h, v, col, row] in per_run.into_iter().flatten() {
+        if !seen.insert([h, v, col, row]) {
+            continue;
+        }
+        let tile = osd_enrich::snow::tile_id(h, v);
+        by_tile
+            .entry(tile.clone())
+            .or_insert_with(|| {
+                tiles.push(tile.clone());
+                Vec::new()
+            })
+            .push([row, col]);
+    }
+    let mut out = String::from("{");
+    for (i, tile) in tiles.iter().enumerate() {
+        if i > 0 {
+            out.push(',');
+        }
+        out.push_str(&format!("\"{tile}\":["));
+        out.push_str(
+            &by_tile[tile]
+                .iter()
+                .map(|[row, col]| format!("[{row},{col}]"))
+                .collect::<Vec<_>>()
+                .join(","),
+        );
+        out.push(']');
+    }
+    out.push('}');
+    out
+}
+
+/// Brings the snow cover archive up to date with the Python fetcher, which writes into the same
+/// cache file the processor reads: for the `Full` policy, the pixels of the runs; for
+/// `Incremental`, the missing weeks of the pixels the archive already has. A failure fails the
+/// run, as upstream's does.
+fn fetch_snow_cover(
+    settings: &SnowCoverSettings,
+    runs: &[crate::format::RunOut],
+    cache_path: &Path,
+    scratch_dir: &Path,
+) -> Result<()> {
+    let python = settings.python.clone().unwrap_or_else(|| {
+        let venv = PathBuf::from("snow-cover/venv/bin/python");
+        if venv.exists() {
+            venv
+        } else {
+            PathBuf::from("python3")
+        }
+    });
+    let mut command = std::process::Command::new(&python);
+    command
+        .arg(&settings.script)
+        .arg("--archive-file")
+        .arg(cache_path);
+    match settings.fetch_policy {
+        SnowCoverFetchPolicy::None => return Ok(()),
+        SnowCoverFetchPolicy::Incremental => {
+            command.arg("--fill-cache");
+        }
+        SnowCoverFetchPolicy::Full => {
+            if runs.is_empty() {
+                return Ok(());
+            }
+            let pixels = scratch_dir.join("snow_cover_pixels.json");
+            fs::write(&pixels, snow_cover_pixels_json(runs))?;
+            command.arg("--pixels-json").arg(&pixels);
+        }
+    }
+    tracing::info!("Running: {command:?}");
+    let status = command
+        .status()
+        .with_context(|| format!("starting {}", python.display()))?;
+    if !status.success() {
+        anyhow::bail!("Snow cover processing failed: {command:?} exited with {status}");
+    }
+    Ok(())
 }
 
 /// A reverse-geocoding server.
@@ -323,21 +432,27 @@ pub fn write_metadata(
     write_text(&output_dir.join("metadata.json"), &metadata.to_json())
 }
 
-/// Reads the input files, runs the pipeline and writes the output files.
-pub fn prepare(config: &PrepareConfig) -> Result<()> {
+/// Reads the input files in `input_dir` and formats them.
+pub fn load_formatted(input_dir: &Path) -> Result<crate::format::Formatted> {
     let started = std::time::Instant::now();
     let input = FormatInput {
-        runs: features_from_osm_json(&config.input_dir.join(RUNS))?,
-        lifts: features_from_osm_json(&config.input_dir.join(LIFTS))?,
-        ski_areas: features_from_osm_json(&config.input_dir.join(SKI_AREAS))?,
-        sites: relations_from_osm_json(&config.input_dir.join(SKI_AREA_SITES))?,
-        spots: features_from_osm_json(&config.input_dir.join(SPOTS))?,
-        skimap: skimap_ski_areas(&config.input_dir.join(SKIMAP))?,
+        runs: features_from_osm_json(&input_dir.join(RUNS))?,
+        lifts: features_from_osm_json(&input_dir.join(LIFTS))?,
+        ski_areas: features_from_osm_json(&input_dir.join(SKI_AREAS))?,
+        sites: relations_from_osm_json(&input_dir.join(SKI_AREA_SITES))?,
+        spots: features_from_osm_json(&input_dir.join(SPOTS))?,
+        skimap: skimap_ski_areas(&input_dir.join(SKIMAP))?,
     };
     tracing::info!("read and convert the input: {:?}", started.elapsed());
     let started = std::time::Instant::now();
-    let mut formatted = format_all(&input)?;
+    let formatted = format_all(&input)?;
     tracing::info!("format: {:?}", started.elapsed());
+    Ok(formatted)
+}
+
+/// Reads the input files, runs the pipeline and writes the output files.
+pub fn prepare(config: &PrepareConfig) -> Result<()> {
+    let mut formatted = load_formatted(&config.input_dir)?;
 
     // The cache is shared by the geocoder and the elevation lookup, and opened only if needed.
     let cache = if config.geocoding.is_some()
@@ -386,6 +501,17 @@ pub fn prepare(config: &PrepareConfig) -> Result<()> {
     }
     if let Some(source) = &elevation_source {
         source.close();
+    }
+
+    if let Some(settings) = &config.snow_cover {
+        let started = std::time::Instant::now();
+        fetch_snow_cover(
+            settings,
+            &formatted.runs,
+            &config.cache_path,
+            &config.input_dir,
+        )?;
+        tracing::info!("fetch snow cover: {:?}", started.elapsed());
     }
 
     let geocoder = match (&config.geocoding, &cache) {
