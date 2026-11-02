@@ -277,7 +277,7 @@ mod tests {
             ("usage", "industrial"),
             ("railway:traffic_mode", "freight"),
         ] {
-            let t = tags(&[("aerialway", "chair_lift"), pair.into()]);
+            let t = tags(&[("aerialway", "chair_lift"), pair]);
             assert!(is_disqualified(&t), "{pair:?}");
             assert!(
                 !is_lift(&t),

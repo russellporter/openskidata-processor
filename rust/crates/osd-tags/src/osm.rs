@@ -69,10 +69,10 @@ pub fn osm_name(
     reference: Option<&str>,
 ) -> Option<String> {
     let mut keys = name_keys(tags, root);
-    if keys.is_empty() {
-        if let Some(fallback) = fallback_root {
-            keys = name_keys(tags, fallback);
-        }
+    if keys.is_empty()
+        && let Some(fallback) = fallback_root
+    {
+        keys = name_keys(tags, fallback);
     }
     if keys.is_empty() {
         return None;

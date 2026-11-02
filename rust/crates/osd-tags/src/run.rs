@@ -113,10 +113,10 @@ pub fn grooming(tags: &Tags) -> Option<RunGrooming> {
     }
 
     // Defaults. Checked after the tag, so an explicit value always wins.
-    if let Some(difficulty) = tags.get("piste:difficulty").map(String::as_str) {
-        if matches!(difficulty, "expert" | "freeride" | "extreme") {
-            return Some(RunGrooming::Backcountry);
-        }
+    if let Some(difficulty) = tags.get("piste:difficulty").map(String::as_str)
+        && matches!(difficulty, "expert" | "freeride" | "extreme")
+    {
+        return Some(RunGrooming::Backcountry);
     }
     if tags.get("piste:grooming").map(String::as_str) == Some("no") {
         return Some(RunGrooming::Backcountry);

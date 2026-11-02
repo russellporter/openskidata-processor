@@ -20,6 +20,8 @@
 //! so coalescing arcs after elevations are attached would silently merge arcs that differ
 //! only in z. Upstream relies on this (`PrepareGeoJSON.ts:145-151`) and so must this.
 
+pub mod format;
+
 use anyhow::Result;
 use std::path::PathBuf;
 

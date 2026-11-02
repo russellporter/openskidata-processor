@@ -103,10 +103,11 @@ pub fn landuse(
     tags: &Tags,
     geometry: GeometryKind,
 ) -> Option<SkiAreaTagProperties> {
-    if let Some(sport) = tags.get("sport") {
-        if sport != "skiing" && sport != "ski" {
-            return None;
-        }
+    if let Some(sport) = tags.get("sport")
+        && sport != "skiing"
+        && sport != "ski"
+    {
+        return None;
     }
 
     if !matches!(geometry, GeometryKind::Polygon | GeometryKind::MultiPolygon) {

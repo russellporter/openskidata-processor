@@ -82,18 +82,18 @@ impl Converter {
         }
 
         for way in &self.ways {
-            if self.is_polygon_way(way) {
-                if let Some(feature) = self.way_feature(way, true) {
-                    features.push(feature);
-                }
+            if self.is_polygon_way(way)
+                && let Some(feature) = self.way_feature(way, true)
+            {
+                features.push(feature);
             }
         }
 
         for way in &self.ways {
-            if !self.is_polygon_way(way) {
-                if let Some(feature) = self.way_feature(way, false) {
-                    features.push(feature);
-                }
+            if !self.is_polygon_way(way)
+                && let Some(feature) = self.way_feature(way, false)
+            {
+                features.push(feature);
             }
         }
 
@@ -119,10 +119,10 @@ impl Converter {
         }
         for relation in &self.relations {
             for member in relation.members.iter().flatten() {
-                if member.member_type == MemberType::Node {
-                    if let Some(index) = self.nodes.index_of(member.reference) {
-                        state[index] = 1;
-                    }
+                if member.member_type == MemberType::Node
+                    && let Some(index) = self.nodes.index_of(member.reference)
+                {
+                    state[index] = 1;
                 }
             }
         }

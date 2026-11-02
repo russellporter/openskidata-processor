@@ -62,10 +62,10 @@ pub struct StatusAndValue {
 
 /// Whether the tags say the feature no longer exists.
 fn is_unsupported(key: &str, tags: &Tags) -> bool {
-    if let Some(value) = tags.get(key) {
-        if UNSUPPORTED_STATES.contains(&value.as_str()) {
-            return true;
-        }
+    if let Some(value) = tags.get(key)
+        && UNSUPPORTED_STATES.contains(&value.as_str())
+    {
+        return true;
     }
     UNSUPPORTED_STATES
         .iter()

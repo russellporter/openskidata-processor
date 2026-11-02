@@ -5,4 +5,5 @@ rust/crates/osd-normalize/tests/merge_vectors.json
 rust/crates/osd-normalize/tests/normalize_scenes.json
 rust/crates/osd-normalize/tests/topology_scenes.json
 rust/crates/osd-osm/tests/validity_vectors.json
+rust/crates/osd-pipeline/tests/format_scenes.json
 rust/crates/osd-store/tests/id_vectors.json

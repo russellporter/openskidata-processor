@@ -108,7 +108,7 @@ pub fn point_in_polygon(x: f64, y: f64, polygon: &[&[[f64; 2]]]) -> Containment 
         }
     }
 
-    if crossings % 2 == 0 {
+    if crossings.is_multiple_of(2) {
         Containment::Outside
     } else {
         Containment::Inside

@@ -1540,6 +1540,8 @@ dependencies = [
  "osd-out",
  "osd-store",
  "osd-tags",
+ "serde",
+ "serde_json",
  "tracing",
 ]
 

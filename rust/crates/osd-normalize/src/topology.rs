@@ -429,27 +429,25 @@ fn dedup(extracted: &mut Extracted) -> Vec<Piece> {
         let start_point = coordinates[arc.start];
         let end_point = coordinates[arc.end];
 
-        if let Some(start_arcs) = arcs_by_end.get(&start_point) {
-            if let Some(&found) = start_arcs
+        if let Some(start_arcs) = arcs_by_end.get(&start_point)
+            && let Some(&found) = start_arcs
                 .iter()
                 .find(|&&candidate| equal_line(candidate, *arc))
-            {
-                *arc = found;
-                return;
-            }
+        {
+            *arc = found;
+            return;
         }
 
-        if let Some(end_arcs) = arcs_by_end.get(&end_point) {
-            if let Some(&found) = end_arcs
+        if let Some(end_arcs) = arcs_by_end.get(&end_point)
+            && let Some(&found) = end_arcs
                 .iter()
                 .find(|&&candidate| reverse_equal_line(candidate, *arc))
-            {
-                *arc = Piece {
-                    start: found.end,
-                    end: found.start,
-                };
-                return;
-            }
+        {
+            *arc = Piece {
+                start: found.end,
+                end: found.start,
+            };
+            return;
         }
 
         arcs_by_end.entry(start_point).or_default().push(*arc);

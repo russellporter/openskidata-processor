@@ -84,10 +84,12 @@ fn event_order(e1: &SweepEvent, e2: &SweepEvent) -> i32 {
     if e1.x < e2.x {
         return -1;
     }
-    if e1.x == e2.x && (e1.feature_id != e2.feature_id || e1.ring_id != e2.ring_id) {
-        if e1.is_left_endpoint == Some(true) && e2.is_left_endpoint != Some(true) {
-            return -1;
-        }
+    if e1.x == e2.x
+        && (e1.feature_id != e2.feature_id || e1.ring_id != e2.ring_id)
+        && e1.is_left_endpoint == Some(true)
+        && e2.is_left_endpoint != Some(true)
+    {
+        return -1;
     }
     if e1.y != e2.y {
         return if e1.y > e2.y { 1 } else { -1 };
@@ -195,9 +197,8 @@ fn test_segment_intersect(events: &[SweepEvent], s1: Segment, s2: Segment) -> Op
     };
     let score1 = orient(x3, y3);
     let score2 = orient(x4, y4);
-    if score1 > 0.0 && score2 > 0.0 {
-        return None;
-    } else if score1 < 0.0 && score2 < 0.0 {
+    // Both endpoints of the second segment strictly on one side of the first: no crossing.
+    if (score1 > 0.0 && score2 > 0.0) || (score1 < 0.0 && score2 < 0.0) {
         return None;
     }
 

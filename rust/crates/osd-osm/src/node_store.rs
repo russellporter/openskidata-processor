@@ -34,10 +34,10 @@ impl NodeStore {
 
     pub fn add(&mut self, id: i64, lon: f64, lat: f64) {
         assert!(!self.started, "cannot add nodes after lookups have started");
-        if let Some(&last) = self.ids.last() {
-            if id <= last {
-                self.sorted = false;
-            }
+        if let Some(&last) = self.ids.last()
+            && id <= last
+        {
+            self.sorted = false;
         }
         self.ids.push(id);
         self.lons.push(round_coordinate(lon));
@@ -134,7 +134,7 @@ mod tests {
 
     #[test]
     fn coordinates_are_rounded_at_one_trillionth_of_a_degree() {
-        assert_eq!(round_coordinate(11.123456789012349), 11.123456789012);
+        assert_eq!(round_coordinate(11.123_456_789_012_35), 11.123456789012);
         // Already clean values survive unchanged.
         assert_eq!(round_coordinate(11.5), 11.5);
         assert_eq!(round_coordinate(-47.25), -47.25);
