@@ -1,0 +1,1 @@
+CREATE TRIGGER "{rtree}_update3" AFTER UPDATE OF geometry ON "{table}" WHEN OLD.id != NEW.id AND        (NEW.geometry NOTNULL AND NOT ST_IsEmpty(NEW.geometry)) BEGIN   DELETE FROM "{rtree}" WHERE id = OLD.id;   INSERT OR REPLACE INTO "{rtree}" VALUES (    NEW.id,     ST_MinX(NEW.geometry), ST_MaxX(NEW.geometry),     ST_MinY(NEW.geometry), ST_MaxY(NEW.geometry)  ); END

@@ -1,0 +1,1 @@
+CREATE TRIGGER "{rtree}_insert" AFTER INSERT ON "{table}" WHEN (new.geometry NOT NULL AND NOT ST_IsEmpty(NEW.geometry)) BEGIN   INSERT OR REPLACE INTO "{rtree}" VALUES (    NEW.id,    ST_MinX(NEW.geometry), ST_MaxX(NEW.geometry),     ST_MinY(NEW.geometry), ST_MaxY(NEW.geometry)   ); END

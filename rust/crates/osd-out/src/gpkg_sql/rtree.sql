@@ -1,0 +1,1 @@
+CREATE VIRTUAL TABLE "{rtree}" USING rtree(id, minx, maxx, miny, maxy)

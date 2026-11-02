@@ -16,7 +16,7 @@ use osd_cluster::engine::{ClusterOutput, Feature, cluster};
 use osd_osm::element::{Element, Feature as OsmFeature, Relation};
 use osd_osm::overpass::{convert_overpass_json, read_elements};
 use osd_out::geojson::write_feature_collection;
-use osd_out::{csv, mapboxgl};
+use osd_out::{csv, gpkg, mapboxgl};
 use serde_json::{Value, json};
 use std::fs::{self, File};
 use std::io::{BufReader, BufWriter, Write};
@@ -175,6 +175,16 @@ pub fn write_outputs(output: &ClusterOutput, output_dir: &Path) -> Result<()> {
     write_text(
         &csv_dir.join(csv::filename(FeatureType::Spot)),
         &csv::file(FeatureType::Spot, output.spots.iter().map(csv::spot)),
+    )?;
+
+    gpkg::write_geopackage(
+        &output_dir.join("openskidata.gpkg"),
+        &gpkg::Layers {
+            ski_areas: &output.ski_areas,
+            lifts: &output.lifts,
+            runs: &output.runs,
+            spots: &output.spots,
+        },
     )?;
     Ok(())
 }

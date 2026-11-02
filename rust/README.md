@@ -12,7 +12,7 @@ document. This README is the short version.
 `openskidata prepare` works: given the downloaded input files (`input_*.osmjson` and
 `input_skimap_ski_areas.geojson`), it reproduces what the TypeScript pipeline writes with
 elevation, geocoding and snow cover switched off -- `ski_areas|runs|lifts|spots.geojson`,
-their `mapboxgl_*` counterparts, and the four CSV files.
+their `mapboxgl_*` counterparts, the four CSV files and `openskidata.gpkg`.
 
 ```bash
 cargo build --release -p osd-cli
@@ -35,6 +35,7 @@ The pieces and what they were checked on:
 | viewport hints                          | 709 cases at 1e-9                                                           |
 | the format stage                        | 500 worlds (1,140 ski areas, 1,254 runs, 424 lifts, 756 spots)              |
 | clustering, statistics, the exports     | 188 worlds: final GeoJSON, mapboxgl GeoJSON and CSV text, plus the file I/O |
+| the GeoPackage                          | 36 worlds dumped table by table (DDL, rows, R-tree) + 16 synthetic sets     |
 
 Each check was then **mutation tested**: deliberately break the port, confirm the test
 fails, and add inputs until it does. That found real gaps every time (areas straddling a
@@ -52,7 +53,13 @@ The clustering oracle (`osd-cluster/tests/cluster_scenes.json`) needs PostgreSQL
 regenerate and takes about eight minutes, so CI does not re-check it; the Rust tests that
 read it do run in CI.
 
-**Not done yet.** The GeoPackage, `metadata.json`, elevation (and the float-heavy
+The GeoPackage oracle (`osd-pipeline/tests/gpkg_scenes.json`) re-runs the real `prepare` on a
+sample of the cluster worlds and dumps the `.gpkg` it writes; because those worlds never carry
+places, wikidata ids, references, elevation profiles or lift-station positions, 16 further
+sets feed the real writer real output features with those properties and random booleans
+filled in. The Rust writer is compared on every table's DDL, every row and every R-tree.
+
+**Not done yet.** `metadata.json`, elevation (and the float-heavy
 `line_chunk_patched`/ascent/pitch maths behind the elevation CSV columns), geocoding, snow
 cover, the Postgres cache migration, downloading from Overpass/Skimap.org, PBF input, and the
 streaming driver that bounds normalization memory (`normalize_runs_partitioned` partitions in
@@ -80,7 +87,16 @@ depends on them. Each is pinned by a test and explained where it lives.
   this one rests on reading the TypeScript rather than on a test.
 - **A lift's embedded `stations[].skiAreas` is stale upstream** (unresolved site ski areas
   with placeholder coordinates). Not reproduced: this pipeline resolves them the way
-  `spots.geojson` does. The one deliberate divergence from the TypeScript output.
+  `spots.geojson` does. A deliberate divergence from the TypeScript output.
+- **Every boolean cell of an upstream GeoPackage is `0`.** `@ngageoint/geopackage` stores a
+  BOOLEAN as `value === true ? 1 : 0`, and the writer hands it the numbers `1`/`0`, so `lit`,
+  `oneway`, `bubble` and the rest are `0` whatever the feature says, and unknown is `0`, not
+  `NULL`. Not reproduced: this writes the intended `1`/`0`/`NULL`, and the test checks them
+  against the GeoJSON properties instead of against upstream's file. The other GeoPackage
+  differences: `gpkg_contents` carries the true bounding box (upstream's has latitude and
+  longitude crossed, from the first 1,000 features only), the `gpkg_schema` extension rows for
+  tables that do not exist are left out, and R-tree boxes are as tight as the bundled SQLite
+  makes them (upstream's, from an older SQLite, are an f32 ulp or two wider).
 
 ## The generated enums
 

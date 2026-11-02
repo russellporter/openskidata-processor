@@ -1,0 +1,1 @@
+CREATE TRIGGER "{rtree}_delete" AFTER DELETE ON "{table}" WHEN old.geometry NOT NULL BEGIN  DELETE FROM "{rtree}" WHERE id = OLD.id; END

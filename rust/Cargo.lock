@@ -1550,6 +1550,7 @@ dependencies = [
  "osd-out",
  "osd-store",
  "osd-tags",
+ "rusqlite",
  "serde",
  "serde_json",
  "tracing",

@@ -48,17 +48,12 @@
 
 pub mod csv;
 pub mod geojson;
+pub mod gpkg;
 pub mod mapboxgl;
 pub mod tiles;
 
 use anyhow::Result;
-use osd_store::FeatureStore;
 use std::path::Path;
-
-/// Replaces `GeoPackageWriter`.
-pub fn write_geopackage(_store: &FeatureStore, _path: &Path) -> Result<()> {
-    todo!("write SQLite + WKB + gpkg metadata tables directly")
-}
 
 /// Replaces `DatasetMetadata`. Counts are folded in during the CSV pass.
 pub fn write_metadata(_path: &Path) -> Result<()> {

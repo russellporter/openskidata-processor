@@ -3,15 +3,13 @@
 //! worlds with their recorded `ski_areas`, `runs`, `lifts` and `spots`.
 
 use openskidata_format::FeatureType;
-use openskidata_format::{SkiAreaActivity, Status};
-use osd_cluster::engine::{ClusterOutput, cluster};
-use osd_osm::element::{Element, Feature, Relation};
-use osd_osm::overpass::{convert_overpass_json, read_elements};
+use osd_cluster::engine::ClusterOutput;
 use osd_out::{csv, mapboxgl};
-use osd_pipeline::format::{FormatInput, SkimapSkiArea, format_all};
+
+mod common;
+use common::Roles;
 use serde::Deserialize;
 use serde_json::{Value, json};
-use std::str::FromStr;
 
 #[derive(Deserialize)]
 struct Scenes {
@@ -22,17 +20,6 @@ struct Scenes {
 struct Scene {
     roles: Roles,
     expected: Expected,
-}
-
-#[derive(Deserialize)]
-struct Roles {
-    runs: Value,
-    lifts: Value,
-    #[serde(rename = "skiAreas")]
-    ski_areas: Value,
-    sites: Value,
-    spots: Value,
-    skimap: Vec<Value>,
 }
 
 #[derive(Deserialize)]
@@ -66,46 +53,6 @@ struct MapboxGl {
     runs: Vec<Value>,
     lifts: Vec<Value>,
     spots: Vec<Value>,
-}
-
-fn features(elements: &Value) -> Vec<Feature> {
-    let document = json!({ "elements": elements }).to_string();
-    convert_overpass_json(document.as_bytes()).unwrap()
-}
-
-fn relations(elements: &Value) -> Vec<Relation> {
-    let document = json!({ "elements": elements }).to_string();
-    let mut relations = Vec::new();
-    read_elements(document.as_bytes(), |element| {
-        if let Element::Relation(relation) = element {
-            relations.push(relation);
-        }
-    })
-    .unwrap();
-    relations
-}
-
-fn skimap(value: &Value) -> SkimapSkiArea {
-    let properties = &value["properties"];
-    let coordinates = &value["geometry"]["coordinates"];
-    SkimapSkiArea {
-        id: properties["id"].as_str().unwrap().to_owned(),
-        name: properties["name"].as_str().map(str::to_owned),
-        status: properties["status"]
-            .as_str()
-            .map(|s| Status::from_str(s).unwrap()),
-        activities: properties["activities"]
-            .as_array()
-            .unwrap()
-            .iter()
-            .map(|a| SkiAreaActivity::from_str(a.as_str().unwrap()).unwrap())
-            .collect(),
-        official_website: properties["official_website"].as_str().map(str::to_owned),
-        coordinates: [
-            coordinates[0].as_f64().unwrap(),
-            coordinates[1].as_f64().unwrap(),
-        ],
-    }
 }
 
 fn same(a: &Value, b: &Value) -> bool {
@@ -201,16 +148,7 @@ fn every_recorded_scene_is_reproduced() {
     let mut failures: Vec<String> = Vec::new();
     let mut scenes_failed = 0;
     for (n, scene) in scenes.scenes.iter().enumerate() {
-        let input = FormatInput {
-            runs: features(&scene.roles.runs),
-            lifts: features(&scene.roles.lifts),
-            ski_areas: features(&scene.roles.ski_areas),
-            sites: relations(&scene.roles.sites),
-            spots: features(&scene.roles.spots),
-            skimap: scene.roles.skimap.iter().map(skimap).collect(),
-        };
-        let formatted = format_all(&input).unwrap();
-        let output = cluster(formatted.into_cluster_input()).unwrap();
+        let output = common::run(&scene.roles);
         let actual = actual(&output);
 
         let mut scene_failed = false;

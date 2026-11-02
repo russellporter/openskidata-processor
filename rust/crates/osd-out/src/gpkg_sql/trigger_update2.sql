@@ -1,0 +1,1 @@
+CREATE TRIGGER "{rtree}_update2" AFTER UPDATE OF geometry ON "{table}" WHEN OLD.id = NEW.id AND        (NEW.geometry ISNULL OR ST_IsEmpty(NEW.geometry)) BEGIN   DELETE FROM "{rtree}" WHERE id = OLD.id; END
