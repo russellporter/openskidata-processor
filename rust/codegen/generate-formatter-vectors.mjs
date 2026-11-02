@@ -36,6 +36,9 @@ const { formatRun } = await import(
 const { formatLift } = await import(
   join(repoRoot, "dist/transforms/LiftFormatter.js")
 );
+const { formatSkiArea, InputSkiAreaType } = await import(
+  join(repoRoot, "dist/transforms/SkiAreaFormatter.js")
+);
 
 /** A short line, so geometry never varies between cases. */
 const LINE = {
@@ -333,7 +336,216 @@ const lifts = liftCases.map((tags) => {
   return { tags, output };
 });
 
-const vectors = { formatVersion: pkg.version, runs, lifts };
+// ---------------------------------------------------------------------------------------
+// Ski areas. Three input arms with three different derivations, so one corpus per arm.
+// ---------------------------------------------------------------------------------------
+
+const SQUARE = {
+  type: "Polygon",
+  coordinates: [
+    [
+      [11.0, 47.0],
+      [11.01, 47.0],
+      [11.01, 47.01],
+      [11.0, 47.01],
+      [11.0, 47.0],
+    ],
+  ],
+};
+const MULTI_SQUARE = {
+  type: "MultiPolygon",
+  coordinates: [SQUARE.coordinates],
+};
+const POINT = { type: "Point", coordinates: [11.0, 47.0] };
+
+/** The same square translated, so the run-difficulty convention region changes. */
+function squareAt(lng, lat) {
+  const d = 0.01;
+  return {
+    type: "Polygon",
+    coordinates: [
+      [
+        [lng, lat],
+        [lng + d, lat],
+        [lng + d, lat + d],
+        [lng, lat + d],
+        [lng, lat],
+      ],
+    ],
+  };
+}
+
+function landuseFeature(tags, geometry = SQUARE) {
+  return {
+    type: "Feature",
+    geometry,
+    properties: { type: "way", id: 7, tags },
+  };
+}
+
+/** Geometry is recorded for ski areas, since the site arm's placeholder lives there. */
+function skiAreaOutput(feature) {
+  if (feature === null) return null;
+  return { properties: stable(feature.properties), geometry: feature.geometry };
+}
+
+function runSkiArea(arm, input) {
+  try {
+    return skiAreaOutput(formatSkiArea(arm)(input));
+  } catch (error) {
+    return { error: String(error?.message ?? error) };
+  }
+}
+
+// --- arm 1: OSM landuse=winter_sports polygons -------------------------------------------
+const landuseCases = [];
+for (const prefix of LIFECYCLE_PREFIXES) {
+  landuseCases.push({ tags: { [`${prefix}landuse`]: "winter_sports" } });
+}
+// The bare-flag and status-as-value lifecycle forms.
+landuseCases.push({ tags: { landuse: "winter_sports", disused: "yes" } });
+landuseCases.push({
+  tags: { landuse: "construction", construction: "winter_sports" },
+});
+landuseCases.push({ tags: { landuse: "demolished" } });
+// The sport filter: absent is kept, skiing and ski are kept, anything else is dropped.
+for (const sport of [undefined, "skiing", "ski", "snowboard", "hiking", ""]) {
+  const tags = { landuse: "winter_sports" };
+  if (sport !== undefined) tags.sport = sport;
+  landuseCases.push({ tags });
+}
+// Names and the other copied-through tags.
+landuseCases.push({ tags: { landuse: "winter_sports", name: "Zugspitze" } });
+landuseCases.push({
+  tags: { landuse: "winter_sports", name: "Base", "name:de": "Deutsch" },
+});
+landuseCases.push({
+  tags: { landuse: "winter_sports", website: "https://example.com" },
+});
+landuseCases.push({ tags: { landuse: "winter_sports", website: "" } });
+landuseCases.push({ tags: { landuse: "winter_sports", wikidata: "Q42" } });
+landuseCases.push({ tags: { landuse: "winter_sports", wikidata: "Q1;Q2" } });
+// Geometry kinds: a polygon and multipolygon are accepted, a point is not.
+landuseCases.push({
+  tags: { landuse: "winter_sports" },
+  geometry: MULTI_SQUARE,
+});
+landuseCases.push({ tags: { landuse: "winter_sports" }, geometry: POINT });
+// The run-difficulty convention follows the location.
+for (const [where, lng, lat] of [
+  ["alps", 11.0, 47.0],
+  ["hokkaido", 142.8, 43.3],
+  ["colorado", -106.0, 39.6],
+  ["new zealand", 170.1, -44.6],
+]) {
+  landuseCases.push({
+    tags: { landuse: "winter_sports" },
+    geometry: squareAt(lng, lat),
+    note: where,
+  });
+}
+
+const skiAreasLanduse = landuseCases.map(({ tags, geometry, note }) => ({
+  tags,
+  geometryType: (geometry ?? SQUARE).type,
+  ...(note ? { note } : {}),
+  output: runSkiArea(
+    InputSkiAreaType.OPENSTREETMAP_LANDUSE,
+    landuseFeature(tags, geometry ?? SQUARE),
+  ),
+}));
+
+// --- arm 2: OSM site=piste relations -----------------------------------------------------
+const siteCases = [];
+for (const prefix of LIFECYCLE_PREFIXES) {
+  siteCases.push({ tags: { [`${prefix}site`]: "piste" } });
+}
+siteCases.push({ tags: { site: "piste", disused: "yes" } });
+siteCases.push({ tags: { site: "demolished" } });
+siteCases.push({ tags: { site: "piste", name: "Kitzbuhel" } });
+siteCases.push({ tags: { site: "piste", name: "Base", "name:de": "Deutsch" } });
+siteCases.push({ tags: { site: "piste", website: "https://example.com" } });
+siteCases.push({ tags: { site: "piste", wikidata: "Q42" } });
+// A different relation id changes the placeholder geometry.
+const skiAreasSite = [];
+for (const id of [1, 99]) {
+  for (const { tags } of siteCases) {
+    skiAreasSite.push({
+      relationId: id,
+      tags,
+      output: runSkiArea(InputSkiAreaType.OPENSTREETMAP_SITE, {
+        type: "relation",
+        id,
+        members: [],
+        tags,
+      }),
+    });
+  }
+}
+
+// --- arm 3: Skimap.org points ------------------------------------------------------------
+const skimapCases = [];
+const SKIMAP_STATUSES = [
+  null,
+  "operating",
+  "disused",
+  "abandoned",
+  "proposed",
+  "planned",
+  "construction",
+];
+const SKIMAP_ACTIVITIES = [
+  [],
+  ["downhill"],
+  ["nordic"],
+  ["downhill", "nordic"],
+];
+for (const status of SKIMAP_STATUSES) {
+  for (const activities of SKIMAP_ACTIVITIES) {
+    skimapCases.push({
+      id: "100",
+      name: "Resort",
+      status,
+      activities,
+      official_website: null,
+    });
+  }
+}
+for (const name of [undefined, "", "Named"]) {
+  skimapCases.push({
+    id: "101",
+    name,
+    status: "operating",
+    activities: ["downhill"],
+    official_website: null,
+  });
+}
+for (const official_website of [null, "", "https://example.com"]) {
+  skimapCases.push({
+    id: "102",
+    name: "Site",
+    status: "operating",
+    activities: ["downhill"],
+    official_website,
+  });
+}
+
+const skiAreasSkimap = skimapCases.map((properties) => ({
+  properties,
+  output: runSkiArea(InputSkiAreaType.SKIMAP_ORG, {
+    type: "Feature",
+    geometry: POINT,
+    properties: { scalerank: 1, ...properties },
+  }),
+}));
+
+const skiAreas = {
+  landuse: skiAreasLanduse,
+  site: skiAreasSite,
+  skimap: skiAreasSkimap,
+};
+
+const vectors = { formatVersion: pkg.version, runs, lifts, skiAreas };
 /**
  * Run the emitted JSON through Prettier, so the checked-in file is both
  * Prettier-clean (CI runs `prettier --check` over the repo) and byte-stable against this
@@ -377,5 +589,9 @@ if (process.argv.includes("--check")) {
   console.log(
     `Wrote ${runs.length} run cases (${emptyRuns} filtered out) and ` +
       `${lifts.length} lift cases (${nullLifts} rejected)`,
+  );
+  console.log(
+    `Wrote ${skiAreas.landuse.length} landuse, ${skiAreas.site.length} site and ` +
+      `${skiAreas.skimap.length} Skimap.org ski area cases`,
   );
 }

@@ -14368,5 +14368,2477 @@
       "tags": {},
       "output": null
     }
-  ]
+  ],
+  "skiAreas": {
+    "landuse": [
+      {
+        "tags": {
+          "landuse": "winter_sports"
+        },
+        "geometryType": "Polygon",
+        "output": {
+          "properties": {
+            "activities": [],
+            "name": null,
+            "runConvention": "europe",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "way/7"
+              }
+            ],
+            "status": "operating",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [11, 47],
+                [11.01, 47],
+                [11.01, 47.01],
+                [11, 47.01],
+                [11, 47]
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "tags": {
+          "proposed:landuse": "winter_sports"
+        },
+        "geometryType": "Polygon",
+        "output": {
+          "properties": {
+            "activities": [],
+            "name": null,
+            "runConvention": "europe",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "way/7"
+              }
+            ],
+            "status": "proposed",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [11, 47],
+                [11.01, 47],
+                [11.01, 47.01],
+                [11, 47.01],
+                [11, 47]
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "tags": {
+          "planned:landuse": "winter_sports"
+        },
+        "geometryType": "Polygon",
+        "output": {
+          "properties": {
+            "activities": [],
+            "name": null,
+            "runConvention": "europe",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "way/7"
+              }
+            ],
+            "status": "planned",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [11, 47],
+                [11.01, 47],
+                [11.01, 47.01],
+                [11, 47.01],
+                [11, 47]
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "tags": {
+          "construction:landuse": "winter_sports"
+        },
+        "geometryType": "Polygon",
+        "output": {
+          "properties": {
+            "activities": [],
+            "name": null,
+            "runConvention": "europe",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "way/7"
+              }
+            ],
+            "status": "construction",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [11, 47],
+                [11.01, 47],
+                [11.01, 47.01],
+                [11, 47.01],
+                [11, 47]
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "tags": {
+          "disused:landuse": "winter_sports"
+        },
+        "geometryType": "Polygon",
+        "output": {
+          "properties": {
+            "activities": [],
+            "name": null,
+            "runConvention": "europe",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "way/7"
+              }
+            ],
+            "status": "disused",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [11, 47],
+                [11.01, 47],
+                [11.01, 47.01],
+                [11, 47.01],
+                [11, 47]
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "tags": {
+          "abandoned:landuse": "winter_sports"
+        },
+        "geometryType": "Polygon",
+        "output": {
+          "properties": {
+            "activities": [],
+            "name": null,
+            "runConvention": "europe",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "way/7"
+              }
+            ],
+            "status": "abandoned",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [11, 47],
+                [11.01, 47],
+                [11.01, 47.01],
+                [11, 47.01],
+                [11, 47]
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "tags": {
+          "landuse": "winter_sports",
+          "disused": "yes"
+        },
+        "geometryType": "Polygon",
+        "output": {
+          "properties": {
+            "activities": [],
+            "name": null,
+            "runConvention": "europe",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "way/7"
+              }
+            ],
+            "status": "disused",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [11, 47],
+                [11.01, 47],
+                [11.01, 47.01],
+                [11, 47.01],
+                [11, 47]
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "tags": {
+          "landuse": "construction",
+          "construction": "winter_sports"
+        },
+        "geometryType": "Polygon",
+        "output": {
+          "properties": {
+            "activities": [],
+            "name": null,
+            "runConvention": "europe",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "way/7"
+              }
+            ],
+            "status": "construction",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [11, 47],
+                [11.01, 47],
+                [11.01, 47.01],
+                [11, 47.01],
+                [11, 47]
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "tags": {
+          "landuse": "demolished"
+        },
+        "geometryType": "Polygon",
+        "output": null
+      },
+      {
+        "tags": {
+          "landuse": "winter_sports"
+        },
+        "geometryType": "Polygon",
+        "output": {
+          "properties": {
+            "activities": [],
+            "name": null,
+            "runConvention": "europe",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "way/7"
+              }
+            ],
+            "status": "operating",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [11, 47],
+                [11.01, 47],
+                [11.01, 47.01],
+                [11, 47.01],
+                [11, 47]
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "tags": {
+          "landuse": "winter_sports",
+          "sport": "skiing"
+        },
+        "geometryType": "Polygon",
+        "output": {
+          "properties": {
+            "activities": [],
+            "name": null,
+            "runConvention": "europe",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "way/7"
+              }
+            ],
+            "status": "operating",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [11, 47],
+                [11.01, 47],
+                [11.01, 47.01],
+                [11, 47.01],
+                [11, 47]
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "tags": {
+          "landuse": "winter_sports",
+          "sport": "ski"
+        },
+        "geometryType": "Polygon",
+        "output": {
+          "properties": {
+            "activities": [],
+            "name": null,
+            "runConvention": "europe",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "way/7"
+              }
+            ],
+            "status": "operating",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [11, 47],
+                [11.01, 47],
+                [11.01, 47.01],
+                [11, 47.01],
+                [11, 47]
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "tags": {
+          "landuse": "winter_sports",
+          "sport": "snowboard"
+        },
+        "geometryType": "Polygon",
+        "output": null
+      },
+      {
+        "tags": {
+          "landuse": "winter_sports",
+          "sport": "hiking"
+        },
+        "geometryType": "Polygon",
+        "output": null
+      },
+      {
+        "tags": {
+          "landuse": "winter_sports",
+          "sport": ""
+        },
+        "geometryType": "Polygon",
+        "output": null
+      },
+      {
+        "tags": {
+          "landuse": "winter_sports",
+          "name": "Zugspitze"
+        },
+        "geometryType": "Polygon",
+        "output": {
+          "properties": {
+            "activities": [],
+            "name": "Zugspitze",
+            "runConvention": "europe",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "way/7"
+              }
+            ],
+            "status": "operating",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [11, 47],
+                [11.01, 47],
+                [11.01, 47.01],
+                [11, 47.01],
+                [11, 47]
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "tags": {
+          "landuse": "winter_sports",
+          "name": "Base",
+          "name:de": "Deutsch"
+        },
+        "geometryType": "Polygon",
+        "output": {
+          "properties": {
+            "activities": [],
+            "name": "Base, Deutsch",
+            "runConvention": "europe",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "way/7"
+              }
+            ],
+            "status": "operating",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [11, 47],
+                [11.01, 47],
+                [11.01, 47.01],
+                [11, 47.01],
+                [11, 47]
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "tags": {
+          "landuse": "winter_sports",
+          "website": "https://example.com"
+        },
+        "geometryType": "Polygon",
+        "output": {
+          "properties": {
+            "activities": [],
+            "name": null,
+            "runConvention": "europe",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "way/7"
+              }
+            ],
+            "status": "operating",
+            "type": "skiArea",
+            "websites": ["https://example.com"],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [11, 47],
+                [11.01, 47],
+                [11.01, 47.01],
+                [11, 47.01],
+                [11, 47]
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "tags": {
+          "landuse": "winter_sports",
+          "website": ""
+        },
+        "geometryType": "Polygon",
+        "output": {
+          "properties": {
+            "activities": [],
+            "name": null,
+            "runConvention": "europe",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "way/7"
+              }
+            ],
+            "status": "operating",
+            "type": "skiArea",
+            "websites": [""],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [11, 47],
+                [11.01, 47],
+                [11.01, 47.01],
+                [11, 47.01],
+                [11, 47]
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "tags": {
+          "landuse": "winter_sports",
+          "wikidata": "Q42"
+        },
+        "geometryType": "Polygon",
+        "output": {
+          "properties": {
+            "activities": [],
+            "name": null,
+            "runConvention": "europe",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "way/7"
+              }
+            ],
+            "status": "operating",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": "Q42"
+          },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [11, 47],
+                [11.01, 47],
+                [11.01, 47.01],
+                [11, 47.01],
+                [11, 47]
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "tags": {
+          "landuse": "winter_sports",
+          "wikidata": "Q1;Q2"
+        },
+        "geometryType": "Polygon",
+        "output": {
+          "properties": {
+            "activities": [],
+            "name": null,
+            "runConvention": "europe",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "way/7"
+              }
+            ],
+            "status": "operating",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": "Q1"
+          },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [11, 47],
+                [11.01, 47],
+                [11.01, 47.01],
+                [11, 47.01],
+                [11, 47]
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "tags": {
+          "landuse": "winter_sports"
+        },
+        "geometryType": "MultiPolygon",
+        "output": {
+          "properties": {
+            "activities": [],
+            "name": null,
+            "runConvention": "europe",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "way/7"
+              }
+            ],
+            "status": "operating",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "MultiPolygon",
+            "coordinates": [
+              [
+                [
+                  [11, 47],
+                  [11.01, 47],
+                  [11.01, 47.01],
+                  [11, 47.01],
+                  [11, 47]
+                ]
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "tags": {
+          "landuse": "winter_sports"
+        },
+        "geometryType": "Point",
+        "output": null
+      },
+      {
+        "tags": {
+          "landuse": "winter_sports"
+        },
+        "geometryType": "Polygon",
+        "note": "alps",
+        "output": {
+          "properties": {
+            "activities": [],
+            "name": null,
+            "runConvention": "europe",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "way/7"
+              }
+            ],
+            "status": "operating",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [11, 47],
+                [11.01, 47],
+                [11.01, 47.01],
+                [11, 47.01],
+                [11, 47]
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "tags": {
+          "landuse": "winter_sports"
+        },
+        "geometryType": "Polygon",
+        "note": "hokkaido",
+        "output": {
+          "properties": {
+            "activities": [],
+            "name": null,
+            "runConvention": "japan",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "way/7"
+              }
+            ],
+            "status": "operating",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [142.8, 43.3],
+                [142.81, 43.3],
+                [142.81, 43.309999999999995],
+                [142.8, 43.309999999999995],
+                [142.8, 43.3]
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "tags": {
+          "landuse": "winter_sports"
+        },
+        "geometryType": "Polygon",
+        "note": "colorado",
+        "output": {
+          "properties": {
+            "activities": [],
+            "name": null,
+            "runConvention": "north_america",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "way/7"
+              }
+            ],
+            "status": "operating",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [-106, 39.6],
+                [-105.99, 39.6],
+                [-105.99, 39.61],
+                [-106, 39.61],
+                [-106, 39.6]
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "tags": {
+          "landuse": "winter_sports"
+        },
+        "geometryType": "Polygon",
+        "note": "new zealand",
+        "output": {
+          "properties": {
+            "activities": [],
+            "name": null,
+            "runConvention": "north_america",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "way/7"
+              }
+            ],
+            "status": "operating",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [170.1, -44.6],
+                [170.10999999999999, -44.6],
+                [170.10999999999999, -44.59],
+                [170.1, -44.59],
+                [170.1, -44.6]
+              ]
+            ]
+          }
+        }
+      }
+    ],
+    "site": [
+      {
+        "relationId": 1,
+        "tags": {
+          "site": "piste"
+        },
+        "output": {
+          "properties": {
+            "activities": [],
+            "name": null,
+            "runConvention": "north_america",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "relation/1"
+              }
+            ],
+            "status": "operating",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [360, 360, 1]
+          }
+        }
+      },
+      {
+        "relationId": 1,
+        "tags": {
+          "proposed:site": "piste"
+        },
+        "output": {
+          "properties": {
+            "activities": [],
+            "name": null,
+            "runConvention": "north_america",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "relation/1"
+              }
+            ],
+            "status": "proposed",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [360, 360, 1]
+          }
+        }
+      },
+      {
+        "relationId": 1,
+        "tags": {
+          "planned:site": "piste"
+        },
+        "output": {
+          "properties": {
+            "activities": [],
+            "name": null,
+            "runConvention": "north_america",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "relation/1"
+              }
+            ],
+            "status": "planned",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [360, 360, 1]
+          }
+        }
+      },
+      {
+        "relationId": 1,
+        "tags": {
+          "construction:site": "piste"
+        },
+        "output": {
+          "properties": {
+            "activities": [],
+            "name": null,
+            "runConvention": "north_america",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "relation/1"
+              }
+            ],
+            "status": "construction",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [360, 360, 1]
+          }
+        }
+      },
+      {
+        "relationId": 1,
+        "tags": {
+          "disused:site": "piste"
+        },
+        "output": {
+          "properties": {
+            "activities": [],
+            "name": null,
+            "runConvention": "north_america",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "relation/1"
+              }
+            ],
+            "status": "disused",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [360, 360, 1]
+          }
+        }
+      },
+      {
+        "relationId": 1,
+        "tags": {
+          "abandoned:site": "piste"
+        },
+        "output": {
+          "properties": {
+            "activities": [],
+            "name": null,
+            "runConvention": "north_america",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "relation/1"
+              }
+            ],
+            "status": "abandoned",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [360, 360, 1]
+          }
+        }
+      },
+      {
+        "relationId": 1,
+        "tags": {
+          "site": "piste",
+          "disused": "yes"
+        },
+        "output": {
+          "properties": {
+            "activities": [],
+            "name": null,
+            "runConvention": "north_america",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "relation/1"
+              }
+            ],
+            "status": "disused",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [360, 360, 1]
+          }
+        }
+      },
+      {
+        "relationId": 1,
+        "tags": {
+          "site": "demolished"
+        },
+        "output": null
+      },
+      {
+        "relationId": 1,
+        "tags": {
+          "site": "piste",
+          "name": "Kitzbuhel"
+        },
+        "output": {
+          "properties": {
+            "activities": [],
+            "name": "Kitzbuhel",
+            "runConvention": "north_america",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "relation/1"
+              }
+            ],
+            "status": "operating",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [360, 360, 1]
+          }
+        }
+      },
+      {
+        "relationId": 1,
+        "tags": {
+          "site": "piste",
+          "name": "Base",
+          "name:de": "Deutsch"
+        },
+        "output": {
+          "properties": {
+            "activities": [],
+            "name": "Base, Deutsch",
+            "runConvention": "north_america",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "relation/1"
+              }
+            ],
+            "status": "operating",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [360, 360, 1]
+          }
+        }
+      },
+      {
+        "relationId": 1,
+        "tags": {
+          "site": "piste",
+          "website": "https://example.com"
+        },
+        "output": {
+          "properties": {
+            "activities": [],
+            "name": null,
+            "runConvention": "north_america",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "relation/1"
+              }
+            ],
+            "status": "operating",
+            "type": "skiArea",
+            "websites": ["https://example.com"],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [360, 360, 1]
+          }
+        }
+      },
+      {
+        "relationId": 1,
+        "tags": {
+          "site": "piste",
+          "wikidata": "Q42"
+        },
+        "output": {
+          "properties": {
+            "activities": [],
+            "name": null,
+            "runConvention": "north_america",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "relation/1"
+              }
+            ],
+            "status": "operating",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": "Q42"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [360, 360, 1]
+          }
+        }
+      },
+      {
+        "relationId": 99,
+        "tags": {
+          "site": "piste"
+        },
+        "output": {
+          "properties": {
+            "activities": [],
+            "name": null,
+            "runConvention": "north_america",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "relation/99"
+              }
+            ],
+            "status": "operating",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [360, 360, 99]
+          }
+        }
+      },
+      {
+        "relationId": 99,
+        "tags": {
+          "proposed:site": "piste"
+        },
+        "output": {
+          "properties": {
+            "activities": [],
+            "name": null,
+            "runConvention": "north_america",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "relation/99"
+              }
+            ],
+            "status": "proposed",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [360, 360, 99]
+          }
+        }
+      },
+      {
+        "relationId": 99,
+        "tags": {
+          "planned:site": "piste"
+        },
+        "output": {
+          "properties": {
+            "activities": [],
+            "name": null,
+            "runConvention": "north_america",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "relation/99"
+              }
+            ],
+            "status": "planned",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [360, 360, 99]
+          }
+        }
+      },
+      {
+        "relationId": 99,
+        "tags": {
+          "construction:site": "piste"
+        },
+        "output": {
+          "properties": {
+            "activities": [],
+            "name": null,
+            "runConvention": "north_america",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "relation/99"
+              }
+            ],
+            "status": "construction",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [360, 360, 99]
+          }
+        }
+      },
+      {
+        "relationId": 99,
+        "tags": {
+          "disused:site": "piste"
+        },
+        "output": {
+          "properties": {
+            "activities": [],
+            "name": null,
+            "runConvention": "north_america",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "relation/99"
+              }
+            ],
+            "status": "disused",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [360, 360, 99]
+          }
+        }
+      },
+      {
+        "relationId": 99,
+        "tags": {
+          "abandoned:site": "piste"
+        },
+        "output": {
+          "properties": {
+            "activities": [],
+            "name": null,
+            "runConvention": "north_america",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "relation/99"
+              }
+            ],
+            "status": "abandoned",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [360, 360, 99]
+          }
+        }
+      },
+      {
+        "relationId": 99,
+        "tags": {
+          "site": "piste",
+          "disused": "yes"
+        },
+        "output": {
+          "properties": {
+            "activities": [],
+            "name": null,
+            "runConvention": "north_america",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "relation/99"
+              }
+            ],
+            "status": "disused",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [360, 360, 99]
+          }
+        }
+      },
+      {
+        "relationId": 99,
+        "tags": {
+          "site": "demolished"
+        },
+        "output": null
+      },
+      {
+        "relationId": 99,
+        "tags": {
+          "site": "piste",
+          "name": "Kitzbuhel"
+        },
+        "output": {
+          "properties": {
+            "activities": [],
+            "name": "Kitzbuhel",
+            "runConvention": "north_america",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "relation/99"
+              }
+            ],
+            "status": "operating",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [360, 360, 99]
+          }
+        }
+      },
+      {
+        "relationId": 99,
+        "tags": {
+          "site": "piste",
+          "name": "Base",
+          "name:de": "Deutsch"
+        },
+        "output": {
+          "properties": {
+            "activities": [],
+            "name": "Base, Deutsch",
+            "runConvention": "north_america",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "relation/99"
+              }
+            ],
+            "status": "operating",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [360, 360, 99]
+          }
+        }
+      },
+      {
+        "relationId": 99,
+        "tags": {
+          "site": "piste",
+          "website": "https://example.com"
+        },
+        "output": {
+          "properties": {
+            "activities": [],
+            "name": null,
+            "runConvention": "north_america",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "relation/99"
+              }
+            ],
+            "status": "operating",
+            "type": "skiArea",
+            "websites": ["https://example.com"],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [360, 360, 99]
+          }
+        }
+      },
+      {
+        "relationId": 99,
+        "tags": {
+          "site": "piste",
+          "wikidata": "Q42"
+        },
+        "output": {
+          "properties": {
+            "activities": [],
+            "name": null,
+            "runConvention": "north_america",
+            "sources": [
+              {
+                "type": "openstreetmap",
+                "id": "relation/99"
+              }
+            ],
+            "status": "operating",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": "Q42"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [360, 360, 99]
+          }
+        }
+      }
+    ],
+    "skimap": [
+      {
+        "properties": {
+          "id": "100",
+          "name": "Resort",
+          "status": null,
+          "activities": [],
+          "official_website": null
+        },
+        "output": {
+          "properties": {
+            "activities": [],
+            "name": "Resort",
+            "runConvention": "europe",
+            "sources": [
+              {
+                "type": "skimap.org",
+                "id": "100"
+              }
+            ],
+            "status": null,
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      },
+      {
+        "properties": {
+          "id": "100",
+          "name": "Resort",
+          "status": null,
+          "activities": ["downhill"],
+          "official_website": null
+        },
+        "output": {
+          "properties": {
+            "activities": ["downhill"],
+            "name": "Resort",
+            "runConvention": "europe",
+            "sources": [
+              {
+                "type": "skimap.org",
+                "id": "100"
+              }
+            ],
+            "status": null,
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      },
+      {
+        "properties": {
+          "id": "100",
+          "name": "Resort",
+          "status": null,
+          "activities": ["nordic"],
+          "official_website": null
+        },
+        "output": {
+          "properties": {
+            "activities": ["nordic"],
+            "name": "Resort",
+            "runConvention": "europe",
+            "sources": [
+              {
+                "type": "skimap.org",
+                "id": "100"
+              }
+            ],
+            "status": null,
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      },
+      {
+        "properties": {
+          "id": "100",
+          "name": "Resort",
+          "status": null,
+          "activities": ["downhill", "nordic"],
+          "official_website": null
+        },
+        "output": {
+          "properties": {
+            "activities": ["downhill", "nordic"],
+            "name": "Resort",
+            "runConvention": "europe",
+            "sources": [
+              {
+                "type": "skimap.org",
+                "id": "100"
+              }
+            ],
+            "status": null,
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      },
+      {
+        "properties": {
+          "id": "100",
+          "name": "Resort",
+          "status": "operating",
+          "activities": [],
+          "official_website": null
+        },
+        "output": {
+          "properties": {
+            "activities": [],
+            "name": "Resort",
+            "runConvention": "europe",
+            "sources": [
+              {
+                "type": "skimap.org",
+                "id": "100"
+              }
+            ],
+            "status": "operating",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      },
+      {
+        "properties": {
+          "id": "100",
+          "name": "Resort",
+          "status": "operating",
+          "activities": ["downhill"],
+          "official_website": null
+        },
+        "output": {
+          "properties": {
+            "activities": ["downhill"],
+            "name": "Resort",
+            "runConvention": "europe",
+            "sources": [
+              {
+                "type": "skimap.org",
+                "id": "100"
+              }
+            ],
+            "status": "operating",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      },
+      {
+        "properties": {
+          "id": "100",
+          "name": "Resort",
+          "status": "operating",
+          "activities": ["nordic"],
+          "official_website": null
+        },
+        "output": {
+          "properties": {
+            "activities": ["nordic"],
+            "name": "Resort",
+            "runConvention": "europe",
+            "sources": [
+              {
+                "type": "skimap.org",
+                "id": "100"
+              }
+            ],
+            "status": "operating",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      },
+      {
+        "properties": {
+          "id": "100",
+          "name": "Resort",
+          "status": "operating",
+          "activities": ["downhill", "nordic"],
+          "official_website": null
+        },
+        "output": {
+          "properties": {
+            "activities": ["downhill", "nordic"],
+            "name": "Resort",
+            "runConvention": "europe",
+            "sources": [
+              {
+                "type": "skimap.org",
+                "id": "100"
+              }
+            ],
+            "status": "operating",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      },
+      {
+        "properties": {
+          "id": "100",
+          "name": "Resort",
+          "status": "disused",
+          "activities": [],
+          "official_website": null
+        },
+        "output": {
+          "properties": {
+            "activities": [],
+            "name": "Resort",
+            "runConvention": "europe",
+            "sources": [
+              {
+                "type": "skimap.org",
+                "id": "100"
+              }
+            ],
+            "status": "disused",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      },
+      {
+        "properties": {
+          "id": "100",
+          "name": "Resort",
+          "status": "disused",
+          "activities": ["downhill"],
+          "official_website": null
+        },
+        "output": {
+          "properties": {
+            "activities": ["downhill"],
+            "name": "Resort",
+            "runConvention": "europe",
+            "sources": [
+              {
+                "type": "skimap.org",
+                "id": "100"
+              }
+            ],
+            "status": "disused",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      },
+      {
+        "properties": {
+          "id": "100",
+          "name": "Resort",
+          "status": "disused",
+          "activities": ["nordic"],
+          "official_website": null
+        },
+        "output": {
+          "properties": {
+            "activities": ["nordic"],
+            "name": "Resort",
+            "runConvention": "europe",
+            "sources": [
+              {
+                "type": "skimap.org",
+                "id": "100"
+              }
+            ],
+            "status": "disused",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      },
+      {
+        "properties": {
+          "id": "100",
+          "name": "Resort",
+          "status": "disused",
+          "activities": ["downhill", "nordic"],
+          "official_website": null
+        },
+        "output": {
+          "properties": {
+            "activities": ["downhill", "nordic"],
+            "name": "Resort",
+            "runConvention": "europe",
+            "sources": [
+              {
+                "type": "skimap.org",
+                "id": "100"
+              }
+            ],
+            "status": "disused",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      },
+      {
+        "properties": {
+          "id": "100",
+          "name": "Resort",
+          "status": "abandoned",
+          "activities": [],
+          "official_website": null
+        },
+        "output": {
+          "properties": {
+            "activities": [],
+            "name": "Resort",
+            "runConvention": "europe",
+            "sources": [
+              {
+                "type": "skimap.org",
+                "id": "100"
+              }
+            ],
+            "status": "abandoned",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      },
+      {
+        "properties": {
+          "id": "100",
+          "name": "Resort",
+          "status": "abandoned",
+          "activities": ["downhill"],
+          "official_website": null
+        },
+        "output": {
+          "properties": {
+            "activities": ["downhill"],
+            "name": "Resort",
+            "runConvention": "europe",
+            "sources": [
+              {
+                "type": "skimap.org",
+                "id": "100"
+              }
+            ],
+            "status": "abandoned",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      },
+      {
+        "properties": {
+          "id": "100",
+          "name": "Resort",
+          "status": "abandoned",
+          "activities": ["nordic"],
+          "official_website": null
+        },
+        "output": {
+          "properties": {
+            "activities": ["nordic"],
+            "name": "Resort",
+            "runConvention": "europe",
+            "sources": [
+              {
+                "type": "skimap.org",
+                "id": "100"
+              }
+            ],
+            "status": "abandoned",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      },
+      {
+        "properties": {
+          "id": "100",
+          "name": "Resort",
+          "status": "abandoned",
+          "activities": ["downhill", "nordic"],
+          "official_website": null
+        },
+        "output": {
+          "properties": {
+            "activities": ["downhill", "nordic"],
+            "name": "Resort",
+            "runConvention": "europe",
+            "sources": [
+              {
+                "type": "skimap.org",
+                "id": "100"
+              }
+            ],
+            "status": "abandoned",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      },
+      {
+        "properties": {
+          "id": "100",
+          "name": "Resort",
+          "status": "proposed",
+          "activities": [],
+          "official_website": null
+        },
+        "output": {
+          "properties": {
+            "activities": [],
+            "name": "Resort",
+            "runConvention": "europe",
+            "sources": [
+              {
+                "type": "skimap.org",
+                "id": "100"
+              }
+            ],
+            "status": "proposed",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      },
+      {
+        "properties": {
+          "id": "100",
+          "name": "Resort",
+          "status": "proposed",
+          "activities": ["downhill"],
+          "official_website": null
+        },
+        "output": {
+          "properties": {
+            "activities": ["downhill"],
+            "name": "Resort",
+            "runConvention": "europe",
+            "sources": [
+              {
+                "type": "skimap.org",
+                "id": "100"
+              }
+            ],
+            "status": "proposed",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      },
+      {
+        "properties": {
+          "id": "100",
+          "name": "Resort",
+          "status": "proposed",
+          "activities": ["nordic"],
+          "official_website": null
+        },
+        "output": {
+          "properties": {
+            "activities": ["nordic"],
+            "name": "Resort",
+            "runConvention": "europe",
+            "sources": [
+              {
+                "type": "skimap.org",
+                "id": "100"
+              }
+            ],
+            "status": "proposed",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      },
+      {
+        "properties": {
+          "id": "100",
+          "name": "Resort",
+          "status": "proposed",
+          "activities": ["downhill", "nordic"],
+          "official_website": null
+        },
+        "output": {
+          "properties": {
+            "activities": ["downhill", "nordic"],
+            "name": "Resort",
+            "runConvention": "europe",
+            "sources": [
+              {
+                "type": "skimap.org",
+                "id": "100"
+              }
+            ],
+            "status": "proposed",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      },
+      {
+        "properties": {
+          "id": "100",
+          "name": "Resort",
+          "status": "planned",
+          "activities": [],
+          "official_website": null
+        },
+        "output": {
+          "properties": {
+            "activities": [],
+            "name": "Resort",
+            "runConvention": "europe",
+            "sources": [
+              {
+                "type": "skimap.org",
+                "id": "100"
+              }
+            ],
+            "status": "planned",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      },
+      {
+        "properties": {
+          "id": "100",
+          "name": "Resort",
+          "status": "planned",
+          "activities": ["downhill"],
+          "official_website": null
+        },
+        "output": {
+          "properties": {
+            "activities": ["downhill"],
+            "name": "Resort",
+            "runConvention": "europe",
+            "sources": [
+              {
+                "type": "skimap.org",
+                "id": "100"
+              }
+            ],
+            "status": "planned",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      },
+      {
+        "properties": {
+          "id": "100",
+          "name": "Resort",
+          "status": "planned",
+          "activities": ["nordic"],
+          "official_website": null
+        },
+        "output": {
+          "properties": {
+            "activities": ["nordic"],
+            "name": "Resort",
+            "runConvention": "europe",
+            "sources": [
+              {
+                "type": "skimap.org",
+                "id": "100"
+              }
+            ],
+            "status": "planned",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      },
+      {
+        "properties": {
+          "id": "100",
+          "name": "Resort",
+          "status": "planned",
+          "activities": ["downhill", "nordic"],
+          "official_website": null
+        },
+        "output": {
+          "properties": {
+            "activities": ["downhill", "nordic"],
+            "name": "Resort",
+            "runConvention": "europe",
+            "sources": [
+              {
+                "type": "skimap.org",
+                "id": "100"
+              }
+            ],
+            "status": "planned",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      },
+      {
+        "properties": {
+          "id": "100",
+          "name": "Resort",
+          "status": "construction",
+          "activities": [],
+          "official_website": null
+        },
+        "output": {
+          "properties": {
+            "activities": [],
+            "name": "Resort",
+            "runConvention": "europe",
+            "sources": [
+              {
+                "type": "skimap.org",
+                "id": "100"
+              }
+            ],
+            "status": "construction",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      },
+      {
+        "properties": {
+          "id": "100",
+          "name": "Resort",
+          "status": "construction",
+          "activities": ["downhill"],
+          "official_website": null
+        },
+        "output": {
+          "properties": {
+            "activities": ["downhill"],
+            "name": "Resort",
+            "runConvention": "europe",
+            "sources": [
+              {
+                "type": "skimap.org",
+                "id": "100"
+              }
+            ],
+            "status": "construction",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      },
+      {
+        "properties": {
+          "id": "100",
+          "name": "Resort",
+          "status": "construction",
+          "activities": ["nordic"],
+          "official_website": null
+        },
+        "output": {
+          "properties": {
+            "activities": ["nordic"],
+            "name": "Resort",
+            "runConvention": "europe",
+            "sources": [
+              {
+                "type": "skimap.org",
+                "id": "100"
+              }
+            ],
+            "status": "construction",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      },
+      {
+        "properties": {
+          "id": "100",
+          "name": "Resort",
+          "status": "construction",
+          "activities": ["downhill", "nordic"],
+          "official_website": null
+        },
+        "output": {
+          "properties": {
+            "activities": ["downhill", "nordic"],
+            "name": "Resort",
+            "runConvention": "europe",
+            "sources": [
+              {
+                "type": "skimap.org",
+                "id": "100"
+              }
+            ],
+            "status": "construction",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      },
+      {
+        "properties": {
+          "id": "101",
+          "status": "operating",
+          "activities": ["downhill"],
+          "official_website": null
+        },
+        "output": {
+          "properties": {
+            "activities": ["downhill"],
+            "name": null,
+            "runConvention": "europe",
+            "sources": [
+              {
+                "type": "skimap.org",
+                "id": "101"
+              }
+            ],
+            "status": "operating",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      },
+      {
+        "properties": {
+          "id": "101",
+          "name": "",
+          "status": "operating",
+          "activities": ["downhill"],
+          "official_website": null
+        },
+        "output": {
+          "properties": {
+            "activities": ["downhill"],
+            "name": null,
+            "runConvention": "europe",
+            "sources": [
+              {
+                "type": "skimap.org",
+                "id": "101"
+              }
+            ],
+            "status": "operating",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      },
+      {
+        "properties": {
+          "id": "101",
+          "name": "Named",
+          "status": "operating",
+          "activities": ["downhill"],
+          "official_website": null
+        },
+        "output": {
+          "properties": {
+            "activities": ["downhill"],
+            "name": "Named",
+            "runConvention": "europe",
+            "sources": [
+              {
+                "type": "skimap.org",
+                "id": "101"
+              }
+            ],
+            "status": "operating",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      },
+      {
+        "properties": {
+          "id": "102",
+          "name": "Site",
+          "status": "operating",
+          "activities": ["downhill"],
+          "official_website": null
+        },
+        "output": {
+          "properties": {
+            "activities": ["downhill"],
+            "name": "Site",
+            "runConvention": "europe",
+            "sources": [
+              {
+                "type": "skimap.org",
+                "id": "102"
+              }
+            ],
+            "status": "operating",
+            "type": "skiArea",
+            "websites": [],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      },
+      {
+        "properties": {
+          "id": "102",
+          "name": "Site",
+          "status": "operating",
+          "activities": ["downhill"],
+          "official_website": ""
+        },
+        "output": {
+          "properties": {
+            "activities": ["downhill"],
+            "name": "Site",
+            "runConvention": "europe",
+            "sources": [
+              {
+                "type": "skimap.org",
+                "id": "102"
+              }
+            ],
+            "status": "operating",
+            "type": "skiArea",
+            "websites": [""],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      },
+      {
+        "properties": {
+          "id": "102",
+          "name": "Site",
+          "status": "operating",
+          "activities": ["downhill"],
+          "official_website": "https://example.com"
+        },
+        "output": {
+          "properties": {
+            "activities": ["downhill"],
+            "name": "Site",
+            "runConvention": "europe",
+            "sources": [
+              {
+                "type": "skimap.org",
+                "id": "102"
+              }
+            ],
+            "status": "operating",
+            "type": "skiArea",
+            "websites": ["https://example.com"],
+            "wikidataID": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [11, 47]
+          }
+        }
+      }
+    ]
+  }
 }

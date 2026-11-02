@@ -16,6 +16,7 @@
 pub mod lift;
 pub mod osm;
 pub mod run;
+pub mod ski_area;
 pub mod status;
 
 pub use status::{
