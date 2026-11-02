@@ -72,6 +72,7 @@
 
 pub mod chains;
 pub mod components;
+pub mod properties;
 pub mod topology;
 
 pub use chains::{ChainGraph, JoinKey, Link, Segment, is_degenerate, join_chains};

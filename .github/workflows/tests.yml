@@ -74,6 +74,9 @@ jobs:
       - name: Check the topology scenes are in sync
         run: docker compose exec -T app node rust/codegen/generate-topology-scenes.mjs --check
 
+      - name: Check the run-merge vectors are in sync
+        run: docker compose exec -T app node rust/codegen/generate-merge-vectors.mjs --check
+
       - name: Rust format
         run: docker compose exec -T app sh -c "cd rust && cargo fmt --all --check"
 

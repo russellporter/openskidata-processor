@@ -22,6 +22,12 @@ fn is_js_space(c: char) -> bool {
     )
 }
 
+/// `String.prototype.trim`: strips JavaScript whitespace and line terminators from both
+/// ends. Not the same set as Rust's `str::trim`, which uses Unicode `White_Space`.
+pub fn trim(s: &str) -> &str {
+    s.trim_matches(is_js_space)
+}
+
 /// The length in bytes of the longest prefix of `s` that is a decimal literal
 /// (`StrDecimalLiteral`), or `None`. `Infinity` is a literal.
 fn decimal_literal_prefix(s: &str) -> Option<usize> {
