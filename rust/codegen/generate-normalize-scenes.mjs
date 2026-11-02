@@ -12,10 +12,10 @@
  * whether two arcs belong to the same group of runs) but not of the same-run comparison
  * (which ignores it): both comparisons need exercising.
  *
- * The comparison on the Rust side ignores `id` and `viewportHint` in the output, because
- * both are recomputed from the final geometry (the id by the hashing stage, the hint by
- * the float-sensitive viewport code); the grouping decisions that depend on them are what
- * the variant bit covers.
+ * The comparison on the Rust side ignores `id` in the output, which is recomputed from the
+ * final geometry by the hashing stage; the viewport hints are compared with a tolerance.
+ * Hints of polygons are passed through from the input, and of lines recomputed from the
+ * produced geometry, so both paths are covered.
  *
  * Build first (`npm run build`). Usage: node rust/codegen/generate-normalize-scenes.mjs [--check]
  */
@@ -191,7 +191,7 @@ function normalize(runs) {
   const accumulator = new RunNormalizerAccumulator();
   for (const run of runs) accumulator.accumulate(toFeature(run));
   return accumulator.results().map((feature) => {
-    const { id, viewportHint, ...rest } = feature.properties;
+    const { id, ...rest } = feature.properties;
     const g = feature.geometry;
     return {
       geometry: {

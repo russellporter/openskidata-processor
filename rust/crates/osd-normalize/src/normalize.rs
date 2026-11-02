@@ -32,7 +32,7 @@ use crate::properties::{comparison_key, identity_key, merged_properties};
 use crate::topology::{InputGeometry, TopoGeometry, Topology, topology};
 use anyhow::{Result, anyhow};
 use openskidata_format::run::RunProperties;
-use openskidata_format::viewport_hint::ViewportHint;
+use openskidata_format::viewport_hint::{ViewportHint, compute_viewport_hint};
 use osd_store::FixedCoord;
 use std::collections::HashMap;
 
@@ -48,6 +48,16 @@ pub struct RunInput {
 pub struct RunOutput {
     pub geometry: InputGeometry,
     pub properties: RunProperties,
+}
+
+/// The viewport hint of a 2D line, which is what normalization produces: elevation is added
+/// after this stage, and the hint is recomputed then.
+pub fn line_viewport_hint(coordinates: &[FixedCoord]) -> ViewportHint {
+    let positions: Vec<[f64; 3]> = coordinates
+        .iter()
+        .map(|c| [c.lng_degrees(), c.lat_degrees(), 0.0])
+        .collect();
+    compute_viewport_hint(&[&positions]).expect("a line has positions")
 }
 
 /// Computes the viewport hint of a line.

@@ -2,12 +2,11 @@
 //! `RunNormalizerAccumulator` (`rust/codegen/generate-normalize-scenes.mjs`).
 //!
 //! The comparison covers geometry (coordinates in fixed-point units, and the order of the
-//! output), and every property except `id` and `viewportHint`, which are recomputed from
-//! the final geometry by later stages.
+//! output) and every property except `id`, which the hashing stage recomputes. Viewport
+//! hints are compared with a relative tolerance of 1e-9.
 
 use openskidata_format::run::RunProperties;
-use openskidata_format::viewport_hint::ViewportHint;
-use osd_normalize::normalize::{RunInput, normalize_runs};
+use osd_normalize::normalize::{RunInput, line_viewport_hint, normalize_runs};
 use osd_normalize::topology::InputGeometry;
 use osd_store::FixedCoord;
 use serde::Deserialize;
@@ -80,7 +79,10 @@ fn geometry_json(geometry: &InputGeometry) -> Value {
 
 fn same(a: &Value, b: &Value) -> bool {
     match (a, b) {
-        (Value::Number(x), Value::Number(y)) => x.as_f64() == y.as_f64(),
+        (Value::Number(x), Value::Number(y)) => {
+            let (x, y) = (x.as_f64().unwrap(), y.as_f64().unwrap());
+            x == y || (x - y).abs() <= 1e-9 * y.abs().max(1.0)
+        }
         (Value::Array(x), Value::Array(y)) => {
             x.len() == y.len() && x.iter().zip(y).all(|(p, q)| same(p, q))
         }
@@ -96,14 +98,6 @@ fn every_recorded_scene_is_reproduced_exactly() {
     let scenes: Scenes = serde_json::from_str(include_str!("normalize_scenes.json")).unwrap();
     assert!(scenes.scenes.len() >= 700, "scene file looks truncated");
 
-    let stub = ViewportHint {
-        center: (0.0, 0.0),
-        bearing: None,
-        rotated_width_meters: 0.0,
-        rotated_height_meters: 0.0,
-        min_camera_y: 0.0,
-    };
-
     let mut failures = Vec::new();
     for (n, scene) in scenes.scenes.iter().enumerate() {
         let runs: Vec<RunInput> = scene
@@ -115,14 +109,13 @@ fn every_recorded_scene_is_reproduced_exactly() {
             })
             .collect();
 
-        let actual: Vec<Value> = match normalize_runs(&runs, &|_| stub) {
+        let actual: Vec<Value> = match normalize_runs(&runs, &line_viewport_hint) {
             Ok(outputs) => outputs
                 .iter()
                 .map(|output| {
                     let mut properties = serde_json::to_value(&output.properties).unwrap();
                     let object = properties.as_object_mut().unwrap();
                     object.remove("id");
-                    object.remove("viewportHint");
                     json!({ "geometry": geometry_json(&output.geometry), "properties": properties })
                 })
                 .collect(),

@@ -87,6 +87,7 @@ pub mod topology;
 pub use chains::{ChainGraph, JoinKey, Link, Segment, is_degenerate, join_chains};
 pub use components::{ComponentId, ComponentIndex};
 pub use normalize::{
-    OutputKey, RunInput, RunOutput, ViewportHinter, normalize_runs, normalize_runs_partitioned,
+    OutputKey, RunInput, RunOutput, ViewportHinter, line_viewport_hint, normalize_runs,
+    normalize_runs_partitioned,
 };
 pub use topology::{InputGeometry, TopoGeometry, Topology, topology};
