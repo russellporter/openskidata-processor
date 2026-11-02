@@ -1569,6 +1569,7 @@ dependencies = [
  "osd-cache",
  "osd-osm",
  "osd-store",
+ "osd-tags",
  "osd-turf",
  "reqwest",
  "serde",

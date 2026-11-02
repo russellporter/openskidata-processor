@@ -9,9 +9,12 @@
 //!    row ("Too many errors");
 //! 3. a response is cached and read back through [`crate::geocode`].
 //!
-//! Like the `DataLoader` it replaces, it remembers each cell's outcome for its own lifetime,
-//! failures included, so a cell that failed is not asked again and cells asked for at the same
-//! moment share one request.
+//! Like the `DataLoader` it replaces, it shares one request between cells asked for at the same
+//! moment and remembers each cell's response for its own lifetime. It differs in failures: a
+//! `DataLoader` clears the keys of a failed batch, and since upstream batches every cell of
+//! every object geocoded in the same tick, one failing cell fails all of them and each is
+//! asked again by the next object to want it. Here a failure fails only the cell, and is
+//! remembered, so a cell that failed is not asked again by another object.
 //!
 //! Where upstream issues one `INSERT` per response, the store here takes one write per
 //! response too; with SQLite a write costs microseconds, so batching them would buy nothing.

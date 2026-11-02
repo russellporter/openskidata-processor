@@ -40,6 +40,7 @@
 //!   supercover rasterization of the segments dilated by one pixel: same answers, O(n).
 
 pub mod collation;
+pub mod elevation;
 pub mod geocode;
 pub mod http_geocoder;
 pub mod places;

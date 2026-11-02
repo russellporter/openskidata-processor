@@ -101,6 +101,9 @@ jobs:
       - name: Check the ISO 3166 data is in sync
         run: docker compose exec -T app node rust/codegen/generate-iso3166-data.mjs --check
 
+      - name: Check the elevation loader vectors are in sync
+        run: docker compose exec -T app node rust/codegen/generate-elevation-loader-vectors.mjs --check
+
       - name: Check the geocoded scenes are in sync
         run: docker compose exec -T app node rust/codegen/generate-geocoded-scenes.mjs --check
 
