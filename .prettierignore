@@ -7,7 +7,9 @@ rust/crates/osd-cache/tests/geohash_vectors.json
 rust/crates/osd-cluster/tests/cluster_scenes.json
 rust/crates/osd-cluster/tests/turf_vectors.json
 rust/crates/osd-enrich/tests/collation_vectors.json
+rust/crates/osd-enrich/tests/geocode_vectors.json
 rust/crates/osd-enrich/tests/places_vectors.json
+rust/crates/osd-enrich/src/iso3166.json
 rust/crates/osd-normalize/tests/merge_vectors.json
 rust/crates/osd-normalize/tests/normalize_scenes.json
 rust/crates/osd-normalize/tests/topology_scenes.json

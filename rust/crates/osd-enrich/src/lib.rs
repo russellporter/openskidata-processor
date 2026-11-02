@@ -40,6 +40,7 @@
 //!   supercover rasterization of the segments dilated by one pixel: same answers, O(n).
 
 pub mod collation;
+pub mod geocode;
 pub mod places;
 
 use anyhow::Result;

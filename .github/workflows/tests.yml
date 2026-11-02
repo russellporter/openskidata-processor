@@ -98,6 +98,12 @@ jobs:
       - name: Check the output formatter vectors are in sync
         run: docker compose exec -T app node rust/codegen/generate-output-vectors.mjs --check
 
+      - name: Check the ISO 3166 data is in sync
+        run: docker compose exec -T app node rust/codegen/generate-iso3166-data.mjs --check
+
+      - name: Check the geocode vectors are in sync
+        run: docker compose exec -T app node rust/codegen/generate-geocode-vectors.mjs --check
+
       - name: Check the collation vectors are in sync
         run: docker compose exec -T app node rust/codegen/generate-collation-vectors.mjs --check
 
