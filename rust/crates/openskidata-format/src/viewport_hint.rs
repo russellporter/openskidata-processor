@@ -171,7 +171,7 @@ mod tests {
         let line = [[11.0, 47.0, 1000.0], [11.01, 47.0, 1000.0]];
         let hint = compute_viewport_hint(&[&line]).unwrap();
         assert_eq!(hint.bearing, None);
-        assert_eq!(hint.center, (11.005, 47.0));
+        assert!((hint.center.0 - 11.005).abs() < 1e-12 && hint.center.1 == 47.0);
     }
 
     #[test]
