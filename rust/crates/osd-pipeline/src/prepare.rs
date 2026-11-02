@@ -300,6 +300,7 @@ pub fn write_metadata(
 
 /// Reads the input files, runs the pipeline and writes the output files.
 pub fn prepare(config: &PrepareConfig) -> Result<()> {
+    let started = std::time::Instant::now();
     let input = FormatInput {
         runs: features_from_osm_json(&config.input_dir.join(RUNS))?,
         lifts: features_from_osm_json(&config.input_dir.join(LIFTS))?,
@@ -308,7 +309,10 @@ pub fn prepare(config: &PrepareConfig) -> Result<()> {
         spots: features_from_osm_json(&config.input_dir.join(SPOTS))?,
         skimap: skimap_ski_areas(&config.input_dir.join(SKIMAP))?,
     };
+    tracing::info!("read and convert the input: {:?}", started.elapsed());
+    let started = std::time::Instant::now();
     let mut formatted = format_all(&input)?;
+    tracing::info!("format: {:?}", started.elapsed());
 
     // The cache is shared by the geocoder and the elevation lookup, and opened only if needed.
     let cache = if config.geocoding.is_some() || config.elevation.is_some() {
@@ -368,7 +372,9 @@ pub fn prepare(config: &PrepareConfig) -> Result<()> {
             elevation: elevation_loader.as_ref(),
         },
     )?;
+    let started = std::time::Instant::now();
     write_outputs(&output, &config.output_dir)?;
+    tracing::info!("write the outputs: {:?}", started.elapsed());
     let download = metadata::read_download_metadata(&config.input_dir);
     write_metadata(
         &output,

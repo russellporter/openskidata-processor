@@ -39,7 +39,7 @@ use osd_enrich::places::{sort_places, unique_places};
 use osd_osm::element::{Geometry, Position};
 use rstar::{AABB, RTree, RTreeObject};
 use sha1::{Digest, Sha1};
-use std::collections::{BTreeMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 
 const MAX_DISTANCE_KM: f64 = 0.5;
 const MAX_SKI_AREA_MERGE_DISTANCE_KM: f64 = 0.25;
@@ -197,6 +197,7 @@ impl Obj {
     }
 }
 
+#[derive(PartialEq)]
 struct IndexEntry {
     index: usize,
     envelope: AABB<[f64; 2]>,
@@ -235,7 +236,15 @@ struct Context {
 pub struct Engine {
     objects: Vec<Obj>,
     by_key: BTreeMap<String, usize>,
+    /// Ski area id -> the objects that list it, so a ski area's members are found without a
+    /// scan of every object. May hold an object that has since left (see `members_of`).
+    members: HashMap<String, Vec<usize>>,
     tree: RTree<IndexEntry>,
+    /// The ski areas by their bounding boxes, kept current as they are inserted and as their
+    /// geometries change (see `reindex_ski_area`).
+    ski_area_tree: RTree<IndexEntry>,
+    /// The box each ski area has in `ski_area_tree`, to take it out again.
+    ski_area_envelopes: HashMap<usize, AABB<[f64; 2]>>,
 }
 
 // --------------------------------------------------------------------------------------
@@ -276,7 +285,10 @@ impl Engine {
         let mut engine = Engine {
             objects: Vec::new(),
             by_key: BTreeMap::new(),
+            members: HashMap::new(),
             tree: RTree::new(),
+            ski_area_tree: RTree::new(),
+            ski_area_envelopes: HashMap::new(),
         };
 
         for area in input.ski_areas {
@@ -392,11 +404,25 @@ impl Engine {
 
     /// Upstream upserts by key, so a later object with the same key replaces the earlier.
     fn insert(&mut self, object: Obj) {
-        if let Some(&existing) = self.by_key.get(&object.key) {
-            self.objects[existing] = object;
-        } else {
-            self.by_key.insert(object.key.clone(), self.objects.len());
+        let index = match self.by_key.get(&object.key) {
+            Some(&existing) => existing,
+            None => {
+                self.by_key.insert(object.key.clone(), self.objects.len());
+                self.objects.len()
+            }
+        };
+        if !object.is_ski_area() {
+            for ski_area in &object.ski_areas {
+                self.members
+                    .entry(ski_area.clone())
+                    .or_default()
+                    .push(index);
+            }
+        }
+        if index == self.objects.len() {
             self.objects.push(object);
+        } else {
+            self.objects[index] = object;
         }
     }
 
@@ -412,6 +438,33 @@ impl Engine {
             })
             .collect();
         self.tree = RTree::bulk_load(entries);
+
+        let ski_areas: Vec<IndexEntry> = self
+            .objects
+            .iter()
+            .enumerate()
+            .filter(|(_, o)| o.alive && o.is_ski_area())
+            .map(|(index, o)| IndexEntry {
+                index,
+                envelope: aabb(spatial::bbox(&o.geometry)),
+            })
+            .collect();
+        self.ski_area_envelopes = ski_areas
+            .iter()
+            .map(|entry| (entry.index, entry.envelope))
+            .collect();
+        self.ski_area_tree = RTree::bulk_load(ski_areas);
+    }
+
+    /// Brings a ski area's entry in the spatial index in line with its geometry; call after the
+    /// geometry changes or the ski area is inserted.
+    fn reindex_ski_area(&mut self, index: usize) {
+        if let Some(envelope) = self.ski_area_envelopes.remove(&index) {
+            self.ski_area_tree.remove(&IndexEntry { index, envelope });
+        }
+        let envelope = aabb(spatial::bbox(&self.objects[index].geometry));
+        self.ski_area_tree.insert(IndexEntry { index, envelope });
+        self.ski_area_envelopes.insert(index, envelope);
     }
 
     // ----------------------------------------------------------------------------------
@@ -440,14 +493,23 @@ impl Engine {
 
     /// Member objects of a ski area, in key order (`getObjectsForSkiArea`).
     fn members_of(&self, ski_area_id: &str) -> Vec<usize> {
-        self.by_key
-            .values()
+        let Some(candidates) = self.members.get(ski_area_id) else {
+            return Vec::new();
+        };
+        // The index may hold an object twice, or one that no longer lists the ski area (it was
+        // replaced by another with the same key), so each is checked; upstream returns them in
+        // key order.
+        let mut found: Vec<usize> = candidates
+            .iter()
             .copied()
             .filter(|&i| {
                 let o = &self.objects[i];
                 o.alive && !o.is_ski_area() && o.ski_areas.iter().any(|s| s == ski_area_id)
             })
-            .collect()
+            .collect();
+        found.sort_by(|&a, &b| self.objects[a].key.cmp(&self.objects[b].key));
+        found.dedup();
+        found
     }
 
     /// `findNearbyObjects`: objects matching a search, in key order, with the visited set
@@ -518,18 +580,29 @@ impl Engine {
         source: SourceType,
         km: f64,
     ) -> Vec<usize> {
-        self.ski_areas(false, Some(source))
-            .into_iter()
+        // Candidates from the index by bounding box (a ski area that covers, is covered by, or is
+        // within `km` of the geometry has a box that meets the geometry's, widened by `km`); then
+        // the exact test.
+        let envelope = aabb(spatial::expand(spatial::bbox(geometry), km * 1000.0));
+        let mut found: Vec<usize> = self
+            .ski_area_tree
+            .locate_in_envelope_intersecting(envelope)
+            .map(|entry| entry.index)
             .filter(|&i| {
                 let o = &self.objects[i];
-                if is_placeholder(&o.geometry) {
+                let Payload::SkiArea { source: s, .. } = &o.payload else {
+                    return false;
+                };
+                if !o.alive || *s != source || is_placeholder(&o.geometry) {
                     return false;
                 }
                 spatial::covers(&o.geometry, geometry)
                     || spatial::covers(geometry, &o.geometry)
                     || spatial::within_m(&o.geometry, geometry, km * 1000.0)
             })
-            .collect()
+            .collect();
+        found.sort_by(|&a, &b| self.objects[a].key.cmp(&self.objects[b].key));
+        found
     }
 
     /// The geometries a ski area searches from (`getObjectDerivedSkiAreaGeometry`): its
@@ -652,6 +725,10 @@ impl Engine {
             let o = &mut self.objects[m];
             if !o.ski_areas.iter().any(|s| s == ski_area_id) {
                 o.ski_areas.push(ski_area_id.to_owned());
+                self.members
+                    .entry(ski_area_id.to_owned())
+                    .or_default()
+                    .push(m);
             }
             o.is_in_ski_area_polygon = o.is_in_ski_area_polygon || in_polygon;
             o.is_basis_for_new_ski_area = false;
@@ -712,6 +789,7 @@ impl Engine {
                 *is_polygon = false;
                 properties.summary.activities = activities;
             }
+            self.reindex_ski_area(ski_area);
         }
     }
 
@@ -991,17 +1069,37 @@ impl Engine {
                 *is_polygon = other.is_polygon;
             }
         }
+        if use_other_geometry {
+            self.reindex_ski_area(target);
+        }
     }
 
     /// `generateSkiAreasForUnassignedObjects`.
     fn generate_ski_areas_for_unassigned(&mut self) {
-        let mut last_processed: Option<String> = None;
-        loop {
-            let next = self.by_key.values().copied().find(|&i| {
+        // The run to start from is the first, in key order, that is still the basis for a new ski
+        // area. That flag is only ever cleared, so the candidates are listed once and walked past
+        // as they stop qualifying, rather than searched for afresh each time.
+        let candidates: Vec<usize> = self
+            .by_key
+            .values()
+            .copied()
+            .filter(|&i| {
                 let o = &self.objects[i];
                 o.alive && o.kind() == FeatureType::Run && o.is_basis_for_new_ski_area
-            });
-            let Some(run) = next else { break };
+            })
+            .collect();
+        let mut cursor = 0;
+        let mut last_processed: Option<String> = None;
+        loop {
+            while cursor < candidates.len() && {
+                let o = &self.objects[candidates[cursor]];
+                !(o.alive && o.is_basis_for_new_ski_area)
+            } {
+                cursor += 1;
+            }
+            let Some(&run) = candidates.get(cursor) else {
+                break;
+            };
             let key = self.objects[run].key.clone();
             if last_processed.as_deref() == Some(key.as_str()) {
                 self.objects[run].is_basis_for_new_ski_area = false;
@@ -1105,6 +1203,9 @@ impl Engine {
                 is_polygon: false,
             },
         });
+        if let Some(&index) = self.by_key.get(&id) {
+            self.reindex_ski_area(index);
+        }
         self.mark_part_of_ski_area(&id, &sorted, false);
     }
 
@@ -1384,36 +1485,59 @@ impl Engine {
     /// their centroids while they are augmented.
     pub fn cluster_with(&mut self, enrichment: &Enrichment<'_>) {
         let geocoder = enrichment.geocoder;
-        self.assign_activities_and_geometry_from_members();
-        self.assign_objects_to_ski_areas(&AssignOptions {
-            source: SourceType::Openstreetmap,
-            remove_if_no_objects_found: true,
-            remove_if_substantial_number_of_objects_in_ski_area_site: true,
-            only_in_polygon: true,
-            only_if_not_already_assigned: false,
-        });
-        self.assign_objects_to_ski_areas(&AssignOptions {
-            source: SourceType::Openstreetmap,
-            remove_if_no_objects_found: false,
-            remove_if_substantial_number_of_objects_in_ski_area_site: false,
-            only_in_polygon: false,
-            only_if_not_already_assigned: true,
-        });
-        self.merge_skimap_into_openstreetmap();
-        self.assign_objects_to_ski_areas(&AssignOptions {
-            source: SourceType::SkimapOrg,
-            remove_if_no_objects_found: false,
-            remove_if_substantial_number_of_objects_in_ski_area_site: false,
-            only_in_polygon: false,
-            only_if_not_already_assigned: true,
-        });
-        self.generate_ski_areas_for_unassigned();
-        if let Some(geocoder) = geocoder {
-            self.geocode_objects(geocoder);
+        // Each step is timed, as upstream's performance monitor does, at `info` level.
+        fn step<T>(label: &str, run: impl FnOnce() -> T) -> T {
+            let started = std::time::Instant::now();
+            let result = run();
+            tracing::info!("{label}: {:?}", started.elapsed());
+            result
         }
-        self.associate_lift_stations(enrichment.elevation);
-        self.augment_ski_areas(geocoder);
-        self.remove_ski_areas_without_geometry();
+        step("assign activities and geometry from members", || {
+            self.assign_activities_and_geometry_from_members()
+        });
+        step("assign objects in OSM polygon ski areas", || {
+            self.assign_objects_to_ski_areas(&AssignOptions {
+                source: SourceType::Openstreetmap,
+                remove_if_no_objects_found: true,
+                remove_if_substantial_number_of_objects_in_ski_area_site: true,
+                only_in_polygon: true,
+                only_if_not_already_assigned: false,
+            })
+        });
+        step("assign nearby objects to OSM ski areas", || {
+            self.assign_objects_to_ski_areas(&AssignOptions {
+                source: SourceType::Openstreetmap,
+                remove_if_no_objects_found: false,
+                remove_if_substantial_number_of_objects_in_ski_area_site: false,
+                only_in_polygon: false,
+                only_if_not_already_assigned: true,
+            })
+        });
+        step("merge skimap.org and OpenStreetMap ski areas", || {
+            self.merge_skimap_into_openstreetmap()
+        });
+        step("assign nearby objects to skimap.org ski areas", || {
+            self.assign_objects_to_ski_areas(&AssignOptions {
+                source: SourceType::SkimapOrg,
+                remove_if_no_objects_found: false,
+                remove_if_substantial_number_of_objects_in_ski_area_site: false,
+                only_in_polygon: false,
+                only_if_not_already_assigned: true,
+            })
+        });
+        step("generate ski areas for unassigned objects", || {
+            self.generate_ski_areas_for_unassigned()
+        });
+        if let Some(geocoder) = geocoder {
+            step("geocode objects", || self.geocode_objects(geocoder));
+        }
+        step("associate lift stations", || {
+            self.associate_lift_stations(enrichment.elevation)
+        });
+        step("augment ski areas", || self.augment_ski_areas(geocoder));
+        step("remove ski areas without a geometry", || {
+            self.remove_ski_areas_without_geometry()
+        });
     }
 
     /// `geocodeAllObjects`: the places along every run, lift and spot. An object whose lookup
@@ -1787,9 +1911,14 @@ pub fn cluster_with_geocoder(
 
 /// Runs the whole stage on typed input, with the services in `enrichment`.
 pub fn cluster_enriched(input: ClusterInput, enrichment: &Enrichment<'_>) -> Result<ClusterOutput> {
+    let started = std::time::Instant::now();
     let mut engine = Engine::load(input);
+    tracing::info!("load objects and build the index: {:?}", started.elapsed());
     engine.cluster_with(enrichment);
-    engine.export()
+    let started = std::time::Instant::now();
+    let output = engine.export();
+    tracing::info!("export: {:?}", started.elapsed());
+    output
 }
 
 #[cfg(test)]

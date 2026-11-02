@@ -62,8 +62,31 @@ filled in. The Rust writer is compared on every table's DDL, every row and every
 **Not done yet.** The terrain-tile elevation source (the Racemap and tileserver-gl servers work), snow
 cover, downloading from Overpass/Skimap.org, PBF input, and the streaming driver that bounds
 normalization memory (`normalize_runs_partitioned` partitions in memory today). The Postgres caches
-migrate with `openskidata migrate-cache`. No performance or memory figure has been measured:
-Overpass is unreachable from the development container, so there is no large input to measure on.
+migrate with `openskidata migrate-cache`.
+
+### Performance
+
+Overpass is unreachable from the development container, so the inputs are synthetic:
+`codegen/make-large-input.mjs <resorts> <dir>` tiles recorded resort worlds across the globe
+(`codegen/run-ts-prepare.mjs` runs the TypeScript `prepare` on the same input). Measured on 4 cores
+and 16 GB, `prepare` only (no elevation, geocoding or tiles), TypeScript with Postgres running beside
+it:
+
+| Resorts | Ski areas / runs / lifts / spots | TypeScript (node only) | Rust |
+|---:|---|---|---|
+| 500 | | 16 s, 138 MB | 0.3 s, 20 MB |
+| 2,000 | | 80 s, 177 MB | 1.0 s, 53 MB |
+| 5,000 | 9,539 / 12,871 / 4,250 / 4,915 | 199 s, 208 MB | 2.4 s, 131 MB |
+| 20,000 | | not run | 11 s, 0.5 GB |
+| 50,000 | | not run | 45 s, 1.2 GB |
+
+The Rust and TypeScript outputs are identical feature by feature at 500, 2,000 and 5,000 resorts.
+Time and memory are roughly linear; the first Rust version was not (77 s at 5,000), because the
+engine rescanned all objects to find a ski area's members, to find nearby ski areas, and to pick the
+next run to generate a ski area from. Those are now a membership index, a ski-area R-tree kept in
+step with geometry changes, and a cursor over the candidates. The TypeScript figure excludes the
+Postgres server's own memory. Memory is dominated by the whole dataset being held in memory
+(about 24 KB per resort); the streaming normalization driver is the remaining lever.
 
 ## Behaviours reproduced
 
