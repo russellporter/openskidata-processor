@@ -107,9 +107,10 @@ it already holds for `--fill-cache`, and its tests run in CI. `SNOW_COVER_FETCH_
 (fetch the runs' pixels), `incremental` (fill the weeks missing for pixels already held) or
 `none`. The download from NASA itself has not been run: it needs Earthdata credentials.
 
-**Not done yet.** PBF input, and the streaming driver that bounds normalization memory
-(`normalize_runs_partitioned` partitions in memory today). The Postgres caches migrate with
-`openskidata migrate-cache`.
+**Not done.** PBF input (the Overpass `>>` and `way(r)` selections in `DownloadURLs.ts` cannot be
+checked offline, and the Overpass JSON that `OSM_INPUT_DIR` and the download provide is the
+production path), and the compact columnar store with streaming normalization described under
+Performance. The Postgres caches migrate with `openskidata migrate-cache`.
 
 ### Performance
 
@@ -119,21 +120,40 @@ Overpass is unreachable from the development container, so the inputs are synthe
 and 16 GB, `prepare` only (no elevation, geocoding or tiles), TypeScript with Postgres running beside
 it:
 
-| Resorts | Ski areas / runs / lifts / spots | TypeScript (node only) | Rust          |
-| ------: | -------------------------------- | ---------------------- | ------------- |
-|     500 |                                  | 16 s, 138 MB           | 0.3 s, 20 MB  |
-|   2,000 |                                  | 80 s, 177 MB           | 1.0 s, 53 MB  |
-|   5,000 | 9,539 / 12,871 / 4,250 / 4,915   | 199 s, 208 MB          | 2.4 s, 131 MB |
-|  20,000 |                                  | not run                | 11 s, 0.5 GB  |
-|  50,000 |                                  | not run                | 45 s, 1.2 GB  |
+| Resorts | Ski areas / runs / lifts / spots   | TypeScript (node only) | Rust          |
+| ------: | ---------------------------------- | ---------------------- | ------------- |
+|     500 |                                    | 16 s, 138 MB           | 0.3 s, 20 MB  |
+|   2,000 |                                    | 80 s, 177 MB           | 1.0 s, 53 MB  |
+|   5,000 | 9,539 / 12,871 / 4,250 / 4,915     | 199 s, 208 MB          | 2.4 s, 131 MB |
+|  50,000 | 96,332 / 128,351 / 42,917 / 49,510 | not run                | 15 s, 0.95 GB |
 
-The Rust and TypeScript outputs are identical feature by feature at 500, 2,000 and 5,000 resorts.
-Time and memory are roughly linear; the first Rust version was not (77 s at 5,000), because the
-engine rescanned all objects to find a ski area's members, to find nearby ski areas, and to pick the
-next run to generate a ski area from. Those are now a membership index, a ski-area R-tree kept in
-step with geometry changes, and a cursor over the candidates. The TypeScript figure excludes the
-Postgres server's own memory. Memory is dominated by the whole dataset being held in memory
-(about 24 KB per resort); the streaming normalization driver is the remaining lever.
+The Rust and TypeScript outputs are identical feature by feature at 500, 2,000 and 5,000 resorts
+(and the changes since then leave the 50,000 output byte for byte as it was). The TypeScript
+figure excludes the Postgres server's own memory.
+
+Time is linear in the data. The first Rust version was not (77 s at 5,000): the engine rescanned
+all objects to find a ski area's members, to find nearby ski areas, and to pick the next run to
+generate a ski area from. Those are now a membership index, a ski-area R-tree kept in step with
+geometry changes (leaving out ski areas still at the shared placeholder position, which an R-tree
+cannot remove quickly: 13 s at 50,000), and a cursor over the candidates. The per-feature
+formatting, the independent output files and the ski-area/run steps use all cores, and the
+allocator is jemalloc.
+
+At 50,000 resorts, with the log's own timings: reading 2.0 s, formatting 4.1 s, clustering 5 s,
+writing 3.2 s.
+
+**Memory is not where the plan wanted it.** The plan was a compact store (a coordinate arena,
+interned strings, enums as bytes) and a three-pass streaming normalization, for a few hundred
+megabytes at planet scale. What is built keeps every feature as ordinary Rust structs (tag maps of
+`String`s, `Vec<[f64; 2]>` geometry, property structs of `Option<String>`s), all in memory from
+reading to writing. That is about 7 times the input JSON (0.95 GB for 130 MB). The Overpass JSON
+is read as a stream and the node coordinates are already packed (24 bytes a node), `format_all`
+consumes the raw features as it formats them, and memory is returned between phases, but the peak
+is the formatted dataset plus the clustering engine's copy of it. A planet run is therefore
+several gigabytes, not hundreds of megabytes: roughly the same order as the TypeScript's 4 GB
+heap, and an order of magnitude faster. Getting lower means replacing `Tags` and the property
+structs with interned, columnar storage; the streaming normalization driver only helps once the
+input is no longer held whole, so it comes after that.
 
 ## Behaviours reproduced
 

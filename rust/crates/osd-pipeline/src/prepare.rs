@@ -10,7 +10,7 @@
 //! what the TypeScript pipeline produces with snow cover switched off.
 
 use crate::elevation::apply_elevation;
-use crate::format::{FormatInput, SkimapSkiArea, format_all};
+use crate::format::{FormatInput, SkimapSkiArea, format_all_owned};
 use anyhow::{Context, Result};
 use openskidata_format::{FeatureType, SkiAreaActivity, Status};
 use osd_cache::CacheStore;
@@ -292,74 +292,92 @@ fn write_text(path: &Path, text: &str) -> Result<()> {
     fs::write(path, text).with_context(|| format!("writing {}", path.display()))
 }
 
-/// Writes every output file for a clustered dataset.
+/// Writes every output file for a clustered dataset. The files do not depend on one another, so
+/// they are written at once, one job each; the GeoPackage is the longest.
 pub fn write_outputs(output: &ClusterOutput, output_dir: &Path) -> Result<()> {
+    use rayon::prelude::*;
     fs::create_dir_all(output_dir.join("csv"))?;
-
-    write_geojson(
-        &output_dir.join("ski_areas.geojson"),
-        output.ski_areas.iter().map(feature_json),
-    )?;
-    write_geojson(
-        &output_dir.join("runs.geojson"),
-        output.runs.iter().map(feature_json),
-    )?;
-    write_geojson(
-        &output_dir.join("lifts.geojson"),
-        output.lifts.iter().map(feature_json),
-    )?;
-    write_geojson(
-        &output_dir.join("spots.geojson"),
-        output.spots.iter().map(feature_json),
-    )?;
-
-    write_geojson(
-        &output_dir.join("mapboxgl_ski_areas.geojson"),
-        output.ski_areas.iter().map(mapboxgl::ski_area),
-    )?;
-    write_geojson(
-        &output_dir.join("mapboxgl_runs.geojson"),
-        output.runs.iter().filter_map(mapboxgl::run),
-    )?;
-    write_geojson(
-        &output_dir.join("mapboxgl_lifts.geojson"),
-        output.lifts.iter().map(mapboxgl::lift),
-    )?;
-    write_geojson(
-        &output_dir.join("mapboxgl_spots.geojson"),
-        output.spots.iter().map(mapboxgl::spot),
-    )?;
-
     let csv_dir = output_dir.join("csv");
-    write_text(
-        &csv_dir.join(csv::filename(FeatureType::SkiArea)),
-        &csv::file(
-            FeatureType::SkiArea,
-            output.ski_areas.iter().map(csv::ski_area),
-        ),
-    )?;
-    write_text(
-        &csv_dir.join(csv::filename(FeatureType::Run)),
-        &csv::file(FeatureType::Run, output.runs.iter().map(csv::run)),
-    )?;
-    write_text(
-        &csv_dir.join(csv::filename(FeatureType::Lift)),
-        &csv::file(FeatureType::Lift, output.lifts.iter().map(csv::lift)),
-    )?;
-    write_text(
-        &csv_dir.join(csv::filename(FeatureType::Spot)),
-        &csv::file(FeatureType::Spot, output.spots.iter().map(csv::spot)),
-    )?;
 
-    gpkg::write_geopackage(
-        &output_dir.join("openskidata.gpkg"),
-        &gpkg::Layers {
-            ski_areas: &output.ski_areas,
-            lifts: &output.lifts,
-            runs: &output.runs,
-            spots: &output.spots,
-        },
-    )?;
+    type Job<'a> = Box<dyn FnOnce() -> Result<()> + Send + 'a>;
+    let mut jobs: Vec<Job<'_>> = Vec::new();
+    jobs.push(Box::new(|| {
+        gpkg::write_geopackage(
+            &output_dir.join("openskidata.gpkg"),
+            &gpkg::Layers {
+                ski_areas: &output.ski_areas,
+                lifts: &output.lifts,
+                runs: &output.runs,
+                spots: &output.spots,
+            },
+        )
+        .map(|_| ())
+    }));
+    jobs.push(Box::new(|| {
+        write_geojson(
+            &output_dir.join("runs.geojson"),
+            output.runs.iter().map(feature_json),
+        )
+    }));
+    jobs.push(Box::new(|| {
+        write_geojson(
+            &output_dir.join("mapboxgl_runs.geojson"),
+            output.runs.iter().filter_map(mapboxgl::run),
+        )
+    }));
+    jobs.push(Box::new(|| {
+        write_geojson(
+            &output_dir.join("ski_areas.geojson"),
+            output.ski_areas.iter().map(feature_json),
+        )?;
+        write_geojson(
+            &output_dir.join("lifts.geojson"),
+            output.lifts.iter().map(feature_json),
+        )?;
+        write_geojson(
+            &output_dir.join("spots.geojson"),
+            output.spots.iter().map(feature_json),
+        )
+    }));
+    jobs.push(Box::new(|| {
+        write_geojson(
+            &output_dir.join("mapboxgl_ski_areas.geojson"),
+            output.ski_areas.iter().map(mapboxgl::ski_area),
+        )?;
+        write_geojson(
+            &output_dir.join("mapboxgl_lifts.geojson"),
+            output.lifts.iter().map(mapboxgl::lift),
+        )?;
+        write_geojson(
+            &output_dir.join("mapboxgl_spots.geojson"),
+            output.spots.iter().map(mapboxgl::spot),
+        )
+    }));
+    jobs.push(Box::new(|| {
+        write_text(
+            &csv_dir.join(csv::filename(FeatureType::Run)),
+            &csv::file(FeatureType::Run, output.runs.iter().map(csv::run)),
+        )?;
+        write_text(
+            &csv_dir.join(csv::filename(FeatureType::SkiArea)),
+            &csv::file(
+                FeatureType::SkiArea,
+                output.ski_areas.iter().map(csv::ski_area),
+            ),
+        )?;
+        write_text(
+            &csv_dir.join(csv::filename(FeatureType::Lift)),
+            &csv::file(FeatureType::Lift, output.lifts.iter().map(csv::lift)),
+        )?;
+        write_text(
+            &csv_dir.join(csv::filename(FeatureType::Spot)),
+            &csv::file(FeatureType::Spot, output.spots.iter().map(csv::spot)),
+        )
+    }));
+
+    jobs.into_par_iter()
+        .map(|job| job())
+        .collect::<Result<Vec<()>>>()?;
     Ok(())
 }
 
@@ -443,10 +461,18 @@ pub fn load_formatted(input_dir: &Path) -> Result<crate::format::Formatted> {
         spots: features_from_osm_json(&input_dir.join(SPOTS))?,
         skimap: skimap_ski_areas(&input_dir.join(SKIMAP))?,
     };
-    tracing::info!("read and convert the input: {:?}", started.elapsed());
+    tracing::info!(
+        "read and convert the input: {:?}{}",
+        started.elapsed(),
+        crate::memory::describe()
+    );
     let started = std::time::Instant::now();
-    let formatted = format_all(&input)?;
-    tracing::info!("format: {:?}", started.elapsed());
+    let formatted = format_all_owned(input)?;
+    tracing::info!(
+        "format: {:?}{}",
+        started.elapsed(),
+        crate::memory::describe()
+    );
     Ok(formatted)
 }
 
@@ -541,7 +567,11 @@ pub fn prepare(config: &PrepareConfig) -> Result<()> {
     )?;
     let started = std::time::Instant::now();
     write_outputs(&output, &config.output_dir)?;
-    tracing::info!("write the outputs: {:?}", started.elapsed());
+    tracing::info!(
+        "write the outputs: {:?}{}",
+        started.elapsed(),
+        crate::memory::describe()
+    );
     if config.generate_tiles {
         let started = std::time::Instant::now();
         osd_out::tiles::generate_tiles(

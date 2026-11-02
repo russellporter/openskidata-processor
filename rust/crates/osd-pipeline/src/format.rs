@@ -40,6 +40,7 @@ use osd_tags::ski_area::{
     SkimapInput, landuse as landuse_properties, placeholder_site_geometry, skimap,
 };
 use osd_tags::spot::spots;
+use rayon::prelude::*;
 
 /// `FeatureBuilder.DEFERRED_FEATURE_ID`.
 pub const DEFERRED_FEATURE_ID: &str = "__deferred_feature_id__";
@@ -495,35 +496,49 @@ fn format_run(feature: &Feature, sites: &Sites) -> Option<Vec<(InputGeometry, Ru
 
 /// Formats every role.
 pub fn format_all(input: &FormatInput) -> Result<Formatted> {
+    format_all_owned(FormatInput {
+        runs: input.runs.clone(),
+        lifts: input.lifts.clone(),
+        ski_areas: input.ski_areas.clone(),
+        sites: input.sites.clone(),
+        spots: input.spots.clone(),
+        skimap: input.skimap.clone(),
+    })
+}
+
+/// [`format_all`], consuming the input: each extract is released as it is formatted, so the raw
+/// features and the formatted ones are not all in memory at once.
+pub fn format_all_owned(input: FormatInput) -> Result<Formatted> {
     let sites = Sites::load(&input.sites);
     let mut out = Formatted::default();
 
     // Ski areas: landuse polygons, then sites, then Skimap.org.
-    for feature in &input.ski_areas {
-        let Some(geometry) = ski_area_geometry(&feature.geometry) else {
-            continue;
-        };
-        if matches!(feature.geometry, Geometry::Point(_)) || !is_valid(&feature.geometry) {
-            continue;
-        }
-        let Some(tag_properties) = landuse_properties(
-            feature.osm_type.as_str(),
-            feature.id,
-            &feature.tags,
-            geometry_kind(&feature.geometry),
-        ) else {
-            continue;
-        };
-        out.ski_areas.push(ski_area_out(
-            id_of("skiArea", &feature.geometry),
-            tag_properties,
-            convention(&feature.geometry),
-            viewport_hint(&feature.geometry),
-            geometry,
-        ));
-    }
+    let landuse: Vec<Option<SkiAreaOut>> = input
+        .ski_areas
+        .into_par_iter()
+        .map(|feature| {
+            let geometry = ski_area_geometry(&feature.geometry)?;
+            if matches!(feature.geometry, Geometry::Point(_)) || !is_valid(&feature.geometry) {
+                return None;
+            }
+            let tag_properties = landuse_properties(
+                feature.osm_type.as_str(),
+                feature.id,
+                &feature.tags,
+                geometry_kind(&feature.geometry),
+            )?;
+            Some(ski_area_out(
+                id_of("skiArea", &feature.geometry),
+                tag_properties,
+                convention(&feature.geometry),
+                viewport_hint(&feature.geometry),
+                geometry,
+            ))
+        })
+        .collect();
+    out.ski_areas.extend(landuse.into_iter().flatten());
     out.ski_areas.extend(sites.ski_areas.iter().cloned());
-    for area in &input.skimap {
+    for area in input.skimap {
         let point = Geometry::Point(area.coordinates);
         let tag_properties = skimap(SkimapInput {
             id: &area.id,
@@ -544,78 +559,84 @@ pub fn format_all(input: &FormatInput) -> Result<Formatted> {
     }
 
     // Runs, normalized as one topology.
-    let mut inputs: Vec<RunInput> = Vec::new();
-    for feature in &input.runs {
-        let Some(parts) = format_run(feature, &sites) else {
-            continue;
-        };
-        for (geometry, properties) in parts {
-            inputs.push(RunInput {
-                geometry,
-                properties,
-            });
-        }
-    }
+    let formatted_runs: Vec<Vec<_>> = input
+        .runs
+        .into_par_iter()
+        .filter_map(|feature| format_run(&feature, &sites))
+        .collect();
+    let inputs: Vec<RunInput> = formatted_runs
+        .into_iter()
+        .flatten()
+        .map(|(geometry, properties)| RunInput {
+            geometry,
+            properties,
+        })
+        .collect();
     let normalized = normalize_runs(&inputs, &line_viewport_hint)?;
-    for output in normalized {
-        out.runs.push(run_out(output));
-    }
+    out.runs = normalized.into_par_iter().map(run_out).collect();
 
     // Lifts.
-    for feature in &input.lifts {
-        if !matches!(
-            feature.geometry,
-            Geometry::LineString(_) | Geometry::MultiLineString(_)
-        ) || !is_valid(&feature.geometry)
-        {
-            continue;
-        }
-        let Some(tags) = lift_properties(&feature.tags, feature.osm_type.as_str(), feature.id)
-        else {
-            continue;
-        };
-        let site_ids = ids(sites.for_sources(&tags.sources));
-        out.lifts.push(LiftOut {
-            elevations: None,
-            properties: lift_properties_full(
-                tags,
-                id_of("lift", &feature.geometry),
-                viewport_hint(&feature.geometry),
-            ),
-            geometry: feature.geometry.clone(),
-            site_ski_areas: site_ids,
-        });
-    }
+    out.lifts = input
+        .lifts
+        .into_par_iter()
+        .filter_map(|feature| {
+            if !matches!(
+                feature.geometry,
+                Geometry::LineString(_) | Geometry::MultiLineString(_)
+            ) || !is_valid(&feature.geometry)
+            {
+                return None;
+            }
+            let tags = lift_properties(&feature.tags, feature.osm_type.as_str(), feature.id)?;
+            let site_ids = ids(sites.for_sources(&tags.sources));
+            Some(LiftOut {
+                elevations: None,
+                properties: lift_properties_full(
+                    tags,
+                    id_of("lift", &feature.geometry),
+                    viewport_hint(&feature.geometry),
+                ),
+                geometry: feature.geometry,
+                site_ski_areas: site_ids,
+            })
+        })
+        .collect();
 
     // Spots.
-    for feature in &input.spots {
-        let point = centroid(&feature.geometry);
-        let geometry = Geometry::Point(point);
-        let hint = viewport_hint(&geometry);
-        let sources = vec![Source {
-            source_type: SourceType::Openstreetmap,
-            id: feature.osm_id(),
-        }];
-        let site_ids = ids(sites.for_sources(&sources));
-        for kind in spots(&feature.tags) {
-            out.spots.push(SpotOut {
-                coordinates: point,
-                elevations: None,
-                properties: SpotProperties {
-                    base: SpotBaseProperties {
-                        feature_type: FeatureType::Spot,
-                        id: id_of("spot", &geometry),
-                        ski_areas: Vec::new(),
-                        sources: sources.clone(),
-                        places: Vec::new(),
-                        viewport_hint: hint,
+    let spot_groups: Vec<Vec<SpotOut>> = input
+        .spots
+        .into_par_iter()
+        .map(|feature| {
+            let point = centroid(&feature.geometry);
+            let geometry = Geometry::Point(point);
+            let hint = viewport_hint(&geometry);
+            let sources = vec![Source {
+                source_type: SourceType::Openstreetmap,
+                id: feature.osm_id(),
+            }];
+            let site_ids = ids(sites.for_sources(&sources));
+            spots(&feature.tags)
+                .into_iter()
+                .map(|kind| SpotOut {
+                    coordinates: point,
+                    elevations: None,
+                    properties: SpotProperties {
+                        base: SpotBaseProperties {
+                            feature_type: FeatureType::Spot,
+                            id: id_of("spot", &geometry),
+                            ski_areas: Vec::new(),
+                            sources: sources.clone(),
+                            places: Vec::new(),
+                            viewport_hint: hint,
+                        },
+                        kind,
                     },
-                    kind,
-                },
-                site_ski_areas: site_ids.clone(),
-            });
-        }
-    }
+                    site_ski_areas: site_ids.clone(),
+                })
+                .collect()
+        })
+        .collect();
+    out.spots = spot_groups.into_iter().flatten().collect();
     Ok(out)
 }
 

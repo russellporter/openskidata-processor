@@ -48,6 +48,8 @@ robust = "1.2.0"
 xxhash-rust = { version = "0.8.19", features = ["xxh3"] }
 sha1 = "0.10.6"
 libm = "0.2.15"
+# allocator
+tikv-jemallocator = "0.7.0"
 # errors, logging, cli
 anyhow = "1.0.104"
 thiserror = "2.0.21"

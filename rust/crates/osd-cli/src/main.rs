@@ -4,6 +4,11 @@
 //! `npm run clear-cache` / `npm run merge-outputs` / `npm run extract-tiles` scripts.
 
 use anyhow::Result;
+
+// The pipeline allocates and frees millions of small strings in bursts, from many threads;
+// jemalloc is faster at that than the system allocator and hands memory back between phases.
+#[global_allocator]
+static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
 use clap::{Parser, Subcommand};
 
 #[derive(clap::ValueEnum, Debug, Clone, Copy)]

@@ -444,11 +444,14 @@ impl Engine {
             .collect();
         self.tree = RTree::bulk_load(entries);
 
+        // Ski areas still at the placeholder position are never candidates (see
+        // `find_nearby_ski_areas`), so they are left out: there can be a hundred thousand of them
+        // at one point, and an R-tree cannot remove one of many identical entries quickly.
         let ski_areas: Vec<IndexEntry> = self
             .objects
             .iter()
             .enumerate()
-            .filter(|(_, o)| o.alive && o.is_ski_area())
+            .filter(|(_, o)| o.alive && o.is_ski_area() && !is_placeholder(&o.geometry))
             .map(|(index, o)| IndexEntry {
                 index,
                 envelope: aabb(spatial::bbox(&o.geometry)),
@@ -466,6 +469,9 @@ impl Engine {
     fn reindex_ski_area(&mut self, index: usize) {
         if let Some(envelope) = self.ski_area_envelopes.remove(&index) {
             self.ski_area_tree.remove(&IndexEntry { index, envelope });
+        }
+        if is_placeholder(&self.objects[index].geometry) {
+            return;
         }
         let envelope = aabb(spatial::bbox(&self.objects[index].geometry));
         self.ski_area_tree.insert(IndexEntry { index, envelope });
@@ -1512,7 +1518,7 @@ impl Engine {
         fn step<T>(label: &str, run: impl FnOnce() -> T) -> T {
             let started = std::time::Instant::now();
             let result = run();
-            tracing::info!("{label}: {:?}", started.elapsed());
+            tracing::info!("{label}: {:?}{}", started.elapsed(), memory_note());
             result
         }
         if enrichment.snow_cover.is_some() {
@@ -1994,14 +2000,39 @@ pub fn cluster_with_geocoder(
 }
 
 /// Runs the whole stage on typed input, with the services in `enrichment`.
+/// ` (memory 123 MB, peak 456 MB)` for the phase timings, where the platform tells.
+fn memory_note() -> String {
+    let Ok(status) = std::fs::read_to_string("/proc/self/status") else {
+        return String::new();
+    };
+    let mb = |name: &str| -> Option<u64> {
+        let kb: u64 = status
+            .lines()
+            .find_map(|l| l.strip_prefix(name))?
+            .split_whitespace()
+            .next()?
+            .parse()
+            .ok()?;
+        Some(kb / 1024)
+    };
+    match (mb("VmRSS:"), mb("VmHWM:")) {
+        (Some(now), Some(peak)) => format!(" (memory {now} MB, peak {peak} MB)"),
+        _ => String::new(),
+    }
+}
+
 pub fn cluster_enriched(input: ClusterInput, enrichment: &Enrichment<'_>) -> Result<ClusterOutput> {
     let started = std::time::Instant::now();
     let mut engine = Engine::load(input);
-    tracing::info!("load objects and build the index: {:?}", started.elapsed());
+    tracing::info!(
+        "load objects and build the index: {:?}{}",
+        started.elapsed(),
+        memory_note()
+    );
     engine.cluster_with(enrichment);
     let started = std::time::Instant::now();
     let output = engine.export();
-    tracing::info!("export: {:?}", started.elapsed());
+    tracing::info!("export: {:?}{}", started.elapsed(), memory_note());
     output
 }
 

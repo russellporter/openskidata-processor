@@ -9,6 +9,7 @@ repository.workspace = true
 
 [dependencies]
 anyhow.workspace = true
+tikv-jemallocator.workspace = true
 serde_json.workspace = true
 clap.workspace = true
 tokio.workspace = true
