@@ -74,8 +74,10 @@ depends on them. Each is pinned by a test and explained where it lives.
 - **An empty CSV stream writes an empty file**, header included.
 - **`toFixed` rounds ties up, not to even**, and ties are real: `11.0078125` is a valid
   coordinate.
-- **Runs with `piste:type=downhill;nordic` count twice in the statistics** if two of their
-  uses map to the same activity.
+- **A run's activities are a list, not a set.** A run whose uses map to the same activity
+  (`downhill` and `snow_park`) lists it twice and is counted twice in a ski area's
+  statistics. Kept by construction in `osd_cluster::engine`; no recorded case covers it, so
+  this one rests on reading the TypeScript rather than on a test.
 - **A lift's embedded `stations[].skiAreas` is stale upstream** (unresolved site ski areas
   with placeholder coordinates). Not reproduced: this pipeline resolves them the way
   `spots.geojson` does. The one deliberate divergence from the TypeScript output.
