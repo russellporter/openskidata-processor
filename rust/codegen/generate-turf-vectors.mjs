@@ -22,6 +22,8 @@ const { default: centroid } = await import("@turf/centroid");
 const turf = await import("@turf/helpers");
 const { default: length } = await import("@turf/length");
 const { default: nearestPoint } = await import("@turf/nearest-point");
+const { default: nearestPointOnLine } =
+  await import("@turf/nearest-point-on-line");
 const dist = await import(join(repoRoot, "dist/transforms/GeoTransforms.js"));
 
 let seed = 777;
@@ -191,11 +193,37 @@ for (let n = 0; n < 60; n++) {
   lengths.push({ geometry: g, expected: length(turf.feature(g)) });
 }
 
+// Stations near lines: the point on the line closest to a position, sometimes exactly on a
+// vertex, sometimes beyond an end, sometimes on a degenerate (zero length) segment.
+const nearest = [];
+for (let n = 0; n < 500; n++) {
+  const origin = pick(ORIGINS);
+  const lineCoords = line(origin, 2 + int(5), pick([0.0004, 0.004]));
+  let position;
+  const kind = int(4);
+  if (kind === 0) position = lineCoords[int(lineCoords.length)];
+  else if (kind === 1) position = line(origin, 1, 0.002)[0];
+  else position = line(lineCoords[int(lineCoords.length)], 1, 0.0006)[0];
+  if (random() < 0.05) lineCoords.splice(1, 0, [...lineCoords[0]]);
+  const result = nearestPointOnLine(
+    { type: "LineString", coordinates: lineCoords },
+    turf.point(position),
+  );
+  nearest.push({
+    line: lineCoords,
+    position,
+    expectedPoint: result.geometry.coordinates,
+    expectedDistanceKm: result.properties.dist,
+  });
+}
+
 const generated =
   '{"skiAreaGeometry":[\n' +
   skiAreaGeometries.map((c) => JSON.stringify(c)).join(",\n") +
   '\n],"length":[\n' +
   lengths.map((c) => JSON.stringify(c)).join(",\n") +
+  '\n],"nearestPointOnLine":[\n' +
+  nearest.map((c) => JSON.stringify(c)).join(",\n") +
   "\n]}\n";
 
 if (process.argv.includes("--check")) {

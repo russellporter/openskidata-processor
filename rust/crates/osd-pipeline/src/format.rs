@@ -645,3 +645,88 @@ fn lift_properties_full(tags: LiftTagProperties, id: String, hint: ViewportHint)
         viewport_hint: hint,
     }
 }
+
+// --------------------------------------------------------------------------------------
+// Hand-off to clustering
+// --------------------------------------------------------------------------------------
+
+fn geometry_of_ski_area(geometry: &SkiAreaGeometry) -> Geometry {
+    let pair = |c: &Vec<f64>| [c[0], c[1]];
+    match geometry {
+        SkiAreaGeometry::Point { coordinates } => Geometry::Point(pair(coordinates)),
+        SkiAreaGeometry::Polygon { coordinates } => Geometry::Polygon(
+            coordinates
+                .iter()
+                .map(|ring| ring.iter().map(pair).collect())
+                .collect(),
+        ),
+        SkiAreaGeometry::MultiPolygon { coordinates } => Geometry::MultiPolygon(
+            coordinates
+                .iter()
+                .map(|rings| {
+                    rings
+                        .iter()
+                        .map(|ring| ring.iter().map(pair).collect())
+                        .collect()
+                })
+                .collect(),
+        ),
+    }
+}
+
+fn geometry_of_run(geometry: &InputGeometry) -> Geometry {
+    let pair = |c: &FixedCoord| [c.lng_degrees(), c.lat_degrees()];
+    match geometry {
+        InputGeometry::Line(points) => Geometry::LineString(points.iter().map(pair).collect()),
+        InputGeometry::Polygon(rings) => Geometry::Polygon(
+            rings
+                .iter()
+                .map(|ring| ring.iter().map(pair).collect())
+                .collect(),
+        ),
+    }
+}
+
+impl Formatted {
+    /// The formatted features as input to the clustering stage.
+    pub fn into_cluster_input(self) -> osd_cluster::engine::ClusterInput {
+        use osd_cluster::engine::{ClusterInput, LiftIn, RunIn, SkiAreaIn, SpotIn};
+        ClusterInput {
+            ski_areas: self
+                .ski_areas
+                .into_iter()
+                .map(|a| SkiAreaIn {
+                    geometry: geometry_of_ski_area(&a.geometry),
+                    properties: a.properties,
+                })
+                .collect(),
+            lifts: self
+                .lifts
+                .into_iter()
+                .map(|l| LiftIn {
+                    geometry: l.geometry,
+                    properties: l.properties,
+                    site_ski_areas: l.site_ski_areas,
+                })
+                .collect(),
+            runs: self
+                .runs
+                .into_iter()
+                .map(|r| RunIn {
+                    geometry: geometry_of_run(&r.geometry),
+                    properties: r.properties,
+                    site_ski_areas: r.site_ski_areas,
+                })
+                .collect(),
+            spots: self
+                .spots
+                .into_iter()
+                .map(|s| SpotIn {
+                    geometry: Geometry::Point(s.coordinates),
+                    properties: s.properties,
+                    site_ski_areas: s.site_ski_areas,
+                })
+                .collect(),
+        }
+    }
+}

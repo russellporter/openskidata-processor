@@ -21,6 +21,7 @@
 //! only in z. Upstream relies on this (`PrepareGeoJSON.ts:145-151`) and so must this.
 
 pub mod format;
+pub mod prepare;
 
 use anyhow::Result;
 use std::path::PathBuf;

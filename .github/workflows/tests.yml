@@ -95,6 +95,9 @@ jobs:
       - name: Check the turf vectors are in sync
         run: docker compose exec -T app node rust/codegen/generate-turf-vectors.mjs --check
 
+      - name: Check the output formatter vectors are in sync
+        run: docker compose exec -T app node rust/codegen/generate-output-vectors.mjs --check
+
       - name: Rust format
         run: docker compose exec -T app sh -c "cd rust && cargo fmt --all --check"
 

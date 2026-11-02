@@ -15,6 +15,18 @@ struct Cli {
 
 #[derive(Subcommand, Debug)]
 enum Command {
+    /// Turn the downloaded input files into the output files.
+    ///
+    /// Reads `input_*.osmjson` (from Overpass, or the files `OSM_INPUT_DIR` points at) and
+    /// `input_skimap_ski_areas.geojson` from the input directory, and writes GeoJSON, the
+    /// slimmed mapboxgl GeoJSON and CSV to the output directory. Elevation, geocoding, snow
+    /// cover, the GeoPackage and tiles are not applied yet.
+    Prepare {
+        #[arg(long, env = "INPUT_DIR", default_value = "data/input")]
+        input_dir: std::path::PathBuf,
+        #[arg(long, env = "OUTPUT_DIR", default_value = "data/output")]
+        output_dir: std::path::PathBuf,
+    },
     /// Run the full pipeline.
     Run {
         #[arg(long, env = "OSM_PBF")]
@@ -53,6 +65,13 @@ async fn main() -> Result<()> {
 
     let cli = Cli::parse();
     match cli.command {
+        Command::Prepare {
+            input_dir,
+            output_dir,
+        } => osd_pipeline::prepare::prepare(&osd_pipeline::prepare::PrepareConfig {
+            input_dir,
+            output_dir,
+        }),
         Command::Run { .. } => todo!("wire up osd_pipeline::run"),
         Command::MigrateCache { .. } => todo!("wire up osd_cache::migrate_from_postgres"),
         Command::MetricBlastRadius { .. } => {

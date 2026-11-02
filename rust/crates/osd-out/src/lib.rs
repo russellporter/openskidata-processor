@@ -46,92 +46,18 @@
 //! (`PrepareGeoJSON.ts:224`). Preserve that: counting is a fold over a stream that is
 //! already flowing.
 
+pub mod csv;
+pub mod geojson;
+pub mod mapboxgl;
+pub mod tiles;
+
 use anyhow::Result;
-use openskidata_format::FeatureType;
 use osd_store::FeatureStore;
 use std::path::Path;
-
-/// Stream features to a GeoJSON `FeatureCollection`.
-///
-/// Upstream writes one `JSON.stringify(feature)` per line between a fixed prelude and
-/// epilogue (`src/transforms/FeatureCollection.ts`), making the files effectively
-/// newline-delimited. `src/scripts/merge_outputs.ts` depends on exactly that shape, so
-/// keep it.
-pub fn write_geojson(
-    _store: &FeatureStore,
-    _feature_type: FeatureType,
-    _path: &Path,
-) -> Result<()> {
-    todo!("streaming FeatureCollection writer, one feature per line")
-}
-
-/// Replaces `MapboxGLFormatter`: drops heavy properties, replaces ski-area polygons with
-/// central points, drops connection-only runs, shortens long names, precomputes colors.
-pub fn write_mapboxgl_geojson(
-    _store: &FeatureStore,
-    _feature_type: FeatureType,
-    _path: &Path,
-) -> Result<()> {
-    todo!("port MapboxGLFormatter")
-}
-
-/// Replaces `CSVFormatter`. Headers are literal and fixed (33 columns for runs, 34 for
-/// lifts, 23 for ski areas, 14 for spots) and the escaping is hand-rolled upstream:
-/// quote on `,`, `"`, `\n`, `\r` and `;`.
-pub fn write_csv(_store: &FeatureStore, _feature_type: FeatureType, _path: &Path) -> Result<()> {
-    todo!("port CSVFormatter, preserving the exact header lists and escaping")
-}
 
 /// Replaces `GeoPackageWriter`.
 pub fn write_geopackage(_store: &FeatureStore, _path: &Path) -> Result<()> {
     todo!("write SQLite + WKB + gpkg metadata tables directly")
-}
-
-/// Tile build configuration for one layer.
-#[derive(Debug, Clone)]
-pub struct TileLayer {
-    pub name: &'static str,
-    pub min_zoom: u8,
-    pub max_zoom: u8,
-    pub extra_args: &'static [&'static str],
-}
-
-/// Upstream's four layers, with flags preserved verbatim.
-pub const TILE_LAYERS: &[TileLayer] = &[
-    TileLayer {
-        name: "lifts",
-        min_zoom: 5,
-        max_zoom: 15,
-        extra_args: &["--simplify-only-low-zooms", "--drop-densest-as-needed"],
-    },
-    TileLayer {
-        name: "runs",
-        min_zoom: 9,
-        max_zoom: 15,
-        extra_args: &["--simplify-only-low-zooms", "--drop-densest-as-needed"],
-    },
-    TileLayer {
-        name: "skiareas",
-        min_zoom: 0,
-        max_zoom: 15,
-        extra_args: &["-B", "0", "--drop-densest-as-needed"],
-    },
-    TileLayer {
-        name: "spots",
-        min_zoom: 9,
-        max_zoom: 15,
-        extra_args: &[
-            "-B",
-            "10",
-            "--simplify-only-low-zooms",
-            "--drop-densest-as-needed",
-        ],
-    },
-];
-
-/// Drive tippecanoe for every layer, then `tile-join`.
-pub fn generate_tiles(_mapboxgl_dir: &Path, _working_dir: &Path, _output: &Path) -> Result<()> {
-    todo!("run the four layers in parallel, then tile-join")
 }
 
 /// Replaces `DatasetMetadata`. Counts are folded in during the CSV pass.
@@ -140,19 +66,4 @@ pub fn write_metadata(_path: &Path) -> Result<()> {
 }
 
 #[cfg(test)]
-mod tests {
-    /// `merge_outputs.ts` parses these files line by line, so the layout matters beyond
-    /// being valid JSON.
-    #[test]
-    #[ignore = "scaffold: implement write_geojson first"]
-    fn geojson_output_stays_newline_delimited() {}
-
-    #[test]
-    #[ignore = "scaffold: implement write_csv first"]
-    fn csv_headers_match_upstream_exactly() {}
-
-    /// Not covered by any upstream test: tippecanoe runs in no test today.
-    #[test]
-    #[ignore = "scaffold: implement generate_tiles first"]
-    fn tile_build_produces_the_expected_layer_set() {}
-}
+mod tests {}

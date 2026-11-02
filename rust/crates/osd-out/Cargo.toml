@@ -13,4 +13,11 @@ serde_json.workspace = true
 rusqlite.workspace = true
 geo-types.workspace = true
 openskidata-format.workspace = true
+serde.workspace = true
+osd-tags.workspace = true
+osd-cluster.workspace = true
+osd-osm.workspace = true
 osd-store.workspace = true
+
+[dev-dependencies]
+serde.workspace = true

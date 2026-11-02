@@ -80,10 +80,13 @@
 //! [`DistanceBackend::LocalProjection`] land, as a separately measured commit, with the
 //! `[490, 510]` m blast radius already instrumented.
 
+pub mod engine;
 pub mod flood;
 pub mod geometry;
 pub mod index;
 pub mod passes;
+pub mod spatial;
+pub mod stats;
 pub mod turf;
 
 pub use flood::{FillOptions, Frame, flood_fill, is_non_operating_lift};

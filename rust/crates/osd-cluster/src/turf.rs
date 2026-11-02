@@ -27,8 +27,9 @@ pub fn distance_km(from: Position, to: Position) -> f64 {
     let d_lon = degrees_to_radians(to[0] - from[0]);
     let lat1 = degrees_to_radians(from[1]);
     let lat2 = degrees_to_radians(to[1]);
-    let a = (d_lat / 2.0).sin().powi(2) + (d_lon / 2.0).sin().powi(2) * lat1.cos() * lat2.cos();
-    2.0 * a.sqrt().atan2((1.0 - a).sqrt()) * (EARTH_RADIUS_M / 1000.0)
+    let a = libm::sin(d_lat / 2.0).powi(2)
+        + libm::sin(d_lon / 2.0).powi(2) * libm::cos(lat1) * libm::cos(lat2);
+    2.0 * libm::atan2(a.sqrt(), (1.0 - a).sqrt()) * (EARTH_RADIUS_M / 1000.0)
 }
 
 fn path_length(positions: &[Position]) -> f64 {
@@ -115,9 +116,10 @@ pub fn bearing(start: Position, end: Position) -> f64 {
     let lon2 = degrees_to_radians(end[0]);
     let lat1 = degrees_to_radians(start[1]);
     let lat2 = degrees_to_radians(end[1]);
-    let a = (lon2 - lon1).sin() * lat2.cos();
-    let b = lat1.cos() * lat2.sin() - lat1.sin() * lat2.cos() * (lon2 - lon1).cos();
-    radians_to_degrees(a.atan2(b))
+    let a = libm::sin(lon2 - lon1) * libm::cos(lat2);
+    let b = libm::cos(lat1) * libm::sin(lat2)
+        - libm::sin(lat1) * libm::cos(lat2) * libm::cos(lon2 - lon1);
+    radians_to_degrees(libm::atan2(a, b))
 }
 
 /// `@turf/destination` for a distance in kilometres.
@@ -127,12 +129,15 @@ pub fn destination_km(origin: Position, distance_km: f64, bearing_degrees: f64) 
     let bearing_rad = degrees_to_radians(bearing_degrees);
     let radians = distance_km / (EARTH_RADIUS_M / 1000.0);
 
-    let latitude2 = (latitude1.sin() * radians.cos()
-        + latitude1.cos() * radians.sin() * bearing_rad.cos())
-    .asin();
+    let latitude2 = libm::asin(
+        libm::sin(latitude1) * libm::cos(radians)
+            + libm::cos(latitude1) * libm::sin(radians) * libm::cos(bearing_rad),
+    );
     let longitude2 = longitude1
-        + (bearing_rad.sin() * radians.sin() * latitude1.cos())
-            .atan2(radians.cos() - latitude1.sin() * latitude2.sin());
+        + libm::atan2(
+            libm::sin(bearing_rad) * libm::sin(radians) * libm::cos(latitude1),
+            libm::cos(radians) - libm::sin(latitude1) * libm::sin(latitude2),
+        );
     [
         radians_to_degrees(longitude2),
         radians_to_degrees(latitude2),
@@ -182,4 +187,109 @@ pub fn ski_area_geometry(members: &[&Geometry]) -> Position {
     } else {
         centroid_point
     }
+}
+
+// ---------------------------------------------------------------------------------------
+// nearestPointOnLine
+// ---------------------------------------------------------------------------------------
+
+type Vec3 = [f64; 3];
+
+fn dot(a: Vec3, b: Vec3) -> f64 {
+    a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
+}
+
+fn cross(a: Vec3, b: Vec3) -> Vec3 {
+    [
+        a[1] * b[2] - a[2] * b[1],
+        a[2] * b[0] - a[0] * b[2],
+        a[0] * b[1] - a[1] * b[0],
+    ]
+}
+
+fn magnitude(v: Vec3) -> f64 {
+    (v[0].powi(2) + v[1].powi(2) + v[2].powi(2)).sqrt()
+}
+
+fn normalize(v: Vec3) -> Vec3 {
+    let m = magnitude(v);
+    [v[0] / m, v[1] / m, v[2] / m]
+}
+
+fn lng_lat_to_vector(a: Position) -> Vec3 {
+    let lat = degrees_to_radians(a[1]);
+    let lng = degrees_to_radians(a[0]);
+    [
+        libm::cos(lat) * libm::cos(lng),
+        libm::cos(lat) * libm::sin(lng),
+        libm::sin(lat),
+    ]
+}
+
+fn vector_to_lng_lat(v: Vec3) -> Position {
+    let z = v[2].clamp(-1.0, 1.0);
+    [
+        radians_to_degrees(libm::atan2(v[1], v[0])),
+        radians_to_degrees(libm::asin(z)),
+    ]
+}
+
+/// The closest point to `c` on the great-circle segment `a`-`b`, and whether it is the end.
+fn nearest_point_on_segment(a: Position, b: Position, c: Position) -> (Position, bool) {
+    let (va, vb, vc) = (
+        lng_lat_to_vector(a),
+        lng_lat_to_vector(b),
+        lng_lat_to_vector(c),
+    );
+    let segment_axis = cross(va, vb);
+    if segment_axis == [0.0, 0.0, 0.0] {
+        return if dot(va, vb) > 0.0 {
+            (b, true)
+        } else {
+            (c, false)
+        };
+    }
+    let target_axis = cross(segment_axis, vc);
+    if target_axis == [0.0, 0.0, 0.0] {
+        return (b, true);
+    }
+    let intersection_axis = cross(target_axis, segment_axis);
+    let i1 = normalize(intersection_axis);
+    let i2 = [-i1[0], -i1[1], -i1[2]];
+    let i = if dot(vc, i1) > dot(vc, i2) { i1 } else { i2 };
+
+    let segment_axis_norm = normalize(segment_axis);
+    let cmp_ai = dot(cross(va, i), segment_axis_norm);
+    let cmp_ib = dot(cross(i, vb), segment_axis_norm);
+    if cmp_ai >= 0.0 && cmp_ib >= 0.0 {
+        return (vector_to_lng_lat(i), false);
+    }
+    if dot(va, vc) > dot(vb, vc) {
+        (a, false)
+    } else {
+        (b, true)
+    }
+}
+
+/// `@turf/nearest-point-on-line` for one line: the closest point on it to `input`, and the
+/// distance to it in kilometres.
+pub fn nearest_point_on_line(line: &[Position], input: Position) -> (Position, f64) {
+    let mut closest = [f64::INFINITY, f64::INFINITY];
+    let mut closest_distance = f64::INFINITY;
+    for i in 0..line.len().saturating_sub(1) {
+        let (start, stop) = (line[i], line[i + 1]);
+        let intersect = if stop[0] == input[0] && stop[1] == input[1] {
+            stop
+        } else if start[0] == input[0] && start[1] == input[1] {
+            start
+        } else {
+            nearest_point_on_segment(start, stop, input).0
+        };
+        let point_distance = distance_km(input, intersect);
+        if point_distance < closest_distance {
+            closest = intersect;
+            closest_distance = point_distance;
+        }
+    }
+    (closest, closest_distance)
 }

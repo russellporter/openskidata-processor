@@ -117,6 +117,84 @@ const vectors = {
 };
 
 /**
+ * `getLiftNameAndType`: the name with the lift's type phrase, over the cross product of the
+ * fields it reads. Only those fields matter, so the rest of the properties are held fixed.
+ */
+const liftNameCases = [];
+// Every name hint that suppresses an occupancy, on every lift type, with and without an
+// occupancy to suppress.
+const nameHints = [
+  "t-bar",
+  "j-bar",
+  "platter",
+  "rope tow",
+  "ropetow",
+  "rope-tow",
+  "carpet",
+  "single",
+  "double",
+  "triple",
+  "quad",
+  "1er",
+  "2er",
+  "3er",
+  "4er",
+  "6er",
+  "8er",
+];
+const names = [
+  null,
+  "",
+  "Sunrise",
+  "Big T-Bar",
+  "QUAD Express",
+  "4er Gondel",
+  "Rope-Tow 2",
+  "Magic Carpet",
+  "Nordic (Loop)",
+  "Doppel",
+];
+for (const liftType of Object.values(f.LiftType)) {
+  for (const occupancy of [null, 0, 1, 2, 3, 4, 6, 2.5]) {
+    for (const [heating, bubble] of [
+      [null, null],
+      [true, null],
+      [null, true],
+      [true, true],
+      [false, false],
+    ]) {
+      for (const name of names) {
+        const properties = { liftType, occupancy, heating, bubble, name };
+        liftNameCases.push({
+          properties,
+          expected: f.getLiftNameAndType(properties),
+        });
+      }
+    }
+  }
+}
+
+for (const liftType of Object.values(f.LiftType)) {
+  for (const hint of nameHints) {
+    for (const occupancy of [null, 3]) {
+      for (const name of [hint, "Lift " + hint.toUpperCase() + " 1"]) {
+        const properties = {
+          liftType,
+          occupancy,
+          heating: null,
+          bubble: null,
+          name,
+        };
+        liftNameCases.push({
+          properties,
+          expected: f.getLiftNameAndType(properties),
+        });
+      }
+    }
+  }
+}
+
+/**
  * The run-difficulty convention lookup, checked three ways.
  *
  * The lookup is point-in-polygon against two hand-drawn regions, using an exact-arithmetic
@@ -230,7 +308,27 @@ const generated = prettifyJson(
   JSON.stringify(vectors, encodeNonFinite, 2) + "\n",
 );
 
+// Compact, one case per line, and excluded from Prettier (which would expand ~3,000 small
+// objects into tens of thousands of lines).
+const liftNamePath = join(
+  repoRoot,
+  "rust/crates/openskidata-format/tests/lift_name_vectors.json",
+);
+const liftNameGenerated =
+  '{"cases":[\n' +
+  liftNameCases.map((c) => JSON.stringify(c)).join(",\n") +
+  "\n]}\n";
+
 if (process.argv.includes("--check")) {
+  const existingLiftNames = existsSync(liftNamePath)
+    ? readFileSync(liftNamePath, "utf8")
+    : "";
+  if (existingLiftNames !== liftNameGenerated) {
+    console.error(
+      `${liftNamePath} is out of date.\nRun: node rust/codegen/generate-format-vectors.mjs`,
+    );
+    process.exit(1);
+  }
   const existing = existsSync(outPath) ? readFileSync(outPath, "utf8") : "";
   if (existing !== generated) {
     console.error(
@@ -245,6 +343,7 @@ if (process.argv.includes("--check")) {
 } else {
   mkdirSync(dirname(outPath), { recursive: true });
   writeFileSync(outPath, generated);
+  writeFileSync(liftNamePath, liftNameGenerated);
   const total = Object.entries(vectors)
     .filter(([, v]) => Array.isArray(v))
     .reduce((sum, [, v]) => sum + v.length, 0);

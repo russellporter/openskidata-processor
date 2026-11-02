@@ -1454,7 +1454,9 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "geo",
+ "geo-types",
  "geos",
+ "libm",
  "openskidata-format",
  "osd-osm",
  "osd-store",
@@ -1462,6 +1464,7 @@ dependencies = [
  "rstar 0.13.0",
  "serde",
  "serde_json",
+ "sha1",
 ]
 
 [[package]]
@@ -1524,8 +1527,12 @@ dependencies = [
  "anyhow",
  "geo-types",
  "openskidata-format",
+ "osd-cluster",
+ "osd-osm",
  "osd-store",
+ "osd-tags",
  "rusqlite",
+ "serde",
  "serde_json",
 ]
 

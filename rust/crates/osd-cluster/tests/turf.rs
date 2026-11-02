@@ -1,6 +1,6 @@
 //! The turf ports against the real library (`rust/codegen/generate-turf-vectors.mjs`).
 
-use osd_cluster::turf::{length_km, ski_area_geometry};
+use osd_cluster::turf::{length_km, nearest_point_on_line, ski_area_geometry};
 use osd_osm::element::Geometry;
 use serde::Deserialize;
 use serde_json::Value;
@@ -10,6 +10,18 @@ struct Vectors {
     #[serde(rename = "skiAreaGeometry")]
     ski_area_geometry: Vec<SkiAreaCase>,
     length: Vec<LengthCase>,
+    #[serde(rename = "nearestPointOnLine")]
+    nearest_point_on_line: Vec<NearestCase>,
+}
+
+#[derive(Deserialize)]
+struct NearestCase {
+    line: Vec<[f64; 2]>,
+    position: [f64; 2],
+    #[serde(rename = "expectedPoint")]
+    expected_point: [f64; 2],
+    #[serde(rename = "expectedDistanceKm")]
+    expected_distance_km: f64,
 }
 
 #[derive(Deserialize)]
@@ -69,6 +81,30 @@ fn lengths_match_turf() {
             close(actual, case.expected),
             "case {n}: {actual} vs {}",
             case.expected
+        );
+    }
+}
+
+/// `nearestPointOnLine` is built on cross products of nearly parallel unit vectors, which
+/// multiplies a one-ulp difference in `sin`/`cos` (V8's fdlibm against `libm`) by about
+/// 1e5 to 1e6 on a segment a few hundred metres long. So these agree to a few centimetres,
+/// not to the last digit: positions to 1e-8 degrees (about 1 m at worst) and distances to
+/// 1e-7 km (10 cm), still far finer than anything the pipeline decides on (it snaps stations
+/// within 30 m and rounds nothing).
+#[test]
+fn nearest_points_on_lines_match_turf() {
+    for (n, case) in vectors().nearest_point_on_line.iter().enumerate() {
+        let (point, distance) = nearest_point_on_line(&case.line, case.position);
+        assert!(
+            (point[0] - case.expected_point[0]).abs() < 1e-8
+                && (point[1] - case.expected_point[1]).abs() < 1e-8,
+            "case {n}: {point:?} vs {:?}",
+            case.expected_point
+        );
+        assert!(
+            (distance - case.expected_distance_km).abs() < 1e-7,
+            "case {n}: {distance} vs {}",
+            case.expected_distance_km
         );
     }
 }

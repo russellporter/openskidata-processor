@@ -19,6 +19,10 @@ export const int = (n) => Math.floor(random() * n);
 export const pick = (items) => items[int(items.length)];
 export const chance = (p) => random() < p;
 
+// Dense worlds hold more of everything, with more mixed-activity runs and lifecycle lifts, so
+// that objects are reachable by several paths and ski areas compete for them.
+let dense = false;
+
 // Origins in units of 1e-7 degrees, so every coordinate is on the store's grid.
 const ORIGINS = [
   [113000000, 472000000], // Austrian Alps (europe)
@@ -91,6 +95,15 @@ function makeWorld(wide, origin, nodeBase) {
   return { node, walk, square, nodeList, size };
 }
 
+const denseTypes = [
+  "downhill",
+  "downhill",
+  "nordic",
+  "nordic",
+  "downhill;nordic",
+  "snow_park",
+  "skitour",
+];
 const pisteTypes = [
   "downhill",
   "nordic",
@@ -117,7 +130,7 @@ const difficulties = [
 ];
 
 function runTags() {
-  const tags = { "piste:type": pick(pisteTypes) };
+  const tags = { "piste:type": pick(dense ? denseTypes : pisteTypes) };
   if (chance(0.7)) tags["piste:difficulty"] = pick(difficulties);
   if (chance(0.4))
     tags["piste:name"] = pick([
@@ -200,6 +213,7 @@ function liftTags() {
  * @param options.idBase added to every OSM id, so several clusters can share extracts
  */
 export function generate(options = {}) {
+  dense = options.dense ?? false;
   const wide = options.wide ?? chance(0.12);
   const idBase = options.idBase ?? 0;
   const origin = options.origin ?? null;
@@ -227,7 +241,7 @@ export function generate(options = {}) {
   };
 
   // Runs, some overlapping or touching (they share the world's grid points).
-  for (let n = 0, count = 1 + int(5); n < count; n++) {
+  for (let n = 0, count = dense ? 4 + int(6) : 1 + int(5); n < count; n++) {
     const id = nextId++;
     if (chance(0.2)) {
       const ring = w.square();
@@ -289,7 +303,7 @@ export function generate(options = {}) {
   }
 
   // Lifts.
-  for (let n = 0, count = int(4); n < count; n++) {
+  for (let n = 0, count = dense ? 2 + int(4) : int(4); n < count; n++) {
     const id = nextId++;
     if (chance(0.15)) {
       // A closed way: an area, not a line, so it is not a lift.
@@ -308,7 +322,7 @@ export function generate(options = {}) {
   }
 
   // Ski areas: landuse polygons, some invalid or with the wrong sport.
-  for (let n = 0, count = int(3); n < count; n++) {
+  for (let n = 0, count = dense ? 1 + int(3) : int(3); n < count; n++) {
     const id = nextId++;
     const ring = chance(0.15) ? [...w.walk(5), null] : w.square();
     const nodes = ring.includes(null) ? ring.slice(0, -1) : ring;
@@ -325,7 +339,11 @@ export function generate(options = {}) {
   }
 
   // Sites referencing earlier ways.
-  for (let n = 0, count = chance(0.5) ? 1 + int(2) : 0; n < count; n++) {
+  for (
+    let n = 0, count = chance(dense ? 0.8 : 0.5) ? 1 + int(2) : 0;
+    n < count;
+    n++
+  ) {
     const id = nextId++;
     const members = wayIds
       .filter(() => chance(0.5))
@@ -375,7 +393,7 @@ export function generate(options = {}) {
   }
 
   // Skimap.org ski areas.
-  for (let n = 0, count = int(3); n < count; n++) {
+  for (let n = 0, count = dense ? 1 + int(3) : int(3); n < count; n++) {
     const [ox, oy] = origin ?? pick(ORIGINS);
     roles.skimap.push({
       type: "Feature",
