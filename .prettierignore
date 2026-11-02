@@ -10,6 +10,8 @@ rust/crates/osd-enrich/tests/collation_vectors.json
 rust/crates/osd-enrich/tests/elevation_loader_vectors.json
 rust/crates/osd-enrich/tests/geocode_vectors.json
 rust/crates/osd-enrich/tests/places_vectors.json
+rust/crates/osd-enrich/tests/snow_vectors.json
+rust/crates/osd-enrich/tests/viirs_vectors.json
 rust/crates/osd-enrich/tests/tile_vectors.json
 rust/crates/osd-enrich/src/iso3166.json
 rust/crates/osd-normalize/tests/merge_vectors.json
@@ -20,6 +22,8 @@ rust/crates/osd-out/tests/metadata_vectors.json
 rust/crates/osd-out/tests/output_vectors.json
 rust/crates/osd-pipeline/tests/download_vectors.json
 rust/crates/osd-pipeline/tests/format_scenes.json
+rust/crates/osd-pipeline/tests/snow_scenes.json
+rust/crates/osd-turf/tests/intersects_vectors.json
 rust/crates/osd-pipeline/tests/elevated_scenes.json
 rust/crates/osd-pipeline/tests/geocoded_scenes.json
 rust/crates/osd-pipeline/tests/gpkg_scenes.json

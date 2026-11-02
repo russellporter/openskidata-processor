@@ -86,7 +86,20 @@ then `tile-join`). On 500 resorts the Rust and TypeScript pipelines' tile sets d
 identical tiles: 3,491 tiles, 32,242 features, no differences (compared with a real MVT decoder;
 the bytes differ because the mapboxgl GeoJSON lists properties in a different key order).
 
-**Not done yet.** Snow cover, PBF input, and the streaming driver that bounds normalization memory
+**Snow cover (reading the archive).** `ENABLE_SNOW_COVER=1` adds each run's `snowCoverHistory` and
+each ski area's `statistics.snowCover` (overall and per activity) from the weekly VIIRS data in the
+cache store, whose `snow_cover` entries `openskidata migrate-cache` carries across from Postgres.
+Compared with the TypeScript: turf's `booleanIntersects` (including the sweepline and
+point-in-polygon it is built on, 17,000 cases on random and grid-aligned inputs), the VIIRS
+pixels covered by 740 random geometries (10,862 pixels, identical), the history maths (600 week
+conversions, 406 archives) and the whole of `prepare` on 24 resorts over a seeded archive.
+The comparison found one thing worth knowing: date-fns's `subDays` is `setDate(getDate() - n)`,
+which truncates the sum, so a fractional cloud persistence rounds the other way from truncating it
+first. A pixel is tested only against the segments that reach it (upstream tests every segment
+for every pixel in the geometry's bounding box), which cannot change the answer.
+Fetching new data (the Python in `snow-cover/`) is not wired in yet.
+
+**Not done yet.** Fetching snow cover data, PBF input, and the streaming driver that bounds normalization memory
 (`normalize_runs_partitioned` partitions in memory today). The Postgres caches migrate with
 `openskidata migrate-cache`.
 

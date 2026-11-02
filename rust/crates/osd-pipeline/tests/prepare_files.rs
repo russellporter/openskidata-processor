@@ -136,6 +136,7 @@ fn files_written_by_prepare_match_the_typescript_output() {
         write_inputs(&input_dir, &scene.roles);
         prepare(&PrepareConfig {
             generate_tiles: false,
+            snow_cover: None,
             input_dir: input_dir.clone(),
             output_dir: output_dir.clone(),
             bbox: None,
@@ -201,6 +202,7 @@ fn the_geojson_layout_is_the_one_merge_outputs_expects() {
     write_inputs(&input_dir, &scene.roles);
     prepare(&PrepareConfig {
         generate_tiles: false,
+        snow_cover: None,
         input_dir: input_dir.clone(),
         output_dir: output_dir.clone(),
         bbox: None,
@@ -238,6 +240,7 @@ fn metadata_json_describes_what_was_written() {
     .unwrap();
     prepare(&PrepareConfig {
         generate_tiles: false,
+        snow_cover: None,
         input_dir: input_dir.clone(),
         output_dir: output_dir.clone(),
         bbox: Some(vec![11.0, 47.0, 12.5, 48.0]),
@@ -316,6 +319,7 @@ fn metadata_json_describes_what_was_written() {
     write_inputs(&input_dir, &scene.roles);
     prepare(&PrepareConfig {
         generate_tiles: false,
+        snow_cover: None,
         input_dir: input_dir.clone(),
         output_dir: output_dir.clone(),
         bbox: None,
@@ -446,6 +450,7 @@ fn prepare_geocodes_and_a_second_run_needs_no_server() {
         let output_dir = scratch(out);
         prepare(&PrepareConfig {
             generate_tiles: false,
+            snow_cover: None,
             input_dir: input_dir.clone(),
             output_dir: output_dir.clone(),
             bbox: None,
@@ -518,6 +523,7 @@ fn prepare_elevates_and_a_second_run_needs_no_server() {
         let output_dir = scratch(out);
         prepare(&PrepareConfig {
             generate_tiles: false,
+            snow_cover: None,
             input_dir: input_dir.clone(),
             output_dir: output_dir.clone(),
             bbox: None,
@@ -615,6 +621,7 @@ fn heights_can_come_from_terrain_tiles() {
     });
     prepare(&PrepareConfig {
         generate_tiles: false,
+        snow_cover: None,
         input_dir,
         output_dir: output_dir.clone(),
         bbox: None,
@@ -691,6 +698,7 @@ fn tiles_are_built_from_the_mapboxgl_files_when_asked() {
     write_inputs(&input_dir, &scene.roles);
     prepare(&PrepareConfig {
         generate_tiles: true,
+        snow_cover: None,
         input_dir: input_dir.clone(),
         output_dir: output_dir.clone(),
         bbox: None,

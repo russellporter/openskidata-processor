@@ -21,6 +21,7 @@ osd-turf.workspace = true
 tracing.workspace = true
 osd-osm.workspace = true
 libm.workspace = true
+time.workspace = true
 webp.workspace = true
 png.workspace = true
 icu_collator = "2.4.0"

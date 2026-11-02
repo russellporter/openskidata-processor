@@ -36,6 +36,8 @@ use openskidata_format::{
 use osd_enrich::elevation::{ElevationLoader, geometry_elevations};
 use osd_enrich::geocode::{Geocoder, geocode_geometry};
 use osd_enrich::places::{sort_places, unique_places};
+use osd_enrich::snow::{SnowCoverSource, SnowRun, ski_area_snow_cover};
+use osd_enrich::viirs::{ViirsPixel, geometry_pixels};
 use osd_osm::element::{Geometry, Position};
 use rstar::{AABB, RTree, RTreeObject};
 use sha1::{Digest, Sha1};
@@ -125,6 +127,8 @@ enum Payload {
         difficulty: Option<RunDifficulty>,
         snowmaking: Option<bool>,
         snowfarming: Option<bool>,
+        /// The VIIRS pixels the run covers; empty unless snow cover is enabled.
+        viirs_pixels: Vec<ViirsPixel>,
     },
     Lift {
         properties: LiftProperties,
@@ -375,6 +379,7 @@ impl Engine {
                     snowmaking: properties.snowmaking,
                     snowfarming: properties.snowfarming,
                     properties: stored,
+                    viirs_pixels: Vec::new(),
                 },
             });
         }
@@ -1344,7 +1349,11 @@ impl Engine {
     }
 
     /// `augmentSkiAreasBasedOnAssignedLiftsAndRuns`.
-    fn augment_ski_areas(&mut self, geocoder: Option<&dyn Geocoder>) {
+    fn augment_ski_areas(
+        &mut self,
+        geocoder: Option<&dyn Geocoder>,
+        snow_cover: Option<&dyn SnowCoverSource>,
+    ) {
         for ski_area in self.ski_areas(false, None) {
             let id = self.objects[ski_area].key.clone();
             let members = self.members_of(&id);
@@ -1373,7 +1382,7 @@ impl Engine {
                     .collect()
             };
 
-            let statistics = stats::ski_area_statistics(
+            let mut statistics = stats::ski_area_statistics(
                 &describing
                     .iter()
                     .map(|&m| stats::Member {
@@ -1424,6 +1433,20 @@ impl Engine {
                     .collect()
             };
             let viewport_hint = hint_for(&hint_geometries);
+
+            if let Some(snow_cover) = snow_cover {
+                let runs: Vec<SnowRun<'_>> = describing
+                    .iter()
+                    .filter_map(|&m| match &self.objects[m].payload {
+                        Payload::Run { viirs_pixels, .. } => Some(SnowRun {
+                            pixels: viirs_pixels,
+                            activities: &self.objects[m].activities,
+                        }),
+                        _ => None,
+                    })
+                    .collect();
+                statistics.snow_cover = ski_area_snow_cover(&runs, snow_cover);
+            }
 
             let mut updated = properties;
             updated.summary.activities = activities.clone();
@@ -1492,6 +1515,11 @@ impl Engine {
             tracing::info!("{label}: {:?}", started.elapsed());
             result
         }
+        if enrichment.snow_cover.is_some() {
+            step("find the VIIRS pixels of runs", || {
+                self.compute_viirs_pixels()
+            });
+        }
         step("assign activities and geometry from members", || {
             self.assign_activities_and_geometry_from_members()
         });
@@ -1534,10 +1562,63 @@ impl Engine {
         step("associate lift stations", || {
             self.associate_lift_stations(enrichment.elevation)
         });
-        step("augment ski areas", || self.augment_ski_areas(geocoder));
+        step("augment ski areas", || {
+            self.augment_ski_areas(geocoder, enrichment.snow_cover)
+        });
         step("remove ski areas without a geometry", || {
             self.remove_ski_areas_without_geometry()
         });
+        if let Some(snow_cover) = enrichment.snow_cover {
+            step("snow cover history of runs", || {
+                self.attach_run_snow_cover(snow_cover)
+            });
+        }
+    }
+
+    /// `prepareRun`'s `viirsPixels`, for every run.
+    fn compute_viirs_pixels(&mut self) {
+        use rayon::prelude::*;
+        let runs: Vec<usize> = (0..self.objects.len())
+            .filter(|&i| matches!(self.objects[i].payload, Payload::Run { .. }))
+            .collect();
+        let pixels: Vec<(usize, Vec<ViirsPixel>)> = runs
+            .par_iter()
+            .map(|&i| (i, geometry_pixels(&self.objects[i].geometry)))
+            .collect();
+        for (i, found) in pixels {
+            if let Payload::Run { viirs_pixels, .. } = &mut self.objects[i].payload {
+                *viirs_pixels = found;
+            }
+        }
+    }
+
+    /// `exportRunsGeoJSON`'s `snowCoverHistory`: set for runs whose pixels have any history. A
+    /// failed lookup is logged and leaves the run without one.
+    fn attach_run_snow_cover(&mut self, snow_cover: &dyn SnowCoverSource) {
+        for i in 0..self.objects.len() {
+            if !self.objects[i].alive {
+                continue;
+            }
+            let key = self.objects[i].key.clone();
+            let Payload::Run {
+                viirs_pixels,
+                properties,
+                ..
+            } = &mut self.objects[i].payload
+            else {
+                continue;
+            };
+            if viirs_pixels.is_empty() {
+                continue;
+            }
+            match snow_cover.history(viirs_pixels) {
+                Ok(history) if !history.is_empty() => properties.snow_cover_history = Some(history),
+                Ok(_) => {}
+                Err(error) => {
+                    tracing::error!("Failed to generate snow cover history for run {key}: {error}")
+                }
+            }
+        }
     }
 
     /// `geocodeAllObjects`: the places along every run, lift and spot. An object whose lookup
@@ -1888,6 +1969,9 @@ pub struct Enrichment<'a> {
     pub geocoder: Option<&'a dyn Geocoder>,
     /// Elevations for lift stations once they are snapped onto their lifts.
     pub elevation: Option<&'a ElevationLoader<'a>>,
+    /// Snow cover histories for runs and the statistics of ski areas. Giving one is what
+    /// `SnowCoverConfig` being set is upstream: each run's VIIRS pixels are worked out too.
+    pub snow_cover: Option<&'a dyn SnowCoverSource>,
 }
 
 /// Runs the whole stage on typed input, without geocoding or elevation.
@@ -1904,7 +1988,7 @@ pub fn cluster_with_geocoder(
         input,
         &Enrichment {
             geocoder,
-            elevation: None,
+            ..Enrichment::default()
         },
     )
 }

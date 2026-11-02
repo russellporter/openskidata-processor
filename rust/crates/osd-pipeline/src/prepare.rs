@@ -17,6 +17,7 @@ use osd_cache::CacheStore;
 use osd_cluster::engine::{ClusterOutput, Enrichment, Feature, cluster_enriched};
 use osd_enrich::elevation::{ElevationLoader, ElevationSource, RacemapSource, TileserverGlSource};
 use osd_enrich::http_geocoder::{HttpGeocoder, HttpGeocoderConfig, ServerType};
+use osd_enrich::snow::{CachedSnowCover, SnowCoverSource};
 use osd_osm::element::{Element, Feature as OsmFeature, Relation};
 use osd_osm::overpass::{convert_overpass_json, read_elements};
 use osd_out::geojson::{geometry_json, write_feature_collection};
@@ -50,9 +51,28 @@ pub struct PrepareConfig {
     pub geocoding: Option<GeocodingSettings>,
     /// The elevation server, if one is configured (`ELEVATION_SERVER_URL`).
     pub elevation: Option<ElevationSettings>,
+    /// Snow cover from the archive in the cache (`ENABLE_SNOW_COVER`): each run's history, and
+    /// the snow cover statistics of ski areas.
+    pub snow_cover: Option<SnowCoverSettings>,
     /// Build `openskimap.mbtiles` from the mapboxgl files with tippecanoe (`GENERATE_TILES`).
     /// The four layers are built in the input directory, as upstream's working directory.
     pub generate_tiles: bool,
+}
+
+/// How the snow cover archive is brought up to date before it is read.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SnowCoverFetchPolicy {
+    /// Fetch the data for every pixel of every run.
+    Full,
+    /// Fetch only what the archive is missing, as it is configured to be filled.
+    Incremental,
+    /// Use the archive as it is.
+    None,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct SnowCoverSettings {
+    pub fetch_policy: SnowCoverFetchPolicy,
 }
 
 /// A reverse-geocoding server.
@@ -320,7 +340,10 @@ pub fn prepare(config: &PrepareConfig) -> Result<()> {
     tracing::info!("format: {:?}", started.elapsed());
 
     // The cache is shared by the geocoder and the elevation lookup, and opened only if needed.
-    let cache = if config.geocoding.is_some() || config.elevation.is_some() {
+    let cache = if config.geocoding.is_some()
+        || config.elevation.is_some()
+        || config.snow_cover.is_some()
+    {
         if let Some(parent) = config
             .cache_path
             .parent()
@@ -376,6 +399,10 @@ pub fn prepare(config: &PrepareConfig) -> Result<()> {
         )),
         _ => None,
     };
+    let snow_cover = match (&config.snow_cover, &cache) {
+        (Some(_), Some(cache)) => Some(CachedSnowCover { cache }),
+        _ => None,
+    };
     let output = cluster_enriched(
         formatted.into_cluster_input(),
         &Enrichment {
@@ -383,6 +410,7 @@ pub fn prepare(config: &PrepareConfig) -> Result<()> {
                 .as_ref()
                 .map(|g| g as &dyn osd_enrich::geocode::Geocoder),
             elevation: elevation_loader.as_ref(),
+            snow_cover: snow_cover.as_ref().map(|s| s as &dyn SnowCoverSource),
         },
     )?;
     let started = std::time::Instant::now();

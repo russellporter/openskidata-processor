@@ -10,6 +10,8 @@
 //! Positions are `[longitude, latitude]` in degrees. [`Coord`] adds an optional elevation,
 //! for the functions that carry it along (`lineSliceAlong`, `lineChunk`).
 
+pub mod intersects;
+
 use std::f64::consts::PI;
 
 /// A position as `[longitude, latitude]`.

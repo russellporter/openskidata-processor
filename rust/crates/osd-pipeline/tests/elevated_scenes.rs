@@ -249,6 +249,7 @@ fn snapped_stations_are_elevated_again_or_have_no_elevation() {
                 &osd_cluster::engine::Enrichment {
                     geocoder: None,
                     elevation: lookup.then_some(&loader),
+                    snow_cover: None,
                 },
             )
             .unwrap();

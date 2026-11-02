@@ -103,6 +103,7 @@ pub fn run_enriched(
         &osd_cluster::engine::Enrichment {
             geocoder,
             elevation,
+            snow_cover: None,
         },
     )
     .unwrap()

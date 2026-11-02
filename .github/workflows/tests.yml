@@ -128,6 +128,18 @@ jobs:
       - name: Check the metadata vectors are in sync
         run: docker compose exec -T app node rust/codegen/generate-metadata-vectors.mjs --check
 
+      - name: Check the turf intersects vectors are in sync
+        run: docker compose exec -T app node rust/codegen/generate-intersects-vectors.mjs --check
+
+      - name: Check the VIIRS pixel vectors are in sync
+        run: docker compose exec -T app node rust/codegen/generate-viirs-vectors.mjs --check
+
+      - name: Check the snow cover history vectors are in sync
+        run: docker compose exec -T app node rust/codegen/generate-snow-vectors.mjs --check
+
+      - name: Check the snow cover scenes are in sync
+        run: docker compose exec -T app node rust/codegen/generate-snow-scenes.mjs --check
+
       - name: Check the terrain tile vectors are in sync
         run: docker compose exec -T app node rust/codegen/generate-tile-vectors.mjs --check
 

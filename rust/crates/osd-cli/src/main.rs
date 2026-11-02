@@ -23,6 +23,13 @@ enum ElevationServerType {
 }
 
 #[derive(clap::ValueEnum, Debug, Clone, Copy)]
+enum SnowCoverFetchPolicyArg {
+    Full,
+    Incremental,
+    None,
+}
+
+#[derive(clap::ValueEnum, Debug, Clone, Copy)]
 enum TileEncodingArg {
     Mapbox,
     Terrarium,
@@ -129,6 +136,18 @@ struct PrepareArgs {
     /// For `tile`: tiles downloaded at once.
     #[arg(long, env = "ELEVATION_TILE_CONCURRENCY", default_value_t = 4)]
     elevation_tile_concurrency: usize,
+    /// Add snow cover histories to runs and snow cover statistics to ski areas, from the VIIRS
+    /// archive in the cache store.
+    #[arg(long, env = "ENABLE_SNOW_COVER", action = clap::ArgAction::SetTrue, value_parser = clap::builder::FalseyValueParser::new())]
+    enable_snow_cover: bool,
+    /// How the archive is brought up to date first: `full`, `incremental` or `none`.
+    #[arg(
+        long,
+        env = "SNOW_COVER_FETCH_POLICY",
+        value_enum,
+        default_value = "full"
+    )]
+    snow_cover_fetch_policy: SnowCoverFetchPolicyArg,
     /// Build `openskimap.mbtiles` with tippecanoe. `TILE_CONCURRENCY` bounds how many of the
     /// four layers are built at once (default 2).
     #[arg(long, env = "GENERATE_TILES", action = clap::ArgAction::SetTrue, value_parser = clap::builder::FalseyValueParser::new())]
@@ -212,6 +231,21 @@ fn run_prepare(common: &Common, args: PrepareArgs) -> Result<()> {
         bbox: parse_bbox(&common.bbox)?,
         cache_path: args.cache_path,
         generate_tiles: args.generate_tiles,
+        snow_cover: args
+            .enable_snow_cover
+            .then_some(osd_pipeline::prepare::SnowCoverSettings {
+                fetch_policy: match args.snow_cover_fetch_policy {
+                    SnowCoverFetchPolicyArg::Full => {
+                        osd_pipeline::prepare::SnowCoverFetchPolicy::Full
+                    }
+                    SnowCoverFetchPolicyArg::Incremental => {
+                        osd_pipeline::prepare::SnowCoverFetchPolicy::Incremental
+                    }
+                    SnowCoverFetchPolicyArg::None => {
+                        osd_pipeline::prepare::SnowCoverFetchPolicy::None
+                    }
+                },
+            }),
         geocoding: args
             .geocoding_server_url
             .map(|url| osd_pipeline::prepare::GeocodingSettings {
