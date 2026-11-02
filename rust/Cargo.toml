@@ -40,6 +40,7 @@ robust = "1.2.0"
 
 # hashing / ids
 xxhash-rust = { version = "0.8.19", features = ["xxh3"] }
+sha1 = "0.10.6"
 # errors, logging, cli
 anyhow = "1.0.104"
 thiserror = "2.0.21"

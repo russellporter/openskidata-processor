@@ -2,8 +2,8 @@
 //! `RunNormalizerAccumulator` (`rust/codegen/generate-normalize-scenes.mjs`).
 //!
 //! The comparison covers geometry (coordinates in fixed-point units, and the order of the
-//! output) and every property except `id`, which the hashing stage recomputes. Viewport
-//! hints are compared with a relative tolerance of 1e-9.
+//! output), every property, and the id (an exact content hash, including the quirk for
+//! rotated polygon rings). Viewport hints are compared with a relative tolerance of 1e-9.
 
 use openskidata_format::run::RunProperties;
 use osd_normalize::normalize::{RunInput, line_viewport_hint, normalize_runs};
@@ -115,8 +115,14 @@ fn every_recorded_scene_is_reproduced_exactly() {
                 .map(|output| {
                     let mut properties = serde_json::to_value(&output.properties).unwrap();
                     let object = properties.as_object_mut().unwrap();
+                    // The properties still carry the deferred placeholder id; the real one
+                    // is computed from the final geometry.
                     object.remove("id");
-                    json!({ "geometry": geometry_json(&output.geometry), "properties": properties })
+                    json!({
+                        "id": output.feature_id(),
+                        "geometry": geometry_json(&output.geometry),
+                        "properties": properties,
+                    })
                 })
                 .collect(),
             Err(error) => {
@@ -134,7 +140,8 @@ fn every_recorded_scene_is_reproduced_exactly() {
                     .iter()
                     .map(|v| {
                         format!(
-                            "{} {} oneway={} name={}",
+                            "{} {} {} oneway={} name={}",
+                            v["id"],
                             v["geometry"]["type"],
                             v["geometry"]["coordinates"],
                             v["properties"]["oneway"],

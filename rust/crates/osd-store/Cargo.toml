@@ -12,3 +12,7 @@ serde.workspace = true
 geo-types.workspace = true
 thiserror.workspace = true
 openskidata-format.workspace = true
+sha1.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true

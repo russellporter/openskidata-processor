@@ -12,10 +12,11 @@
  * whether two arcs belong to the same group of runs) but not of the same-run comparison
  * (which ignores it): both comparisons need exercising.
  *
- * The comparison on the Rust side ignores `id` in the output, which is recomputed from the
- * final geometry by the hashing stage; the viewport hints are compared with a tolerance.
- * Hints of polygons are passed through from the input, and of lines recomputed from the
- * produced geometry, so both paths are covered.
+ * Output ids are recorded and compared exactly. They are content hashes, and for polygon
+ * runs they depend on whether topology rotated the ring (see `osd_store::feature_id`), so
+ * this covers that quirk end to end. Viewport hints are compared with a tolerance; hints of
+ * polygons are passed through from the input, and of lines recomputed from the produced
+ * geometry, so both paths are covered.
  *
  * Build first (`npm run build`). Usage: node rust/codegen/generate-normalize-scenes.mjs [--check]
  */
@@ -192,8 +193,10 @@ function normalize(runs) {
   for (const run of runs) accumulator.accumulate(toFeature(run));
   return accumulator.results().map((feature) => {
     const { id, ...rest } = feature.properties;
+    // The real id is kept: it is a content hash that the Rust side now reproduces.
     const g = feature.geometry;
     return {
+      id,
       geometry: {
         type: g.type,
         coordinates:

@@ -60,6 +60,15 @@ pub enum TopoGeometry {
 pub struct Topology {
     pub arcs: Vec<Vec<FixedCoord>>,
     pub geometries: Vec<TopoGeometry>,
+    /// The object identity of every point of every arc, parallel to `arcs`.
+    ///
+    /// Two points with the same identity are the same JavaScript array upstream. That
+    /// happens where a ring was rotated (its closing point is aliased to its first), where a
+    /// ring walks the same arc twice, and where rings share an arc -- and `topojson-client`
+    /// returns those arrays without copying, so the decoded polygon contains the same
+    /// array more than once. `object-hash` writes each repeat as a back-reference, so it
+    /// changes the polygon's id. See `osd_store::feature_id`.
+    pub arc_objects: Vec<Vec<u32>>,
 }
 
 #[derive(Debug, thiserror::Error, PartialEq, Eq)]
@@ -87,6 +96,11 @@ struct Chain {
 
 struct Extracted {
     coordinates: Vec<FixedCoord>,
+    /// The identity of the JavaScript array each coordinate slot holds, parallel to
+    /// `coordinates`. Upstream shares coordinate arrays between slots (a rotated ring's
+    /// closing point *is* its first point) and hands them back from decoding, which matters
+    /// for ids: see [`Topology::arc_objects`].
+    objects: Vec<u32>,
     lines: Vec<Chain>,
     rings: Vec<Chain>,
     /// For each input geometry, the indexes into `lines` / `rings` that it consists of.
@@ -136,8 +150,10 @@ fn extract(input: &[InputGeometry]) -> Result<Extracted, TopologyError> {
         }
     }
 
+    let objects = (0..coordinates.len() as u32).collect();
     Ok(Extracted {
         coordinates,
+        objects,
         lines,
         rings,
         geometry_parts,
@@ -243,13 +259,13 @@ fn join(extracted: &Extracted) -> HashSet<FixedCoord> {
 }
 
 /// Reverses `array[start..end]`.
-fn reverse(array: &mut [FixedCoord], start: usize, end: usize) {
+fn reverse<T>(array: &mut [T], start: usize, end: usize) {
     array[start..end].reverse();
 }
 
 /// Rotates `array[start..end]` so the element at `end - offset` comes first, by three
 /// reversals as upstream does. `array[end]` is left alone.
-fn rotate(array: &mut [FixedCoord], start: usize, end: usize, offset: usize) {
+fn rotate<T>(array: &mut [T], start: usize, end: usize, offset: usize) {
     reverse(array, start, end);
     reverse(array, start, start + offset);
     reverse(array, start + offset, end);
@@ -259,6 +275,7 @@ fn rotate(array: &mut [FixedCoord], start: usize, end: usize, offset: usize) {
 /// unfixed ring, where it rotates the ring to start there instead.
 fn cut(extracted: &mut Extracted, junctions: &HashSet<FixedCoord>) {
     let coordinates = &mut extracted.coordinates;
+    let objects = &mut extracted.objects;
 
     for line in &mut extracted.lines {
         let piece = line.pieces[0];
@@ -308,7 +325,12 @@ fn cut(extracted: &mut Extracted, junctions: &HashSet<FixedCoord>) {
                 } else {
                     // The first junction: rotate rather than cut.
                     rotate(coordinates, ring_start, ring_end, ring_end - ring_mid);
+                    // The slots' identities are not rotated with the coordinates: within a
+                    // ring they are all distinct, so permuting them would only relabel them.
+                    // What matters is that the closing slot is now the *same object* as the
+                    // first, which is upstream's `coordinates[ringEnd] = coordinates[ringStart]`.
                     coordinates[ring_end] = coordinates[ring_start];
+                    objects[ring_end] = objects[ring_start];
                     fixed = true;
                     ring_mid = ring_start; // restart; we may have skipped junctions
                 }
@@ -542,32 +564,44 @@ pub fn topology(input: &[InputGeometry]) -> Result<Topology, TopologyError> {
         })
         .collect();
 
+    let arc_objects = arcs
+        .iter()
+        .map(|arc| extracted.objects[arc.start.min(arc.end)..=arc.start.max(arc.end)].to_vec())
+        .collect();
+
     let arcs = arcs
         .iter()
         .map(|arc| extracted.coordinates[arc.start..=arc.end].to_vec())
         .collect();
 
-    Ok(Topology { arcs, geometries })
+    Ok(Topology {
+        arcs,
+        geometries,
+        arc_objects,
+    })
 }
 
 impl Topology {
-    /// The points of one arc reference, reversed if negative.
-    fn arc_points(&self, reference: i32) -> Vec<FixedCoord> {
+    /// The points of one arc reference, with their identities, reversed if negative.
+    fn arc_points(&self, reference: i32) -> Vec<(FixedCoord, u32)> {
+        let index = if reference < 0 { !reference } else { reference } as usize;
+        let mut points: Vec<(FixedCoord, u32)> = self.arcs[index]
+            .iter()
+            .copied()
+            .zip(self.arc_objects[index].iter().copied())
+            .collect();
         if reference < 0 {
-            let mut points = self.arcs[(!reference) as usize].clone();
             points.reverse();
-            points
-        } else {
-            self.arcs[reference as usize].clone()
         }
+        points
     }
 
     /// Stitches arcs into a line, dropping the repeated point at each junction.
     ///
     /// `topojson-client`'s `line`: each arc after the first replaces the previous arc's
     /// last point (which is the same point), and a result under two points is padded.
-    pub fn line_coordinates(&self, references: &[i32]) -> Vec<FixedCoord> {
-        let mut points: Vec<FixedCoord> = Vec::new();
+    fn line_points(&self, references: &[i32]) -> Vec<(FixedCoord, u32)> {
+        let mut points: Vec<(FixedCoord, u32)> = Vec::new();
         for &reference in references {
             if !points.is_empty() {
                 points.pop();
@@ -581,12 +615,34 @@ impl Topology {
     }
 
     /// `topojson-client`'s `ring`: a line padded to at least four points.
-    pub fn ring_coordinates(&self, references: &[i32]) -> Vec<FixedCoord> {
-        let mut points = self.line_coordinates(references);
+    fn ring_points(&self, references: &[i32]) -> Vec<(FixedCoord, u32)> {
+        let mut points = self.line_points(references);
         while points.len() < 4 {
             points.push(points[0]);
         }
         points
+    }
+
+    pub fn line_coordinates(&self, references: &[i32]) -> Vec<FixedCoord> {
+        self.line_points(references)
+            .into_iter()
+            .map(|(coordinate, _)| coordinate)
+            .collect()
+    }
+
+    pub fn ring_coordinates(&self, references: &[i32]) -> Vec<FixedCoord> {
+        self.ring_points(references)
+            .into_iter()
+            .map(|(coordinate, _)| coordinate)
+            .collect()
+    }
+
+    /// The identity of each point of a decoded ring (see [`Self::arc_objects`]).
+    pub fn ring_objects(&self, references: &[i32]) -> Vec<u32> {
+        self.ring_points(references)
+            .into_iter()
+            .map(|(_, object)| object)
+            .collect()
     }
 }
 

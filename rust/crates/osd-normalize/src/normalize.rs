@@ -34,6 +34,7 @@ use anyhow::{Result, anyhow};
 use openskidata_format::run::RunProperties;
 use openskidata_format::viewport_hint::{ViewportHint, compute_viewport_hint};
 use osd_store::FixedCoord;
+use osd_store::feature_id::feature_id;
 use std::collections::HashMap;
 
 /// A run going in.
@@ -48,6 +49,34 @@ pub struct RunInput {
 pub struct RunOutput {
     pub geometry: InputGeometry,
     pub properties: RunProperties,
+    /// For a polygon, per ring and position: the identity of the JavaScript array upstream
+    /// holds there. Equal identities are one array, which changes the polygon's id (see
+    /// [`Topology::arc_objects`]). Empty for lines.
+    pub point_objects: Vec<Vec<u32>>,
+}
+
+impl RunOutput {
+    /// The run's feature id, identical to the TypeScript pipeline's
+    /// (`buildFeature(geometry, properties).properties.id`).
+    pub fn feature_id(&self) -> String {
+        let position = |c: &FixedCoord| vec![c.lng_degrees(), c.lat_degrees()];
+        match &self.geometry {
+            InputGeometry::Line(points) => feature_id("run", "LineString", |w| {
+                w.array(points.len());
+                for point in points {
+                    w.position(&position(point));
+                }
+            }),
+            InputGeometry::Polygon(rings) => feature_id("run", "Polygon", |w| {
+                w.array(rings.len());
+                for (ring, objects) in rings.iter().zip(&self.point_objects) {
+                    let positions: Vec<Vec<f64>> = ring.iter().map(position).collect();
+                    let keys: Vec<u64> = objects.iter().map(|&o| u64::from(o)).collect();
+                    w.ring(&positions, &keys);
+                }
+            }),
+        }
+    }
 }
 
 /// The viewport hint of a 2D line, which is what normalization produces: elevation is added
@@ -349,11 +378,29 @@ fn combine_segments(
             RunOutput {
                 geometry: InputGeometry::Line(coordinates),
                 properties,
+                point_objects: Vec::new(),
             },
         ));
     }
 
     Ok(output)
+}
+
+/// Relabels object identities in order of first appearance, so that two outputs with the
+/// same sharing pattern compare equal regardless of how their topology happened to number
+/// its coordinate slots (which differs between a global and a per-component topology).
+fn canonical_identities(rings: impl Iterator<Item = Vec<u32>>) -> Vec<Vec<u32>> {
+    let mut labels: HashMap<u32, u32> = HashMap::new();
+    rings
+        .map(|ring| {
+            ring.into_iter()
+                .map(|object| {
+                    let next = labels.len() as u32;
+                    *labels.entry(object).or_insert(next)
+                })
+                .collect()
+        })
+        .collect()
 }
 
 /// Normalizes `runs`, which sit at `global` indices of the full input, returning each
@@ -389,6 +436,9 @@ fn normalize_keyed(
                             .collect(),
                     ),
                     properties: run.properties.clone(),
+                    point_objects: canonical_identities(
+                        rings.iter().map(|ring| topology.ring_objects(ring)),
+                    ),
                 },
             )),
             TopoGeometry::Line(_) => None,

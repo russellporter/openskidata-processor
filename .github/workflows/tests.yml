@@ -83,6 +83,9 @@ jobs:
       - name: Check the viewport hint vectors are in sync
         run: docker compose exec -T app node rust/codegen/generate-viewport-vectors.mjs --check
 
+      - name: Check the feature id vectors are in sync
+        run: docker compose exec -T app node rust/codegen/generate-id-vectors.mjs --check
+
       - name: Rust format
         run: docker compose exec -T app sh -c "cd rust && cargo fmt --all --check"
 
