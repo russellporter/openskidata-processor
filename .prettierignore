@@ -10,6 +10,7 @@ rust/crates/osd-enrich/tests/collation_vectors.json
 rust/crates/osd-enrich/tests/elevation_loader_vectors.json
 rust/crates/osd-enrich/tests/geocode_vectors.json
 rust/crates/osd-enrich/tests/places_vectors.json
+rust/crates/osd-enrich/tests/tile_vectors.json
 rust/crates/osd-enrich/src/iso3166.json
 rust/crates/osd-normalize/tests/merge_vectors.json
 rust/crates/osd-normalize/tests/normalize_scenes.json

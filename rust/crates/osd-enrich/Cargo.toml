@@ -20,4 +20,10 @@ osd-cache.workspace = true
 osd-turf.workspace = true
 tracing.workspace = true
 osd-osm.workspace = true
+libm.workspace = true
+webp.workspace = true
+png.workspace = true
 icu_collator = "2.4.0"
+
+[dev-dependencies]
+base64.workspace = true

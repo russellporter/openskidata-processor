@@ -18,6 +18,14 @@ enum ElevationServerType {
     Racemap,
     #[value(name = "tileserver-gl")]
     TileserverGl,
+    /// Terrain tiles (Mapbox Terrain-RGB or Terrarium) fetched from a URL template.
+    Tile,
+}
+
+#[derive(clap::ValueEnum, Debug, Clone, Copy)]
+enum TileEncodingArg {
+    Mapbox,
+    Terrarium,
 }
 
 #[derive(Parser, Debug)]
@@ -69,11 +77,12 @@ struct PrepareArgs {
         default_value_t = 31_536_000_000
     )]
     geocoding_cache_ttl_ms: i64,
-    /// An elevation server, to give runs, lifts and spots their elevations.
+    /// An elevation server, to give runs, lifts and spots their elevations. For the `tile`
+    /// type, a URL template with `{z}`, `{x}` and `{y}`.
     #[arg(long, env = "ELEVATION_SERVER_URL")]
     elevation_server_url: Option<String>,
-    /// `racemap` (one POST of coordinates) or `tileserver-gl` (a batch endpoint). The
-    /// `tile` type is not supported yet.
+    /// `racemap` (one POST of coordinates), `tileserver-gl` (a batch endpoint) or `tile`
+    /// (terrain tiles read here).
     #[arg(
         long,
         env = "ELEVATION_SERVER_TYPE",
@@ -81,7 +90,7 @@ struct PrepareArgs {
         default_value = "racemap"
     )]
     elevation_server_type: ElevationServerType,
-    /// For `tileserver-gl`: the zooms to try in turn, comma separated.
+    /// For `tileserver-gl` and `tile`: the zooms to try in turn, comma separated.
     #[arg(
         long,
         env = "ELEVATION_SERVER_ZOOM",
@@ -92,6 +101,34 @@ struct PrepareArgs {
     /// The most coordinates asked of the elevation server at once.
     #[arg(long, env = "ELEVATION_SERVER_BATCH_SIZE", default_value_t = 10_000)]
     elevation_server_batch_size: usize,
+    /// For `tile`: how the tiles encode height.
+    #[arg(
+        long,
+        env = "ELEVATION_SERVER_TILE_ENCODING",
+        value_enum,
+        default_value = "mapbox"
+    )]
+    elevation_tile_encoding: TileEncodingArg,
+    /// For `tile`: the width of a tile in pixels.
+    #[arg(long, env = "ELEVATION_TILE_SIZE", default_value_t = 512)]
+    elevation_tile_size: u32,
+    /// For `tile`: where downloaded tiles are kept.
+    #[arg(
+        long,
+        env = "ELEVATION_TILE_CACHE_DIR",
+        default_value = "data/tile-cache"
+    )]
+    elevation_tile_cache_dir: std::path::PathBuf,
+    /// For `tile`: the most tiles kept on disk.
+    #[arg(
+        long,
+        env = "ELEVATION_TILE_CACHE_MAX_TILES",
+        default_value_t = 100_000
+    )]
+    elevation_tile_cache_max_tiles: usize,
+    /// For `tile`: tiles downloaded at once.
+    #[arg(long, env = "ELEVATION_TILE_CONCURRENCY", default_value_t = 4)]
+    elevation_tile_concurrency: usize,
     /// The cache store the geocoder's and the elevation lookup's responses are kept in.
     #[arg(long, env = "CACHE_PATH", default_value = "data/cache.db")]
     cache_path: std::path::PathBuf,
@@ -195,6 +232,24 @@ fn run_prepare(common: &Common, args: PrepareArgs) -> Result<()> {
                             zooms: args.elevation_server_zoom.clone(),
                         }
                     }
+                    ElevationServerType::Tile => osd_pipeline::prepare::ElevationServer::Tile(
+                        osd_enrich::terrain::TerrainTileConfig {
+                            url_template: url,
+                            encoding: match args.elevation_tile_encoding {
+                                TileEncodingArg::Mapbox => {
+                                    osd_enrich::terrain::TileEncoding::Mapbox
+                                }
+                                TileEncodingArg::Terrarium => {
+                                    osd_enrich::terrain::TileEncoding::Terrarium
+                                }
+                            },
+                            tile_size: args.elevation_tile_size,
+                            cache_dir: args.elevation_tile_cache_dir.clone(),
+                            cache_max_tiles: args.elevation_tile_cache_max_tiles,
+                            tile_concurrency: args.elevation_tile_concurrency,
+                            zooms: args.elevation_server_zoom.clone(),
+                        },
+                    ),
                 },
                 batch_size: args.elevation_server_batch_size,
             }),

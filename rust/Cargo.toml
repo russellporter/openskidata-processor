@@ -32,6 +32,10 @@ time = { version = "0.3", features = ["parsing", "formatting"] }
 rusqlite = { version = "0.41.1", features = ["bundled"] }
 tokio-postgres = "0.7.18"
 futures-util = "0.3.34"
+# images (terrain tiles): libwebp itself, as sharp uses, so lossy tiles decode to the same bytes
+webp = "0.3.1"
+png = "0.18.1"
+base64 = "0.22.1"
 # osm
 osmpbf = "0.3.8"
 # text

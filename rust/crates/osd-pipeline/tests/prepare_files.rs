@@ -572,3 +572,87 @@ fn prepare_elevates_and_a_second_run_needs_no_server() {
         );
     }
 }
+
+mod support;
+
+/// A flat 16 by 16 Mapbox Terrain-RGB tile of 1234.5 m, as a PNG.
+fn flat_tile() -> Vec<u8> {
+    let mut out = Vec::new();
+    let mut encoder = png::Encoder::new(&mut out, 16, 16);
+    encoder.set_color(png::ColorType::Rgb);
+    encoder.set_depth(png::BitDepth::Eight);
+    let mut writer = encoder.write_header().unwrap();
+    // (1234.5 + 10000) * 10 = 112345 = 0x01B6D9.
+    let pixels: Vec<u8> = (0..16 * 16).flat_map(|_| [0x01, 0xB6, 0xD9]).collect();
+    writer.write_image_data(&pixels).unwrap();
+    drop(writer);
+    out
+}
+
+#[test]
+fn heights_can_come_from_terrain_tiles() {
+    let scenes: Scenes =
+        serde_json::from_str(include_str!("../../osd-cluster/tests/cluster_scenes.json")).unwrap();
+    let scene = scenes
+        .scenes
+        .iter()
+        .find(|s| s.expected.runs.len() >= 2 && !s.expected.lifts.is_empty())
+        .expect("a scene with runs and lifts");
+    let input_dir = scratch("tiles-in");
+    let output_dir = scratch("tiles-out");
+    let cache_dir = scratch("tiles-cache");
+    write_inputs(&input_dir, &scene.roles);
+
+    let tile = flat_tile();
+    let server = support::Server::start_bytes(std::time::Duration::ZERO, move |_, _, _| {
+        (200, tile.clone())
+    });
+    prepare(&PrepareConfig {
+        input_dir,
+        output_dir: output_dir.clone(),
+        bbox: None,
+        cache_path: cache_dir.join("cache.db"),
+        geocoding: None,
+        elevation: Some(osd_pipeline::prepare::ElevationSettings {
+            server: osd_pipeline::prepare::ElevationServer::Tile(
+                osd_enrich::terrain::TerrainTileConfig {
+                    url_template: format!(
+                        "{}/{{z}}/{{x}}/{{y}}.png",
+                        server.url.trim_end_matches("/geo")
+                    ),
+                    encoding: osd_enrich::terrain::TileEncoding::Mapbox,
+                    tile_size: 16,
+                    cache_dir: cache_dir.join("tiles"),
+                    cache_max_tiles: 1000,
+                    tile_concurrency: 2,
+                    zooms: vec![12],
+                },
+            ),
+            batch_size: 1000,
+        }),
+    })
+    .unwrap();
+
+    // Every run and lift coordinate has the flat tile's height.
+    let mut heights = 0;
+    for file in ["runs.geojson", "lifts.geojson"] {
+        for feature in features(&output_dir.join(file)) {
+            let geometry = &feature["geometry"];
+            let mut stack = vec![&geometry["coordinates"]];
+            while let Some(value) = stack.pop() {
+                match value.as_array() {
+                    Some(a) if a.len() >= 3 && a.iter().all(Value::is_number) => {
+                        assert_eq!(a[2].as_f64(), Some(1234.5), "{file}: {value}");
+                        heights += 1;
+                    }
+                    Some(a) => stack.extend(a),
+                    None => {}
+                }
+            }
+        }
+    }
+    assert!(heights > 0);
+    assert!(server.request_count() > 0);
+    // The tile cache was saved when the run finished.
+    assert!(cache_dir.join("tiles/cache-index.json").exists());
+}

@@ -49,6 +49,10 @@ pub trait ElevationSource: Sync {
     /// Heights for `[latitude, longitude]` pairs, one result per pair, in order. An `Err`
     /// fails the whole request.
     fn fetch(&self, coordinates: &[[f64; 2]]) -> Result<Vec<Lookup>, String>;
+
+    /// Called once when no more heights will be asked for; a source that keeps state on disk
+    /// saves it here.
+    fn close(&self) {}
 }
 
 fn now_ms() -> i64 {

@@ -69,8 +69,18 @@ servers. The commands read the same environment variables as upstream (`WORKING_
 `OUTPUT_DIR`, `BBOX`, `OSM_INPUT_DIR`, ...). The download has never been run against the real
 Overpass: it is unreachable from the development container.
 
-**Not done yet.** The terrain-tile elevation source (the Racemap and tileserver-gl servers work), snow
-cover, PBF input, and the streaming driver that bounds normalization memory
+**Terrain tiles.** `ELEVATION_SERVER_TYPE=tile` reads heights from Mapbox Terrain-RGB or Terrarium
+tiles (`osd-enrich/src/terrain.rs`), alongside the Racemap and tileserver-gl servers. The Web Mercator
+maths, both encodings, the interpolation, what sharp decodes lossless and lossy WebP and PNG tiles to
+(libwebp itself, so lossy tiles match to the byte), and whole runs against a local tile server are
+compared with the TypeScript (`codegen/generate-tile-vectors.mjs`): the heights, every URL
+requested in order, and the cache directory left behind (tile files, `cache-index.json`,
+`missing-tiles.json`) across a close and reopen. An existing upstream tile cache is reused as it
+stands. The cache is read and written in tile order around each concurrent batch, so its LRU order
+is deterministic at any concurrency; tiles with an alpha channel are decoded as RGB where upstream
+misreads them.
+
+**Not done yet.** Snow cover, PBF input, and the streaming driver that bounds normalization memory
 (`normalize_runs_partitioned` partitions in memory today). The Postgres caches migrate with
 `openskidata migrate-cache`.
 

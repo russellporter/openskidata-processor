@@ -8,6 +8,8 @@ use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
+type Handler = dyn Fn(usize, &str, &str) -> (u16, Vec<u8>) + Send + Sync;
+
 /// A server that answers `handler(request number from 1, path)` with `(status, body)`.
 pub struct Server {
     pub url: String,
@@ -30,6 +32,17 @@ impl Server {
     pub fn start_with_body(
         delay: Duration,
         handler: impl Fn(usize, &str, &str) -> (u16, String) + Send + Sync + 'static,
+    ) -> Server {
+        Self::start_bytes(delay, move |n, path, body| {
+            let (status, answer) = handler(n, path, body);
+            (status, answer.into_bytes())
+        })
+    }
+
+    /// As [`Server::start_with_body`], answering with bytes.
+    pub fn start_bytes(
+        delay: Duration,
+        handler: impl Fn(usize, &str, &str) -> (u16, Vec<u8>) + Send + Sync + 'static,
     ) -> Server {
         let listener = TcpListener::bind("127.0.0.1:0").unwrap();
         let url = format!("http://{}/geo", listener.local_addr().unwrap());
@@ -90,7 +103,7 @@ impl Server {
         heads: &Mutex<Vec<String>>,
         in_flight: &AtomicUsize,
         max_in_flight: &AtomicUsize,
-        handler: &(dyn Fn(usize, &str, &str) -> (u16, String) + Send + Sync),
+        handler: &Handler,
     ) {
         let mut buffer = [0u8; 4096];
         let mut received = Vec::new();
@@ -133,9 +146,10 @@ impl Server {
         in_flight.fetch_sub(1, Ordering::SeqCst);
         let _ = write!(
             stream,
-            "HTTP/1.1 {status} X\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{answer}",
+            "HTTP/1.1 {status} X\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
             answer.len()
         );
+        let _ = stream.write_all(&answer);
     }
 
     pub fn request_count(&self) -> usize {

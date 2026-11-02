@@ -128,6 +128,9 @@ jobs:
       - name: Check the metadata vectors are in sync
         run: docker compose exec -T app node rust/codegen/generate-metadata-vectors.mjs --check
 
+      - name: Check the terrain tile vectors are in sync
+        run: docker compose exec -T app node rust/codegen/generate-tile-vectors.mjs --check
+
       - name: Check the download vectors are in sync
         run: docker compose exec -T app node rust/codegen/generate-download-vectors.mjs --check
 

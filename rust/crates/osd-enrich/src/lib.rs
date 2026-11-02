@@ -44,6 +44,7 @@ pub mod elevation;
 pub mod geocode;
 pub mod http_geocoder;
 pub mod places;
+pub mod terrain;
 
 use anyhow::Result;
 use osd_cache::CacheStore;

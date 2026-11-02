@@ -68,6 +68,8 @@ pub enum ElevationServer {
     Racemap { url: String },
     /// A batch endpoint tried at each zoom in turn.
     TileserverGl { url: String, zooms: Vec<u32> },
+    /// Terrain tiles fetched and read here.
+    Tile(osd_enrich::terrain::TerrainTileConfig),
 }
 
 #[derive(Debug, Clone)]
@@ -328,18 +330,23 @@ pub fn prepare(config: &PrepareConfig) -> Result<()> {
         None
     };
 
-    let elevation_source: Option<Box<dyn ElevationSource>> =
-        config
-            .elevation
-            .as_ref()
-            .map(|settings| match &settings.server {
-                ElevationServer::Racemap { url } => {
-                    Box::new(RacemapSource::new(url.clone())) as Box<dyn ElevationSource>
-                }
+    let elevation_source: Option<Box<dyn ElevationSource>> = config
+        .elevation
+        .as_ref()
+        .map(|settings| -> Result<Box<dyn ElevationSource>> {
+            Ok(match &settings.server {
+                ElevationServer::Racemap { url } => Box::new(RacemapSource::new(url.clone())),
                 ElevationServer::TileserverGl { url, zooms } => {
                     Box::new(TileserverGlSource::new(url.clone(), zooms.clone()))
                 }
-            });
+                ElevationServer::Tile(tiles) => Box::new(
+                    osd_enrich::terrain::TerrainTileSource::new(tiles.clone()).with_context(
+                        || format!("opening the tile cache {}", tiles.cache_dir.display()),
+                    )?,
+                ),
+            })
+        })
+        .transpose()?;
     let elevation_loader = match (&elevation_source, &cache, &config.elevation) {
         (Some(source), Some(cache), Some(settings)) => Some(ElevationLoader::new(
             source.as_ref(),
@@ -350,6 +357,9 @@ pub fn prepare(config: &PrepareConfig) -> Result<()> {
     };
     if let Some(loader) = &elevation_loader {
         apply_elevation(&mut formatted, loader);
+    }
+    if let Some(source) = &elevation_source {
+        source.close();
     }
 
     let geocoder = match (&config.geocoding, &cache) {
