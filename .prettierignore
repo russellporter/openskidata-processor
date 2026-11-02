@@ -28,3 +28,4 @@ rust/crates/osd-pipeline/tests/elevated_scenes.json
 rust/crates/osd-pipeline/tests/geocoded_scenes.json
 rust/crates/osd-pipeline/tests/gpkg_scenes.json
 rust/crates/osd-store/tests/id_vectors.json
+.pytest_cache/

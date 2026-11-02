@@ -7,3 +7,5 @@ output/
 npm-debug.log
 snow-cover/venv/
 rust/target/
+.pytest_cache/
+__pycache__/
