@@ -9,6 +9,17 @@ use anyhow::Result;
 // jemalloc is faster at that than the system allocator and hands memory back between phases.
 #[global_allocator]
 static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
+
+/// jemalloc's configuration string. Freed pages go back to the operating system after a second
+/// instead of ten, which takes about 12% off the peak memory of a large run for 3% of its time
+/// (returning them at once costs a quarter more time). `_RJEM_MALLOC_CONF` overrides it.
+#[repr(transparent)]
+pub struct MallocConf(*const u8);
+// The pointer is to a string literal.
+unsafe impl Sync for MallocConf {}
+#[unsafe(export_name = "_rjem_malloc_conf")]
+pub static MALLOC_CONF: MallocConf =
+    MallocConf(b"dirty_decay_ms:1000,muzzy_decay_ms:1000\0".as_ptr());
 use clap::{Parser, Subcommand};
 
 #[derive(clap::ValueEnum, Debug, Clone, Copy)]

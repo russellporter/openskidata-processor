@@ -137,7 +137,8 @@ generate a ski area from. Those are now a membership index, a ski-area R-tree ke
 geometry changes (leaving out ski areas still at the shared placeholder position, which an R-tree
 cannot remove quickly: 13 s at 50,000), and a cursor over the candidates. The per-feature
 formatting, the independent output files and the ski-area/run steps use all cores, and the
-allocator is jemalloc.
+allocator is jemalloc, set to return freed pages after one second rather than ten (12% off
+the peak for 3% of the time).
 
 At 50,000 resorts, with the log's own timings: reading 2.0 s, formatting 4.1 s, clustering 5 s,
 writing 3.2 s.
@@ -146,7 +147,8 @@ writing 3.2 s.
 interned strings, enums as bytes) and a three-pass streaming normalization, for a few hundred
 megabytes at planet scale. What is built keeps every feature as ordinary Rust structs (tag maps of
 `String`s, `Vec<[f64; 2]>` geometry, property structs of `Option<String>`s), all in memory from
-reading to writing. That is about 7 times the input JSON (0.95 GB for 130 MB). The Overpass JSON
+reading to writing. That is about 6 times the input JSON (0.82 GB for 130 MB; the data held at any
+one moment is closer to 300-400 MB, and the rest is peaks while a phase builds its results). The Overpass JSON
 is read as a stream and the node coordinates are already packed (24 bytes a node), `format_all`
 consumes the raw features as it formats them, and memory is returned between phases, but the peak
 is the formatted dataset plus the clustering engine's copy of it. A planet run is therefore
