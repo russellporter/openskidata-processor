@@ -8,6 +8,7 @@
 //! `iso3166-2-db`'s, with the "osm" name provider, read from `src/iso3166.json`, which
 //! `rust/codegen/generate-iso3166-data.mjs` writes from the npm package.
 
+use crate::places::{sort_places, unique_places};
 use openskidata_format::place::{Localized, LocalizedNames, Place};
 use osd_osm::element::{Geometry, Position};
 use osd_turf::{Units, along, path_length};
@@ -192,4 +193,29 @@ fn first_ring(rings: &[Vec<Position>]) -> Result<&[Position], String> {
         .first()
         .map(Vec::as_slice)
         .ok_or_else(|| "Cannot read properties of undefined".to_owned())
+}
+
+/// What the clustering stage needs of a geocoder: the place at a position.
+///
+/// Implemented by the real client (requests, cache, concurrency) and by test doubles.
+/// `Sync` because objects are geocoded in parallel.
+pub trait Geocoder: Sync {
+    /// `Geocoder.geocode`: the place at `position`, or `None` where there is none. An error is
+    /// a failed lookup (the network, a bad response), which fails the object being geocoded.
+    fn geocode(&self, position: Position) -> Result<Option<Place>, String>;
+}
+
+/// `Geocoder.geocodeGeometry`: the distinct places along a geometry (sampled every kilometre),
+/// sorted. Fails if sampling or any one lookup fails.
+pub fn geocode_geometry(
+    geocoder: &dyn Geocoder,
+    geometry: &Geometry,
+) -> Result<Vec<Place>, String> {
+    let mut places = Vec::new();
+    for point in extract_points_along_geometry(geometry, 1.0)? {
+        if let Some(place) = geocoder.geocode(point)? {
+            places.push(place);
+        }
+    }
+    Ok(sort_places(&unique_places(&places)))
 }

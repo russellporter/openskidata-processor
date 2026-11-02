@@ -21,4 +21,6 @@ serde_json.workspace = true
 sha1.workspace = true
 libm.workspace = true
 osd-turf.workspace = true
+osd-enrich.workspace = true
+tracing.workspace = true
 osd-store.workspace = true

@@ -62,7 +62,7 @@ filled in. The Rust writer is compared on every table's DDL, every row and every
 **Not done yet.** Applying elevation: the maths is ported (`openskidata-format::elevation_profile`)
 and feeds a run's CSV columns and `metadata.json`, but heights are not fetched, and the pipeline's
 geometry is 2D, so lifts' elevation columns, ski-area elevations and lift-station positions wait
-for geometry that carries elevations. Also the geocoding client (requests, cache use, concurrency; its response handling and point sampling are ported), snow cover, downloading from
+for geometry that carries elevations. Also the geocoding client itself (requests, cache use, retries -- the engine takes any `Geocoder`, and response handling, point sampling and the pipeline steps are ported), snow cover, downloading from
 Overpass/Skimap.org, PBF input, and the streaming driver that bounds normalization memory
 (`normalize_runs_partitioned` partitions in memory today). The Postgres caches migrate with
 `openskidata migrate-cache`. No performance or memory figure has been measured: Overpass is

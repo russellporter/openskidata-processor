@@ -121,3 +121,74 @@ fn every_recorded_geocode_computation_is_reproduced() {
             .join("\n")
     );
 }
+
+mod geocode_geometry {
+    use openskidata_format::place::{Localized, LocalizedNames, Place};
+    use osd_enrich::geocode::{Geocoder, geocode_geometry};
+    use osd_osm::element::{Geometry, Position};
+    use std::sync::Mutex;
+
+    /// Records what it is asked, and answers with a place named for the latitude.
+    struct Recording {
+        asked: Mutex<Vec<Position>>,
+        fail_at: Option<usize>,
+    }
+
+    impl Geocoder for Recording {
+        fn geocode(&self, position: Position) -> Result<Option<Place>, String> {
+            let mut asked = self.asked.lock().unwrap();
+            asked.push(position);
+            if self.fail_at == Some(asked.len()) {
+                return Err("boom".into());
+            }
+            Ok(Some(Place {
+                iso3166_1_alpha2: "AT".into(),
+                iso3166_2: None,
+                localized: Localized {
+                    en: LocalizedNames {
+                        country: "Austria".into(),
+                        region: None,
+                        locality: Some(format!("{:.2}", position[1])),
+                    },
+                },
+            }))
+        }
+    }
+
+    /// About 4.45 km due north.
+    fn line() -> Geometry {
+        Geometry::LineString(vec![[11.0, 47.0], [11.0, 47.04]])
+    }
+
+    #[test]
+    fn the_line_is_sampled_every_kilometre() {
+        let geocoder = Recording {
+            asked: Mutex::new(vec![]),
+            fail_at: None,
+        };
+        let places = geocode_geometry(&geocoder, &line()).unwrap();
+        let asked = geocoder.asked.lock().unwrap();
+        assert_eq!(asked.len(), 6, "start, four kilometre marks, end");
+        for pair in asked.windows(2).take(4) {
+            let km = osd_turf::distance_km(pair[0], pair[1]);
+            assert!((km - 1.0).abs() < 1e-6, "{km}");
+        }
+        // Distinct localities, and sorted.
+        let names: Vec<_> = places
+            .iter()
+            .map(|p| p.localized.en.locality.clone().unwrap())
+            .collect();
+        assert!(names.windows(2).all(|w| w[0] <= w[1]), "{names:?}");
+    }
+
+    #[test]
+    fn one_failed_lookup_fails_the_geometry_without_a_partial_result() {
+        for fail_at in 1..=6 {
+            let geocoder = Recording {
+                asked: Mutex::new(vec![]),
+                fail_at: Some(fail_at),
+            };
+            assert_eq!(geocode_geometry(&geocoder, &line()), Err("boom".to_owned()));
+        }
+    }
+}

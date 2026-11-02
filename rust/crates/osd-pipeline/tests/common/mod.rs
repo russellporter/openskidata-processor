@@ -3,7 +3,7 @@
 #![allow(dead_code)]
 
 use openskidata_format::{SkiAreaActivity, Status};
-use osd_cluster::engine::{ClusterOutput, cluster};
+use osd_cluster::engine::ClusterOutput;
 use osd_osm::element::{Element, Feature, Relation};
 use osd_osm::overpass::{convert_overpass_json, read_elements};
 use osd_pipeline::format::{FormatInput, SkimapSkiArea, format_all};
@@ -64,6 +64,14 @@ pub fn skimap(value: &Value) -> SkimapSkiArea {
 
 /// Runs the Rust format and clustering stages on a recorded world.
 pub fn run(roles: &Roles) -> ClusterOutput {
+    run_with(roles, None)
+}
+
+/// As [`run`], geocoding with `geocoder` if given.
+pub fn run_with(
+    roles: &Roles,
+    geocoder: Option<&dyn osd_enrich::geocode::Geocoder>,
+) -> ClusterOutput {
     let input = FormatInput {
         runs: features(&roles.runs),
         lifts: features(&roles.lifts),
@@ -73,5 +81,53 @@ pub fn run(roles: &Roles) -> ClusterOutput {
         skimap: roles.skimap.iter().map(skimap).collect(),
     };
     let formatted = format_all(&input).unwrap();
-    cluster(formatted.into_cluster_input()).unwrap()
+    osd_cluster::engine::cluster_with_geocoder(formatted.into_cluster_input(), geocoder).unwrap()
+}
+
+pub fn same(a: &Value, b: &Value) -> bool {
+    match (a, b) {
+        (Value::Number(x), Value::Number(y)) => {
+            let (x, y) = (x.as_f64().unwrap(), y.as_f64().unwrap());
+            x == y || (x - y).abs() <= 1e-9 * y.abs().max(1.0)
+        }
+        (Value::Array(x), Value::Array(y)) => {
+            x.len() == y.len() && x.iter().zip(y).all(|(p, q)| same(p, q))
+        }
+        (Value::Object(x), Value::Object(y)) => {
+            x.len() == y.len() && x.iter().all(|(k, p)| y.get(k).is_some_and(|q| same(p, q)))
+        }
+        _ => a == b,
+    }
+}
+
+/// A documented divergence: the `skiAreas` embedded in a lift's `stations`.
+///
+/// Upstream exports a station embedded in a lift with the properties it was loaded with, so
+/// that field holds the *unresolved* site ski areas as they were at load time -- full
+/// features, still carrying the `[360, 360, id]` placeholder coordinates -- whereas the same
+/// station in `spots.geojson` shows resolved summaries. This pipeline resolves both the same
+/// way, so the field is excluded here; the station's own `skiAreas` is still compared in
+/// `spots`.
+pub fn without_embedded_station_ski_areas(mut feature: Value) -> Value {
+    // `get_mut`, not indexing: `IndexMut` on a missing key inserts a null.
+    let stations = feature
+        .get_mut("properties")
+        .and_then(|p| p.get_mut("stations"))
+        .and_then(Value::as_array_mut);
+    if let Some(stations) = stations {
+        for station in stations {
+            if let Some(object) = station.get_mut("properties").and_then(Value::as_object_mut) {
+                object.remove("skiAreas");
+            }
+        }
+    }
+    feature
+}
+
+pub fn feature_json<P: serde::Serialize>(f: &osd_cluster::engine::Feature<P>) -> Value {
+    without_embedded_station_ski_areas(json!({
+        "type": "Feature",
+        "geometry": serde_json::to_value(&f.geometry).unwrap(),
+        "properties": serde_json::to_value(&f.properties).unwrap(),
+    }))
 }

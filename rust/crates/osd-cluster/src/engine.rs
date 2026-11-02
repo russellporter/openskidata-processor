@@ -32,6 +32,8 @@ use openskidata_format::viewport_hint::{ViewportHint, compute_viewport_hint};
 use openskidata_format::{
     FeatureType, LiftType, RunDifficulty, RunGrooming, RunUse, SkiAreaActivity, SourceType, Status,
 };
+use osd_enrich::geocode::{Geocoder, geocode_geometry};
+use osd_enrich::places::{sort_places, unique_places};
 use osd_osm::element::{Geometry, Position};
 use rstar::{AABB, RTree, RTreeObject};
 use sha1::{Digest, Sha1};
@@ -945,11 +947,12 @@ impl Engine {
             .filter(|w| !w.is_empty())
             .or_else(|| other.properties.wikidata_id.clone());
         properties.places = unique_places(
-            own.properties
+            &own.properties
                 .places
                 .iter()
                 .chain(&other.properties.places)
-                .cloned(),
+                .cloned()
+                .collect::<Vec<_>>(),
         );
 
         let o = &mut self.objects[target];
@@ -1194,7 +1197,7 @@ impl Engine {
     }
 
     /// `augmentSkiAreasBasedOnAssignedLiftsAndRuns`.
-    fn augment_ski_areas(&mut self) {
+    fn augment_ski_areas(&mut self, geocoder: Option<&dyn Geocoder>) {
         for ski_area in self.ski_areas(false, None) {
             let id = self.objects[ski_area].key.clone();
             let members = self.members_of(&id);
@@ -1278,7 +1281,15 @@ impl Engine {
             let member_places: Vec<Place> =
                 members.iter().flat_map(|&m| self.places_of(m)).collect();
             if !member_places.is_empty() {
-                updated.places = sort_places(unique_places(member_places.into_iter()));
+                updated.places = sort_places(&unique_places(&member_places));
+            } else if let Some(geocoder) = geocoder {
+                // No member has a place: geocode the ski area's centroid instead.
+                let centre = turf::centroid(&[&geometry]);
+                match geocoder.geocode(centre) {
+                    Ok(Some(place)) => updated.places = vec![place],
+                    Ok(None) => {}
+                    Err(error) => tracing::warn!("failed geocoding {centre:?}: {error}"),
+                }
             }
 
             let o = &mut self.objects[ski_area];
@@ -1313,6 +1324,13 @@ impl Engine {
 
     /// `performClustering`, without the steps that need external services.
     pub fn cluster(&mut self) {
+        self.cluster_with(None);
+    }
+
+    /// `performClustering`, geocoding if a geocoder is given: runs, lifts and spots by their
+    /// geometries once the ski areas are generated, and ski areas without any member place by
+    /// their centroids while they are augmented.
+    pub fn cluster_with(&mut self, geocoder: Option<&dyn Geocoder>) {
         self.assign_activities_and_geometry_from_members();
         self.assign_objects_to_ski_areas(&AssignOptions {
             source: SourceType::Openstreetmap,
@@ -1337,9 +1355,42 @@ impl Engine {
             only_if_not_already_assigned: true,
         });
         self.generate_ski_areas_for_unassigned();
+        if let Some(geocoder) = geocoder {
+            self.geocode_objects(geocoder);
+        }
         self.associate_lift_stations();
-        self.augment_ski_areas();
+        self.augment_ski_areas(geocoder);
         self.remove_ski_areas_without_geometry();
+    }
+
+    /// `geocodeAllObjects`: the places along every run, lift and spot. An object whose lookup
+    /// fails keeps the places it had, as upstream logs the failure and moves on.
+    fn geocode_objects(&mut self, geocoder: &dyn Geocoder) {
+        use rayon::prelude::*;
+        let targets: Vec<usize> = self
+            .by_key
+            .values()
+            .copied()
+            .filter(|&i| {
+                let o = &self.objects[i];
+                o.alive && !o.is_ski_area()
+            })
+            .collect();
+        let results: Vec<(usize, Result<Vec<Place>, String>)> = targets
+            .par_iter()
+            .map(|&i| (i, geocode_geometry(geocoder, &self.objects[i].geometry)))
+            .collect();
+        for (i, result) in results {
+            match result {
+                Ok(places) => match &mut self.objects[i].payload {
+                    Payload::Run { properties, .. } => properties.places = places,
+                    Payload::Lift { properties, .. } => properties.places = places,
+                    Payload::Spot { properties } => properties.base.places = places,
+                    Payload::SkiArea { .. } => {}
+                },
+                Err(error) => tracing::warn!("failed geocoding {}: {error}", self.objects[i].key),
+            }
+        }
     }
 
     /// `resolveSkiAreaSummaries`: the live ski areas among `ids`, in key order.
@@ -1500,37 +1551,6 @@ fn unique_sources<'a>(sources: impl Iterator<Item = &'a Source>) -> Vec<Source> 
         .collect()
 }
 
-fn unique_places(places: impl Iterator<Item = Place>) -> Vec<Place> {
-    let mut seen = HashSet::new();
-    places
-        .filter(|p| {
-            seen.insert((
-                p.iso3166_1_alpha2.clone(),
-                p.iso3166_2.clone(),
-                p.localized.en.locality.clone(),
-            ))
-        })
-        .collect()
-}
-
-/// `sortPlaces`: by locality, then region, then country, with missing values last.
-fn sort_places(mut places: Vec<Place>) -> Vec<Place> {
-    fn compare(a: &Option<String>, b: &Option<String>) -> std::cmp::Ordering {
-        match (a, b) {
-            (None, None) => std::cmp::Ordering::Equal,
-            (None, Some(_)) => std::cmp::Ordering::Greater,
-            (Some(_), None) => std::cmp::Ordering::Less,
-            (Some(x), Some(y)) => x.cmp(y),
-        }
-    }
-    places.sort_by(|a, b| {
-        compare(&a.localized.en.locality, &b.localized.en.locality)
-            .then_with(|| compare(&a.localized.en.region, &b.localized.en.region))
-            .then_with(|| a.localized.en.country.cmp(&b.localized.en.country))
-    });
-    places
-}
-
 /// `mergedWebsites`: prefer the websites of OpenStreetMap-only ski areas, since the two
 /// sources' URLs usually differ slightly and cannot be de-duplicated.
 fn merged_websites(a: &SkiAreaProperties, b: &SkiAreaProperties) -> Vec<String> {
@@ -1634,9 +1654,17 @@ pub fn generated_ski_area_id(member_keys: &[&str]) -> String {
     )
 }
 
-/// Runs the whole stage on typed input.
+/// Runs the whole stage on typed input, without geocoding.
 pub fn cluster(input: ClusterInput) -> Result<ClusterOutput> {
+    cluster_with_geocoder(input, None)
+}
+
+/// Runs the whole stage on typed input, geocoding with `geocoder` if there is one.
+pub fn cluster_with_geocoder(
+    input: ClusterInput,
+    geocoder: Option<&dyn Geocoder>,
+) -> Result<ClusterOutput> {
     let mut engine = Engine::load(input);
-    engine.cluster();
+    engine.cluster_with(geocoder);
     engine.export()
 }

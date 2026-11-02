@@ -7,9 +7,9 @@ use osd_cluster::engine::ClusterOutput;
 use osd_out::{csv, mapboxgl};
 
 mod common;
-use common::Roles;
+use common::{Roles, feature_json, same, without_embedded_station_ski_areas};
 use serde::Deserialize;
-use serde_json::{Value, json};
+use serde_json::Value;
 
 #[derive(Deserialize)]
 struct Scenes {
@@ -53,54 +53,6 @@ struct MapboxGl {
     runs: Vec<Value>,
     lifts: Vec<Value>,
     spots: Vec<Value>,
-}
-
-fn same(a: &Value, b: &Value) -> bool {
-    match (a, b) {
-        (Value::Number(x), Value::Number(y)) => {
-            let (x, y) = (x.as_f64().unwrap(), y.as_f64().unwrap());
-            x == y || (x - y).abs() <= 1e-9 * y.abs().max(1.0)
-        }
-        (Value::Array(x), Value::Array(y)) => {
-            x.len() == y.len() && x.iter().zip(y).all(|(p, q)| same(p, q))
-        }
-        (Value::Object(x), Value::Object(y)) => {
-            x.len() == y.len() && x.iter().all(|(k, p)| y.get(k).is_some_and(|q| same(p, q)))
-        }
-        _ => a == b,
-    }
-}
-
-/// A documented divergence: the `skiAreas` embedded in a lift's `stations`.
-///
-/// Upstream exports a station embedded in a lift with the properties it was loaded with, so
-/// that field holds the *unresolved* site ski areas as they were at load time -- full
-/// features, still carrying the `[360, 360, id]` placeholder coordinates -- whereas the same
-/// station in `spots.geojson` shows resolved summaries. This pipeline resolves both the same
-/// way, so the field is excluded here; the station's own `skiAreas` is still compared in
-/// `spots`.
-fn without_embedded_station_ski_areas(mut feature: Value) -> Value {
-    // `get_mut`, not indexing: `IndexMut` on a missing key inserts a null.
-    let stations = feature
-        .get_mut("properties")
-        .and_then(|p| p.get_mut("stations"))
-        .and_then(Value::as_array_mut);
-    if let Some(stations) = stations {
-        for station in stations {
-            if let Some(object) = station.get_mut("properties").and_then(Value::as_object_mut) {
-                object.remove("skiAreas");
-            }
-        }
-    }
-    feature
-}
-
-fn feature_json<P: serde::Serialize>(f: &osd_cluster::engine::Feature<P>) -> Value {
-    without_embedded_station_ski_areas(json!({
-        "type": "Feature",
-        "geometry": serde_json::to_value(&f.geometry).unwrap(),
-        "properties": serde_json::to_value(&f.properties).unwrap(),
-    }))
 }
 
 fn actual(output: &ClusterOutput) -> Expected {
