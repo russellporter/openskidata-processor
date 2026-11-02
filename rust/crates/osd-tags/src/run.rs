@@ -3,8 +3,13 @@
 //! Replaces the tag-reading half of `src/transforms/RunFormatter.ts`, plus the shared
 //! helpers in `OSMTransforms.ts` that it uses.
 
+use crate::osm::{first_value, osm_name, osm_ref};
 use crate::status::{Tags, status_and_value};
-use openskidata_format::{RunDifficulty, RunGrooming, RunUse, Status};
+use openskidata_format::source::Source;
+use openskidata_format::{
+    FeatureType, RunDifficulty, RunDifficultyConvention, RunGrooming, RunUse, SourceType, Status,
+};
+use serde::Serialize;
 use std::str::FromStr;
 
 /// Reads an OSM boolean-ish tag.
@@ -182,6 +187,80 @@ pub fn description(tags: &Tags) -> Option<String> {
 /// undefined, so an empty-string website is kept as `[""]`.
 pub fn websites(tags: &Tags) -> Vec<String> {
     tags.get("website").cloned().into_iter().collect()
+}
+
+/// The properties of a run that tags alone determine.
+///
+/// What `formatRun` returns minus the fields filled in later: `id` (a content hash of the
+/// final geometry), `skiAreas`, `places`, `elevationProfile` and `viewportHint`.
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct RunTagProperties {
+    #[serde(rename = "type")]
+    pub feature_type: FeatureType,
+    pub uses: Vec<RunUse>,
+    pub name: Option<String>,
+    #[serde(rename = "ref")]
+    pub reference: Option<String>,
+    pub description: Option<String>,
+    pub difficulty: Option<RunDifficulty>,
+    #[serde(rename = "difficultyConvention")]
+    pub difficulty_convention: RunDifficultyConvention,
+    pub oneway: Option<bool>,
+    pub gladed: Option<bool>,
+    pub patrolled: Option<bool>,
+    pub snowmaking: Option<bool>,
+    pub snowfarming: Option<bool>,
+    pub tunnel: Option<bool>,
+    pub lit: Option<bool>,
+    pub grooming: Option<RunGrooming>,
+    pub status: Status,
+    pub sources: Vec<Source>,
+    pub websites: Vec<String>,
+    #[serde(rename = "wikidataID")]
+    pub wikidata_id: Option<String>,
+}
+
+/// Replaces the tag half of `formatRun`: `None` when the element is not a run for this
+/// dataset -- no recognised use, or not currently operating.
+///
+/// The geometry checks (points and invalid geometries are rejected) belong to the caller,
+/// as does the difficulty convention, which is a function of where the geometry is.
+pub fn run_properties(
+    tags: &Tags,
+    osm_type: &str,
+    osm_id: i64,
+    convention: RunDifficultyConvention,
+) -> Option<RunTagProperties> {
+    let (status, uses) = status_and_uses(tags);
+    if uses.is_empty() || status != Some(Status::Operating) {
+        return None;
+    }
+
+    let reference = osm_ref(tags);
+    Some(RunTagProperties {
+        feature_type: FeatureType::Run,
+        name: osm_name(tags, "piste:name", Some("name"), reference.as_deref()),
+        reference,
+        description: description(tags),
+        difficulty: difficulty(tags),
+        difficulty_convention: convention,
+        oneway: oneway(tags, &uses),
+        gladed: gladed(tags),
+        patrolled: patrolled(tags),
+        snowmaking: snowmaking(tags),
+        snowfarming: snowfarming(tags),
+        tunnel: tunnel(tags),
+        lit: lit(tags),
+        grooming: grooming(tags),
+        status: Status::Operating,
+        sources: vec![Source {
+            source_type: SourceType::Openstreetmap,
+            id: format!("{osm_type}/{osm_id}"),
+        }],
+        websites: websites(tags),
+        wikidata_id: first_value(tags, "wikidata"),
+        uses,
+    })
 }
 
 #[cfg(test)]

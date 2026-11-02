@@ -319,10 +319,62 @@ for (const key of [
   "aerialway:capacity",
   "aerialway:duration",
 ]) {
-  for (const value of ["4", "2400", "7.5", "nonsense"]) {
+  for (const value of [
+    "4",
+    "2400",
+    "7.5",
+    "nonsense",
+    // JavaScript's Number()/parseFloat()/parseInt() edge cases, which the numeric tags
+    // inherit: empty and blank strings, radix prefixes, signs, exponents, non-finite
+    // values and the M:SS duration form with malformed halves.
+    "",
+    " ",
+    " 5 ",
+    "0x10",
+    "0b11",
+    "1e3",
+    "1e400",
+    "Infinity",
+    "-Infinity",
+    "NaN",
+    "+5",
+    "-3",
+    ".5",
+    "5.",
+    "07",
+    "1_0",
+    "1,5",
+    "5 min",
+    "5:30",
+    "5:3",
+    "5:30:10",
+    ":30",
+    "5:",
+    "a:30",
+    "5:b",
+    "5:30 ",
+    "1.5:30",
+    "5:1.5",
+    "-1:30",
+    "0:0",
+    // Math.round ties go toward +Infinity; 0.025 * 60 is exactly 1.5.
+    "0.025",
+    "-0.025",
+    "0.075",
+    // parseInt reads a 0x prefix as hex.
+    "0x1:30",
+    "0x10:0",
+  ]) {
     liftCases.push({ aerialway: "chair_lift", [key]: value });
   }
 }
+liftCases.push({ aerialway: "chair_lift", description: "" });
+liftCases.push({ aerialway: "chair_lift", description: "Scenic" });
+liftCases.push({
+  aerialway: "chair_lift",
+  description: "Scenic",
+  "piste:description": "x",
+});
 liftCases.push({ aerialway: "chair_lift", name: "Sunrise Express" });
 liftCases.push({ aerialway: "chair_lift", ref: "A1" });
 liftCases.push({ railway: "funicular", "railway:traffic_mode": "passenger" });

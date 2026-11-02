@@ -14004,6 +14004,1161 @@
     {
       "tags": {
         "aerialway": "chair_lift",
+        "aerialway:occupancy": ""
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": 0,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:occupancy": " "
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": 0,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:occupancy": " 5 "
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": 5,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:occupancy": "0x10"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": 16,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:occupancy": "0b11"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": 3,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:occupancy": "1e3"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": 1000,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:occupancy": "1e400"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:occupancy": "Infinity"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:occupancy": "-Infinity"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:occupancy": "NaN"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:occupancy": "+5"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": 5,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:occupancy": "-3"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": -3,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:occupancy": ".5"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": 0.5,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:occupancy": "5."
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": 5,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:occupancy": "07"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": 7,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:occupancy": "1_0"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:occupancy": "1,5"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:occupancy": "5 min"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:occupancy": "5:30"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:occupancy": "5:3"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:occupancy": "5:30:10"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:occupancy": ":30"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:occupancy": "5:"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:occupancy": "a:30"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:occupancy": "5:b"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:occupancy": "5:30 "
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:occupancy": "1.5:30"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:occupancy": "5:1.5"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:occupancy": "-1:30"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:occupancy": "0:0"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:occupancy": "0.025"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": 0.025,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:occupancy": "-0.025"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": -0.025,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:occupancy": "0.075"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": 0.075,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:occupancy": "0x1:30"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:occupancy": "0x10:0"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
         "aerialway:capacity": "4"
       },
       "output": {
@@ -14104,6 +15259,1161 @@
       "tags": {
         "aerialway": "chair_lift",
         "aerialway:capacity": "nonsense"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:capacity": ""
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": 0,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:capacity": " "
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": 0,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:capacity": " 5 "
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": 5,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:capacity": "0x10"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": 16,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:capacity": "0b11"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": 3,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:capacity": "1e3"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": 1000,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:capacity": "1e400"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:capacity": "Infinity"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:capacity": "-Infinity"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:capacity": "NaN"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:capacity": "+5"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": 5,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:capacity": "-3"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": -3,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:capacity": ".5"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": 0.5,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:capacity": "5."
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": 5,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:capacity": "07"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": 7,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:capacity": "1_0"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:capacity": "1,5"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:capacity": "5 min"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:capacity": "5:30"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:capacity": "5:3"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:capacity": "5:30:10"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:capacity": ":30"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:capacity": "5:"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:capacity": "a:30"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:capacity": "5:b"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:capacity": "5:30 "
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:capacity": "1.5:30"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:capacity": "5:1.5"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:capacity": "-1:30"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:capacity": "0:0"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:capacity": "0.025"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": 0.025,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:capacity": "-0.025"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": -0.025,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:capacity": "0.075"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": 0.075,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:capacity": "0x1:30"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:capacity": "0x10:0"
       },
       "output": {
         "access": null,
@@ -14242,6 +16552,1261 @@
         "bubble": null,
         "capacity": null,
         "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:duration": ""
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:duration": " "
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:duration": " 5 "
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": 300,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:duration": "0x10"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": 0,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:duration": "0b11"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": 0,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:duration": "1e3"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": 60000,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:duration": "1e400"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:duration": "Infinity"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:duration": "-Infinity"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:duration": "NaN"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:duration": "+5"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": 300,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:duration": "-3"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": -180,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:duration": ".5"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": 30,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:duration": "5."
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": 300,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:duration": "07"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": 420,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:duration": "1_0"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:duration": "1,5"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:duration": "5 min"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:duration": "5:30"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": 330,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:duration": "5:3"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": 303,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:duration": "5:30:10"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:duration": ":30"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:duration": "5:"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:duration": "a:30"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:duration": "5:b"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:duration": "5:30 "
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": 330,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:duration": "1.5:30"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": 90,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:duration": "5:1.5"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": 301,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:duration": "-1:30"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": -30,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:duration": "0:0"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": 0,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:duration": "0.025"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": 2,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:duration": "-0.025"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": -1,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:duration": "0.075"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": 5,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:duration": "0x1:30"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": 90,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "aerialway:duration": "0x10:0"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": 960,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "description": ""
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": null,
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "description": "Scenic"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": "Scenic",
+        "detachable": null,
+        "duration": null,
+        "heating": null,
+        "liftType": "chair_lift",
+        "name": null,
+        "occupancy": null,
+        "oneway": null,
+        "ref": null,
+        "refFRCAIRN": null,
+        "sources": [
+          {
+            "type": "openstreetmap",
+            "id": "way/1"
+          }
+        ],
+        "stations": [],
+        "status": "operating",
+        "tunnel": null,
+        "type": "lift",
+        "websites": [],
+        "wikidataID": null
+      }
+    },
+    {
+      "tags": {
+        "aerialway": "chair_lift",
+        "description": "Scenic",
+        "piste:description": "x"
+      },
+      "output": {
+        "access": null,
+        "bubble": null,
+        "capacity": null,
+        "description": "Scenic",
         "detachable": null,
         "duration": null,
         "heating": null,

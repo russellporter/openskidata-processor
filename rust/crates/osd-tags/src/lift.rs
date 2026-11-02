@@ -2,8 +2,14 @@
 //!
 //! Replaces the tag-reading half of `src/transforms/LiftFormatter.ts`.
 
+use crate::js_number;
+use crate::osm::{first_value, osm_name, osm_ref};
+use crate::run::{osm_boolean, tunnel, websites};
 use crate::status::{Tags, status_and_value};
-use openskidata_format::{LiftType, Status};
+use openskidata_format::lift::Access;
+use openskidata_format::source::Source;
+use openskidata_format::{FeatureType, LiftType, SourceType, Status};
+use serde::Serialize;
 use std::str::FromStr;
 
 /// Railway values that are a lift for this dataset's purposes.
@@ -81,33 +87,126 @@ pub fn is_lift(tags: &Tags) -> bool {
     status.is_some() && lift_type.is_some()
 }
 
-/// Parses a duration in minutes into whole seconds.
+/// `isNumeric` in `LiftFormatter.ts`: `!isNaN(parseFloat(n)) && isFinite(n)`.
 ///
-/// Replaces `mapDuration`. OSM uses both a bare number of minutes and an `M:SS` form, and
-/// the numeric form is rounded, so `7.5` becomes 450 rather than 450.0.
+/// The two halves disagree on purpose-built inputs -- `parseFloat("")` is NaN but
+/// `Number("")` is 0, and `parseFloat("5 min")` is 5 but `Number("5 min")` is NaN -- so
+/// both conversions are applied exactly as written.
+fn is_numeric(value: &str) -> bool {
+    !js_number::parse_float(value).is_nan() && js_number::number(value).is_finite()
+}
+
+/// Parses a duration in minutes into seconds.
+///
+/// Replaces `mapDuration`. OSM uses both a bare number of minutes and an `M:SS` form.
+/// Returns `None` where upstream returns `null` *or* `NaN` (JSON cannot tell the two apart,
+/// and a `NaN` duration is useless to a consumer either way).
+///
+/// The `M:SS` form is read with `parseInt`, so `1.5:30` is 90 and `-1:30` is -30: the
+/// minutes' sign applies only to the minutes.
 pub fn duration_seconds(value: Option<&str>) -> Option<f64> {
     let value = value?;
 
-    if let Ok(minutes) = value.trim().parse::<f64>() {
-        if minutes.is_finite() {
-            return Some((minutes * 60.0).round());
-        }
+    if is_numeric(value) {
+        return finite(js_number::round(js_number::parse_float(value) * 60.0));
     }
 
     if value.contains(':') {
-        let parts: Vec<&str> = value.split(':').collect();
-        if parts.len() != 2 {
+        let components: Vec<&str> = value.split(':').collect();
+        if components.len() != 2 {
             return None;
         }
-        let minutes = parts[0].trim().parse::<f64>().ok()?;
-        let seconds = parts[1].trim().parse::<f64>().ok()?;
-        if !minutes.is_finite() || !seconds.is_finite() {
-            return None;
-        }
-        return Some(minutes * 60.0 + seconds);
+        return finite(
+            js_number::parse_int(components[0]) * 60.0 + js_number::parse_int(components[1]),
+        );
     }
 
     None
+}
+
+fn finite(value: f64) -> Option<f64> {
+    value.is_finite().then_some(value)
+}
+
+/// `mapOSMNumber`: `Number(input)`, or `None` when that is NaN.
+///
+/// Infinity is a number to JavaScript but not to JSON, where it would be written as `null`,
+/// so it also reads as unknown here.
+pub fn osm_number(input: Option<&str>) -> Option<f64> {
+    finite(js_number::number(input?))
+}
+
+/// The properties of a lift that tags alone determine.
+///
+/// What `formatLift` returns minus `id`, `stations`, `skiAreas`, `places` and
+/// `viewportHint`, which are filled in later.
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct LiftTagProperties {
+    #[serde(rename = "type")]
+    pub feature_type: FeatureType,
+    #[serde(rename = "liftType")]
+    pub lift_type: LiftType,
+    pub status: Status,
+    pub name: Option<String>,
+    pub oneway: Option<bool>,
+    #[serde(rename = "ref")]
+    pub reference: Option<String>,
+    #[serde(rename = "refFRCAIRN")]
+    pub ref_fr_cairn: Option<String>,
+    pub description: Option<String>,
+    pub occupancy: Option<f64>,
+    pub capacity: Option<f64>,
+    pub duration: Option<f64>,
+    pub bubble: Option<bool>,
+    pub heating: Option<bool>,
+    pub detachable: Option<bool>,
+    pub tunnel: Option<bool>,
+    pub access: Option<Access>,
+    pub sources: Vec<Source>,
+    pub websites: Vec<String>,
+    #[serde(rename = "wikidataID")]
+    pub wikidata_id: Option<String>,
+}
+
+/// Replaces the tag half of `formatLift`: `None` when the element is not a lift.
+///
+/// The geometry checks (only lines are lifts, and they must be valid) belong to the caller.
+pub fn lift_properties(tags: &Tags, osm_type: &str, osm_id: i64) -> Option<LiftTagProperties> {
+    if is_disqualified(tags) {
+        return None;
+    }
+    let (status, lift_type) = status_and_lift_type(tags);
+    let (status, lift_type) = (status?, lift_type?);
+
+    let get = |key: &str| tags.get(key).map(String::as_str);
+    let reference = osm_ref(tags);
+    Some(LiftTagProperties {
+        feature_type: FeatureType::Lift,
+        lift_type,
+        status,
+        name: osm_name(tags, "name", None, reference.as_deref()),
+        oneway: osm_boolean(get("oneway")),
+        reference,
+        ref_fr_cairn: first_value(tags, "ref:FR:CAIRN"),
+        // `tags.description || null`: unlike runs, an empty description is no description.
+        description: get("description")
+            .filter(|d| !d.is_empty())
+            .map(str::to_owned),
+        occupancy: osm_number(get("aerialway:occupancy")),
+        capacity: osm_number(get("aerialway:capacity")),
+        duration: duration_seconds(get("aerialway:duration")),
+        bubble: osm_boolean(get("aerialway:bubble")),
+        heating: osm_boolean(get("aerialway:heating")),
+        detachable: osm_boolean(get("aerialway:detachable")),
+        tunnel: tunnel(tags),
+        access: (get("access") == Some("private")).then_some(Access::Private),
+        sources: vec![Source {
+            source_type: SourceType::Openstreetmap,
+            id: format!("{osm_type}/{osm_id}"),
+        }],
+        websites: websites(tags),
+        wikidata_id: first_value(tags, "wikidata"),
+    })
 }
 
 #[cfg(test)]
