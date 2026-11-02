@@ -84,6 +84,7 @@ pub mod flood;
 pub mod geometry;
 pub mod index;
 pub mod passes;
+pub mod turf;
 
 pub use flood::{FillOptions, Frame, flood_fill, is_non_operating_lift};
 pub use index::SpatialIndex;

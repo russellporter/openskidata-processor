@@ -1456,9 +1456,12 @@ dependencies = [
  "geo",
  "geos",
  "openskidata-format",
+ "osd-osm",
  "osd-store",
  "rayon",
  "rstar 0.13.0",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
