@@ -6,6 +6,10 @@
 
 use serde::{Deserialize, Serialize};
 
+/// The `openskidata-format` version these enums were generated from; `metadata.json`
+/// reports it as `formatVersion`.
+pub const FORMAT_VERSION: &str = "16.0.0";
+
 /// `DismountRequirement` from openskidata-format@16.0.0.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 #[repr(u8)]

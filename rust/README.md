@@ -12,7 +12,7 @@ document. This README is the short version.
 `openskidata prepare` works: given the downloaded input files (`input_*.osmjson` and
 `input_skimap_ski_areas.geojson`), it reproduces what the TypeScript pipeline writes with
 elevation, geocoding and snow cover switched off -- `ski_areas|runs|lifts|spots.geojson`,
-their `mapboxgl_*` counterparts, the four CSV files and `openskidata.gpkg`.
+their `mapboxgl_*` counterparts, the four CSV files, `openskidata.gpkg` and `metadata.json`.
 
 ```bash
 cargo build --release -p osd-cli
@@ -59,7 +59,7 @@ places, wikidata ids, references, elevation profiles or lift-station positions, 
 sets feed the real writer real output features with those properties and random booleans
 filled in. The Rust writer is compared on every table's DDL, every row and every R-tree.
 
-**Not done yet.** `metadata.json`, elevation (and the float-heavy
+**Not done yet.** Elevation (and the float-heavy
 `line_chunk_patched`/ascent/pitch maths behind the elevation CSV columns), geocoding, snow
 cover, the Postgres cache migration, downloading from Overpass/Skimap.org, PBF input, and the
 streaming driver that bounds normalization memory (`normalize_runs_partitioned` partitions in
@@ -97,6 +97,10 @@ depends on them. Each is pinned by a test and explained where it lives.
   longitude crossed, from the first 1,000 features only), the `gpkg_schema` extension rows for
   tables that do not exist are left out, and R-tree boxes are as tight as the bundled SQLite
   makes them (upstream's, from an older SQLite, are an f32 ulp or two wider).
+- **`metadata.json`'s length totals need elevation.** `runLengthKm` and `liftLengthKm` sum the
+  inclined length elevation produces; the collector takes it as an input (the oracle feeds it the
+  real `getRunElevationData` results) and `prepare` passes none yet, so both are `0`, as upstream's
+  are without elevation.
 
 ## The generated enums
 

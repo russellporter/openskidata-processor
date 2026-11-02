@@ -31,14 +31,12 @@
 //! | skiareas | 0 | 15 | `-B 0 --drop-densest-as-needed` |
 //! | spots | 9 | 15 | `-B 10 --simplify-only-low-zooms --drop-densest-as-needed` |
 //!
-//! # GeoPackage should get smaller, not larger
+//! # The GeoPackage
 //!
-//! `GeoPackageWriter.ts` is 831 LOC of hand-written column schemas (~60 column
-//! definitions across four types) driving `@ngageoint/geopackage`, which in turn needs
-//! `better-sqlite3` and a cast through its private connection handle. A GeoPackage is
-//! just SQLite plus WKB plus a few metadata tables, so writing it directly should
-//! *shrink* this code. Keep the upstream table naming (`{layer}_{geomtype}`, plus the
-//! ski-area centroid `{layer}_point` table) and the deferred spatial index.
+//! Written directly with `rusqlite` (see [`gpkg`]): a GeoPackage is SQLite plus WKB plus a few
+//! metadata tables, so this replaces 831 lines of column schemas driving
+//! `@ngageoint/geopackage`. The upstream table naming (`{layer}_{geomtype}`, plus the ski-area
+//! centroid `{layer}_point` table) and the deferred spatial index are kept.
 //!
 //! # Metadata counting is already free — keep it that way
 //!
@@ -50,15 +48,5 @@ pub mod csv;
 pub mod geojson;
 pub mod gpkg;
 pub mod mapboxgl;
+pub mod metadata;
 pub mod tiles;
-
-use anyhow::Result;
-use std::path::Path;
-
-/// Replaces `DatasetMetadata`. Counts are folded in during the CSV pass.
-pub fn write_metadata(_path: &Path) -> Result<()> {
-    todo!("port DatasetMetadata, schema v1")
-}
-
-#[cfg(test)]
-mod tests {}

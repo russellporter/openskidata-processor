@@ -98,6 +98,9 @@ jobs:
       - name: Check the output formatter vectors are in sync
         run: docker compose exec -T app node rust/codegen/generate-output-vectors.mjs --check
 
+      - name: Check the metadata vectors are in sync
+        run: docker compose exec -T app node rust/codegen/generate-metadata-vectors.mjs --check
+
       - name: Check the GeoPackage scenes are in sync
         run: docker compose exec -T app node rust/codegen/generate-gpkg-scenes.mjs --check
 

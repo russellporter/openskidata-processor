@@ -3,8 +3,8 @@
 //! Replaces `src/PrepareGeoJSON.ts` for the stages that are ported. It reads the same input
 //! files the TypeScript pipeline does (`input_*.osmjson` from Overpass or `OSM_INPUT_DIR`,
 //! and Skimap.org's GeoJSON), and writes `ski_areas.geojson`, `runs.geojson`, `lifts.geojson`
-//! and `spots.geojson`, their `mapboxgl_*` counterparts, and the CSV exports. Not yet
-//! written: the GeoPackage, the tiles and `metadata.json`.
+//! and `spots.geojson`, their `mapboxgl_*` counterparts, the CSV exports, `openskidata.gpkg`
+//! and `metadata.json`. Not yet written: the tiles.
 //!
 //! Elevation, geocoding and snow cover are not applied, so the output equals what the
 //! TypeScript pipeline produces with those three switched off.
@@ -16,12 +16,14 @@ use osd_cluster::engine::{ClusterOutput, Feature, cluster};
 use osd_osm::element::{Element, Feature as OsmFeature, Relation};
 use osd_osm::overpass::{convert_overpass_json, read_elements};
 use osd_out::geojson::write_feature_collection;
+use osd_out::metadata::{self, MetadataCollector, MetadataOptions};
 use osd_out::{csv, gpkg, mapboxgl};
 use serde_json::{Value, json};
 use std::fs::{self, File};
 use std::io::{BufReader, BufWriter, Write};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
+use time::OffsetDateTime;
 
 /// Input file names, as `src/io/GeoJSONFiles.ts` defines them.
 pub const RUNS: &str = "input_runs.osmjson";
@@ -35,6 +37,8 @@ pub const SKIMAP: &str = "input_skimap_ski_areas.geojson";
 pub struct PrepareConfig {
     pub input_dir: PathBuf,
     pub output_dir: PathBuf,
+    /// The bounding box the run is restricted to (`BBOX`), reported in `metadata.json`.
+    pub bbox: Option<Vec<f64>>,
 }
 
 fn features_from_osm_json(path: &Path) -> Result<Vec<OsmFeature>> {
@@ -189,6 +193,69 @@ pub fn write_outputs(output: &ClusterOutput, output_dir: &Path) -> Result<()> {
     Ok(())
 }
 
+/// Writes `metadata.json`, last, once every file it describes is on disk.
+///
+/// Counts are taken from the clustered output. The run and lift length totals are zero until
+/// elevation is ported, as upstream's are for features without an elevation profile.
+pub fn write_metadata(
+    output: &ClusterOutput,
+    output_dir: &Path,
+    bbox: Option<Vec<f64>>,
+    download: Option<&metadata::DownloadMetadata>,
+) -> Result<()> {
+    let mut collector = MetadataCollector::new();
+    for area in &output.ski_areas {
+        let p = &area.properties;
+        collector.add_ski_area(
+            p.summary.status,
+            &p.summary.activities,
+            p.places.iter().map(|place| place.iso3166_1_alpha2.as_str()),
+        );
+    }
+    output.runs.iter().for_each(|_| collector.add_run(None));
+    output.lifts.iter().for_each(|_| collector.add_lift(None));
+    output.spots.iter().for_each(|_| collector.add_spot());
+
+    let geojson = [
+        ("skiAreas", output_dir.join("ski_areas.geojson")),
+        ("runs", output_dir.join("runs.geojson")),
+        ("lifts", output_dir.join("lifts.geojson")),
+        ("spots", output_dir.join("spots.geojson")),
+    ];
+    let csv_files = [
+        ("skiAreas", FeatureType::SkiArea),
+        ("runs", FeatureType::Run),
+        ("lifts", FeatureType::Lift),
+        ("spots", FeatureType::Spot),
+    ]
+    .map(|(key, kind)| (key, output_dir.join("csv").join(csv::filename(kind))));
+    let files = metadata::collect_file_sizes(
+        &geojson
+            .iter()
+            .map(|(k, p)| (*k, p.as_path()))
+            .collect::<Vec<_>>(),
+        &csv_files
+            .iter()
+            .map(|(k, p)| (*k, p.as_path()))
+            .collect::<Vec<_>>(),
+        &output_dir.join("openskidata.gpkg"),
+    );
+
+    let metadata = collector.metadata(
+        MetadataOptions {
+            format_version: openskidata_format::FORMAT_VERSION.to_owned(),
+            bbox,
+            started_at: download.map(|d| d.started_at.clone()),
+            open_street_map_data_timestamp: download
+                .and_then(|d| d.open_street_map.data_timestamp.clone()),
+            ski_map_org_downloaded_at: download.map(|d| d.ski_map_org.downloaded_at.clone()),
+            files,
+        },
+        OffsetDateTime::now_utc(),
+    );
+    write_text(&output_dir.join("metadata.json"), &metadata.to_json())
+}
+
 /// Reads the input files, runs the pipeline and writes the output files.
 pub fn prepare(config: &PrepareConfig) -> Result<()> {
     let input = FormatInput {
@@ -201,5 +268,12 @@ pub fn prepare(config: &PrepareConfig) -> Result<()> {
     };
     let formatted = format_all(&input)?;
     let output = cluster(formatted.into_cluster_input())?;
-    write_outputs(&output, &config.output_dir)
+    write_outputs(&output, &config.output_dir)?;
+    let download = metadata::read_download_metadata(&config.input_dir);
+    write_metadata(
+        &output,
+        &config.output_dir,
+        config.bbox.clone(),
+        download.as_ref(),
+    )
 }

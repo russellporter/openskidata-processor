@@ -20,12 +20,16 @@ enum Command {
     /// Reads `input_*.osmjson` (from Overpass, or the files `OSM_INPUT_DIR` points at) and
     /// `input_skimap_ski_areas.geojson` from the input directory, and writes GeoJSON, the
     /// slimmed mapboxgl GeoJSON and CSV to the output directory. Elevation, geocoding, snow
-    /// cover, the GeoPackage and tiles are not applied yet.
+    /// cover and tiles are not applied yet.
     Prepare {
         #[arg(long, env = "INPUT_DIR", default_value = "data/input")]
         input_dir: std::path::PathBuf,
         #[arg(long, env = "OUTPUT_DIR", default_value = "data/output")]
         output_dir: std::path::PathBuf,
+        /// Bounding box the input was restricted to, as JSON `[west, south, east, north]`.
+        /// Only reported in `metadata.json`.
+        #[arg(long, env = "BBOX")]
+        bbox: Option<String>,
     },
     /// Run the full pipeline.
     Run {
@@ -60,10 +64,18 @@ async fn main() -> Result<()> {
         Command::Prepare {
             input_dir,
             output_dir,
-        } => osd_pipeline::prepare::prepare(&osd_pipeline::prepare::PrepareConfig {
-            input_dir,
-            output_dir,
-        }),
+            bbox,
+        } => {
+            let bbox: Option<Vec<f64>> =
+                bbox.map(|text| serde_json::from_str(&text))
+                    .transpose()
+                    .map_err(|e| anyhow::anyhow!("BBOX must be a JSON array of numbers: {e}"))?;
+            osd_pipeline::prepare::prepare(&osd_pipeline::prepare::PrepareConfig {
+                input_dir,
+                output_dir,
+                bbox,
+            })
+        }
         Command::Run { .. } => todo!("wire up osd_pipeline::run"),
         Command::MigrateCache { .. } => todo!("wire up osd_cache::migrate_from_postgres"),
     }

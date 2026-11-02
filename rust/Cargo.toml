@@ -28,6 +28,7 @@ serde = { version = "1.0.229", features = ["derive"] }
 # boundary, and would silently perturb every coordinate read from GeoJSON.
 serde_json = { version = "1.0.154", features = ["float_roundtrip"] }
 # storage
+time = { version = "0.3", features = ["parsing", "formatting"] }
 rusqlite = { version = "0.41.1", features = ["bundled"] }
 tokio-postgres = "0.7.18"
 # osm

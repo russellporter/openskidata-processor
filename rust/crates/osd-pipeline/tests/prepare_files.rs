@@ -137,6 +137,7 @@ fn files_written_by_prepare_match_the_typescript_output() {
         prepare(&PrepareConfig {
             input_dir: input_dir.clone(),
             output_dir: output_dir.clone(),
+            bbox: None,
         })
         .unwrap();
 
@@ -197,12 +198,123 @@ fn the_geojson_layout_is_the_one_merge_outputs_expects() {
     prepare(&PrepareConfig {
         input_dir: input_dir.clone(),
         output_dir: output_dir.clone(),
+        bbox: None,
     })
     .unwrap();
     let text = fs::read_to_string(output_dir.join("runs.geojson")).unwrap();
     assert!(text.starts_with("{\"type\": \"FeatureCollection\", \"features\":[\n{"));
     assert!(text.contains("\n,\n{"));
     assert!(text.ends_with("\n]}\n"));
+    let _ = fs::remove_dir_all(&input_dir);
+    let _ = fs::remove_dir_all(&output_dir);
+}
+
+/// `metadata.json` describes the files that were just written: their counts, their sizes and
+/// the provenance the download step recorded.
+#[test]
+fn metadata_json_describes_what_was_written() {
+    let scenes: Scenes =
+        serde_json::from_str(include_str!("../../osd-cluster/tests/cluster_scenes.json")).unwrap();
+    let scene = scenes
+        .scenes
+        .iter()
+        .find(|s| s.expected.ski_areas.len() >= 3 && !s.expected.spots.is_empty())
+        .expect("a scene with several ski areas and a spot");
+    let input_dir = scratch("meta-in");
+    let output_dir = scratch("meta-out");
+    write_inputs(&input_dir, &scene.roles);
+    fs::write(
+        input_dir.join("input_download_metadata.json"),
+        r#"{"startedAt":"2026-08-22T20:04:58.000Z","openStreetMap":{"dataTimestamp":"2026-08-22T19:36:10Z"},"skiMapOrg":{"downloadedAt":"2026-08-22T20:05:31.000Z"}}"#,
+    )
+    .unwrap();
+    prepare(&PrepareConfig {
+        input_dir: input_dir.clone(),
+        output_dir: output_dir.clone(),
+        bbox: Some(vec![11.0, 47.0, 12.5, 48.0]),
+    })
+    .unwrap();
+
+    let metadata: Value =
+        serde_json::from_str(&fs::read_to_string(output_dir.join("metadata.json")).unwrap())
+            .unwrap();
+    let expected = &scene.expected;
+    let has = |area: &Value, key: &str, value: &str| {
+        area["properties"][key]
+            .as_array()
+            .is_some_and(|a| a.iter().any(|v| v == value))
+    };
+    let counts = &metadata["counts"];
+    assert_eq!(counts["skiAreas"]["total"], expected.ski_areas.len());
+    assert_eq!(counts["runs"], expected.runs.len());
+    assert_eq!(counts["lifts"], expected.lifts.len());
+    assert_eq!(counts["spots"], expected.spots.len());
+    assert_eq!(
+        counts["skiAreas"]["operating"],
+        expected
+            .ski_areas
+            .iter()
+            .filter(|a| a["properties"]["status"] == "operating")
+            .count()
+    );
+    assert_eq!(
+        counts["skiAreas"]["downhill"],
+        expected
+            .ski_areas
+            .iter()
+            .filter(|a| has(a, "activities", "downhill"))
+            .count()
+    );
+
+    assert_eq!(metadata["version"], 1);
+    assert_eq!(
+        metadata["formatVersion"],
+        openskidata_format::FORMAT_VERSION
+    );
+    assert_eq!(metadata["bbox"], json!([11, 47, 12.5, 48]));
+    assert_eq!(metadata["run"]["startedAt"], "2026-08-22T20:04:58.000Z");
+    assert_eq!(
+        metadata["source"]["openStreetMap"]["dataTimestamp"],
+        "2026-08-22T19:36:10Z"
+    );
+    assert_eq!(
+        metadata["source"]["skiMapOrg"]["downloadedAt"],
+        "2026-08-22T20:05:31.000Z"
+    );
+
+    let size = |path: PathBuf| fs::metadata(path).unwrap().len();
+    assert_eq!(
+        metadata["files"]["geojson"]["runs"],
+        size(output_dir.join("runs.geojson"))
+    );
+    assert_eq!(
+        metadata["files"]["csv"]["spots"],
+        size(output_dir.join("csv").join("spots.csv"))
+    );
+    assert_eq!(
+        metadata["files"]["geoPackage"],
+        size(output_dir.join("openskidata.gpkg"))
+    );
+    let _ = fs::remove_dir_all(&input_dir);
+    let _ = fs::remove_dir_all(&output_dir);
+
+    // Without the download step's file there is no provenance, but still a file.
+    let input_dir = scratch("meta-none-in");
+    let output_dir = scratch("meta-none-out");
+    write_inputs(&input_dir, &scene.roles);
+    prepare(&PrepareConfig {
+        input_dir: input_dir.clone(),
+        output_dir: output_dir.clone(),
+        bbox: None,
+    })
+    .unwrap();
+    let metadata: Value =
+        serde_json::from_str(&fs::read_to_string(output_dir.join("metadata.json")).unwrap())
+            .unwrap();
+    assert_eq!(metadata["bbox"], Value::Null);
+    assert_eq!(metadata["run"]["startedAt"], Value::Null);
+    assert_eq!(metadata["run"]["durationSeconds"], Value::Null);
+    assert_eq!(metadata["source"]["skiMapOrg"]["downloadedAt"], Value::Null);
     let _ = fs::remove_dir_all(&input_dir);
     let _ = fs::remove_dir_all(&output_dir);
 }

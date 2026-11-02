@@ -81,6 +81,12 @@ lines.push(
 lines.push("");
 lines.push("use serde::{Deserialize, Serialize};");
 lines.push("");
+lines.push(
+  "/// The `openskidata-format` version these enums were generated from; `metadata.json`",
+);
+lines.push("/// reports it as `formatVersion`.");
+lines.push(`pub const FORMAT_VERSION: &str = "${pkg.version}";`);
+lines.push("");
 
 for (const [enumName, members] of enums) {
   const entries = Object.entries(members);
