@@ -77,6 +77,9 @@ jobs:
       - name: Check the run-merge vectors are in sync
         run: docker compose exec -T app node rust/codegen/generate-merge-vectors.mjs --check
 
+      - name: Check the normalization scenes are in sync
+        run: docker compose exec -T app node rust/codegen/generate-normalize-scenes.mjs --check
+
       - name: Rust format
         run: docker compose exec -T app sh -c "cd rust && cargo fmt --all --check"
 

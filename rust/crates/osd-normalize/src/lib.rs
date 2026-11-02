@@ -50,7 +50,15 @@
 //!    emit globally sorted by that tuple; non-line geometries keep their original
 //!    indices. Each line belongs to exactly one partition, so this is well defined.
 //!
-//! [`check_partitioning_equivalence`] is the property test that holds all three honest.
+//! `tests/partitioning.rs` is the property test that holds all three honest: it normalizes
+//! interleaved multi-component inputs both ways and requires identical output.
+//!
+//! # Status
+//!
+//! Done and verified against the real TypeScript: the topology construction (606 recorded
+//! scenes), the property merge (800 merges, 400 comparisons) and the whole pipeline
+//! (700 scenes, 3,036 output runs), plus partitioned-equals-global. Not done: the
+//! streaming driver below; [`normalize_runs_partitioned`] partitions in memory.
 //!
 //! # Streaming, because partitioning alone does not bound memory
 //!
@@ -72,73 +80,13 @@
 
 pub mod chains;
 pub mod components;
+pub mod normalize;
 pub mod properties;
 pub mod topology;
 
 pub use chains::{ChainGraph, JoinKey, Link, Segment, is_degenerate, join_chains};
 pub use components::{ComponentId, ComponentIndex};
-
-use anyhow::Result;
-use osd_store::{FeatureIdx, FeatureStore};
-
-/// Where a produced line came from, used to restore global output order.
-///
-/// See precondition 3.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub struct OutputOrderKey {
-    /// Index of the generating line in the global line list.
-    pub source_line: u32,
-    /// Sequence of this segment within that line.
-    pub sequence: u32,
-}
-
-/// Normalize all runs in the store.
-pub fn normalize_runs(_store: &mut FeatureStore) -> Result<Vec<FeatureIdx>> {
-    todo!("three streaming passes, then per-component topology in parallel")
-}
-
-/// Replaces `mergeOverlappingRuns` for a single component.
-pub fn merge_overlapping(
-    _store: &mut FeatureStore,
-    _component: &[FeatureIdx],
-) -> Result<Vec<FeatureIdx>> {
-    todo!("split at shared vertices, merge arcs with equal JoinKey")
-}
-
-/// Replaces `combineRunSegments` for a single component.
-pub fn combine_segments(
-    _store: &mut FeatureStore,
-    _component: &[FeatureIdx],
-) -> Result<Vec<FeatureIdx>> {
-    todo!("join chains by endpoint degree; accumulate coordinates once, not via concat")
-}
-
-/// The property test that is the entire safety argument for partitioning.
-///
-/// For a given run set, normalizing per component must equal normalizing globally,
-/// element for element. Run it over randomly generated run sets, including: runs sharing
-/// only interior vertices, runs whose endpoints differ in the 8th decimal, and chains
-/// long enough to exercise the reassembly ordering.
-pub fn check_partitioning_equivalence(_runs: &FeatureStore) -> Result<()> {
-    todo!("compare partitioned output against global output, element for element")
-}
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    #[ignore = "scaffold: implement normalize_runs first"]
-    fn partitioned_output_equals_global_output() {}
-
-    /// Precondition 3.
-    #[test]
-    #[ignore = "scaffold: implement normalize_runs first"]
-    fn output_order_is_reassembled_globally() {}
-
-    /// Documented divergence: 1e-7 snapping is coarser than TopoJSON's exact float
-    /// equality, so a few vertex pairs will now join that previously did not. This test
-    /// should pin how many, on the fixture set, so the number is reviewed rather than
-    /// discovered.
-    #[test]
-    #[ignore = "scaffold: implement normalize_runs first"]
-    fn records_the_vertex_snapping_divergence() {}
-}
+pub use normalize::{
+    OutputKey, RunInput, RunOutput, ViewportHinter, normalize_runs, normalize_runs_partitioned,
+};
+pub use topology::{InputGeometry, TopoGeometry, Topology, topology};

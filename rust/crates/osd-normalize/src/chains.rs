@@ -114,23 +114,32 @@ impl ChainGraph {
         if links.is_empty() { None } else { Some(links) }
     }
 
-    /// First unprocessed candidate at `point` that is a different segment with the same
-    /// join key.
-    fn find_candidate(
-        &self,
-        candidates: Option<&Vec<usize>>,
-        of: usize,
-        require_reversible: bool,
-    ) -> Option<usize> {
+    /// The first candidate in `candidates` that is a different segment with the same join
+    /// key.
+    ///
+    /// Deliberately **not** filtered for being consumed already or for being one-way.
+    /// Upstream's `.find(featureMatcher)` applies only the same-run test; whether the
+    /// candidate it returns has been consumed (`_expand` returns nothing for it) or may not
+    /// be reversed (`_expandInReverse`) is decided afterwards. So a consumed or one-way
+    /// first match ends the search at that endpoint even when a later candidate would have
+    /// been usable -- which is what upstream does, and so what is reproduced.
+    fn find_candidate(&self, candidates: Option<&Vec<usize>>, of: usize) -> Option<usize> {
         let key = self.segments[of].join_key;
-        candidates?.iter().copied().find(|&candidate| {
-            candidate != of
-                && self.segments[candidate].join_key == key
-                && !self.processed[candidate]
-                // Only the reversed path needs this: a one-way run cannot be walked
-                // backwards without inverting its direction of travel.
-                && !(require_reversible && self.segments[candidate].oneway)
-        })
+        candidates?
+            .iter()
+            .copied()
+            .find(|&candidate| candidate != of && self.segments[candidate].join_key == key)
+    }
+
+    /// `_expandInReverse`: a candidate that is one-way cannot be walked backwards, because
+    /// that would invert its direction of travel.
+    fn expand_in_reverse(&mut self, candidate: Option<usize>, direction: Direction) -> Vec<Link> {
+        match candidate {
+            Some(position) if !self.segments[position].oneway => {
+                self.expand(Some(position), direction, true)
+            }
+            _ => Vec::new(),
+        }
     }
 
     fn expand(
@@ -162,14 +171,14 @@ impl ChainGraph {
             // Prefer a segment that *ends* where this one begins: it continues the chain
             // in its own direction.
             let inbound = self.inbound.get(&head).cloned();
-            let candidate = self.find_candidate(inbound.as_ref(), position, false);
+            let candidate = self.find_candidate(inbound.as_ref(), position);
             let mut backward = self.expand(candidate, Direction::Backward, false);
             if backward.is_empty() {
                 // Otherwise a segment that also *begins* here, taken reversed so the two
                 // run head-to-head.
                 let outbound = self.outbound.get(&head).cloned();
-                let candidate = self.find_candidate(outbound.as_ref(), position, true);
-                backward = self.expand(candidate, Direction::Backward, true);
+                let candidate = self.find_candidate(outbound.as_ref(), position);
+                backward = self.expand_in_reverse(candidate, Direction::Backward);
             }
             links.extend(backward);
         }
@@ -181,12 +190,12 @@ impl ChainGraph {
 
         if direction != Direction::Backward {
             let outbound = self.outbound.get(&tail).cloned();
-            let candidate = self.find_candidate(outbound.as_ref(), position, false);
+            let candidate = self.find_candidate(outbound.as_ref(), position);
             let mut forward = self.expand(candidate, Direction::Forward, false);
             if forward.is_empty() {
                 let inbound = self.inbound.get(&tail).cloned();
-                let candidate = self.find_candidate(inbound.as_ref(), position, true);
-                forward = self.expand(candidate, Direction::Forward, true);
+                let candidate = self.find_candidate(inbound.as_ref(), position);
+                forward = self.expand_in_reverse(candidate, Direction::Forward);
             }
             links.extend(forward);
         }
@@ -306,6 +315,20 @@ mod tests {
         // The only possible join needs the second segment reversed, which is forbidden.
         assert_eq!(runs(&chains[0]), vec![0]);
         assert_eq!(runs(&chains[1]), vec![1]);
+    }
+
+    /// The first same-key candidate decides the search at an endpoint. If it is one-way the
+    /// reversed join is refused, even though a later candidate could have been reversed.
+    #[test]
+    fn a_oneway_first_candidate_blocks_the_reversed_join() {
+        let mut oneway = segment(1, 11.1, 11.2, 1);
+        oneway.oneway = true;
+        let chains = join_chains(vec![
+            segment(0, 11.1, 11.0, 1),
+            oneway,
+            segment(2, 11.1, 11.3, 1),
+        ]);
+        assert_eq!(runs(&chains[0]), vec![0]);
     }
 
     /// A one-way run still joins in its own direction; the guard is only about reversal.
