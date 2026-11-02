@@ -17,6 +17,7 @@ rust/crates/osd-normalize/tests/topology_scenes.json
 rust/crates/osd-osm/tests/validity_vectors.json
 rust/crates/osd-out/tests/metadata_vectors.json
 rust/crates/osd-out/tests/output_vectors.json
+rust/crates/osd-pipeline/tests/download_vectors.json
 rust/crates/osd-pipeline/tests/format_scenes.json
 rust/crates/osd-pipeline/tests/elevated_scenes.json
 rust/crates/osd-pipeline/tests/geocoded_scenes.json

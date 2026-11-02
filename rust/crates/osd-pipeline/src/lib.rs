@@ -20,6 +20,7 @@
 //! so coalescing arcs after elevations are attached would silently merge arcs that differ
 //! only in z. Upstream relies on this (`PrepareGeoJSON.ts:145-151`) and so must this.
 
+pub mod download;
 pub mod elevation;
 pub mod format;
 pub mod prepare;

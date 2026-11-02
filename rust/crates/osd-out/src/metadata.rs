@@ -351,12 +351,12 @@ fn round(value: f64, decimals: i32) -> f64 {
 }
 
 /// `Date.prototype.getTime`: milliseconds since the epoch, sub-millisecond digits dropped.
-fn unix_millis(at: OffsetDateTime) -> i64 {
+pub fn unix_millis(at: OffsetDateTime) -> i64 {
     at.unix_timestamp_nanos().div_euclid(1_000_000) as i64
 }
 
 /// `Date.prototype.toISOString`: `YYYY-MM-DDTHH:mm:ss.sssZ` in UTC.
-fn to_iso_string(millis: i64) -> String {
+pub fn to_iso_string(millis: i64) -> String {
     let at = OffsetDateTime::from_unix_timestamp_nanos(i128::from(millis) * 1_000_000)
         .expect("a representable instant");
     format!(

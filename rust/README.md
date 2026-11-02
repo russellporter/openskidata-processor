@@ -59,10 +59,20 @@ places, wikidata ids, references, elevation profiles or lift-station positions, 
 sets feed the real writer real output features with those properties and random booleans
 filled in. The Rust writer is compared on every table's DDL, every row and every R-tree.
 
+**Download.** `openskidata download` fetches the five Overpass queries and Skimap.org
+(`osd-pipeline/src/download.rs`); `openskidata run` is download then prepare, `--skip-download`
+to prepare only. The query texts, the bounding-box filter on Skimap.org, the provenance file and
+`encodeURIComponent` are compared with the TypeScript builders
+(`codegen/generate-download-vectors.mjs`); retries, concurrency (the runs query beside the others,
+one Overpass endpoint never asked twice at once) and `OSM_INPUT_DIR` are tested against stub
+servers. The commands read the same environment variables as upstream (`WORKING_DIR`,
+`OUTPUT_DIR`, `BBOX`, `OSM_INPUT_DIR`, ...). The download has never been run against the real
+Overpass: it is unreachable from the development container.
+
 **Not done yet.** The terrain-tile elevation source (the Racemap and tileserver-gl servers work), snow
-cover, downloading from Overpass/Skimap.org, PBF input, and the streaming driver that bounds
-normalization memory (`normalize_runs_partitioned` partitions in memory today). The Postgres caches
-migrate with `openskidata migrate-cache`.
+cover, PBF input, and the streaming driver that bounds normalization memory
+(`normalize_runs_partitioned` partitions in memory today). The Postgres caches migrate with
+`openskidata migrate-cache`.
 
 ### Performance
 
@@ -72,13 +82,13 @@ Overpass is unreachable from the development container, so the inputs are synthe
 and 16 GB, `prepare` only (no elevation, geocoding or tiles), TypeScript with Postgres running beside
 it:
 
-| Resorts | Ski areas / runs / lifts / spots | TypeScript (node only) | Rust |
-|---:|---|---|---|
-| 500 | | 16 s, 138 MB | 0.3 s, 20 MB |
-| 2,000 | | 80 s, 177 MB | 1.0 s, 53 MB |
-| 5,000 | 9,539 / 12,871 / 4,250 / 4,915 | 199 s, 208 MB | 2.4 s, 131 MB |
-| 20,000 | | not run | 11 s, 0.5 GB |
-| 50,000 | | not run | 45 s, 1.2 GB |
+| Resorts | Ski areas / runs / lifts / spots | TypeScript (node only) | Rust          |
+| ------: | -------------------------------- | ---------------------- | ------------- |
+|     500 |                                  | 16 s, 138 MB           | 0.3 s, 20 MB  |
+|   2,000 |                                  | 80 s, 177 MB           | 1.0 s, 53 MB  |
+|   5,000 | 9,539 / 12,871 / 4,250 / 4,915   | 199 s, 208 MB          | 2.4 s, 131 MB |
+|  20,000 |                                  | not run                | 11 s, 0.5 GB  |
+|  50,000 |                                  | not run                | 45 s, 1.2 GB  |
 
 The Rust and TypeScript outputs are identical feature by feature at 500, 2,000 and 5,000 resorts.
 Time and memory are roughly linear; the first Rust version was not (77 s at 5,000), because the

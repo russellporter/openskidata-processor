@@ -27,78 +27,110 @@ struct Cli {
     command: Command,
 }
 
+/// What every pipeline command needs: where the files are, and the area they cover.
+#[derive(clap::Args, Debug)]
+struct Common {
+    /// Where the input files (`input_*.osmjson`, `input_skimap_ski_areas.geojson`) are and
+    /// the download writes them.
+    #[arg(long, env = "WORKING_DIR", default_value = "data")]
+    working_dir: std::path::PathBuf,
+    /// Bounding box, as JSON `[west, south, east, north]`: restricts the download and is
+    /// reported in `metadata.json`.
+    #[arg(long, env = "BBOX")]
+    bbox: Option<String>,
+}
+
+#[derive(clap::Args, Debug)]
+struct DownloadArgs {
+    /// Use the five Overpass JSON files in this directory instead of querying Overpass.
+    #[arg(long, env = "OSM_INPUT_DIR")]
+    osm_input_dir: Option<std::path::PathBuf>,
+}
+
+#[derive(clap::Args, Debug)]
+struct PrepareArgs {
+    #[arg(long, env = "OUTPUT_DIR", default_value = "data")]
+    output_dir: std::path::PathBuf,
+    /// A reverse geocoder (Photon, or a Who's On First `geocode-api`) to find the places
+    /// objects lie in. Without one, `places` are empty.
+    #[arg(long, env = "GEOCODING_SERVER_URL")]
+    geocoding_server_url: Option<String>,
+    #[arg(
+        long,
+        env = "GEOCODING_SERVER_TYPE",
+        value_enum,
+        default_value = "photon"
+    )]
+    geocoding_server_type: GeocodingServerType,
+    /// How long a cached geocoding response stays valid, in milliseconds (default a year).
+    #[arg(
+        long,
+        env = "GEOCODING_SERVER_URL_TTL",
+        default_value_t = 31_536_000_000
+    )]
+    geocoding_cache_ttl_ms: i64,
+    /// An elevation server, to give runs, lifts and spots their elevations.
+    #[arg(long, env = "ELEVATION_SERVER_URL")]
+    elevation_server_url: Option<String>,
+    /// `racemap` (one POST of coordinates) or `tileserver-gl` (a batch endpoint). The
+    /// `tile` type is not supported yet.
+    #[arg(
+        long,
+        env = "ELEVATION_SERVER_TYPE",
+        value_enum,
+        default_value = "racemap"
+    )]
+    elevation_server_type: ElevationServerType,
+    /// For `tileserver-gl`: the zooms to try in turn, comma separated.
+    #[arg(
+        long,
+        env = "ELEVATION_SERVER_ZOOM",
+        value_delimiter = ',',
+        default_value = "12"
+    )]
+    elevation_server_zoom: Vec<u32>,
+    /// The most coordinates asked of the elevation server at once.
+    #[arg(long, env = "ELEVATION_SERVER_BATCH_SIZE", default_value_t = 10_000)]
+    elevation_server_batch_size: usize,
+    /// The cache store the geocoder's and the elevation lookup's responses are kept in.
+    #[arg(long, env = "CACHE_PATH", default_value = "data/cache.db")]
+    cache_path: std::path::PathBuf,
+}
+
 #[derive(Subcommand, Debug)]
 enum Command {
+    /// Download the OpenStreetMap data from Overpass and the ski areas from Skimap.org.
+    ///
+    /// Writes `input_*.osmjson`, `input_skimap_ski_areas.geojson` and
+    /// `input_download_metadata.json` to the working directory.
+    Download {
+        #[command(flatten)]
+        common: Common,
+        #[command(flatten)]
+        download: DownloadArgs,
+    },
     /// Turn the downloaded input files into the output files.
     ///
-    /// Reads `input_*.osmjson` (from Overpass, or the files `OSM_INPUT_DIR` points at) and
-    /// `input_skimap_ski_areas.geojson` from the input directory, and writes GeoJSON, the
-    /// slimmed mapboxgl GeoJSON and CSV to the output directory. Snow cover and tiles are not
-    /// applied yet.
+    /// Reads the files `download` wrote, and writes GeoJSON, the slimmed mapboxgl GeoJSON,
+    /// CSV and the GeoPackage to the output directory. Snow cover and tiles are not applied
+    /// yet.
     Prepare {
-        #[arg(long, env = "INPUT_DIR", default_value = "data/input")]
-        input_dir: std::path::PathBuf,
-        #[arg(long, env = "OUTPUT_DIR", default_value = "data/output")]
-        output_dir: std::path::PathBuf,
-        /// Bounding box the input was restricted to, as JSON `[west, south, east, north]`.
-        /// Only reported in `metadata.json`.
-        #[arg(long, env = "BBOX")]
-        bbox: Option<String>,
-        /// A reverse geocoder (Photon, or a Who's On First `geocode-api`) to find the places
-        /// objects lie in. Without one, `places` are empty.
-        #[arg(long, env = "GEOCODING_SERVER_URL")]
-        geocoding_server_url: Option<String>,
-        #[arg(
-            long,
-            env = "GEOCODING_SERVER_TYPE",
-            value_enum,
-            default_value = "photon"
-        )]
-        geocoding_server_type: GeocodingServerType,
-        /// How long a cached geocoding response stays valid, in milliseconds (default a year).
-        #[arg(
-            long,
-            env = "GEOCODING_SERVER_URL_TTL",
-            default_value_t = 31_536_000_000
-        )]
-        geocoding_cache_ttl_ms: i64,
-        /// An elevation server, to give runs, lifts and spots their elevations.
-        #[arg(long, env = "ELEVATION_SERVER_URL")]
-        elevation_server_url: Option<String>,
-        /// `racemap` (one POST of coordinates) or `tileserver-gl` (a batch endpoint). The
-        /// `tile` type is not supported yet.
-        #[arg(
-            long,
-            env = "ELEVATION_SERVER_TYPE",
-            value_enum,
-            default_value = "racemap"
-        )]
-        elevation_server_type: ElevationServerType,
-        /// For `tileserver-gl`: the zooms to try in turn, comma separated.
-        #[arg(
-            long,
-            env = "ELEVATION_SERVER_ZOOM",
-            value_delimiter = ',',
-            default_value = "12"
-        )]
-        elevation_server_zoom: Vec<u32>,
-        /// The most coordinates asked of the elevation server at once.
-        #[arg(long, env = "ELEVATION_SERVER_BATCH_SIZE", default_value_t = 10_000)]
-        elevation_server_batch_size: usize,
-        /// The cache store the geocoder's and the elevation lookup's responses are kept in.
-        #[arg(long, env = "CACHE_PATH", default_value = "data/cache.db")]
-        cache_path: std::path::PathBuf,
+        #[command(flatten)]
+        common: Common,
+        #[command(flatten)]
+        prepare: PrepareArgs,
     },
-    /// Run the full pipeline.
+    /// Download, then prepare (`run.sh`).
     Run {
-        #[arg(long, env = "OSM_PBF")]
-        osm_pbf: std::path::PathBuf,
-        #[arg(long, env = "OUTPUT_DIR", default_value = "data")]
-        output_dir: std::path::PathBuf,
-        #[arg(long, env = "CACHE_PATH", default_value = "data/cache.db")]
-        cache_path: std::path::PathBuf,
-        #[arg(long, env = "GENERATE_TILES")]
-        generate_tiles: bool,
+        #[command(flatten)]
+        common: Common,
+        #[command(flatten)]
+        download: DownloadArgs,
+        #[command(flatten)]
+        prepare: PrepareArgs,
+        /// Use the files already in the working directory.
+        #[arg(long)]
+        skip_download: bool,
     },
     /// Migrate the Postgres caches into the embedded store. Run once; safe to repeat.
     ///
@@ -117,71 +149,81 @@ enum Command {
     },
 }
 
-#[tokio::main]
-async fn main() -> Result<()> {
+fn parse_bbox(bbox: &Option<String>) -> Result<Option<Vec<f64>>> {
+    bbox.as_ref()
+        .map(|text| serde_json::from_str(text))
+        .transpose()
+        .map_err(|e| anyhow::anyhow!("BBOX must be a JSON array of numbers: {e}"))
+}
+
+fn run_download(common: &Common, download: &DownloadArgs) -> Result<()> {
+    osd_pipeline::download::download(&osd_pipeline::download::DownloadConfig::new(
+        common.working_dir.clone(),
+        parse_bbox(&common.bbox)?,
+        download.osm_input_dir.clone(),
+    ))
+}
+
+fn run_prepare(common: &Common, args: PrepareArgs) -> Result<()> {
+    osd_pipeline::prepare::prepare(&osd_pipeline::prepare::PrepareConfig {
+        input_dir: common.working_dir.clone(),
+        output_dir: args.output_dir,
+        bbox: parse_bbox(&common.bbox)?,
+        cache_path: args.cache_path,
+        geocoding: args
+            .geocoding_server_url
+            .map(|url| osd_pipeline::prepare::GeocodingSettings {
+                url,
+                server_type: match args.geocoding_server_type {
+                    GeocodingServerType::Photon => osd_enrich::http_geocoder::ServerType::Photon,
+                    GeocodingServerType::GeocodeApi => {
+                        osd_enrich::http_geocoder::ServerType::GeocodeApi
+                    }
+                },
+                cache_ttl_ms: args.geocoding_cache_ttl_ms,
+            }),
+        elevation: args
+            .elevation_server_url
+            .map(|url| osd_pipeline::prepare::ElevationSettings {
+                server: match args.elevation_server_type {
+                    ElevationServerType::Racemap => {
+                        osd_pipeline::prepare::ElevationServer::Racemap { url }
+                    }
+                    ElevationServerType::TileserverGl => {
+                        osd_pipeline::prepare::ElevationServer::TileserverGl {
+                            url,
+                            zooms: args.elevation_server_zoom.clone(),
+                        }
+                    }
+                },
+                batch_size: args.elevation_server_batch_size,
+            }),
+    })
+}
+
+// Not `#[tokio::main]`: the pipeline uses blocking HTTP clients, which must not be created
+// inside an async runtime. Only the Postgres migration needs one.
+fn main() -> Result<()> {
     tracing_subscriber::fmt()
         .with_env_filter(
             tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| "info".into()),
         )
         .init();
 
-    let cli = Cli::parse();
-    match cli.command {
-        Command::Prepare {
-            input_dir,
-            output_dir,
-            bbox,
-            geocoding_server_url,
-            geocoding_server_type,
-            geocoding_cache_ttl_ms,
-            elevation_server_url,
-            elevation_server_type,
-            elevation_server_zoom,
-            elevation_server_batch_size,
-            cache_path,
+    match Cli::parse().command {
+        Command::Download { common, download } => run_download(&common, &download),
+        Command::Prepare { common, prepare } => run_prepare(&common, prepare),
+        Command::Run {
+            common,
+            download,
+            prepare,
+            skip_download,
         } => {
-            let bbox: Option<Vec<f64>> =
-                bbox.map(|text| serde_json::from_str(&text))
-                    .transpose()
-                    .map_err(|e| anyhow::anyhow!("BBOX must be a JSON array of numbers: {e}"))?;
-            osd_pipeline::prepare::prepare(&osd_pipeline::prepare::PrepareConfig {
-                input_dir,
-                output_dir,
-                bbox,
-                cache_path,
-                geocoding: geocoding_server_url.map(|url| {
-                    osd_pipeline::prepare::GeocodingSettings {
-                        url,
-                        server_type: match geocoding_server_type {
-                            GeocodingServerType::Photon => {
-                                osd_enrich::http_geocoder::ServerType::Photon
-                            }
-                            GeocodingServerType::GeocodeApi => {
-                                osd_enrich::http_geocoder::ServerType::GeocodeApi
-                            }
-                        },
-                        cache_ttl_ms: geocoding_cache_ttl_ms,
-                    }
-                }),
-                elevation: elevation_server_url.map(|url| {
-                    osd_pipeline::prepare::ElevationSettings {
-                        server: match elevation_server_type {
-                            ElevationServerType::Racemap => {
-                                osd_pipeline::prepare::ElevationServer::Racemap { url }
-                            }
-                            ElevationServerType::TileserverGl => {
-                                osd_pipeline::prepare::ElevationServer::TileserverGl {
-                                    url,
-                                    zooms: elevation_server_zoom.clone(),
-                                }
-                            }
-                        },
-                        batch_size: elevation_server_batch_size,
-                    }
-                }),
-            })
+            if !skip_download {
+                run_download(&common, &download)?;
+            }
+            run_prepare(&common, prepare)
         }
-        Command::Run { .. } => todo!("wire up osd_pipeline::run"),
         Command::MigrateCache {
             postgres_url,
             cache_path,
@@ -191,8 +233,9 @@ async fn main() -> Result<()> {
                 std::fs::create_dir_all(parent)?;
             }
             let store = osd_cache::CacheStore::open(&cache_path)?;
-            let report =
-                osd_cache::migrate_from_postgres(&postgres_url, &table_prefix, &store).await?;
+            let report = tokio::runtime::Runtime::new()?.block_on(
+                osd_cache::migrate_from_postgres(&postgres_url, &table_prefix, &store),
+            )?;
             println!("{report:#?}");
             println!("{:#?}", store.counts()?);
             Ok(())
