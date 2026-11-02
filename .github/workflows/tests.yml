@@ -104,6 +104,9 @@ jobs:
       - name: Check the elevation loader vectors are in sync
         run: docker compose exec -T app node rust/codegen/generate-elevation-loader-vectors.mjs --check
 
+      - name: Check the elevated scenes are in sync
+        run: docker compose exec -T app node rust/codegen/generate-elevated-scenes.mjs --check
+
       - name: Check the geocoded scenes are in sync
         run: docker compose exec -T app node rust/codegen/generate-geocoded-scenes.mjs --check
 

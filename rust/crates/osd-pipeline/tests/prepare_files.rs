@@ -138,7 +138,9 @@ fn files_written_by_prepare_match_the_typescript_output() {
             input_dir: input_dir.clone(),
             output_dir: output_dir.clone(),
             bbox: None,
+            cache_path: scratch("unused-cache").join("cache.db"),
             geocoding: None,
+            elevation: None,
         })
         .unwrap();
 
@@ -200,7 +202,9 @@ fn the_geojson_layout_is_the_one_merge_outputs_expects() {
         input_dir: input_dir.clone(),
         output_dir: output_dir.clone(),
         bbox: None,
+        cache_path: scratch("unused-cache").join("cache.db"),
         geocoding: None,
+        elevation: None,
     })
     .unwrap();
     let text = fs::read_to_string(output_dir.join("runs.geojson")).unwrap();
@@ -234,7 +238,9 @@ fn metadata_json_describes_what_was_written() {
         input_dir: input_dir.clone(),
         output_dir: output_dir.clone(),
         bbox: Some(vec![11.0, 47.0, 12.5, 48.0]),
+        cache_path: scratch("unused-cache").join("cache.db"),
         geocoding: None,
+        elevation: None,
     })
     .unwrap();
 
@@ -309,7 +315,9 @@ fn metadata_json_describes_what_was_written() {
         input_dir: input_dir.clone(),
         output_dir: output_dir.clone(),
         bbox: None,
+        cache_path: scratch("unused-cache").join("cache.db"),
         geocoding: None,
+        elevation: None,
     })
     .unwrap();
     let metadata: Value =
@@ -323,22 +331,23 @@ fn metadata_json_describes_what_was_written() {
     let _ = fs::remove_dir_all(&output_dir);
 }
 
-/// A server that answers every request with the same Photon response, until dropped.
-struct FixedPhoton {
+/// A server that answers every request from a function of its body, until shut down.
+struct FixedServer {
     url: String,
     requests: std::sync::Arc<std::sync::atomic::AtomicUsize>,
     stop: std::sync::Arc<std::sync::atomic::AtomicBool>,
     address: std::net::SocketAddr,
 }
 
-impl FixedPhoton {
-    fn start() -> FixedPhoton {
+impl FixedServer {
+    fn start(answer: impl Fn(&str) -> String + Send + Sync + 'static) -> FixedServer {
         use std::io::{Read, Write};
         use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
         let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
         let address = listener.local_addr().unwrap();
         let requests = std::sync::Arc::new(AtomicUsize::new(0));
         let stop = std::sync::Arc::new(AtomicBool::new(false));
+        let answer = std::sync::Arc::new(answer);
         let (counter, flag) = (requests.clone(), stop.clone());
         std::thread::spawn(move || {
             for stream in listener.incoming() {
@@ -347,16 +356,34 @@ impl FixedPhoton {
                 }
                 let Ok(mut stream) = stream else { continue };
                 counter.fetch_add(1, Ordering::SeqCst);
+                let answer = answer.clone();
                 std::thread::spawn(move || {
                     let mut buffer = [0u8; 4096];
                     let mut received = Vec::new();
-                    while !received.windows(4).any(|w| w == b"\r\n\r\n") {
+                    let head_end = loop {
+                        if let Some(at) = received.windows(4).position(|w| w == b"\r\n\r\n") {
+                            break at + 4;
+                        }
                         match stream.read(&mut buffer) {
                             Ok(0) | Err(_) => return,
                             Ok(n) => received.extend_from_slice(&buffer[..n]),
                         }
+                    };
+                    let head = String::from_utf8_lossy(&received[..head_end]).to_lowercase();
+                    let length = head
+                        .lines()
+                        .find_map(|l| {
+                            l.strip_prefix("content-length:")
+                                .map(|v| v.trim().parse().unwrap_or(0))
+                        })
+                        .unwrap_or(0usize);
+                    while received.len() < head_end + length {
+                        match stream.read(&mut buffer) {
+                            Ok(0) | Err(_) => break,
+                            Ok(n) => received.extend_from_slice(&buffer[..n]),
+                        }
                     }
-                    let body = r#"{"features":[{"properties":{"countrycode":"AT","state":"Vienna","city":"Wien"}}]}"#;
+                    let body = answer(&String::from_utf8_lossy(&received[head_end..]));
                     let _ = write!(
                         stream,
                         "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
@@ -365,12 +392,20 @@ impl FixedPhoton {
                 });
             }
         });
-        FixedPhoton {
+        FixedServer {
             url: format!("http://{address}/geo"),
             requests,
             stop,
             address,
         }
+    }
+
+    /// Every request answered with the same Photon response.
+    fn photon() -> FixedServer {
+        Self::start(|_| {
+            r#"{"features":[{"properties":{"countrycode":"AT","state":"Vienna","city":"Wien"}}]}"#
+                .to_owned()
+        })
     }
 
     fn requests(&self) -> usize {
@@ -397,12 +432,11 @@ fn prepare_geocodes_and_a_second_run_needs_no_server() {
     write_inputs(&input_dir, &scene.roles);
     let cache_path = scratch("geo-cache").join("cache.db");
 
-    let server = FixedPhoton::start();
+    let server = FixedServer::photon();
     let settings = |url: &str| GeocodingSettings {
         url: url.to_owned(),
         server_type: osd_enrich::http_geocoder::ServerType::Photon,
         cache_ttl_ms: 1_000_000_000_000,
-        cache_path: cache_path.clone(),
     };
     let run = |out: &str, url: &str| {
         let output_dir = scratch(out);
@@ -410,7 +444,9 @@ fn prepare_geocodes_and_a_second_run_needs_no_server() {
             input_dir: input_dir.clone(),
             output_dir: output_dir.clone(),
             bbox: None,
+            cache_path: cache_path.clone(),
             geocoding: Some(settings(url)),
+            elevation: None,
         })
         .unwrap();
         output_dir
@@ -440,6 +476,89 @@ fn prepare_geocodes_and_a_second_run_needs_no_server() {
     // A second run, the server gone: every cell comes from the cache, and the output is the same.
     server.shut_down();
     let second = run("geo-out-2", "http://127.0.0.1:1/geo");
+    for file in [
+        "runs.geojson",
+        "lifts.geojson",
+        "spots.geojson",
+        "ski_areas.geojson",
+    ] {
+        assert_eq!(
+            fs::read_to_string(first.join(file)).unwrap(),
+            fs::read_to_string(second.join(file)).unwrap(),
+            "{file}"
+        );
+    }
+}
+
+#[test]
+fn prepare_elevates_and_a_second_run_needs_no_server() {
+    use osd_pipeline::prepare::{ElevationServer, ElevationSettings};
+    let scenes: Scenes =
+        serde_json::from_str(include_str!("../../osd-cluster/tests/cluster_scenes.json")).unwrap();
+    let scene = scenes
+        .scenes
+        .iter()
+        .find(|s| s.expected.runs.len() >= 2 && !s.expected.lifts.is_empty())
+        .expect("a scene with runs and a lift");
+    let input_dir = scratch("elev-in");
+    write_inputs(&input_dir, &scene.roles);
+    let cache_path = scratch("elev-cache").join("cache.db");
+
+    // Every coordinate is at 1500.0 m, whatever is asked.
+    let server = FixedServer::start(|body| {
+        let asked: Vec<[f64; 2]> = serde_json::from_str(body).unwrap();
+        format!("[{}]", vec!["1500.0"; asked.len()].join(","))
+    });
+    let run = |out: &str, url: &str| {
+        let output_dir = scratch(out);
+        prepare(&PrepareConfig {
+            input_dir: input_dir.clone(),
+            output_dir: output_dir.clone(),
+            bbox: None,
+            cache_path: cache_path.clone(),
+            geocoding: None,
+            elevation: Some(ElevationSettings {
+                server: ElevationServer::Racemap {
+                    url: url.to_owned(),
+                },
+                batch_size: 10_000,
+            }),
+        })
+        .unwrap();
+        output_dir
+    };
+
+    let first = run("elev-out-1", &server.url);
+    assert!(server.requests() > 0, "the server was asked");
+    for run in features(&first.join("runs.geojson")) {
+        let coordinates = run["geometry"]["coordinates"].as_array().unwrap();
+        let first_coordinate = if run["geometry"]["type"] == "LineString" {
+            &coordinates[0]
+        } else {
+            &coordinates[0][0]
+        };
+        assert_eq!(first_coordinate[2], 1500.0, "{}", run["properties"]["id"]);
+        if run["geometry"]["type"] == "LineString" {
+            let heights = run["properties"]["elevationProfile"]["heights"]
+                .as_array()
+                .unwrap();
+            assert!(heights.iter().all(|h| *h == 1500.0));
+        }
+    }
+    let lift = features(&first.join("lifts.geojson")).remove(0);
+    assert_eq!(lift["geometry"]["coordinates"][0][2], 1500.0);
+
+    // The metadata counts lengths now, and the lift CSV has its elevation columns.
+    let metadata: Value =
+        serde_json::from_str(&fs::read_to_string(first.join("metadata.json")).unwrap()).unwrap();
+    assert!(metadata["totals"]["runLengthKm"].as_f64().unwrap() > 0.0);
+    assert!(metadata["totals"]["liftLengthKm"].as_f64().unwrap() > 0.0);
+    let csv = fs::read_to_string(first.join("csv").join("lifts.csv")).unwrap();
+    assert!(csv.lines().nth(1).unwrap().contains(",1500,1500,"), "{csv}");
+
+    // A second run with the server gone: every cell comes from the cache.
+    server.shut_down();
+    let second = run("elev-out-2", "http://127.0.0.1:1/elevation");
     for file in [
         "runs.geojson",
         "lifts.geojson",

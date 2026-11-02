@@ -59,6 +59,39 @@ pub fn write_feature_collection<W: Write>(
     out.write_all(CLOSE.as_bytes())
 }
 
+/// A geometry as GeoJSON, with each coordinate's elevation as its third number if there are
+/// any. `elevations` is in the order of the geometry's flattened positions (a polygon's rings
+/// and a multipolygon's polygons in turn).
+pub fn geometry_json(geometry: &osd_osm::element::Geometry, elevations: Option<&[f64]>) -> Value {
+    use osd_osm::element::{Geometry, Position};
+    let mut z = elevations.map(|e| e.iter().copied());
+    let mut position = |p: &Position| -> Value {
+        match z.as_mut().and_then(Iterator::next) {
+            Some(height) => serde_json::json!([p[0], p[1], height]),
+            None => serde_json::json!([p[0], p[1]]),
+        }
+    };
+    match geometry {
+        Geometry::Point(p) => serde_json::json!({ "type": "Point", "coordinates": position(p) }),
+        Geometry::LineString(line) => serde_json::json!({
+            "type": "LineString",
+            "coordinates": line.iter().map(&mut position).collect::<Vec<_>>(),
+        }),
+        Geometry::MultiLineString(lines) => serde_json::json!({
+            "type": "MultiLineString",
+            "coordinates": lines.iter().map(|l| l.iter().map(&mut position).collect::<Vec<_>>()).collect::<Vec<_>>(),
+        }),
+        Geometry::Polygon(rings) => serde_json::json!({
+            "type": "Polygon",
+            "coordinates": rings.iter().map(|r| r.iter().map(&mut position).collect::<Vec<_>>()).collect::<Vec<_>>(),
+        }),
+        Geometry::MultiPolygon(polygons) => serde_json::json!({
+            "type": "MultiPolygon",
+            "coordinates": polygons.iter().map(|rings| rings.iter().map(|r| r.iter().map(&mut position).collect::<Vec<_>>()).collect::<Vec<_>>()).collect::<Vec<_>>(),
+        }),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

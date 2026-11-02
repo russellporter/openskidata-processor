@@ -21,6 +21,7 @@ osd-cluster.workspace = true
 osd-enrich.workspace = true
 osd-cache.workspace = true
 osd-out.workspace = true
+osd-turf.workspace = true
 time.workspace = true
 
 [dev-dependencies]

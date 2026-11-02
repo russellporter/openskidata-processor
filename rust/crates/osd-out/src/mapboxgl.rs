@@ -19,6 +19,8 @@ use osd_osm::element::{Geometry, Position};
 use osd_tags::js_number::{round, trim};
 use serde_json::{Map, Value, json};
 
+use crate::geojson::geometry_json;
+
 fn feature(geometry: Value, properties: Map<String, Value>) -> Value {
     json!({ "type": "Feature", "geometry": geometry, "properties": properties })
 }
@@ -91,7 +93,10 @@ pub fn run(f: &Feature<RunProperties>) -> Option<Value> {
         let offset = index as f64 - (uses.len() as f64 - 1.0) / 2.0;
         properties.insert((*use_).into(), json!(offset));
     }
-    Some(feature(to_value(&f.geometry), properties))
+    Some(feature(
+        geometry_json(&f.geometry, f.elevations.as_deref()),
+        properties,
+    ))
 }
 
 pub fn lift(f: &Feature<LiftProperties>) -> Value {
@@ -124,7 +129,10 @@ pub fn lift(f: &Feature<LiftProperties>) -> Value {
         ),
     );
     properties.insert("tunnel".into(), json!(p.tunnel));
-    feature(to_value(&f.geometry), properties)
+    feature(
+        geometry_json(&f.geometry, f.elevations.as_deref()),
+        properties,
+    )
 }
 
 pub fn spot(f: &Feature<SpotProperties>) -> Value {
@@ -161,7 +169,10 @@ pub fn spot(f: &Feature<SpotProperties>) -> Value {
         }
         _ => {}
     }
-    feature(to_value(&f.geometry), properties)
+    feature(
+        geometry_json(&f.geometry, f.elevations.as_deref()),
+        properties,
+    )
 }
 
 fn spot_type(kind: &SpotKind) -> Value {

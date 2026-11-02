@@ -72,6 +72,11 @@ pub fn run_with(
     roles: &Roles,
     geocoder: Option<&dyn osd_enrich::geocode::Geocoder>,
 ) -> ClusterOutput {
+    run_enriched(roles, geocoder, None)
+}
+
+/// The format stage on a recorded world.
+pub fn format(roles: &Roles) -> osd_pipeline::format::Formatted {
     let input = FormatInput {
         runs: features(&roles.runs),
         lifts: features(&roles.lifts),
@@ -80,8 +85,55 @@ pub fn run_with(
         spots: features(&roles.spots),
         skimap: roles.skimap.iter().map(skimap).collect(),
     };
-    let formatted = format_all(&input).unwrap();
-    osd_cluster::engine::cluster_with_geocoder(formatted.into_cluster_input(), geocoder).unwrap()
+    format_all(&input).unwrap()
+}
+
+/// As [`run`], geocoding with `geocoder` and elevating with `elevation` if given.
+pub fn run_enriched(
+    roles: &Roles,
+    geocoder: Option<&dyn osd_enrich::geocode::Geocoder>,
+    elevation: Option<&osd_enrich::elevation::ElevationLoader<'_>>,
+) -> ClusterOutput {
+    let mut formatted = format(roles);
+    if let Some(loader) = elevation {
+        osd_pipeline::elevation::apply_elevation(&mut formatted, loader);
+    }
+    osd_cluster::engine::cluster_enriched(
+        formatted.into_cluster_input(),
+        &osd_cluster::engine::Enrichment {
+            geocoder,
+            elevation,
+        },
+    )
+    .unwrap()
+}
+
+/// The path of the first place two JSON values differ, for a failure message.
+pub fn first_difference(a: &Value, b: &Value, path: &str) -> Option<String> {
+    match (a, b) {
+        (Value::Object(x), Value::Object(y)) => {
+            for (k, v) in x {
+                match y.get(k) {
+                    None => return Some(format!("{path}.{k}: only in actual")),
+                    Some(w) => {
+                        if let Some(d) = first_difference(v, w, &format!("{path}.{k}")) {
+                            return Some(d);
+                        }
+                    }
+                }
+            }
+            y.keys()
+                .find(|k| !x.contains_key(*k))
+                .map(|k| format!("{path}.{k}: only in expected"))
+        }
+        (Value::Array(x), Value::Array(y)) if x.len() == y.len() => x
+            .iter()
+            .zip(y)
+            .enumerate()
+            .find_map(|(i, (v, w))| first_difference(v, w, &format!("{path}[{i}]"))),
+        _ if same(a, b) => None,
+        _ => Some(format!("{path}: {a} vs {b}")),
+    }
 }
 
 pub fn same(a: &Value, b: &Value) -> bool {
@@ -127,7 +179,7 @@ pub fn without_embedded_station_ski_areas(mut feature: Value) -> Value {
 pub fn feature_json<P: serde::Serialize>(f: &osd_cluster::engine::Feature<P>) -> Value {
     without_embedded_station_ski_areas(json!({
         "type": "Feature",
-        "geometry": serde_json::to_value(&f.geometry).unwrap(),
+        "geometry": osd_out::geojson::geometry_json(&f.geometry, f.elevations.as_deref()),
         "properties": serde_json::to_value(&f.properties).unwrap(),
     }))
 }

@@ -6,18 +6,20 @@
 //! and `spots.geojson`, their `mapboxgl_*` counterparts, the CSV exports, `openskidata.gpkg`
 //! and `metadata.json`. Not yet written: the tiles.
 //!
-//! Geocoding is applied when a geocoder is configured. Elevation and snow cover are not, so the
-//! output equals what the TypeScript pipeline produces with those two switched off.
+//! Geocoding and elevation are applied when configured. Snow cover is not, so the output equals
+//! what the TypeScript pipeline produces with snow cover switched off.
 
+use crate::elevation::apply_elevation;
 use crate::format::{FormatInput, SkimapSkiArea, format_all};
 use anyhow::{Context, Result};
 use openskidata_format::{FeatureType, SkiAreaActivity, Status};
 use osd_cache::CacheStore;
-use osd_cluster::engine::{ClusterOutput, Feature, cluster_with_geocoder};
+use osd_cluster::engine::{ClusterOutput, Enrichment, Feature, cluster_enriched};
+use osd_enrich::elevation::{ElevationLoader, ElevationSource, RacemapSource, TileserverGlSource};
 use osd_enrich::http_geocoder::{HttpGeocoder, HttpGeocoderConfig, ServerType};
 use osd_osm::element::{Element, Feature as OsmFeature, Relation};
 use osd_osm::overpass::{convert_overpass_json, read_elements};
-use osd_out::geojson::write_feature_collection;
+use osd_out::geojson::{geometry_json, write_feature_collection};
 use osd_out::metadata::{self, MetadataCollector, MetadataOptions};
 use osd_out::{csv, gpkg, mapboxgl};
 use serde_json::{Value, json};
@@ -41,19 +43,38 @@ pub struct PrepareConfig {
     pub output_dir: PathBuf,
     /// The bounding box the run is restricted to (`BBOX`), reported in `metadata.json`.
     pub bbox: Option<Vec<f64>>,
+    /// Where the geocoder's and the elevation lookup's responses are cached (see
+    /// `openskidata migrate-cache`). Only opened if one of them is configured.
+    pub cache_path: PathBuf,
     /// The reverse geocoder, if one is configured (`GEOCODING_SERVER_URL`).
     pub geocoding: Option<GeocodingSettings>,
+    /// The elevation server, if one is configured (`ELEVATION_SERVER_URL`).
+    pub elevation: Option<ElevationSettings>,
 }
 
-/// A reverse-geocoding server and where its responses are cached.
+/// A reverse-geocoding server.
 #[derive(Debug, Clone)]
 pub struct GeocodingSettings {
     pub url: String,
     pub server_type: ServerType,
     /// How long a cached response stays valid, in milliseconds.
     pub cache_ttl_ms: i64,
-    /// The cache store (see `openskidata migrate-cache`).
-    pub cache_path: PathBuf,
+}
+
+/// Which elevation server to ask, and how.
+#[derive(Debug, Clone)]
+pub enum ElevationServer {
+    /// One POST of `[lat, lng]` pairs.
+    Racemap { url: String },
+    /// A batch endpoint tried at each zoom in turn.
+    TileserverGl { url: String, zooms: Vec<u32> },
+}
+
+#[derive(Debug, Clone)]
+pub struct ElevationSettings {
+    pub server: ElevationServer,
+    /// The most cells asked of the server at once.
+    pub batch_size: usize,
 }
 
 fn features_from_osm_json(path: &Path) -> Result<Vec<OsmFeature>> {
@@ -120,7 +141,7 @@ fn skimap_ski_area(feature: &Value) -> Option<SkimapSkiArea> {
 fn feature_json<P: serde::Serialize>(feature: &Feature<P>) -> Value {
     json!({
         "type": "Feature",
-        "geometry": serde_json::to_value(&feature.geometry).expect("serializes"),
+        "geometry": geometry_json(&feature.geometry, feature.elevations.as_deref()),
         "properties": serde_json::to_value(&feature.properties).expect("serializes"),
     })
 }
@@ -210,9 +231,8 @@ pub fn write_outputs(output: &ClusterOutput, output_dir: &Path) -> Result<()> {
 
 /// Writes `metadata.json`, last, once every file it describes is on disk.
 ///
-/// Counts are taken from the clustered output. A run's length is its inclined length from its
-/// elevation profile, and zero without one, as upstream's is. Lifts need their geometry's
-/// elevations, which this pipeline does not carry yet, so the lift total is zero.
+/// Counts are taken from the clustered output. A run's or lift's length is its inclined length
+/// from its elevation data, and zero without any, as upstream's is.
 pub fn write_metadata(
     output: &ClusterOutput,
     output_dir: &Path,
@@ -231,7 +251,11 @@ pub fn write_metadata(
     for run in &output.runs {
         collector.add_run(csv::run_elevation(run).map(|e| e.pitch.inclined_length_in_meters));
     }
-    output.lifts.iter().for_each(|_| collector.add_lift(None));
+    for lift in &output.lifts {
+        collector.add_lift(
+            csv::lift_elevation(lift).map(|e| e.elevation.pitch.inclined_length_in_meters),
+        );
+    }
     output.spots.iter().for_each(|_| collector.add_spot());
 
     let geojson = [
@@ -284,29 +308,66 @@ pub fn prepare(config: &PrepareConfig) -> Result<()> {
         spots: features_from_osm_json(&config.input_dir.join(SPOTS))?,
         skimap: skimap_ski_areas(&config.input_dir.join(SKIMAP))?,
     };
-    let formatted = format_all(&input)?;
-    let output = match &config.geocoding {
-        Some(settings) => {
-            if let Some(parent) = settings
-                .cache_path
-                .parent()
-                .filter(|p| !p.as_os_str().is_empty())
-            {
-                fs::create_dir_all(parent)?;
-            }
-            let cache = CacheStore::open(&settings.cache_path)?;
-            let geocoder = HttpGeocoder::new(
-                HttpGeocoderConfig {
-                    url: settings.url.clone(),
-                    server_type: settings.server_type,
-                    cache_ttl_ms: settings.cache_ttl_ms,
-                },
-                &cache,
-            );
-            cluster_with_geocoder(formatted.into_cluster_input(), Some(&geocoder))?
+    let mut formatted = format_all(&input)?;
+
+    // The cache is shared by the geocoder and the elevation lookup, and opened only if needed.
+    let cache = if config.geocoding.is_some() || config.elevation.is_some() {
+        if let Some(parent) = config
+            .cache_path
+            .parent()
+            .filter(|p| !p.as_os_str().is_empty())
+        {
+            fs::create_dir_all(parent)?;
         }
-        None => cluster_with_geocoder(formatted.into_cluster_input(), None)?,
+        Some(CacheStore::open(&config.cache_path)?)
+    } else {
+        None
     };
+
+    let elevation_source: Option<Box<dyn ElevationSource>> =
+        config
+            .elevation
+            .as_ref()
+            .map(|settings| match &settings.server {
+                ElevationServer::Racemap { url } => {
+                    Box::new(RacemapSource::new(url.clone())) as Box<dyn ElevationSource>
+                }
+                ElevationServer::TileserverGl { url, zooms } => {
+                    Box::new(TileserverGlSource::new(url.clone(), zooms.clone()))
+                }
+            });
+    let elevation_loader = match (&elevation_source, &cache, &config.elevation) {
+        (Some(source), Some(cache), Some(settings)) => Some(ElevationLoader::new(
+            source.as_ref(),
+            cache,
+            settings.batch_size,
+        )),
+        _ => None,
+    };
+    if let Some(loader) = &elevation_loader {
+        apply_elevation(&mut formatted, loader);
+    }
+
+    let geocoder = match (&config.geocoding, &cache) {
+        (Some(settings), Some(cache)) => Some(HttpGeocoder::new(
+            HttpGeocoderConfig {
+                url: settings.url.clone(),
+                server_type: settings.server_type,
+                cache_ttl_ms: settings.cache_ttl_ms,
+            },
+            cache,
+        )),
+        _ => None,
+    };
+    let output = cluster_enriched(
+        formatted.into_cluster_input(),
+        &Enrichment {
+            geocoder: geocoder
+                .as_ref()
+                .map(|g| g as &dyn osd_enrich::geocode::Geocoder),
+            elevation: elevation_loader.as_ref(),
+        },
+    )?;
     write_outputs(&output, &config.output_dir)?;
     let download = metadata::read_download_metadata(&config.input_dir);
     write_metadata(

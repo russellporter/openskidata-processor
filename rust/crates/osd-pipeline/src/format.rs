@@ -75,6 +75,8 @@ pub struct SkiAreaOut {
 #[derive(Debug, Clone, PartialEq)]
 pub struct RunOut {
     pub geometry: InputGeometry,
+    /// Set by the elevation stage.
+    pub elevations: Option<Vec<f64>>,
     pub properties: RunProperties,
     /// Ids of the site ski areas this run belongs to.
     pub site_ski_areas: Vec<String>,
@@ -86,6 +88,8 @@ pub struct RunOut {
 #[derive(Debug, Clone, PartialEq)]
 pub struct LiftOut {
     pub geometry: Geometry,
+    /// Set by the elevation stage.
+    pub elevations: Option<Vec<f64>>,
     pub properties: LiftProperties,
     pub site_ski_areas: Vec<String>,
 }
@@ -93,6 +97,8 @@ pub struct LiftOut {
 #[derive(Debug, Clone, PartialEq)]
 pub struct SpotOut {
     pub coordinates: Position,
+    /// Set by the elevation stage.
+    pub elevations: Option<Vec<f64>>,
     pub properties: SpotProperties,
     pub site_ski_areas: Vec<String>,
 }
@@ -130,6 +136,33 @@ fn sequences(geometry: &Geometry) -> Vec<Vec<Position3>> {
 
 fn viewport_hint(geometry: &Geometry) -> ViewportHint {
     let parts = sequences(geometry);
+    let refs: Vec<&[Position3]> = parts.iter().map(Vec::as_slice).collect();
+    compute_viewport_hint(&refs).expect("a valid geometry has positions")
+}
+
+/// The viewport hint of a geometry whose coordinates have the given elevations, in the order of
+/// its flattened positions.
+pub(crate) fn viewport_hint_with_elevations(
+    geometry: &Geometry,
+    elevations: &[f64],
+) -> ViewportHint {
+    let mut z = elevations.iter().copied();
+    let mut line = |positions: &[Position]| -> Vec<Position3> {
+        positions
+            .iter()
+            .map(|p| [p[0], p[1], z.next().expect("an elevation per position")])
+            .collect()
+    };
+    let parts: Vec<Vec<Position3>> = match geometry {
+        Geometry::Point(p) => vec![line(&[*p])],
+        Geometry::LineString(l) => vec![line(l)],
+        Geometry::MultiLineString(lines) => lines.iter().map(|l| line(l)).collect(),
+        Geometry::Polygon(rings) => rings.iter().map(|r| line(r)).collect(),
+        Geometry::MultiPolygon(polygons) => polygons
+            .iter()
+            .flat_map(|rings| rings.iter().map(|r| line(r)).collect::<Vec<_>>())
+            .collect(),
+    };
     let refs: Vec<&[Position3]> = parts.iter().map(Vec::as_slice).collect();
     compute_viewport_hint(&refs).expect("a valid geometry has positions")
 }
@@ -543,6 +576,7 @@ pub fn format_all(input: &FormatInput) -> Result<Formatted> {
         };
         let site_ids = ids(sites.for_sources(&tags.sources));
         out.lifts.push(LiftOut {
+            elevations: None,
             properties: lift_properties_full(
                 tags,
                 id_of("lift", &feature.geometry),
@@ -566,6 +600,7 @@ pub fn format_all(input: &FormatInput) -> Result<Formatted> {
         for kind in spots(&feature.tags) {
             out.spots.push(SpotOut {
                 coordinates: point,
+                elevations: None,
                 properties: SpotProperties {
                     base: SpotBaseProperties {
                         feature_type: FeatureType::Spot,
@@ -611,6 +646,7 @@ fn run_out(output: RunOutput) -> RunOut {
     properties.id = id;
     RunOut {
         geometry: output.geometry,
+        elevations: None,
         properties,
         site_ski_areas,
         point_objects: output.point_objects,
@@ -674,7 +710,7 @@ fn geometry_of_ski_area(geometry: &SkiAreaGeometry) -> Geometry {
     }
 }
 
-fn geometry_of_run(geometry: &InputGeometry) -> Geometry {
+pub(crate) fn geometry_of_run(geometry: &InputGeometry) -> Geometry {
     let pair = |c: &FixedCoord| [c.lng_degrees(), c.lat_degrees()];
     match geometry {
         InputGeometry::Line(points) => Geometry::LineString(points.iter().map(pair).collect()),
@@ -705,6 +741,7 @@ impl Formatted {
                 .into_iter()
                 .map(|l| LiftIn {
                     geometry: l.geometry,
+                    elevations: l.elevations,
                     properties: l.properties,
                     site_ski_areas: l.site_ski_areas,
                 })
@@ -714,6 +751,7 @@ impl Formatted {
                 .into_iter()
                 .map(|r| RunIn {
                     geometry: geometry_of_run(&r.geometry),
+                    elevations: r.elevations,
                     properties: r.properties,
                     site_ski_areas: r.site_ski_areas,
                 })
@@ -723,6 +761,7 @@ impl Formatted {
                 .into_iter()
                 .map(|s| SpotIn {
                     geometry: Geometry::Point(s.coordinates),
+                    elevations: s.elevations,
                     properties: s.properties,
                     site_ski_areas: s.site_ski_areas,
                 })

@@ -59,15 +59,11 @@ places, wikidata ids, references, elevation profiles or lift-station positions, 
 sets feed the real writer real output features with those properties and random booleans
 filled in. The Rust writer is compared on every table's DDL, every row and every R-tree.
 
-**Not done yet.** Applying elevation: the maths is ported (`openskidata-format::elevation_profile`)
-and feeds a run's CSV columns and `metadata.json`, and heights can be looked up (`osd_enrich::elevation`,
-for the Racemap and tileserver-gl servers; not the terrain-tile source) but are not yet applied,
-because the pipeline's geometry is 2D, so lifts' elevation columns, ski-area elevations and lift-station positions wait
-for geometry that carries elevations. Also snow cover, downloading from
-Overpass/Skimap.org, PBF input, and the streaming driver that bounds normalization memory
-(`normalize_runs_partitioned` partitions in memory today). The Postgres caches migrate with
-`openskidata migrate-cache`. No performance or memory figure has been measured: Overpass is
-unreachable from the development container, so there is no large input to measure on.
+**Not done yet.** The terrain-tile elevation source (the Racemap and tileserver-gl servers work), snow
+cover, downloading from Overpass/Skimap.org, PBF input, and the streaming driver that bounds
+normalization memory (`normalize_runs_partitioned` partitions in memory today). The Postgres caches
+migrate with `openskidata migrate-cache`. No performance or memory figure has been measured:
+Overpass is unreachable from the development container, so there is no large input to measure on.
 
 ## Behaviours reproduced
 
@@ -110,6 +106,10 @@ depends on them. Each is pinned by a test and explained where it lives.
   result depends on the algorithm. Under 64 places this reproduces V8's (run detection and binary
   insertion); from 64 it is a stable sort, identical whenever the comparison is consistent, as it
   is for any real geocoder output.
+- **A snapped lift station on a cell with no elevation stops upstream.** `LiftStationAssociator`
+  elevates a station again after snapping it onto its lift, and an error there (a cell with no data)
+  is not caught, so the whole run stops. Here it is logged and the station is left without an
+  elevation.
 - **A failing geocoding cell fails only itself.** Upstream's `DataLoader` batches every cell
   geocoded in the same tick and rejects the whole batch when one fails, so one bad cell loses the
   places of every object in it, and each is asked again by the next object to want it. Here a failed

@@ -360,6 +360,62 @@ const elevatedRunCases = runCases.map(({ feature: original }, index) => {
 });
 runCases.push(...elevatedRunCases);
 
+/**
+ * Lifts again, on elevated lines (a height on every coordinate) with stations of their own: a
+ * top and a bottom station, sometimes one elevated and one not, which is what the lift's speeds
+ * are measured between. They come last, like the elevated runs, so earlier cases do not move.
+ */
+const elevatedLiftCases = liftCases.map(({ feature: original }, index) => {
+  const feature = structuredClone(original);
+  feature.properties.id = "lift-elevated-" + index;
+  const n = 2 + int(5);
+  let x = 11 + random() * 0.01;
+  let y = 47 + random() * 0.01;
+  let z = 1000 + int(1500);
+  const coordinates = [];
+  for (let i = 0; i < n; i++) {
+    coordinates.push([x, y, z]);
+    x += random() * 0.002;
+    y += random() * 0.002;
+    z += int(200) - 20;
+  }
+  feature.geometry = { type: "LineString", coordinates };
+  const station = (position, point) => ({
+    type: "Feature",
+    geometry: { type: "Point", coordinates: point },
+    properties: {
+      type: "spot",
+      spotType: "lift_station",
+      id: "station-" + int(1e6),
+      name: null,
+      position,
+      entry: null,
+      exit: null,
+      liftId: feature.properties.id,
+      skiAreas: [],
+      sources: [],
+      places: [],
+      viewportHint: hint,
+    },
+  });
+  const first = coordinates[0];
+  const last = coordinates[coordinates.length - 1];
+  const at = (c) =>
+    chance(0.85) ? [c[0], c[1], c[2] + int(40)] : [c[0], c[1]];
+  feature.properties.stations = [
+    ...(chance(0.8) ? [station("bottom", at(first))] : []),
+    ...(chance(0.8) ? [station("top", at(last))] : []),
+    ...(chance(0.3) ? [station("mid", at(coordinates[1]))] : []),
+  ];
+  feature.properties.duration = pick([null, 0, 120, 330, 7.5, 1e-3]);
+  return {
+    feature,
+    csv: csv.formatter("lift")(structuredClone(feature)),
+    mapboxgl: mapbox.formatter("lift")(structuredClone(feature)),
+  };
+});
+liftCases.push(...elevatedLiftCases);
+
 const lines = (cases) =>
   "[\n" + cases.map((c) => JSON.stringify(c)).join(",\n") + "\n]";
 const generated =

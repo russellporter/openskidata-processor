@@ -18,6 +18,7 @@ use crate::spatial::{self, BBox};
 use crate::stats;
 use crate::turf;
 use anyhow::{Result, bail};
+use openskidata_format::LiftStationPosition;
 use openskidata_format::lift::LiftProperties;
 use openskidata_format::place::Place;
 use openskidata_format::run::RunProperties;
@@ -32,6 +33,7 @@ use openskidata_format::viewport_hint::{ViewportHint, compute_viewport_hint};
 use openskidata_format::{
     FeatureType, LiftType, RunDifficulty, RunGrooming, RunUse, SkiAreaActivity, SourceType, Status,
 };
+use osd_enrich::elevation::{ElevationLoader, geometry_elevations};
 use osd_enrich::geocode::{Geocoder, geocode_geometry};
 use osd_enrich::places::{sort_places, unique_places};
 use osd_osm::element::{Geometry, Position};
@@ -61,6 +63,9 @@ pub struct SkiAreaIn {
 #[derive(Debug, Clone)]
 pub struct RunIn {
     pub geometry: Geometry,
+    /// The elevation of each coordinate, in the order of the geometry's flattened positions,
+    /// if the elevation stage found them.
+    pub elevations: Option<Vec<f64>>,
     pub properties: RunProperties,
     pub site_ski_areas: Vec<String>,
 }
@@ -68,6 +73,9 @@ pub struct RunIn {
 #[derive(Debug, Clone)]
 pub struct LiftIn {
     pub geometry: Geometry,
+    /// The elevation of each coordinate, in the order of the geometry's flattened positions,
+    /// if the elevation stage found them.
+    pub elevations: Option<Vec<f64>>,
     pub properties: LiftProperties,
     pub site_ski_areas: Vec<String>,
 }
@@ -75,6 +83,9 @@ pub struct LiftIn {
 #[derive(Debug, Clone)]
 pub struct SpotIn {
     pub geometry: Geometry,
+    /// The elevation of each coordinate, in the order of the geometry's flattened positions,
+    /// if the elevation stage found them.
+    pub elevations: Option<Vec<f64>>,
     pub properties: SpotProperties,
     pub site_ski_areas: Vec<String>,
 }
@@ -90,6 +101,9 @@ pub struct ClusterInput {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Feature<P> {
     pub geometry: Geometry,
+    /// The elevation of each coordinate of the geometry, in the order of its flattened positions,
+    /// where it has any.
+    pub elevations: Option<Vec<f64>>,
     pub properties: P,
 }
 
@@ -131,6 +145,8 @@ struct Obj {
     key: String,
     alive: bool,
     geometry: Geometry,
+    /// The elevation of each coordinate of `geometry`, if known (see [`Feature::elevations`]).
+    elevations: Option<Vec<f64>>,
     /// Ids of the ski areas this object belongs to.
     ski_areas: Vec<String>,
     /// Kept as a list, not a set: a run with two uses that map to the same activity counts
@@ -278,6 +294,7 @@ impl Engine {
                 key: area.properties.summary.id.clone(),
                 alive: true,
                 geometry: area.geometry,
+                elevations: None,
                 ski_areas: Vec::new(),
                 activities: area.properties.summary.activities.clone(),
                 is_in_ski_area_polygon: false,
@@ -301,6 +318,7 @@ impl Engine {
                 key: properties.id.clone(),
                 alive: true,
                 geometry: lift.geometry,
+                elevations: lift.elevations,
                 ski_areas: lift.site_ski_areas.clone(),
                 // Lift activities are the association key during clustering, not the ski
                 // area's classification; a lift never grants "downhill" to its ski area.
@@ -333,6 +351,7 @@ impl Engine {
                 key: properties.id.clone(),
                 alive: true,
                 geometry: run.geometry,
+                elevations: run.elevations,
                 ski_areas: run.site_ski_areas.clone(),
                 activities,
                 is_in_ski_area_polygon: false,
@@ -354,6 +373,7 @@ impl Engine {
                 key: spot.properties.base.id.clone(),
                 alive: true,
                 geometry: spot.geometry,
+                elevations: spot.elevations,
                 ski_areas: spot.site_ski_areas.clone(),
                 activities,
                 is_in_ski_area_polygon: false,
@@ -1072,6 +1092,7 @@ impl Engine {
             key: id.clone(),
             alive: true,
             geometry,
+            elevations: None,
             ski_areas: vec![id.clone()],
             activities,
             is_in_ski_area_polygon: false,
@@ -1090,7 +1111,7 @@ impl Engine {
     /// `LiftStationAssociator.associateStationsWithLifts`: each lift station is snapped to
     /// the closest lift within 30 m and recorded on it; stations with no lift in range are
     /// removed.
-    fn associate_lift_stations(&mut self) {
+    fn associate_lift_stations(&mut self, elevation: Option<&ElevationLoader<'_>>) {
         const THRESHOLD_KM: f64 = 0.03;
 
         let stations: Vec<usize> = self
@@ -1118,15 +1139,40 @@ impl Engine {
             let lift_key = self.objects[lift].key.clone();
             let station_key = self.objects[station].key.clone();
 
-            // A missing station position would be inferred from its elevation against the
-            // lift's, which does not exist before the elevation stage; an existing position
-            // is kept as is.
+            // A station without a position gets one from its own elevation (before it is
+            // snapped) against the range of the lift's.
+            let station_elevation = self.objects[station]
+                .elevations
+                .as_ref()
+                .and_then(|z| z.first().copied());
+            let inferred =
+                infer_station_position(station_elevation, self.objects[lift].elevations.as_deref());
+
             let o = &mut self.objects[station];
             o.geometry = Geometry::Point(point);
+            // Snapped onto the lift, the station is where its old elevation no longer applies.
+            // With a lookup it is elevated again at its new position; if that fails upstream
+            // stops, whereas here it is left without one.
+            o.elevations = elevation.and_then(|loader| {
+                match geometry_elevations(loader, &Geometry::Point(point)) {
+                    Ok(z) => Some(z),
+                    Err(error) => {
+                        tracing::warn!(
+                            "no elevation for the snapped station {station_key}: {error}"
+                        );
+                        None
+                    }
+                }
+            });
             if let Payload::Spot { properties } = &mut o.payload
-                && let SpotKind::LiftStation { lift_id, .. } = &mut properties.kind
+                && let SpotKind::LiftStation {
+                    lift_id, position, ..
+                } = &mut properties.kind
             {
                 *lift_id = lift_key;
+                if position.is_none() {
+                    *position = inferred;
+                }
             }
 
             match stations_by_lift.iter_mut().find(|(l, _)| *l == lift) {
@@ -1231,6 +1277,7 @@ impl Engine {
                     .iter()
                     .map(|&m| stats::Member {
                         geometry: &self.objects[m].geometry,
+                        elevations: self.objects[m].elevations.as_deref(),
                         kind: match &self.objects[m].payload {
                             Payload::Run {
                                 difficulty,
@@ -1262,12 +1309,17 @@ impl Engine {
             };
 
             let geometry = self.objects[ski_area].geometry.clone();
-            let hint_geometries: Vec<&Geometry> = if describing.is_empty() {
-                vec![&geometry]
+            let hint_geometries: Vec<(&Geometry, Option<&[f64]>)> = if describing.is_empty() {
+                vec![(&geometry, None)]
             } else {
                 describing
                     .iter()
-                    .map(|&m| &self.objects[m].geometry)
+                    .map(|&m| {
+                        (
+                            &self.objects[m].geometry,
+                            self.objects[m].elevations.as_deref(),
+                        )
+                    })
                     .collect()
             };
             let viewport_hint = hint_for(&hint_geometries);
@@ -1324,13 +1376,14 @@ impl Engine {
 
     /// `performClustering`, without the steps that need external services.
     pub fn cluster(&mut self) {
-        self.cluster_with(None);
+        self.cluster_with(&Enrichment::default());
     }
 
     /// `performClustering`, geocoding if a geocoder is given: runs, lifts and spots by their
     /// geometries once the ski areas are generated, and ski areas without any member place by
     /// their centroids while they are augmented.
-    pub fn cluster_with(&mut self, geocoder: Option<&dyn Geocoder>) {
+    pub fn cluster_with(&mut self, enrichment: &Enrichment<'_>) {
+        let geocoder = enrichment.geocoder;
         self.assign_activities_and_geometry_from_members();
         self.assign_objects_to_ski_areas(&AssignOptions {
             source: SourceType::Openstreetmap,
@@ -1358,7 +1411,7 @@ impl Engine {
         if let Some(geocoder) = geocoder {
             self.geocode_objects(geocoder);
         }
-        self.associate_lift_stations();
+        self.associate_lift_stations(enrichment.elevation);
         self.augment_ski_areas(geocoder);
         self.remove_ski_areas_without_geometry();
     }
@@ -1432,6 +1485,7 @@ impl Engine {
             match &o.payload {
                 Payload::SkiArea { properties, .. } => out.ski_areas.push(Feature {
                     geometry: o.geometry.clone(),
+                    elevations: None,
                     properties: properties.clone(),
                 }),
                 Payload::Run { properties, .. } => {
@@ -1439,6 +1493,7 @@ impl Engine {
                     properties.ski_areas = self.summaries(&o.ski_areas);
                     out.runs.push(Feature {
                         geometry: o.geometry.clone(),
+                        elevations: o.elevations.clone(),
                         properties,
                     });
                 }
@@ -1465,7 +1520,10 @@ impl Engine {
                                 feature_tag: FeatureTag::Feature,
                                 geometry: SpotGeometry {
                                     geometry_type: PointTag::Point,
-                                    coordinates: vec![p[0], p[1]],
+                                    coordinates: match station.elevations.as_deref() {
+                                        Some([z]) => vec![p[0], p[1], *z],
+                                        _ => vec![p[0], p[1]],
+                                    },
                                 },
                                 properties: properties.clone(),
                             })
@@ -1473,6 +1531,7 @@ impl Engine {
                         .collect();
                     out.lifts.push(Feature {
                         geometry: o.geometry.clone(),
+                        elevations: o.elevations.clone(),
                         properties,
                     });
                 }
@@ -1481,6 +1540,7 @@ impl Engine {
                     properties.base.ski_areas = self.summaries(&o.ski_areas);
                     out.spots.push(Feature {
                         geometry: o.geometry.clone(),
+                        elevations: o.elevations.clone(),
                         properties,
                     });
                 }
@@ -1603,24 +1663,66 @@ fn convention_for(geometry: &Geometry) -> openskidata_format::RunDifficultyConve
     .expect("a geometry has positions")
 }
 
-fn hint_for(geometries: &[&Geometry]) -> ViewportHint {
-    let sequences: Vec<Vec<[f64; 3]>> = geometries.iter().flat_map(|g| sequences_of(g)).collect();
+/// The viewport hint of geometries and the elevations of their coordinates, where known (a
+/// geometry without elevations counts as flat, as an unelevated one does upstream).
+fn hint_for(items: &[(&Geometry, Option<&[f64]>)]) -> ViewportHint {
+    let sequences: Vec<Vec<[f64; 3]>> = items
+        .iter()
+        .flat_map(|(geometry, elevations)| sequences_of(geometry, *elevations))
+        .collect();
     let refs: Vec<&[[f64; 3]]> = sequences.iter().map(Vec::as_slice).collect();
     compute_viewport_hint(&refs).expect("members have positions")
 }
 
-fn sequences_of(geometry: &Geometry) -> Vec<Vec<[f64; 3]>> {
-    let line = |l: &[Position]| -> Vec<[f64; 3]> { l.iter().map(|p| [p[0], p[1], 0.0]).collect() };
+fn sequences_of(geometry: &Geometry, elevations: Option<&[f64]>) -> Vec<Vec<[f64; 3]>> {
+    let mut z = elevations.map(|e| e.iter().copied());
+    let mut line = |l: &[Position]| -> Vec<[f64; 3]> {
+        l.iter()
+            .map(|p| {
+                [
+                    p[0],
+                    p[1],
+                    z.as_mut().and_then(Iterator::next).unwrap_or(0.0),
+                ]
+            })
+            .collect()
+    };
     match geometry {
-        Geometry::Point(p) => vec![vec![[p[0], p[1], 0.0]]],
+        Geometry::Point(p) => vec![line(&[*p])],
         Geometry::LineString(l) => vec![line(l)],
         Geometry::MultiLineString(lines) => lines.iter().map(|l| line(l)).collect(),
         Geometry::Polygon(rings) => rings.iter().map(|r| line(r)).collect(),
         Geometry::MultiPolygon(polygons) => polygons
             .iter()
-            .flat_map(|rings| rings.iter().map(|r| line(r)))
+            .flat_map(|rings| rings.iter().map(|r| line(r)).collect::<Vec<_>>())
             .collect(),
     }
+}
+
+/// `inferStationPosition`: where on its lift a station is, from its elevation against the range
+/// of the lift's coordinates: the bottom quarter, the top quarter, or the middle. Nothing if the
+/// station has no (or a zero) elevation or the lift has fewer than two.
+fn infer_station_position(
+    station_elevation: Option<f64>,
+    lift_elevations: Option<&[f64]>,
+) -> Option<LiftStationPosition> {
+    let station = station_elevation.filter(|e| *e != 0.0 && !e.is_nan())?;
+    let elevations = lift_elevations?;
+    if elevations.len() < 2 {
+        return None;
+    }
+    let min = elevations.iter().copied().fold(f64::INFINITY, f64::min);
+    let max = elevations.iter().copied().fold(f64::NEG_INFINITY, f64::max);
+    let range = max - min;
+    let bottom_threshold = min + range * 0.25;
+    let top_threshold = max - range * 0.25;
+    Some(if station <= bottom_threshold {
+        LiftStationPosition::Bottom
+    } else if station >= top_threshold {
+        LiftStationPosition::Top
+    } else {
+        LiftStationPosition::Mid
+    })
 }
 
 /// `generatedSkiAreaID`: an RFC 4122 version 5 UUID of the sorted member keys.
@@ -1654,9 +1756,19 @@ pub fn generated_ski_area_id(member_keys: &[&str]) -> String {
     )
 }
 
-/// Runs the whole stage on typed input, without geocoding.
+/// The external services the stage can use. Without them, `places` stay empty and lift
+/// stations keep no elevation of their own.
+#[derive(Default, Clone, Copy)]
+pub struct Enrichment<'a> {
+    /// Reverse geocoding of objects and ski areas.
+    pub geocoder: Option<&'a dyn Geocoder>,
+    /// Elevations for lift stations once they are snapped onto their lifts.
+    pub elevation: Option<&'a ElevationLoader<'a>>,
+}
+
+/// Runs the whole stage on typed input, without geocoding or elevation.
 pub fn cluster(input: ClusterInput) -> Result<ClusterOutput> {
-    cluster_with_geocoder(input, None)
+    cluster_enriched(input, &Enrichment::default())
 }
 
 /// Runs the whole stage on typed input, geocoding with `geocoder` if there is one.
@@ -1664,7 +1776,70 @@ pub fn cluster_with_geocoder(
     input: ClusterInput,
     geocoder: Option<&dyn Geocoder>,
 ) -> Result<ClusterOutput> {
+    cluster_enriched(
+        input,
+        &Enrichment {
+            geocoder,
+            elevation: None,
+        },
+    )
+}
+
+/// Runs the whole stage on typed input, with the services in `enrichment`.
+pub fn cluster_enriched(input: ClusterInput, enrichment: &Enrichment<'_>) -> Result<ClusterOutput> {
     let mut engine = Engine::load(input);
-    engine.cluster_with(geocoder);
+    engine.cluster_with(enrichment);
     engine.export()
+}
+
+#[cfg(test)]
+mod station_position_tests {
+    use super::*;
+    use LiftStationPosition::{Bottom, Mid, Top};
+
+    // A lift from 1000 m to 2000 m: bottom up to 1250, top from 1750.
+    const LIFT: [f64; 3] = [1000.0, 1500.0, 2000.0];
+
+    #[test]
+    fn the_quarters_of_the_lifts_range_decide_and_the_boundaries_belong_to_the_ends() {
+        let at = |z| infer_station_position(Some(z), Some(&LIFT));
+        assert_eq!(at(1000.0), Some(Bottom));
+        assert_eq!(at(1250.0), Some(Bottom), "the boundary is bottom");
+        assert_eq!(at(1250.1), Some(Mid));
+        assert_eq!(at(1500.0), Some(Mid));
+        assert_eq!(at(1749.9), Some(Mid));
+        assert_eq!(at(1750.0), Some(Top), "the boundary is top");
+        assert_eq!(at(2000.0), Some(Top));
+        // Beyond the lift's range it is still the nearer end.
+        assert_eq!(at(500.0), Some(Bottom));
+        assert_eq!(at(9000.0), Some(Top));
+    }
+
+    #[test]
+    fn a_station_with_no_elevation_or_a_zero_one_has_no_position() {
+        assert_eq!(infer_station_position(None, Some(&LIFT)), None);
+        // Upstream tests the elevation for truthiness, so sea level counts as none.
+        assert_eq!(infer_station_position(Some(0.0), Some(&[0.0, 100.0])), None);
+        assert_eq!(infer_station_position(Some(f64::NAN), Some(&LIFT)), None);
+    }
+
+    #[test]
+    fn a_lift_needs_two_elevations_to_have_a_range() {
+        assert_eq!(infer_station_position(Some(1500.0), None), None);
+        assert_eq!(infer_station_position(Some(1500.0), Some(&[])), None);
+        assert_eq!(infer_station_position(Some(1500.0), Some(&[1500.0])), None);
+        // Two equal elevations are a range of zero: everything at it is bottom.
+        assert_eq!(
+            infer_station_position(Some(1500.0), Some(&[1500.0, 1500.0])),
+            Some(Bottom)
+        );
+    }
+
+    #[test]
+    fn a_descending_lift_has_the_same_range() {
+        assert_eq!(
+            infer_station_position(Some(1900.0), Some(&[2000.0, 1500.0, 1000.0])),
+            Some(Top)
+        );
+    }
 }

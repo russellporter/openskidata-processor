@@ -529,11 +529,36 @@ fn geometry(v: &Value) -> Geometry {
     }
 }
 
+/// The third number of each coordinate in order, if the geometry has them.
+fn elevations(v: &Value) -> Option<Vec<f64>> {
+    fn collect(v: &Value, out: &mut Vec<f64>) {
+        match v {
+            Value::Array(a) if a.first().is_some_and(Value::is_number) => {
+                out.push(a.get(2).and_then(Value::as_f64).unwrap_or(f64::NAN))
+            }
+            Value::Array(a) => a.iter().for_each(|x| collect(x, out)),
+            _ => {}
+        }
+    }
+    let mut out = Vec::new();
+    collect(&v["coordinates"], &mut out);
+    // Only when the first coordinate has a third number.
+    let mut first = &v["coordinates"];
+    while first
+        .as_array()
+        .is_some_and(|a| a.first().is_some_and(Value::is_array))
+    {
+        first = &first[0];
+    }
+    (first.as_array().is_some_and(|a| a.len() >= 3)).then_some(out)
+}
+
 fn features<P: serde::de::DeserializeOwned>(values: &[Value]) -> Vec<Feature<P>> {
     values
         .iter()
         .map(|v| Feature {
             geometry: geometry(&v["geometry"]),
+            elevations: elevations(&v["geometry"]),
             properties: serde_json::from_value(v["properties"].clone()).unwrap(),
         })
         .collect()

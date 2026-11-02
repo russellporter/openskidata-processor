@@ -10,7 +10,9 @@
 //! empty; upstream's are empty too when no elevation server is configured.
 
 use openskidata_format::elevation_profile::ElevationData;
-use openskidata_format::lift::LiftProperties;
+use openskidata_format::lift::{
+    LiftElevationData, LiftProperties, StationPoint, lift_elevation_data,
+};
 use openskidata_format::place::Place;
 use openskidata_format::run::{RunProperties, run_color_name, run_elevation_data};
 use openskidata_format::ski_area::{SkiAreaProperties, SkiAreaSummaryFeature};
@@ -311,8 +313,48 @@ pub fn run(f: &Feature<RunProperties>) -> String {
     .join(",")
 }
 
+/// A lift's elevation data: its elevated line, with the elevations of its terminal stations
+/// used for its speeds. `None` for a lift that has none.
+pub fn lift_elevation(f: &Feature<LiftProperties>) -> Option<LiftElevationData> {
+    let (Geometry::LineString(line), Some(z)) = (&f.geometry, f.elevations.as_deref()) else {
+        return None;
+    };
+    let coordinates: Vec<Coord> = line
+        .iter()
+        .zip(z)
+        .map(|(p, z)| Coord::with_z(p[0], p[1], *z))
+        .collect();
+    let stations: Vec<StationPoint> = f
+        .properties
+        .stations
+        .iter()
+        .filter_map(|station| {
+            let SpotKind::LiftStation { position, .. } = &station.properties.kind else {
+                return None;
+            };
+            let c = &station.geometry.coordinates;
+            Some(StationPoint {
+                position: *position,
+                coord: Coord {
+                    x: *c.first()?,
+                    y: *c.get(1)?,
+                    z: c.get(2).copied(),
+                },
+            })
+        })
+        .collect();
+    match lift_elevation_data(&coordinates, f.properties.duration, &stations) {
+        Ok(data) => data,
+        Err(error) => {
+            tracing::warn!("lift {}: elevation data unusable: {error}", f.properties.id);
+            None
+        }
+    }
+}
+
 pub fn lift(f: &Feature<LiftProperties>) -> String {
     let p = &f.properties;
+    let lift_elevation = lift_elevation(f);
     let [countries, regions, localities] = places(&p.places);
     let [geometry, lat, lng] = geometry_columns(&f.geometry);
     [
@@ -333,14 +375,36 @@ pub fn lift(f: &Feature<LiftProperties>) -> String {
         format_boolean(p.detachable).into(),
         format_boolean(p.bubble).into(),
         format_boolean(p.heating).into(),
-        // inclined_length_m .. overall_pitch_%: need elevation
-        String::new(),
-        String::new(),
-        String::new(),
-        String::new(),
-        String::new(),
-        String::new(),
-        String::new(),
+        lift_elevation.as_ref().map_or(String::new(), |e| {
+            to_fixed(e.elevation.pitch.inclined_length_in_meters, 0)
+        }),
+        lift_elevation.as_ref().map_or(String::new(), |e| {
+            to_fixed(e.elevation.ascent_descent.vertical_in_meters, 0)
+        }),
+        optional_fixed(
+            lift_elevation
+                .as_ref()
+                .and_then(|e| e.speed_in_meters_per_second),
+            1,
+        ),
+        optional_fixed(
+            lift_elevation
+                .as_ref()
+                .and_then(|e| e.vertical_speed_in_meters_per_second),
+            2,
+        ),
+        lift_elevation.as_ref().map_or(String::new(), |e| {
+            to_fixed(e.elevation.ascent_descent.min_elevation_in_meters, 0)
+        }),
+        lift_elevation.as_ref().map_or(String::new(), |e| {
+            to_fixed(e.elevation.ascent_descent.max_elevation_in_meters, 0)
+        }),
+        optional_fixed(
+            lift_elevation
+                .as_ref()
+                .and_then(|e| e.elevation.pitch.overall_pitch_in_percent),
+            2,
+        ),
         escape_field(p.wikidata_id.as_deref()),
         websites(&p.websites),
         open_ski_map_url(&p.id),

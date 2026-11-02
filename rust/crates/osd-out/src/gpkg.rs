@@ -450,58 +450,82 @@ fn spot_values(p: &SpotProperties) -> Vec<Sql> {
 // Geometry blobs
 // ---------------------------------------------------------------------------------------
 
-fn wkb_header(out: &mut Vec<u8>, geometry_type: u32) {
-    out.push(1); // little endian
-    out.extend(geometry_type.to_le_bytes());
+/// The Z flag of a WKB geometry type, as the library writes it for elevated geometries.
+const WKB_Z: u32 = 0x8000_0000;
+
+/// Hands out the elevations of a geometry's coordinates in order, if it has any.
+struct Elevations<'a>(Option<std::slice::Iter<'a, f64>>);
+
+impl<'a> Elevations<'a> {
+    fn new(elevations: Option<&'a [f64]>) -> Self {
+        Elevations(elevations.map(|e| e.iter()))
+    }
+
+    fn present(&self) -> bool {
+        self.0.is_some()
+    }
+
+    fn type_flag(&self) -> u32 {
+        if self.present() { WKB_Z } else { 0 }
+    }
 }
 
-fn wkb_position(out: &mut Vec<u8>, p: &Position) {
+fn wkb_header(out: &mut Vec<u8>, geometry_type: u32, z: &Elevations<'_>) {
+    out.push(1); // little endian
+    out.extend((geometry_type | z.type_flag()).to_le_bytes());
+}
+
+fn wkb_position(out: &mut Vec<u8>, p: &Position, z: &mut Elevations<'_>) {
     out.extend(p[0].to_le_bytes());
     out.extend(p[1].to_le_bytes());
+    if let Some(height) = z.0.as_mut().map(|e| e.next().copied().unwrap_or(f64::NAN)) {
+        out.extend(height.to_le_bytes());
+    }
 }
 
-fn wkb_line(out: &mut Vec<u8>, positions: &[Position]) {
+fn wkb_line(out: &mut Vec<u8>, positions: &[Position], z: &mut Elevations<'_>) {
     out.extend((positions.len() as u32).to_le_bytes());
-    positions.iter().for_each(|p| wkb_position(out, p));
+    positions.iter().for_each(|p| wkb_position(out, p, z));
 }
 
-fn wkb_polygon(out: &mut Vec<u8>, rings: &[Vec<Position>]) {
-    wkb_header(out, 3);
+fn wkb_polygon(out: &mut Vec<u8>, rings: &[Vec<Position>], z: &mut Elevations<'_>) {
+    wkb_header(out, 3, z);
     out.extend((rings.len() as u32).to_le_bytes());
-    rings.iter().for_each(|r| wkb_line(out, r));
+    rings.iter().for_each(|r| wkb_line(out, r, z));
 }
 
-fn wkb(geometry: &Geometry) -> Vec<u8> {
+fn wkb(geometry: &Geometry, elevations: Option<&[f64]>) -> Vec<u8> {
+    let mut z = Elevations::new(elevations);
     let mut out = Vec::new();
     match geometry {
         Geometry::Point(p) => {
-            wkb_header(&mut out, 1);
-            wkb_position(&mut out, p);
+            wkb_header(&mut out, 1, &z);
+            wkb_position(&mut out, p, &mut z);
         }
         Geometry::LineString(line) => {
-            wkb_header(&mut out, 2);
-            wkb_line(&mut out, line);
+            wkb_header(&mut out, 2, &z);
+            wkb_line(&mut out, line, &mut z);
         }
         Geometry::MultiLineString(lines) => {
-            wkb_header(&mut out, 5);
+            wkb_header(&mut out, 5, &z);
             out.extend((lines.len() as u32).to_le_bytes());
             for line in lines {
-                wkb_header(&mut out, 2);
-                wkb_line(&mut out, line);
+                wkb_header(&mut out, 2, &z);
+                wkb_line(&mut out, line, &mut z);
             }
         }
         // A layer has one polygon table, so a polygon is stored as a multipolygon of one.
         Geometry::Polygon(rings) => {
-            wkb_header(&mut out, 6);
+            wkb_header(&mut out, 6, &z);
             out.extend(1u32.to_le_bytes());
-            wkb_polygon(&mut out, rings);
+            wkb_polygon(&mut out, rings, &mut z);
         }
         Geometry::MultiPolygon(polygons) => {
-            wkb_header(&mut out, 6);
+            wkb_header(&mut out, 6, &z);
             out.extend((polygons.len() as u32).to_le_bytes());
             polygons
                 .iter()
-                .for_each(|rings| wkb_polygon(&mut out, rings));
+                .for_each(|rings| wkb_polygon(&mut out, rings, &mut z));
         }
     }
     out
@@ -509,10 +533,10 @@ fn wkb(geometry: &Geometry) -> Vec<u8> {
 
 /// A GeoPackage geometry blob: `GP`, version 0, flags 0 (big-endian header, no envelope),
 /// the SRS id, then the WKB.
-fn blob(geometry: &Geometry) -> Vec<u8> {
+fn blob(geometry: &Geometry, elevations: Option<&[f64]>) -> Vec<u8> {
     let mut out = vec![b'G', b'P', 0, 0];
     out.extend((WGS84 as u32).to_be_bytes());
-    out.extend(wkb(geometry));
+    out.extend(wkb(geometry, elevations));
     out
 }
 
@@ -649,7 +673,13 @@ impl Table {
         })
     }
 
-    fn insert(&mut self, db: &Connection, geometry: &Geometry, values: Vec<Sql>) -> Result<()> {
+    fn insert(
+        &mut self,
+        db: &Connection,
+        geometry: &Geometry,
+        elevations: Option<&[f64]>,
+        values: Vec<Sql>,
+    ) -> Result<()> {
         let e = envelope(geometry);
         self.bounds = [
             self.bounds[0].min(e[0]),
@@ -657,7 +687,7 @@ impl Table {
             self.bounds[2].max(e[2]),
             self.bounds[3].max(e[3]),
         ];
-        let mut row = vec![Sql::Blob(blob(geometry))];
+        let mut row = vec![Sql::Blob(blob(geometry, elevations))];
         row.extend(values);
         db.prepare_cached(&self.insert)?
             .execute(params_from_iter(row))?;
@@ -719,11 +749,14 @@ fn blob_envelope(blob: &[u8]) -> [f64; 4] {
     }
     fn walk(b: &[u8], at: &mut usize, e: &mut [f64; 4]) {
         *at += 1; // byte order
-        let kind = u32_at(b, *at);
+        let raw = u32_at(b, *at);
         *at += 4;
+        let kind = raw & !WKB_Z;
+        // Three doubles a position if the geometry is elevated, else two.
+        let stride = if raw & WKB_Z != 0 { 24 } else { 16 };
         let point = |at: &mut usize, e: &mut [f64; 4]| {
             let (x, y) = (f64_at(b, *at), f64_at(b, *at + 8));
-            *at += 16;
+            *at += stride;
             *e = [e[0].min(x), e[1].min(y), e[2].max(x), e[3].max(y)];
         };
         match kind {
@@ -789,7 +822,7 @@ fn write_layer<P>(
         for feature in features {
             let center = Geometry::Point(turf::centroid(&[&feature.geometry]));
             let i = slot(db, &center, &mut tables)?;
-            tables[i].insert(db, &center, values(&feature.properties))?;
+            tables[i].insert(db, &center, None, values(&feature.properties))?;
         }
     }
     for feature in features {
@@ -797,7 +830,12 @@ fn write_layer<P>(
             continue;
         }
         let i = slot(db, &feature.geometry, &mut tables)?;
-        tables[i].insert(db, &feature.geometry, values(&feature.properties))?;
+        tables[i].insert(
+            db,
+            &feature.geometry,
+            feature.elevations.as_deref(),
+            values(&feature.properties),
+        )?;
     }
     for table in &tables {
         table.finish(db)?;
@@ -873,7 +911,7 @@ mod tests {
 
     #[test]
     fn blobs_carry_the_gp_header_and_little_endian_wkb() {
-        let b = blob(&Geometry::Point([1.0, 2.0]));
+        let b = blob(&Geometry::Point([1.0, 2.0]), None);
         assert_eq!(&b[..8], &[b'G', b'P', 0, 0, 0, 0, 0x10, 0xe6]);
         assert_eq!(b[8], 1);
         assert_eq!(&b[9..13], &1u32.to_le_bytes());
@@ -881,9 +919,29 @@ mod tests {
     }
 
     #[test]
+    fn an_elevated_geometry_has_the_z_flag_and_three_doubles_a_position() {
+        let line = Geometry::LineString(vec![[1.0, 2.0], [3.0, 4.0]]);
+        let b = wkb(&line, Some(&[10.0, 20.0]));
+        assert_eq!(&b[1..5], &(2u32 | 0x8000_0000).to_le_bytes());
+        assert_eq!(b.len(), 1 + 4 + 4 + 2 * 24);
+        assert_eq!(&b[9..17], &1.0f64.to_le_bytes());
+        assert_eq!(&b[25..33], &10.0f64.to_le_bytes());
+        // Parts of a multi-geometry carry the flag too, and the envelope ignores the heights.
+        let multi = Geometry::MultiLineString(vec![
+            vec![[0.0, 0.0], [1.0, 1.0]],
+            vec![[4.0, 4.0], [5.0, 6.0]],
+        ]);
+        let e = Some(&[7.0, 8.0, 9.0, 99.0][..]);
+        let b = wkb(&multi, e);
+        assert_eq!(&b[1..5], &(5u32 | 0x8000_0000).to_le_bytes());
+        assert_eq!(&b[10..14], &(2u32 | 0x8000_0000).to_le_bytes());
+        assert_eq!(blob_envelope(&blob(&multi, e)), [0.0, 0.0, 5.0, 6.0]);
+    }
+
+    #[test]
     fn a_polygon_is_stored_as_a_multipolygon_of_one() {
         let polygon = Geometry::Polygon(vec![vec![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 0.0]]]);
-        let b = wkb(&polygon);
+        let b = wkb(&polygon, None);
         assert_eq!(&b[1..5], &6u32.to_le_bytes());
         assert_eq!(&b[5..9], &1u32.to_le_bytes());
         assert_eq!(&b[10..14], &3u32.to_le_bytes());
@@ -905,7 +963,7 @@ mod tests {
             ]),
         ] {
             assert_eq!(
-                blob_envelope(&blob(&geometry)),
+                blob_envelope(&blob(&geometry, None)),
                 envelope(&geometry),
                 "{geometry:?}"
             );

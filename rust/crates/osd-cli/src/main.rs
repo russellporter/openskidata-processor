@@ -13,6 +13,13 @@ enum GeocodingServerType {
     GeocodeApi,
 }
 
+#[derive(clap::ValueEnum, Debug, Clone, Copy)]
+enum ElevationServerType {
+    Racemap,
+    #[value(name = "tileserver-gl")]
+    TileserverGl,
+}
+
 #[derive(Parser, Debug)]
 #[command(name = "openskidata", about = "OpenSkiData processor", version)]
 struct Cli {
@@ -26,8 +33,8 @@ enum Command {
     ///
     /// Reads `input_*.osmjson` (from Overpass, or the files `OSM_INPUT_DIR` points at) and
     /// `input_skimap_ski_areas.geojson` from the input directory, and writes GeoJSON, the
-    /// slimmed mapboxgl GeoJSON and CSV to the output directory. Elevation, snow cover and
-    /// tiles are not applied yet.
+    /// slimmed mapboxgl GeoJSON and CSV to the output directory. Snow cover and tiles are not
+    /// applied yet.
     Prepare {
         #[arg(long, env = "INPUT_DIR", default_value = "data/input")]
         input_dir: std::path::PathBuf,
@@ -55,7 +62,30 @@ enum Command {
             default_value_t = 31_536_000_000
         )]
         geocoding_cache_ttl_ms: i64,
-        /// The cache store the geocoder's responses are kept in.
+        /// An elevation server, to give runs, lifts and spots their elevations.
+        #[arg(long, env = "ELEVATION_SERVER_URL")]
+        elevation_server_url: Option<String>,
+        /// `racemap` (one POST of coordinates) or `tileserver-gl` (a batch endpoint). The
+        /// `tile` type is not supported yet.
+        #[arg(
+            long,
+            env = "ELEVATION_SERVER_TYPE",
+            value_enum,
+            default_value = "racemap"
+        )]
+        elevation_server_type: ElevationServerType,
+        /// For `tileserver-gl`: the zooms to try in turn, comma separated.
+        #[arg(
+            long,
+            env = "ELEVATION_SERVER_ZOOM",
+            value_delimiter = ',',
+            default_value = "12"
+        )]
+        elevation_server_zoom: Vec<u32>,
+        /// The most coordinates asked of the elevation server at once.
+        #[arg(long, env = "ELEVATION_SERVER_BATCH_SIZE", default_value_t = 10_000)]
+        elevation_server_batch_size: usize,
+        /// The cache store the geocoder's and the elevation lookup's responses are kept in.
         #[arg(long, env = "CACHE_PATH", default_value = "data/cache.db")]
         cache_path: std::path::PathBuf,
     },
@@ -104,6 +134,10 @@ async fn main() -> Result<()> {
             geocoding_server_url,
             geocoding_server_type,
             geocoding_cache_ttl_ms,
+            elevation_server_url,
+            elevation_server_type,
+            elevation_server_zoom,
+            elevation_server_batch_size,
             cache_path,
         } => {
             let bbox: Option<Vec<f64>> =
@@ -114,6 +148,7 @@ async fn main() -> Result<()> {
                 input_dir,
                 output_dir,
                 bbox,
+                cache_path,
                 geocoding: geocoding_server_url.map(|url| {
                     osd_pipeline::prepare::GeocodingSettings {
                         url,
@@ -126,7 +161,22 @@ async fn main() -> Result<()> {
                             }
                         },
                         cache_ttl_ms: geocoding_cache_ttl_ms,
-                        cache_path,
+                    }
+                }),
+                elevation: elevation_server_url.map(|url| {
+                    osd_pipeline::prepare::ElevationSettings {
+                        server: match elevation_server_type {
+                            ElevationServerType::Racemap => {
+                                osd_pipeline::prepare::ElevationServer::Racemap { url }
+                            }
+                            ElevationServerType::TileserverGl => {
+                                osd_pipeline::prepare::ElevationServer::TileserverGl {
+                                    url,
+                                    zooms: elevation_server_zoom.clone(),
+                                }
+                            }
+                        },
+                        batch_size: elevation_server_batch_size,
                     }
                 }),
             })

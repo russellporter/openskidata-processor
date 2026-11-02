@@ -257,6 +257,13 @@ function renamed(properties) {
   }
 }
 
+/** The same shape with a height added to every coordinate. */
+function elevated(coordinates) {
+  return typeof coordinates[0] === "number"
+    ? [coordinates[0], coordinates[1], 500 + int(2500) + int(10) / 10]
+    : coordinates.map(elevated);
+}
+
 function enrich(outputs) {
   const copy = structuredClone(outputs);
   for (const key of ["skiAreas", "lifts", "runs"]) {
@@ -264,6 +271,13 @@ function enrich(outputs) {
   }
   for (const key of ["lifts", "runs", "spots"]) {
     for (const f of copy[key]) renamed(f.properties);
+  }
+  // Elevated geometries, as the elevation stage produces: a height on every coordinate.
+  for (const key of ["lifts", "runs", "spots"]) {
+    for (const f of copy[key]) {
+      if (chance(0.5))
+        f.geometry.coordinates = elevated(f.geometry.coordinates);
+    }
   }
   for (const f of copy.skiAreas) {
     common(f.properties);

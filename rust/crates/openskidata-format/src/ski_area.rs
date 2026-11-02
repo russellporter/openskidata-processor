@@ -121,6 +121,15 @@ pub struct RunDifficultyStatistics {
         skip_serializing_if = "Option::is_none"
     )]
     pub snowfarming_length_in_km: Option<f64>,
+    #[serde(rename = "minElevation", skip_serializing_if = "Option::is_none")]
+    pub min_elevation: Option<f64>,
+    #[serde(rename = "maxElevation", skip_serializing_if = "Option::is_none")]
+    pub max_elevation: Option<f64>,
+    #[serde(
+        rename = "combinedElevationChange",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub combined_elevation_change: Option<f64>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -138,6 +147,15 @@ pub struct LiftTypeStatistics {
     pub count: u64,
     #[serde(rename = "lengthInKm")]
     pub length_in_km: f64,
+    #[serde(rename = "minElevation", skip_serializing_if = "Option::is_none")]
+    pub min_elevation: Option<f64>,
+    #[serde(rename = "maxElevation", skip_serializing_if = "Option::is_none")]
+    pub max_elevation: Option<f64>,
+    #[serde(
+        rename = "combinedElevationChange",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub combined_elevation_change: Option<f64>,
 }
 
 /// The literal `'other'` bucket key shared by the statistics maps.

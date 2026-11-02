@@ -24,21 +24,61 @@ struct Case {
     mapboxgl: Option<Value>,
 }
 
+/// A position's first two numbers; a third is its elevation.
+fn pair(v: &Value) -> [f64; 2] {
+    [v[0].as_f64().unwrap(), v[1].as_f64().unwrap()]
+}
+
+fn line(v: &Value) -> Vec<[f64; 2]> {
+    v.as_array().unwrap().iter().map(pair).collect()
+}
+
+fn lines(v: &Value) -> Vec<Vec<[f64; 2]>> {
+    v.as_array().unwrap().iter().map(line).collect()
+}
+
 fn geometry(value: &Value) -> Geometry {
-    let c = value["coordinates"].clone();
+    let c = &value["coordinates"];
     match value["type"].as_str().unwrap() {
-        "Point" => Geometry::Point(serde_json::from_value(c).unwrap()),
-        "LineString" => Geometry::LineString(serde_json::from_value(c).unwrap()),
-        "MultiLineString" => Geometry::MultiLineString(serde_json::from_value(c).unwrap()),
-        "Polygon" => Geometry::Polygon(serde_json::from_value(c).unwrap()),
-        "MultiPolygon" => Geometry::MultiPolygon(serde_json::from_value(c).unwrap()),
+        "Point" => Geometry::Point(pair(c)),
+        "LineString" => Geometry::LineString(line(c)),
+        "MultiLineString" => Geometry::MultiLineString(lines(c)),
+        "Polygon" => Geometry::Polygon(lines(c)),
+        "MultiPolygon" => Geometry::MultiPolygon(c.as_array().unwrap().iter().map(lines).collect()),
         other => panic!("unexpected {other}"),
     }
+}
+
+/// The third number of each position in order, if the geometry's first position has one.
+fn elevations(value: &Value) -> Option<Vec<f64>> {
+    fn collect(v: &Value, out: &mut Vec<f64>) {
+        match v {
+            Value::Array(a) if a.first().is_some_and(Value::is_number) => {
+                out.push(a.get(2).and_then(Value::as_f64).unwrap_or(f64::NAN))
+            }
+            Value::Array(a) => a.iter().for_each(|x| collect(x, out)),
+            _ => {}
+        }
+    }
+    let mut first = &value["coordinates"];
+    while first
+        .as_array()
+        .is_some_and(|a| a.first().is_some_and(Value::is_array))
+    {
+        first = &first[0];
+    }
+    if !first.as_array().is_some_and(|a| a.len() >= 3) {
+        return None;
+    }
+    let mut out = Vec::new();
+    collect(&value["coordinates"], &mut out);
+    Some(out)
 }
 
 fn typed<P: DeserializeOwned>(case: &Case) -> Feature<P> {
     Feature {
         geometry: geometry(&case.feature["geometry"]),
+        elevations: elevations(&case.feature["geometry"]),
         properties: serde_json::from_value(case.feature["properties"].clone())
             .unwrap_or_else(|e| panic!("{e}: {}", case.feature["properties"])),
     }
