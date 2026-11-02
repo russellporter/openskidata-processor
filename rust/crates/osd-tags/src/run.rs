@@ -126,6 +126,64 @@ pub fn difficulty(tags: &Tags) -> Option<RunDifficulty> {
         .and_then(|value| RunDifficulty::from_str(value).ok())
 }
 
+/// Whether a run goes through trees.
+///
+/// Replaces `getGladed`. An explicit tag wins; failing that, a run mapped through woodland
+/// is assumed gladed. That inference is why `natural=wood` alone yields `true` rather than
+/// unknown, and why an explicit `piste:gladed=no` beats it.
+pub fn gladed(tags: &Tags) -> Option<bool> {
+    if let Some(value) = osm_boolean(first_present(tags, &["piste:gladed", "gladed"])) {
+        return Some(value);
+    }
+    let is = |key: &str, value: &str| tags.get(key).map(String::as_str) == Some(value);
+    if is("natural", "wood") || is("landuse", "forest") {
+        return Some(true);
+    }
+    None
+}
+
+/// Whether a run is patrolled. The `piste:`-prefixed key wins over the plain one.
+pub fn patrolled(tags: &Tags) -> Option<bool> {
+    osm_boolean(first_present(tags, &["piste:patrolled", "patrolled"]))
+}
+
+/// Whether a run is lit for night skiing. The `piste:`-prefixed key wins over the plain one.
+pub fn lit(tags: &Tags) -> Option<bool> {
+    osm_boolean(first_present(tags, &["piste:lit", "lit"]))
+}
+
+/// Whether snow is made on the run. Only the `piste:`-prefixed key is read.
+pub fn snowmaking(tags: &Tags) -> Option<bool> {
+    osm_boolean(tags.get("piste:snowmaking").map(String::as_str))
+}
+
+/// Whether the run's early season is secured by stored snow. Only the `piste:` key is read.
+pub fn snowfarming(tags: &Tags) -> Option<bool> {
+    osm_boolean(tags.get("piste:snowfarming").map(String::as_str))
+}
+
+/// Whether the run passes through a tunnel.
+///
+/// Presence is what counts, not the value: `tunnel=no` is still `true`. Upstream tests
+/// `tags["tunnel"] !== undefined`, and the format documentation describes it as true for
+/// any tunnel value. An untagged run is unknown rather than false.
+pub fn tunnel(tags: &Tags) -> Option<bool> {
+    tags.contains_key("tunnel").then_some(true)
+}
+
+/// The description, preferring the `piste:`-prefixed key.
+pub fn description(tags: &Tags) -> Option<String> {
+    first_present(tags, &["piste:description", "description"]).map(str::to_owned)
+}
+
+/// The websites of a run.
+///
+/// `[tags.website].filter(notEmpty)` upstream, and `notEmpty` rejects only null and
+/// undefined, so an empty-string website is kept as `[""]`.
+pub fn websites(tags: &Tags) -> Vec<String> {
+    tags.get("website").cloned().into_iter().collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -268,6 +326,39 @@ mod tests {
             grooming(&tags(&[("piste:grooming", "no")])),
             Some(RunGrooming::Backcountry)
         );
+    }
+
+    #[test]
+    fn gladed_falls_back_to_woodland_but_an_explicit_tag_wins() {
+        assert_eq!(gladed(&tags(&[("natural", "wood")])), Some(true));
+        assert_eq!(gladed(&tags(&[("landuse", "forest")])), Some(true));
+        assert_eq!(gladed(&tags(&[("natural", "scrub")])), None);
+        assert_eq!(
+            gladed(&tags(&[("natural", "wood"), ("piste:gladed", "no")])),
+            Some(false),
+            "an explicit tag beats the woodland inference"
+        );
+    }
+
+    #[test]
+    fn tunnel_is_presence_not_value() {
+        assert_eq!(tunnel(&tags(&[("tunnel", "yes")])), Some(true));
+        assert_eq!(
+            tunnel(&tags(&[("tunnel", "no")])),
+            Some(true),
+            "even tunnel=no"
+        );
+        assert_eq!(
+            tunnel(&tags(&[("tunnel", "avalanche_protector")])),
+            Some(true)
+        );
+        assert_eq!(tunnel(&tags(&[])), None);
+    }
+
+    #[test]
+    fn an_empty_website_is_kept() {
+        assert_eq!(websites(&tags(&[("website", "")])), vec![String::new()]);
+        assert_eq!(websites(&tags(&[])), Vec::<String>::new());
     }
 
     #[test]

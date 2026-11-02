@@ -215,3 +215,78 @@ fn wikidata_ids_match_the_live_implementation() {
         );
     }
 }
+
+/// Each remaining boolean / string property, against the same corpus. They are grouped
+/// because each is a one-line read, and the corpus is what gives them meaning.
+#[test]
+fn remaining_run_properties_match_the_live_implementation() {
+    use osd_tags::run::{
+        description, gladed, lit, patrolled, snowfarming, snowmaking, tunnel, websites,
+    };
+
+    let mut non_null = std::collections::BTreeMap::<&str, usize>::new();
+    for case in &cases() {
+        let Some(output) = single_output(case) else {
+            continue;
+        };
+        let bool_of = |key: &str| output.get(key).and_then(|v| v.as_bool());
+
+        let checks: [(&str, Option<bool>, Option<bool>); 6] = [
+            ("gladed", gladed(&case.tags), bool_of("gladed")),
+            ("patrolled", patrolled(&case.tags), bool_of("patrolled")),
+            ("lit", lit(&case.tags), bool_of("lit")),
+            ("snowmaking", snowmaking(&case.tags), bool_of("snowmaking")),
+            (
+                "snowfarming",
+                snowfarming(&case.tags),
+                bool_of("snowfarming"),
+            ),
+            ("tunnel", tunnel(&case.tags), bool_of("tunnel")),
+        ];
+        for (name, actual, expected) in checks {
+            assert_eq!(actual, expected, "{name} for tags {:?}", case.tags);
+            if expected.is_some() {
+                *non_null.entry(name).or_default() += 1;
+            }
+        }
+
+        assert_eq!(
+            description(&case.tags).as_deref(),
+            output.get("description").and_then(|v| v.as_str()),
+            "description for tags {:?}",
+            case.tags
+        );
+
+        let expected_websites: Vec<&str> = output["websites"]
+            .as_array()
+            .expect("websites array")
+            .iter()
+            .map(|w| w.as_str().expect("string"))
+            .collect();
+        assert_eq!(
+            websites(&case.tags)
+                .iter()
+                .map(String::as_str)
+                .collect::<Vec<_>>(),
+            expected_websites,
+            "websites for tags {:?}",
+            case.tags
+        );
+    }
+
+    // Every property must have been exercised with a real value, or the check above says
+    // nothing about it.
+    for name in [
+        "gladed",
+        "patrolled",
+        "lit",
+        "snowmaking",
+        "snowfarming",
+        "tunnel",
+    ] {
+        assert!(
+            non_null.get(name).copied().unwrap_or(0) >= 2,
+            "{name} was never given a real value in the corpus: {non_null:?}"
+        );
+    }
+}
