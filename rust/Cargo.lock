@@ -1546,6 +1546,7 @@ dependencies = [
  "osd-osm",
  "osd-store",
  "osd-tags",
+ "osd-turf",
  "rusqlite",
  "serde",
  "serde_json",

@@ -319,6 +319,47 @@ const spotCases = Array.from({ length: 60 }, () => {
   };
 });
 
+/**
+ * The same runs again, on longer lines with a valid elevation profile, so that the CSV's
+ * elevation columns (inclined length, ascent, descent, pitch, elevations) are exercised.
+ * They come last so that adding them does not shift the random numbers the rest draws.
+ */
+const elevatedRunCases = runCases.map(({ feature: original }, index) => {
+  const feature = structuredClone(original);
+  feature.properties.id = "run-elevated-" + index;
+  const n = 2 + int(10);
+  let x = 11 + random() * 0.01;
+  let y = 47 + random() * 0.01;
+  const coordinates = [];
+  for (let i = 0; i < n; i++) {
+    coordinates.push([x, y]);
+    x += (random() - 0.3) * pick([0.0004, 0.004]);
+    y += (random() - 0.5) * pick([0.0004, 0.004]);
+  }
+  feature.geometry = { type: "LineString", coordinates };
+  const target = pick([25, 25, 50, 100, 250]);
+  const sampled = f.extractPointsForElevationProfile(
+    structuredClone(feature.geometry),
+    target,
+  );
+  let height = 900 + int(2200);
+  const heights = sampled.geometry.coordinates.map(() => {
+    height += int(70) - 45;
+    return height;
+  });
+  feature.properties.elevationProfile = {
+    heights,
+    resolution: sampled.resolutionInMeters,
+    targetResolution: target,
+  };
+  return {
+    feature,
+    csv: csv.formatter("run")(structuredClone(feature)),
+    mapboxgl: mapbox.formatter("run")(structuredClone(feature)),
+  };
+});
+runCases.push(...elevatedRunCases);
+
 const lines = (cases) =>
   "[\n" + cases.map((c) => JSON.stringify(c)).join(",\n") + "\n]";
 const generated =

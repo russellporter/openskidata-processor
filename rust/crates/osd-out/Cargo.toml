@@ -13,6 +13,7 @@ serde_json.workspace = true
 rusqlite.workspace = true
 time.workspace = true
 tracing.workspace = true
+osd-turf.workspace = true
 geo-types.workspace = true
 openskidata-format.workspace = true
 serde.workspace = true

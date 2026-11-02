@@ -4,13 +4,15 @@
 //! hand-rolled upstream (quote on `,`, `"`, newline, carriage return and `;`) and is kept so
 //! that existing consumers keep parsing the same files.
 //!
-//! The elevation columns (`inclined_length_m`, `descent_m`, ... ) are empty until the
-//! elevation stage is ported: upstream leaves them empty too for features that carry no
-//! elevation, which is every feature when no elevation server is configured.
+//! A run's elevation columns (`inclined_length_m`, `descent_m`, ... ) come from its elevation
+//! profile; they are empty for a run without one, as upstream leaves them. A lift's need its
+//! geometry's elevations, which this pipeline's 2D geometry does not carry yet, so they stay
+//! empty; upstream's are empty too when no elevation server is configured.
 
+use openskidata_format::elevation_profile::ElevationData;
 use openskidata_format::lift::LiftProperties;
 use openskidata_format::place::Place;
-use openskidata_format::run::{RunProperties, run_color_name};
+use openskidata_format::run::{RunProperties, run_color_name, run_elevation_data};
 use openskidata_format::ski_area::{SkiAreaProperties, SkiAreaSummaryFeature};
 use openskidata_format::source::{Source, source_url};
 use openskidata_format::spot::{SpotKind, SpotProperties};
@@ -20,6 +22,7 @@ use osd_cluster::turf;
 use osd_osm::element::Geometry;
 use osd_store::feature_id::js_number_to_string;
 use osd_tags::js_number::round;
+use osd_turf::Coord;
 
 pub const RUN_HEADERS: &str = "name,ref,countries,regions,localities,ski_area_names,difficulty,color,oneway,lit,gladed,patrolled,grooming,uses,inclined_length_m,descent_m,ascent_m,average_pitch_%,max_pitch_%,min_elevation_m,max_elevation_m,difficulty_convention,wikidata_id,websites,openskimap,id,geometry,lat,lng,ski_area_ids,sources,description";
 pub const LIFT_HEADERS: &str = "name,ref,ref_fr_cairn,lift_type,status,access,countries,regions,localities,ski_area_names,oneway,duration_sec,capacity,occupancy,detachable,bubble,heating,inclined_length_m,vertical_m,speed_m_per_s,vertical_speed_m_per_s,min_elevation_m,max_elevation_m,overall_pitch_%,wikidata_id,websites,openskimap,id,geometry,lat,lng,ski_area_ids,sources,description";
@@ -216,8 +219,34 @@ fn number(value: Option<f64>) -> String {
         .unwrap_or_default()
 }
 
+/// A run's elevation data: its elevation profile laid along its line. `None` for a run
+/// without a profile or that is not a line.
+///
+/// Upstream throws if the profile does not fit the line (a different number of points, or a
+/// resolution that disagrees), which stops the whole export. A mismatch here is logged and
+/// the run's elevation columns are left empty instead.
+pub fn run_elevation(f: &Feature<RunProperties>) -> Option<ElevationData> {
+    let Geometry::LineString(line) = &f.geometry else {
+        return None;
+    };
+    let coordinates: Vec<Coord> = line.iter().map(|p| Coord::new(p[0], p[1])).collect();
+    match run_elevation_data(&coordinates, f.properties.elevation_profile.as_ref()) {
+        Ok(data) => data,
+        Err(error) => {
+            tracing::warn!("run {}: elevation data unusable: {error}", f.properties.id);
+            None
+        }
+    }
+}
+
+/// `value?.toFixed(digits)`: empty when there is no value.
+fn optional_fixed(value: Option<f64>, digits: usize) -> String {
+    value.map_or(String::new(), |v| to_fixed(v, digits))
+}
+
 pub fn run(f: &Feature<RunProperties>) -> String {
     let p = &f.properties;
+    let elevation = run_elevation(f);
     let color = run_color_name(p.difficulty_convention, p.difficulty);
     let [countries, regions, localities] = places(&p.places);
     let [geometry, lat, lng] = geometry_columns(&f.geometry);
@@ -236,15 +265,33 @@ pub fn run(f: &Feature<RunProperties>) -> String {
         format_boolean(p.patrolled).into(),
         enum_text(&p.grooming),
         p.uses.iter().map(plain).collect::<Vec<_>>().join(";"),
-        // inclined_length_m, descent_m, ascent_m, average_pitch_%, max_pitch_%,
-        // min_elevation_m, max_elevation_m: need elevation
-        String::new(),
-        String::new(),
-        String::new(),
-        String::new(),
-        String::new(),
-        String::new(),
-        String::new(),
+        elevation.as_ref().map_or(String::new(), |e| {
+            to_fixed(e.pitch.inclined_length_in_meters, 0)
+        }),
+        elevation.as_ref().map_or(String::new(), |e| {
+            to_fixed(e.ascent_descent.descent_in_meters, 0)
+        }),
+        elevation.as_ref().map_or(String::new(), |e| {
+            to_fixed(e.ascent_descent.ascent_in_meters, 0)
+        }),
+        optional_fixed(
+            elevation
+                .as_ref()
+                .and_then(|e| e.pitch.average_pitch_in_percent),
+            2,
+        ),
+        optional_fixed(
+            elevation
+                .as_ref()
+                .and_then(|e| e.pitch.max_pitch_in_percent),
+            2,
+        ),
+        elevation.as_ref().map_or(String::new(), |e| {
+            to_fixed(e.ascent_descent.min_elevation_in_meters, 0)
+        }),
+        elevation.as_ref().map_or(String::new(), |e| {
+            to_fixed(e.ascent_descent.max_elevation_in_meters, 0)
+        }),
         plain(&p.difficulty_convention),
         escape_field(p.wikidata_id.as_deref()),
         websites(&p.websites),

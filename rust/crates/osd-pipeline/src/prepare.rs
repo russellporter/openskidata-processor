@@ -195,8 +195,9 @@ pub fn write_outputs(output: &ClusterOutput, output_dir: &Path) -> Result<()> {
 
 /// Writes `metadata.json`, last, once every file it describes is on disk.
 ///
-/// Counts are taken from the clustered output. The run and lift length totals are zero until
-/// elevation is ported, as upstream's are for features without an elevation profile.
+/// Counts are taken from the clustered output. A run's length is its inclined length from its
+/// elevation profile, and zero without one, as upstream's is. Lifts need their geometry's
+/// elevations, which this pipeline does not carry yet, so the lift total is zero.
 pub fn write_metadata(
     output: &ClusterOutput,
     output_dir: &Path,
@@ -212,7 +213,9 @@ pub fn write_metadata(
             p.places.iter().map(|place| place.iso3166_1_alpha2.as_str()),
         );
     }
-    output.runs.iter().for_each(|_| collector.add_run(None));
+    for run in &output.runs {
+        collector.add_run(csv::run_elevation(run).map(|e| e.pitch.inclined_length_in_meters));
+    }
     output.lifts.iter().for_each(|_| collector.add_lift(None));
     output.spots.iter().for_each(|_| collector.add_spot());
 

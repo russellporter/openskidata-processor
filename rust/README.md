@@ -99,8 +99,10 @@ depends on them. Each is pinned by a test and explained where it lives.
   makes them (upstream's, from an older SQLite, are an f32 ulp or two wider).
 - **`metadata.json`'s length totals need elevation.** `runLengthKm` and `liftLengthKm` sum the
   inclined length elevation produces; the collector takes it as an input (the oracle feeds it the
-  real `getRunElevationData` results) and `prepare` passes none yet, so both are `0`, as upstream's
-  are without elevation.
+  real `getRunElevationData` results). `prepare` passes each run's from its elevation profile; the
+  lift total stays `0` until the pipeline's geometry can carry elevations.
+- **A run whose elevation profile does not fit its line** makes upstream's CSV export throw; here it
+  is logged and the run's elevation columns are left empty.
 
 ## The generated enums
 
