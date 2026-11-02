@@ -16,6 +16,7 @@ tracing.workspace = true
 tracing-subscriber.workspace = true
 osd-pipeline.workspace = true
 osd-cache.workspace = true
+osd-enrich.workspace = true
 
 [[bin]]
 name = "openskidata"

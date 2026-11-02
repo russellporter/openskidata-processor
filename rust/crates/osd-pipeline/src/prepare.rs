@@ -6,13 +6,15 @@
 //! and `spots.geojson`, their `mapboxgl_*` counterparts, the CSV exports, `openskidata.gpkg`
 //! and `metadata.json`. Not yet written: the tiles.
 //!
-//! Elevation, geocoding and snow cover are not applied, so the output equals what the
-//! TypeScript pipeline produces with those three switched off.
+//! Geocoding is applied when a geocoder is configured. Elevation and snow cover are not, so the
+//! output equals what the TypeScript pipeline produces with those two switched off.
 
 use crate::format::{FormatInput, SkimapSkiArea, format_all};
 use anyhow::{Context, Result};
 use openskidata_format::{FeatureType, SkiAreaActivity, Status};
-use osd_cluster::engine::{ClusterOutput, Feature, cluster};
+use osd_cache::CacheStore;
+use osd_cluster::engine::{ClusterOutput, Feature, cluster_with_geocoder};
+use osd_enrich::http_geocoder::{HttpGeocoder, HttpGeocoderConfig, ServerType};
 use osd_osm::element::{Element, Feature as OsmFeature, Relation};
 use osd_osm::overpass::{convert_overpass_json, read_elements};
 use osd_out::geojson::write_feature_collection;
@@ -39,6 +41,19 @@ pub struct PrepareConfig {
     pub output_dir: PathBuf,
     /// The bounding box the run is restricted to (`BBOX`), reported in `metadata.json`.
     pub bbox: Option<Vec<f64>>,
+    /// The reverse geocoder, if one is configured (`GEOCODING_SERVER_URL`).
+    pub geocoding: Option<GeocodingSettings>,
+}
+
+/// A reverse-geocoding server and where its responses are cached.
+#[derive(Debug, Clone)]
+pub struct GeocodingSettings {
+    pub url: String,
+    pub server_type: ServerType,
+    /// How long a cached response stays valid, in milliseconds.
+    pub cache_ttl_ms: i64,
+    /// The cache store (see `openskidata migrate-cache`).
+    pub cache_path: PathBuf,
 }
 
 fn features_from_osm_json(path: &Path) -> Result<Vec<OsmFeature>> {
@@ -270,7 +285,28 @@ pub fn prepare(config: &PrepareConfig) -> Result<()> {
         skimap: skimap_ski_areas(&config.input_dir.join(SKIMAP))?,
     };
     let formatted = format_all(&input)?;
-    let output = cluster(formatted.into_cluster_input())?;
+    let output = match &config.geocoding {
+        Some(settings) => {
+            if let Some(parent) = settings
+                .cache_path
+                .parent()
+                .filter(|p| !p.as_os_str().is_empty())
+            {
+                fs::create_dir_all(parent)?;
+            }
+            let cache = CacheStore::open(&settings.cache_path)?;
+            let geocoder = HttpGeocoder::new(
+                HttpGeocoderConfig {
+                    url: settings.url.clone(),
+                    server_type: settings.server_type,
+                    cache_ttl_ms: settings.cache_ttl_ms,
+                },
+                &cache,
+            );
+            cluster_with_geocoder(formatted.into_cluster_input(), Some(&geocoder))?
+        }
+        None => cluster_with_geocoder(formatted.into_cluster_input(), None)?,
+    };
     write_outputs(&output, &config.output_dir)?;
     let download = metadata::read_download_metadata(&config.input_dir);
     write_metadata(

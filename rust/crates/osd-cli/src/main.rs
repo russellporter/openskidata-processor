@@ -6,6 +6,13 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 
+#[derive(clap::ValueEnum, Debug, Clone, Copy)]
+enum GeocodingServerType {
+    Photon,
+    #[value(name = "geocode-api")]
+    GeocodeApi,
+}
+
 #[derive(Parser, Debug)]
 #[command(name = "openskidata", about = "OpenSkiData processor", version)]
 struct Cli {
@@ -19,8 +26,8 @@ enum Command {
     ///
     /// Reads `input_*.osmjson` (from Overpass, or the files `OSM_INPUT_DIR` points at) and
     /// `input_skimap_ski_areas.geojson` from the input directory, and writes GeoJSON, the
-    /// slimmed mapboxgl GeoJSON and CSV to the output directory. Elevation, geocoding, snow
-    /// cover and tiles are not applied yet.
+    /// slimmed mapboxgl GeoJSON and CSV to the output directory. Elevation, snow cover and
+    /// tiles are not applied yet.
     Prepare {
         #[arg(long, env = "INPUT_DIR", default_value = "data/input")]
         input_dir: std::path::PathBuf,
@@ -30,6 +37,27 @@ enum Command {
         /// Only reported in `metadata.json`.
         #[arg(long, env = "BBOX")]
         bbox: Option<String>,
+        /// A reverse geocoder (Photon, or a Who's On First `geocode-api`) to find the places
+        /// objects lie in. Without one, `places` are empty.
+        #[arg(long, env = "GEOCODING_SERVER_URL")]
+        geocoding_server_url: Option<String>,
+        #[arg(
+            long,
+            env = "GEOCODING_SERVER_TYPE",
+            value_enum,
+            default_value = "photon"
+        )]
+        geocoding_server_type: GeocodingServerType,
+        /// How long a cached geocoding response stays valid, in milliseconds (default a year).
+        #[arg(
+            long,
+            env = "GEOCODING_SERVER_URL_TTL",
+            default_value_t = 31_536_000_000
+        )]
+        geocoding_cache_ttl_ms: i64,
+        /// The cache store the geocoder's responses are kept in.
+        #[arg(long, env = "CACHE_PATH", default_value = "data/cache.db")]
+        cache_path: std::path::PathBuf,
     },
     /// Run the full pipeline.
     Run {
@@ -73,6 +101,10 @@ async fn main() -> Result<()> {
             input_dir,
             output_dir,
             bbox,
+            geocoding_server_url,
+            geocoding_server_type,
+            geocoding_cache_ttl_ms,
+            cache_path,
         } => {
             let bbox: Option<Vec<f64>> =
                 bbox.map(|text| serde_json::from_str(&text))
@@ -82,6 +114,21 @@ async fn main() -> Result<()> {
                 input_dir,
                 output_dir,
                 bbox,
+                geocoding: geocoding_server_url.map(|url| {
+                    osd_pipeline::prepare::GeocodingSettings {
+                        url,
+                        server_type: match geocoding_server_type {
+                            GeocodingServerType::Photon => {
+                                osd_enrich::http_geocoder::ServerType::Photon
+                            }
+                            GeocodingServerType::GeocodeApi => {
+                                osd_enrich::http_geocoder::ServerType::GeocodeApi
+                            }
+                        },
+                        cache_ttl_ms: geocoding_cache_ttl_ms,
+                        cache_path,
+                    }
+                }),
             })
         }
         Command::Run { .. } => todo!("wire up osd_pipeline::run"),

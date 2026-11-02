@@ -138,6 +138,7 @@ fn files_written_by_prepare_match_the_typescript_output() {
             input_dir: input_dir.clone(),
             output_dir: output_dir.clone(),
             bbox: None,
+            geocoding: None,
         })
         .unwrap();
 
@@ -199,6 +200,7 @@ fn the_geojson_layout_is_the_one_merge_outputs_expects() {
         input_dir: input_dir.clone(),
         output_dir: output_dir.clone(),
         bbox: None,
+        geocoding: None,
     })
     .unwrap();
     let text = fs::read_to_string(output_dir.join("runs.geojson")).unwrap();
@@ -232,6 +234,7 @@ fn metadata_json_describes_what_was_written() {
         input_dir: input_dir.clone(),
         output_dir: output_dir.clone(),
         bbox: Some(vec![11.0, 47.0, 12.5, 48.0]),
+        geocoding: None,
     })
     .unwrap();
 
@@ -306,6 +309,7 @@ fn metadata_json_describes_what_was_written() {
         input_dir: input_dir.clone(),
         output_dir: output_dir.clone(),
         bbox: None,
+        geocoding: None,
     })
     .unwrap();
     let metadata: Value =
@@ -317,4 +321,135 @@ fn metadata_json_describes_what_was_written() {
     assert_eq!(metadata["source"]["skiMapOrg"]["downloadedAt"], Value::Null);
     let _ = fs::remove_dir_all(&input_dir);
     let _ = fs::remove_dir_all(&output_dir);
+}
+
+/// A server that answers every request with the same Photon response, until dropped.
+struct FixedPhoton {
+    url: String,
+    requests: std::sync::Arc<std::sync::atomic::AtomicUsize>,
+    stop: std::sync::Arc<std::sync::atomic::AtomicBool>,
+    address: std::net::SocketAddr,
+}
+
+impl FixedPhoton {
+    fn start() -> FixedPhoton {
+        use std::io::{Read, Write};
+        use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let address = listener.local_addr().unwrap();
+        let requests = std::sync::Arc::new(AtomicUsize::new(0));
+        let stop = std::sync::Arc::new(AtomicBool::new(false));
+        let (counter, flag) = (requests.clone(), stop.clone());
+        std::thread::spawn(move || {
+            for stream in listener.incoming() {
+                if flag.load(Ordering::SeqCst) {
+                    break;
+                }
+                let Ok(mut stream) = stream else { continue };
+                counter.fetch_add(1, Ordering::SeqCst);
+                std::thread::spawn(move || {
+                    let mut buffer = [0u8; 4096];
+                    let mut received = Vec::new();
+                    while !received.windows(4).any(|w| w == b"\r\n\r\n") {
+                        match stream.read(&mut buffer) {
+                            Ok(0) | Err(_) => return,
+                            Ok(n) => received.extend_from_slice(&buffer[..n]),
+                        }
+                    }
+                    let body = r#"{"features":[{"properties":{"countrycode":"AT","state":"Vienna","city":"Wien"}}]}"#;
+                    let _ = write!(
+                        stream,
+                        "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
+                        body.len()
+                    );
+                });
+            }
+        });
+        FixedPhoton {
+            url: format!("http://{address}/geo"),
+            requests,
+            stop,
+            address,
+        }
+    }
+
+    fn requests(&self) -> usize {
+        self.requests.load(std::sync::atomic::Ordering::SeqCst)
+    }
+
+    fn shut_down(self) {
+        self.stop.store(true, std::sync::atomic::Ordering::SeqCst);
+        let _ = std::net::TcpStream::connect(self.address);
+    }
+}
+
+#[test]
+fn prepare_geocodes_and_a_second_run_needs_no_server() {
+    use osd_pipeline::prepare::GeocodingSettings;
+    let scenes: Scenes =
+        serde_json::from_str(include_str!("../../osd-cluster/tests/cluster_scenes.json")).unwrap();
+    let scene = scenes
+        .scenes
+        .iter()
+        .find(|s| s.expected.runs.len() >= 2)
+        .expect("a scene with runs");
+    let input_dir = scratch("geo-in");
+    write_inputs(&input_dir, &scene.roles);
+    let cache_path = scratch("geo-cache").join("cache.db");
+
+    let server = FixedPhoton::start();
+    let settings = |url: &str| GeocodingSettings {
+        url: url.to_owned(),
+        server_type: osd_enrich::http_geocoder::ServerType::Photon,
+        cache_ttl_ms: 1_000_000_000_000,
+        cache_path: cache_path.clone(),
+    };
+    let run = |out: &str, url: &str| {
+        let output_dir = scratch(out);
+        prepare(&PrepareConfig {
+            input_dir: input_dir.clone(),
+            output_dir: output_dir.clone(),
+            bbox: None,
+            geocoding: Some(settings(url)),
+        })
+        .unwrap();
+        output_dir
+    };
+
+    let first = run("geo-out-1", &server.url);
+    let asked = server.requests();
+    assert!(asked > 0, "the server was asked");
+    let runs = features(&first.join("runs.geojson"));
+    assert!(!runs.is_empty());
+    for run in &runs {
+        assert_eq!(
+            run["properties"]["places"],
+            json!([{
+                "iso3166_1Alpha2": "AT",
+                "iso3166_2": "AT-9",
+                "localized": {"en": {"country": "Austria", "region": "Vienna", "locality": "Wien"}}
+            }]),
+            "{}",
+            run["properties"]["id"]
+        );
+    }
+    // The CSV shows them too.
+    let csv = fs::read_to_string(first.join("csv").join("runs.csv")).unwrap();
+    assert!(csv.contains("Austria,Vienna,Wien"), "{csv}");
+
+    // A second run, the server gone: every cell comes from the cache, and the output is the same.
+    server.shut_down();
+    let second = run("geo-out-2", "http://127.0.0.1:1/geo");
+    for file in [
+        "runs.geojson",
+        "lifts.geojson",
+        "spots.geojson",
+        "ski_areas.geojson",
+    ] {
+        assert_eq!(
+            fs::read_to_string(first.join(file)).unwrap(),
+            fs::read_to_string(second.join(file)).unwrap(),
+            "{file}"
+        );
+    }
 }

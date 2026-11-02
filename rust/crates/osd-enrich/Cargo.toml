@@ -17,5 +17,6 @@ openskidata-format.workspace = true
 osd-store.workspace = true
 osd-cache.workspace = true
 osd-turf.workspace = true
+tracing.workspace = true
 osd-osm.workspace = true
 icu_collator = "2.4.0"

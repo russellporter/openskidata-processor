@@ -10,6 +10,7 @@
  *
  * Requires a build (`npm run build`). Usage: node rust/codegen/generate-geocode-vectors.mjs [--check]
  */
+import { createServer } from "node:http";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { join } from "node:path";
@@ -224,6 +225,46 @@ for (let n = 0; n < 1500; n++) {
       extractPointsAlongGeometry(structuredClone(geometry), interval),
     ),
   });
+}
+
+// The requests the real client makes: what a server is asked, for each kind and position.
+{
+  const asked = [];
+  const server = createServer((request, response) => {
+    asked.push(request.url);
+    response.setHeader("content-type", "application/json");
+    response.end(
+      JSON.stringify({
+        type: "FeatureCollection",
+        features: [],
+        geometries: [],
+      }),
+    );
+  });
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const url = `http://127.0.0.1:${server.address().port}/geo`;
+  for (const type of ["photon", "geocode-api"]) {
+    const geocoder = new Geocoder(
+      { url, type, cacheTTL: 1e12 },
+      getPostgresTestConfig(),
+    );
+    await geocoder.initialize();
+    for (let n = 0; n < 200; n++) {
+      const position = [int(36000) / 100 - 180, int(18000) / 100 - 90].map(
+        (v) => v + int(1000) / 1e7,
+      );
+      const before = asked.length;
+      await quiet(() => geocoder.rawGeocode(position));
+      cases.push({
+        kind: "url",
+        type,
+        position,
+        expected: asked.slice(before),
+      });
+    }
+    await geocoder.close();
+  }
+  server.close();
 }
 
 const generated =

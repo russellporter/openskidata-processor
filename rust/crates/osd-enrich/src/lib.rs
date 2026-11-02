@@ -41,6 +41,7 @@
 
 pub mod collation;
 pub mod geocode;
+pub mod http_geocoder;
 pub mod places;
 
 use anyhow::Result;

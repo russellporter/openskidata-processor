@@ -20,7 +20,7 @@ geos = "11.3.1"
 # parallelism + async
 rayon = "1.12.0"
 tokio = { version = "1.54.1", features = ["rt-multi-thread", "macros", "fs", "sync", "time"] }
-reqwest = { version = "0.13.5", default-features = false, features = ["json", "rustls", "gzip"] }
+reqwest = { version = "0.13.5", default-features = false, features = ["json", "rustls", "gzip", "blocking"] }
 # serialization
 serde = { version = "1.0.229", features = ["derive"] }
 # float_roundtrip: serde_json's default float parser is not correctly rounded and can land one

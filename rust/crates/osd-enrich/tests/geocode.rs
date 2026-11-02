@@ -9,6 +9,7 @@
 
 use openskidata_format::place::Place;
 use osd_enrich::geocode::{enhance_photon, enhance_whos_on_first, extract_points_along_geometry};
+use osd_enrich::http_geocoder::{ServerType, request_url};
 use osd_osm::element::{Geometry, Position};
 use serde::Deserialize;
 use serde_json::Value;
@@ -27,6 +28,10 @@ struct Case {
     geometry: Value,
     #[serde(default)]
     interval: f64,
+    #[serde(default, rename = "type")]
+    server_type: String,
+    #[serde(default)]
+    position: Vec<f64>,
     expected: Value,
 }
 
@@ -63,7 +68,7 @@ struct Stats {
 #[test]
 fn every_recorded_geocode_computation_is_reproduced() {
     let vectors: Vectors = serde_json::from_str(include_str!("geocode_vectors.json")).unwrap();
-    assert!(vectors.cases.len() >= 3000);
+    assert!(vectors.cases.len() >= 4000);
     let mut stats = Stats::default();
     let mut failures = Vec::new();
 
@@ -95,6 +100,17 @@ fn every_recorded_geocode_computation_is_reproduced() {
                     (Err(got), _, Some(want)) => got == want.as_str().unwrap(),
                     _ => false,
                 }
+            }
+            "url" => {
+                let server_type = match case.server_type.as_str() {
+                    "photon" => ServerType::Photon,
+                    "geocode-api" => ServerType::GeocodeApi,
+                    other => panic!("unknown server type {other}"),
+                };
+                let cell = osd_cache::geohash::encode(case.position[1], case.position[0], 6);
+                let url = request_url("http://server.invalid/geo", server_type, cell);
+                let want = case.expected[0].as_str().unwrap();
+                url.strip_prefix("http://server.invalid") == Some(want)
             }
             other => panic!("unknown kind {other}"),
         };
