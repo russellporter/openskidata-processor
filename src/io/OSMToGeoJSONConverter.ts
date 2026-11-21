@@ -542,9 +542,9 @@ export class OverpassToGeoJSONConverter {
   private routeGeometry(
     members: OverpassRelationMember[],
   ): GeoJSON.LineString | GeoJSON.MultiLineString | null {
-    const lines = joinWays(this.wayMembers(members).map((m) => m.nodes)).map(
-      (line) => line.map((id) => this.nodes.position(id)),
-    );
+    const lines = joinDirectedWays(
+      this.wayMembers(members).map((m) => m.nodes),
+    ).map((line) => line.map((id) => this.nodes.position(id)));
     if (lines.length === 0) {
       return null;
     }
@@ -606,6 +606,46 @@ export class OverpassToGeoJSONConverter {
       ? { type: "Polygon", coordinates: coordinates[0] }
       : { type: "MultiPolygon", coordinates: coordinates };
   }
+}
+
+/**
+ * Joins the member ways of a route into linestrings without reversing any way.
+ * Way direction is meaningful for routes (e.g. a downhill piste is drawn
+ * downhill), while member order often isn't, so ways are only joined head to
+ * tail. Ways that can't be joined that way (branches, opposing directions)
+ * start their own linestring.
+ */
+function joinDirectedWays(ways: number[][]): number[][] {
+  const lines: number[][] = [];
+  for (const way of ways) {
+    if (way.length < 2) {
+      continue;
+    }
+    let line = way.slice();
+    // Repeatedly attach existing lines that connect head to tail.
+    let found = true;
+    while (found && line[0] !== line[line.length - 1]) {
+      found = false;
+      for (let i = 0; i < lines.length; i++) {
+        const other = lines[i];
+        if (other[0] === other[other.length - 1]) {
+          continue;
+        }
+        if (other[other.length - 1] === line[0]) {
+          line = other.concat(line.slice(1));
+        } else if (line[line.length - 1] === other[0]) {
+          line = line.concat(other.slice(1));
+        } else {
+          continue;
+        }
+        lines.splice(i, 1);
+        found = true;
+        break;
+      }
+    }
+    lines.push(line);
+  }
+  return lines;
 }
 
 /**

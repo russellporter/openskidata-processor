@@ -303,13 +303,13 @@ describe("OSMToGeoJSONConverter", () => {
           type: "MultiLineString",
           coordinates: [
             [
-              [5, 5],
-              [6, 5],
-            ],
-            [
               [0, 0],
               [1, 0],
               [2, 0],
+            ],
+            [
+              [5, 5],
+              [6, 5],
             ],
           ],
         },
@@ -368,6 +368,56 @@ describe("OSMToGeoJSONConverter", () => {
         },
       },
     ]);
+  });
+
+  it("never reverses member ways when joining a route relation", () => {
+    // Modeled on relation 6937672 (Urdenfürggli): members are listed bottom to
+    // top, and a variant branches off at the same junction node as the main
+    // run. Every way is drawn downhill and must stay that way.
+    const features = convert([
+      node(1, 0, 3), // top
+      node(2, 0, 2),
+      node(3, 0, 1), // junction
+      node(4, 0, 0), // bottom of main run
+      node(5, 1, 0), // bottom of variant
+      node(6, 1, 3), // top of link
+      way(101, [3, 4]),
+      way(102, [2, 3]),
+      way(103, [1, 2]),
+      way(104, [6, 2]),
+      way(105, [3, 5]),
+      relation(
+        201,
+        [
+          { type: "way", ref: 101, role: "" },
+          { type: "way", ref: 102, role: "" },
+          { type: "way", ref: 103, role: "link" },
+          { type: "way", ref: 104, role: "link" },
+          { type: "way", ref: 105, role: "variant" },
+        ],
+        { type: "route", route: "piste", "piste:type": "downhill" },
+      ),
+    ]);
+
+    expect(features[0].geometry).toEqual({
+      type: "MultiLineString",
+      coordinates: [
+        [
+          [0, 3],
+          [0, 2],
+          [0, 1],
+          [0, 0],
+        ],
+        [
+          [1, 3],
+          [0, 2],
+        ],
+        [
+          [0, 1],
+          [1, 0],
+        ],
+      ],
+    });
   });
 
   it("assembles a multipolygon with an inner ring following the right-hand rule", () => {
