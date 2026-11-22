@@ -1162,6 +1162,121 @@ it("associates lifts and runs with polygon openstreetmap ski area", async () => 
   `);
 });
 
+// https://github.com/russellporter/openskimap.org/issues/138
+it("associates backcountry run fully inside polygon openstreetmap ski area unless patrolled=no", async () => {
+  const paths = TestHelpers.getFilePaths();
+  TestHelpers.mockFeatureFiles(
+    [
+      TestHelpers.mockSkiAreaFeature({
+        id: "1",
+        name: "Ski Area",
+        activities: [SkiAreaActivity.Downhill],
+        sources: [{ type: SourceType.OPENSTREETMAP, id: "1" }],
+        geometry: {
+          type: "Polygon",
+          coordinates: [
+            [
+              [0, 0],
+              [0.02, 0],
+              [0.02, 0.02],
+              [0, 0.02],
+              [0, 0],
+            ],
+          ],
+        },
+      }),
+    ],
+    [
+      TestHelpers.mockLiftFeature({
+        id: "2",
+        name: "Lift",
+        liftType: LiftType.ChairLift,
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [0.005, 0.005],
+            [0.005, 0.015],
+          ],
+        },
+      }),
+    ],
+    [
+      TestHelpers.mockRunFeature({
+        id: "3",
+        name: "Expert run",
+        uses: [RunUse.Downhill],
+        difficulty: RunDifficulty.EXPERT,
+        grooming: RunGrooming.Backcountry,
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [0.007, 0.015],
+            [0.007, 0.005],
+          ],
+        },
+      }),
+      TestHelpers.mockRunFeature({
+        id: "4",
+        name: "Unpatrolled run",
+        uses: [RunUse.Downhill],
+        difficulty: RunDifficulty.EXPERT,
+        grooming: RunGrooming.Backcountry,
+        patrolled: false,
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [0.008, 0.015],
+            [0.008, 0.005],
+          ],
+        },
+      }),
+      TestHelpers.mockRunFeature({
+        id: "5",
+        name: "Run leaving the ski area",
+        uses: [RunUse.Downhill],
+        difficulty: RunDifficulty.EXPERT,
+        grooming: RunGrooming.Backcountry,
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [0.009, 0.015],
+            [0.03, 0.015],
+          ],
+        },
+      }),
+    ],
+    paths.intermediate,
+  );
+
+  await clusterSkiAreas(paths.intermediate, paths.output, testConfig);
+
+  expect(
+    TestHelpers.fileContents(paths.output.runs).features.map(
+      simplifiedRunFeature,
+    ),
+  ).toMatchInlineSnapshot(`
+    [
+      {
+        "id": "3",
+        "name": "Expert run",
+        "skiAreas": [
+          "1",
+        ],
+      },
+      {
+        "id": "4",
+        "name": "Unpatrolled run",
+        "skiAreas": [],
+      },
+      {
+        "id": "5",
+        "name": "Run leaving the ski area",
+        "skiAreas": [],
+      },
+    ]
+  `);
+});
+
 it("associates lifts and runs adjacent to polygon openstreetmap ski area when no other polygon contains them", async () => {
   const paths = TestHelpers.getFilePaths();
   TestHelpers.mockFeatureFiles(

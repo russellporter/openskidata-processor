@@ -77,6 +77,12 @@ function objectLengthKm(obj: LiftObject | RunObject): number {
   return obj.geometry.type === "Polygon" ? raw / 3 : raw;
 }
 
+function isOnlyInSkiAreaPolygonRun(object: MapObject): boolean {
+  return (
+    object.type === FeatureType.Run && object.onlyInSkiAreaPolygon === true
+  );
+}
+
 function isNonOperatingLift(object: MapObject): boolean {
   return (
     object.type === FeatureType.Lift &&
@@ -262,13 +268,17 @@ export class SkiAreaClusteringService {
   ): DraftRun {
     const properties = feature.properties;
     const isInSkiAreaSite = feature.properties.skiAreas.length > 0;
+    const isUnpatrolledBackcountry =
+      !isInSkiAreaSite &&
+      properties.grooming === RunGrooming.Backcountry &&
+      properties.patrolled !== true;
+    // A backcountry run with no patrolled tag joins a ski area only when the ski
+    // area's polygon fully contains it. One tagged patrolled=no never joins one.
+    const onlyInSkiAreaPolygon =
+      isUnpatrolledBackcountry && properties.patrolled !== false;
 
     const activities = (() => {
-      if (
-        !isInSkiAreaSite &&
-        properties.grooming === RunGrooming.Backcountry &&
-        properties.patrolled !== true
-      ) {
+      if (isUnpatrolledBackcountry && !onlyInSkiAreaPolygon) {
         return [];
       }
 
@@ -301,12 +311,14 @@ export class SkiAreaClusteringService {
         (properties.uses.includes(RunUse.Downhill) ||
           properties.uses.includes(RunUse.Nordic)) &&
         activities.some((activity) => allSkiAreaActivities.has(activity)) &&
-        feature.properties.skiAreas.length === 0,
+        feature.properties.skiAreas.length === 0 &&
+        !onlyInSkiAreaPolygon,
       skiAreas: feature.properties.skiAreas.map(
         (skiArea) => skiArea.properties.id,
       ),
       isInSkiAreaPolygon: false,
       isInSkiAreaSite: isInSkiAreaSite,
+      onlyInSkiAreaPolygon: onlyInSkiAreaPolygon,
       siteSkiAreas: feature.properties.skiAreas.map(
         (skiArea) => skiArea.properties.id,
       ),
@@ -675,9 +687,16 @@ export class SkiAreaClusteringService {
 
     const memberObjects = await this.visitObject(searchContext, skiArea);
 
+    // Runs that only join a containing polygon never decide whether it is kept.
+    const objectsDecidingRemoval = memberObjects.filter(
+      (object) => !isOnlyInSkiAreaPolygonRun(object),
+    );
+
     const removeDueToNoObjects =
       options.skiArea.removeIfNoObjectsFound &&
-      !memberObjects.some((object) => object.type !== FeatureType.SkiArea);
+      !objectsDecidingRemoval.some(
+        (object) => object.type !== FeatureType.SkiArea,
+      );
 
     if (removeDueToNoObjects) {
       const nearbySkimapSkiAreas = await this.database.findNearbySkiAreas(
@@ -697,7 +716,7 @@ export class SkiAreaClusteringService {
       }
     }
 
-    const liftsAndRuns = memberObjects.filter(
+    const liftsAndRuns = objectsDecidingRemoval.filter(
       (object): object is LiftObject | RunObject =>
         object.type === FeatureType.Lift || object.type === FeatureType.Run,
     );
@@ -1400,7 +1419,10 @@ export class SkiAreaClusteringService {
   private getActivitiesBasedOnRuns(mapObjects: MapObject[]): SkiAreaActivity[] {
     const foundActivities = new Set<SkiAreaActivity>();
     mapObjects
-      .filter((object) => object.type === FeatureType.Run)
+      .filter(
+        (object) =>
+          object.type === FeatureType.Run && !isOnlyInSkiAreaPolygonRun(object),
+      )
       .forEach((run) => {
         run.activities.forEach((activity) => {
           if (allSkiAreaActivities.has(activity)) {

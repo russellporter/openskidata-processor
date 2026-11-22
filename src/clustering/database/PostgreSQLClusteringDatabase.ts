@@ -47,8 +47,8 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
     (key, type, source, geometry, geom, is_polygon, activities, ski_areas,
      is_basis_for_new_ski_area, is_in_ski_area_polygon, is_in_ski_area_site,
      site_ski_areas, lift_type, station_ids, difficulty, viirs_pixels, spot_type,
-     properties)
-    VALUES ($1, $2, $3, $4, ST_MakeValid(ST_Force2D(ST_GeomFromGeoJSON($5)), 'method=structure'), $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+     properties, only_in_ski_area_polygon)
+    VALUES ($1, $2, $3, $4, ST_MakeValid(ST_Force2D(ST_GeomFromGeoJSON($5)), 'method=structure'), $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
     ON CONFLICT (key) DO UPDATE SET
       type = EXCLUDED.type,
       source = EXCLUDED.source,
@@ -66,7 +66,8 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
       difficulty = EXCLUDED.difficulty,
       viirs_pixels = EXCLUDED.viirs_pixels,
       spot_type = EXCLUDED.spot_type,
-      properties = EXCLUDED.properties
+      properties = EXCLUDED.properties,
+      only_in_ski_area_polygon = EXCLUDED.only_in_ski_area_polygon
   `;
 
   async initialize(): Promise<void> {
@@ -271,6 +272,7 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
       JSON.stringify((object as any).viirsPixels || []),
       spotType,
       JSON.stringify((object as any).properties || {}),
+      (object as any).onlyInSkiAreaPolygon ? true : false,
     ];
   }
 
@@ -360,6 +362,7 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
         viirs_pixels JSONB,
         spot_type TEXT,
         properties JSONB NOT NULL,
+        only_in_ski_area_polygon BOOLEAN DEFAULT FALSE,
         geom GEOMETRY(Geometry, 4326)
       )
     `);
@@ -765,6 +768,15 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
       });
     }
 
+    // Some runs may only join a ski area whose polygon fully contains them, so
+    // only an unbuffered containment search can find them.
+    if (
+      context.searchType !== "contains" ||
+      context.bufferDistanceKm !== undefined
+    ) {
+      query += " AND NOT only_in_ski_area_polygon";
+    }
+
     // Filter out objects that already belong to this ski area
     query += ` AND NOT (ski_areas @> $${paramIndex++}::jsonb)`;
     params.push(JSON.stringify([context.id]));
@@ -936,6 +948,7 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
       baseObject.snowfarming = row.properties?.snowfarming ?? null;
       baseObject.viirsPixels = row.viirs_pixels || [];
       baseObject.isInSkiAreaSite = Boolean(row.is_in_ski_area_site);
+      baseObject.onlyInSkiAreaPolygon = Boolean(row.only_in_ski_area_polygon);
       baseObject.siteSkiAreas = row.site_ski_areas || [];
       baseObject.properties = row.properties || { places: [] };
     } else if (row.type === FeatureType.Spot) {
@@ -958,6 +971,7 @@ export class PostgreSQLClusteringDatabase implements ClusteringDatabase {
         WITH member_geometries AS (
           SELECT geom FROM objects 
           WHERE ski_areas @> $1::jsonb AND type != '${FeatureType.SkiArea}'
+            AND NOT only_in_ski_area_polygon
         ),
         ski_area_geometry AS (
           SELECT geom FROM objects 

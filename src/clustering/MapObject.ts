@@ -27,6 +27,9 @@ export interface DraftRun extends BaseDraftMapObject {
   isBasisForNewSkiArea: boolean;
   isInSkiAreaPolygon: boolean;
   isInSkiAreaSite: boolean;
+  // True for a run that may only join a ski area whose polygon fully contains it,
+  // such as a backcountry run with no patrolled tag.
+  onlyInSkiAreaPolygon?: boolean;
   // IDs of the site=piste relations this object is a member of. Unlike `skiAreas`,
   // this is set once when the object is loaded and is never appended to during clustering.
   siteSkiAreas: string[];
